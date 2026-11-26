@@ -1,0 +1,9 @@
+{
+  "@@locale": "ko",
+  "appTitle": "fitlog",
+  "commonSave": "저장",
+  "commonCancel": "취소",
+  "commonDelete": "삭제",
+  "commonRetry": "다시 시도",
+  "commonError": "문제가 생겼어요"
+}

@@ -1,0 +1,9 @@
+{
+  "@@locale": "en",
+  "appTitle": "fitlog",
+  "commonSave": "Save",
+  "commonCancel": "Cancel",
+  "commonDelete": "Delete",
+  "commonRetry": "Retry",
+  "commonError": "Something went wrong"
+}
