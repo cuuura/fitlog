@@ -41,3 +41,6 @@ final aiConnectionRepositoryProvider = Provider<AiConnectionRepository>(
 final exportRepositoryProvider = Provider<ExportRepository>(
   (ref) => RemoteExportRepository(ref.watch(apiClientProvider)),
 );
+
+// v1.0
+final statsRepositoryProvider = Provider<StatsRepository>((ref) => RemoteStatsRepository(ref.watch(apiClientProvider)));

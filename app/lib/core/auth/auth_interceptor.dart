@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../api/api_client.dart';
 import '../api/dto.dart';
 import '../config.dart';
+import '../integrity/integrity.dart';
 import 'auth_controller.dart';
 import 'token_store.dart';
 
@@ -38,7 +39,7 @@ class AuthInterceptor extends QueuedInterceptor {
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 20),
       contentType: 'application/json',
-    )));
+    )), integrity: ref.watch(integrityTokenSourceProvider));
     return AuthInterceptor(
       dio: dio,
       store: ref.watch(tokenStoreProvider),
@@ -83,8 +84,9 @@ class AuthInterceptor extends QueuedInterceptor {
         );
         await store.write(current);
       } on ApiException catch (e) {
-        // 네트워크 오류면 세션은 유지하고 원래 오류를 돌려준다.
-        if (!e.isNetwork) {
+        // 네트워크 오류·호출 제한(429)·무결성 실패(403 INTEGRITY_FAILED)면 세션은 유지하고 원래 오류를 돌려준다.
+        // 무결성 실패로 로그아웃시키면 로그인도 같은 이유로 막혀 기록에 접근할 수 없게 된다.
+        if (!e.isNetwork && !e.isRateLimited && e.code != 'INTEGRITY_FAILED') {
           await store.clear(keepUserId: true);
           onSessionExpired();
         }

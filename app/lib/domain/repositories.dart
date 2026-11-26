@@ -7,6 +7,7 @@
 import '../core/api/ai_dto.dart';
 import '../core/api/dto.dart';
 import '../core/api/program_dto.dart';
+import '../core/api/stats_dto.dart';
 
 /// 기본 종목(서버에서 내려받아 로컬 캐시) + 내 종목.
 abstract interface class ExerciseRepository {
@@ -123,6 +124,12 @@ class InstancePlan {
 }
 
 /// v0.2 계획 캐시(sync.md "계획 캐시"). B2가 data/plan_cache에 구현한다.
+/// v1.0 STA-4 그래프 데이터. 서버 집계 전용(온라인). 실패는 ApiException(오프라인이면 isNetwork).
+abstract interface class StatsRepository {
+  Future<ExerciseProgress> progress(String exerciseId, {DateTime? from, DateTime? to, int? limit});
+  Future<SessionComparison> comparison(String sessionId);
+}
+
 abstract interface class PlanCache {
   /// 활성(ACTIVE) 인스턴스와 다음 계획. 오프라인이면 캐시 기준.
   Stream<List<InstancePlan>> watchActive();

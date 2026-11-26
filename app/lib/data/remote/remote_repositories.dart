@@ -4,6 +4,7 @@ import 'dart:async';
 import '../../core/api/ai_dto.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/program_dto.dart';
+import '../../core/api/stats_dto.dart';
 import '../../domain/repositories.dart';
 
 class RemoteProgramRepository implements ProgramRepository {
@@ -66,6 +67,17 @@ class RemoteRecordsRepository implements RecordsRepository {
   Future<OneRmMeasurement> addOneRm(String exerciseId, OneRmMeasurement m) => api.postOneRm(exerciseId, m);
   @override
   Future<void> deleteOneRm(String id) => api.deleteOneRm(id);
+}
+
+class RemoteStatsRepository implements StatsRepository {
+  final ApiClient api;
+  RemoteStatsRepository(this.api);
+
+  @override
+  Future<ExerciseProgress> progress(String exerciseId, {DateTime? from, DateTime? to, int? limit}) =>
+      api.getProgress(exerciseId, from: from, to: to, limit: limit);
+  @override
+  Future<SessionComparison> comparison(String sessionId) => api.getComparison(sessionId);
 }
 
 /// 서버 데이터가 바뀐 뒤 앱이 할 일(동기화 pull, 계획 캐시 갱신). providers에서 연결한다.

@@ -29,4 +29,8 @@ abstract final class Routes {
   static const deletionRequests = '/ai/deletions'; // B2 삭제 요청 승인·거절
   static const aiConnect = '/ai/connect'; // B3 MCP 연결 안내·연결된 AI
   static const export = '/export'; // B3 내보내기
+
+  // v1.0
+  static String exerciseProgress(String exerciseId) => '/exercises/$exerciseId/progress'; // B1 종목 추이 꺾은선
+  static String sessionComparison(String sessionId) => '/sessions/$sessionId/comparison'; // B1 오늘 vs 지난·PR 막대
 }
