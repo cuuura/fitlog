@@ -87,6 +87,11 @@ class McpToolsTest {
         val ctx = plainClient().ctx()
         val uid = ctx.conn.userId
         val ex = insertExercise(uid, "BARBELL")
+        // 테스트 DB 에 같은 이름의 기본 종목이 쌓여도 limit 안에 들도록 고유 이름으로 바꾼다
+        val uniqueName = "테스트 종목 ${ex.toString().takeLast(8)}"
+        org.jetbrains.exposed.sql.transactions.transaction {
+            com.fitlog.core.Exercises.update({ com.fitlog.core.Exercises.id eq ex }) { it[com.fitlog.core.Exercises.nameKo] = uniqueName }
+        }
 
         val profile = ctx.call("get_profile")
         assertFalse(profile.isError())
@@ -95,7 +100,7 @@ class McpToolsTest {
         assertEquals("EPLEY", profile.sc()["e1rmFormula"]!!.jsonPrimitive.content)
         assertTrue(profile.text().isNotBlank() && !profile.text().contains("\n"))
 
-        val found = ctx.call("search_exercises", """{"query":"테스트 종목","limit":5}""")
+        val found = ctx.call("search_exercises", """{"query":"$uniqueName","limit":5}""")
         assertTrue(found.sc()["exercises"]!!.jsonArray.any { it.jsonObject["id"]!!.jsonPrimitive.content == ex.toString() })
         assertEquals(0, ctx.call("search_exercises", """{"query":"zzzz없는종목"}""").sc()["count"]!!.jsonPrimitive.int)
         assertTrue(ctx.call("search_exercises", """{"type":"NOPE"}""").isError())

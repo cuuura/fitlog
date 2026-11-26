@@ -74,7 +74,7 @@ services:
     depends_on:
       - server
     environment:
-      DOMAIN: ${DOMAIN:?DOMAIN is required for the https profile}
+      DOMAIN: ${DOMAIN:-localhost}  # https 프로필에서는 .env 에 실제 도메인을 넣는다
     ports:
       - "80:80"
       - "443:443"

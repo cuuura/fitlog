@@ -24,7 +24,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Lowercase image name
-        run: echo "IMAGE=${REGISTRY}/${IMAGE_OWNER,,}/fitlog-server" >> "$GITHUB_ENV"
+        run: |
+          echo "IMAGE=${REGISTRY}/${IMAGE_OWNER,,}/fitlog-server" >> "$GITHUB_ENV"
+          echo "BACKUP_IMAGE=${REGISTRY}/${IMAGE_OWNER,,}/fitlog-backup" >> "$GITHUB_ENV"
 
       - uses: docker/setup-buildx-action@v3
 
@@ -55,3 +57,24 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # 백업 사이드카 이미지(docker-compose.yml 의 backup 서비스)
+      - id: meta-backup
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.BACKUP_IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,format=short
+            type=match,pattern=server-v(\d+\.\d+\.\d+.*),group=1
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: server/deploy/backup
+          push: true
+          tags: ${{ steps.meta-backup.outputs.tags }}
+          labels: ${{ steps.meta-backup.outputs.labels }}
+          cache-from: type=gha,scope=backup
+          cache-to: type=gha,scope=backup,mode=max
