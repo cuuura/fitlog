@@ -1312,5 +1312,8 @@
       }
     }
   },
-  "progressCompareNotSynced": "This session has not reached the server yet. Try again after it syncs"
+  "progressCompareNotSynced": "This session has not reached the server yet. Try again after it syncs",
+  "releasePrivacyPolicy": "Privacy policy",
+  "releasePrivacyPolicySubtitle": "Opens in your browser",
+  "releasePrivacyOpenFailed": "Couldn't open the link. Please try again later."
 }

@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'play_integrity.dart';
+
 /// 인증 요청 직전에 무결성 토큰을 얻는다. 못 얻으면 null(헤더 없이 보낸다). 예외를 던지지 않는다.
 abstract interface class IntegrityTokenSource {
   Future<String?> token(String requestHash);
@@ -22,4 +24,8 @@ String integrityRequestHash(String value) =>
 const integrityHeader = 'X-Integrity-Token';
 
 /// B2가 Android 구현으로 바꾼다. 테스트·웹은 NoIntegrity.
-final integrityTokenSourceProvider = Provider<IntegrityTokenSource>((ref) => const NoIntegrity());
+final integrityTokenSourceProvider = Provider<IntegrityTokenSource>(
+  (ref) => playIntegrityAvailable
+      ? PlayIntegrityTokenSource(cloudProjectNumber: playCloudProjectNumber)
+      : const NoIntegrity(),
+);

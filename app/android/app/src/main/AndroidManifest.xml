@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 릴리스 빌드에서 서버 통신에 필요(debug/profile 매니페스트에만 있으면 릴리스는 통신 불가). -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <!-- B3: 휴식 타이머 알림·진동. SCHEDULE_EXACT_ALARM은 사용자가 허용하지 않으면 inexact로 폴백한다. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.VIBRATE"/>

@@ -1384,5 +1384,8 @@
       }
     }
   },
-  "progressCompareNotSynced": "아직 서버에 올라가지 않은 세션이에요. 동기화된 뒤 다시 시도해 주세요"
+  "progressCompareNotSynced": "아직 서버에 올라가지 않은 세션이에요. 동기화된 뒤 다시 시도해 주세요",
+  "releasePrivacyPolicy": "개인정보 처리방침",
+  "releasePrivacyPolicySubtitle": "브라우저에서 열려요",
+  "releasePrivacyOpenFailed": "링크를 열지 못했어요. 잠시 후 다시 시도해 주세요."
 }
