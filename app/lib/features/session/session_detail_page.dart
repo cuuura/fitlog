@@ -37,6 +37,12 @@ class SessionDetailPage extends ConsumerWidget {
         title: Text(formatDate(local)),
         actions: [
           IconButton(
+            key: const Key('detail-compare'),
+            tooltip: l.progressCompareButton,
+            icon: const Icon(Icons.compare_arrows),
+            onPressed: () => context.push(Routes.sessionComparison(s.id)),
+          ),
+          IconButton(
             key: const Key('detail-edit'),
             tooltip: l.historyEdit,
             icon: const Icon(Icons.edit_outlined),
@@ -47,8 +53,12 @@ class SessionDetailPage extends ConsumerWidget {
             tooltip: l.commonDelete,
             icon: const Icon(Icons.delete_outline),
             onPressed: () async {
-              final ok = await confirmDialog(context,
-                  title: l.sessionDetailDeleteConfirm, confirmLabel: l.commonDelete, confirmKey: const Key('detail-delete-confirm'));
+              final ok = await confirmDialog(
+                context,
+                title: l.sessionDetailDeleteConfirm,
+                confirmLabel: l.commonDelete,
+                confirmKey: const Key('detail-delete-confirm'),
+              );
               if (!ok || !context.mounted) return;
               await ref.read(sessionControllerProvider).deleteSession(s.id);
               if (context.mounted) context.pop();
@@ -70,7 +80,11 @@ class SessionDetailPage extends ConsumerWidget {
               alignment: Alignment.centerLeft,
               child: Padding(
                 padding: const EdgeInsets.only(top: 8),
-                child: SourceBadge(key: const Key('detail-source-badge'), source: s.source, importBatchId: s.importBatchId),
+                child: SourceBadge(
+                  key: const Key('detail-source-badge'),
+                  source: s.source,
+                  importBatchId: s.importBatchId,
+                ),
               ),
             ),
           if (s.note != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(s.note!)),
@@ -82,11 +96,15 @@ class SessionDetailPage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Builder(builder: (_) {
-                      final ex = exercises[se.exerciseId];
-                      return Text(ex == null ? '…' : '${exerciseDisplayName(context, ex)} · ${typeLabel(l, ex.type)}',
-                          style: Theme.of(context).textTheme.titleMedium);
-                    }),
+                    Builder(
+                      builder: (_) {
+                        final ex = exercises[se.exerciseId];
+                        return Text(
+                          ex == null ? '…' : '${exerciseDisplayName(context, ex)} · ${typeLabel(l, ex.type)}',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        );
+                      },
+                    ),
                     if (se.note != null) Text(se.note!, style: Theme.of(context).textTheme.bodySmall),
                     const SizedBox(height: 4),
                     if (se.sets.isEmpty) Text(l.sessionNoSets),
@@ -110,7 +128,9 @@ class SessionDetailPage extends ConsumerWidget {
     ].join(' · ');
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Text('${w.isWarmup ? l.sessionWarmupShort : i + 1}  ${formatSetBrief(w, type, unit)}${extra.isEmpty ? '' : '  ($extra)'}'),
+      child: Text(
+        '${w.isWarmup ? l.sessionWarmupShort : i + 1}  ${formatSetBrief(w, type, unit)}${extra.isEmpty ? '' : '  ($extra)'}',
+      ),
     );
   }
 }

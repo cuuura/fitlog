@@ -1247,5 +1247,69 @@
     }
   },
   "importReplaceWarningPermanent": "The existing item is overwritten in place. Reverting won't restore the previous content.",
-  "deletionForbidden": "Built-in items can't be deleted"
+  "deletionForbidden": "Built-in items can't be deleted",
+  "progressButton": "Progress chart",
+  "progressTitle": "Progress",
+  "progressPeriod3m": "3 months",
+  "progressPeriod6m": "6 months",
+  "progressPeriod1y": "1 year",
+  "progressPeriodAll": "All",
+  "progressMetricWeight": "Top weight",
+  "progressMetricE1rm": "Est. 1RM",
+  "progressMetricVolume": "Volume",
+  "progressLegendNormal": "Regular",
+  "progressLegendPr": "PR",
+  "progressLegendBest": "All-time best",
+  "progressBestLine": "All-time best {value}",
+  "@progressBestLine": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "progressEmpty": "No records in this period. Try a longer range.",
+  "progressOffline": "Connect to the internet to view this",
+  "progressLoadFailed": "Couldn't load the chart. Please try again later.",
+  "progressSelected": "{date} · {value}",
+  "@progressSelected": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "progressWeightReps": "{weight} × {reps}",
+  "@progressWeightReps": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "progressOpenSession": "Open this session",
+  "progressCompareButton": "Compare with last session",
+  "progressCompareTitle": "Compare with last session",
+  "progressCompareEmpty": "Nothing to compare.",
+  "progressFirstRecord": "First record",
+  "progressLegendPrevious": "Last time",
+  "progressLegendToday": "Today",
+  "progressLegendPrevPr": "Previous PR",
+  "progressWeightPrBadge": "Weight PR",
+  "progressE1rmPrBadge": "Est. 1RM PR",
+  "progressSetsHeader": "Set by set",
+  "progressSetLabel": "Set {n}",
+  "@progressSetLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }

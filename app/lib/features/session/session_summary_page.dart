@@ -26,8 +26,7 @@ class SessionSummaryPage extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final async = ref.watch(sessionByIdProvider(sessionId));
     final session = async.value;
-    final exercises =
-        ref.watch(exerciseMapProvider).value ?? const <String, Exercise>{};
+    final exercises = ref.watch(exerciseMapProvider).value ?? const <String, Exercise>{};
     final unit = ref.watch(settingsProvider).weightUnit;
 
     Widget body;
@@ -55,49 +54,29 @@ class SessionSummaryPage extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: _Stat(
-                  label: l.sessionSummarySets,
-                  value: '${sets.length}',
-                  k: 'summary-sets',
-                ),
+                child: _Stat(label: l.sessionSummarySets, value: '${sets.length}', k: 'summary-sets'),
               ),
               Expanded(
-                child: _Stat(
-                  label: l.sessionSummaryVolume,
-                  value: formatVolume(volume, unit),
-                  k: 'summary-volume',
-                ),
+                child: _Stat(label: l.sessionSummaryVolume, value: formatVolume(volume, unit), k: 'summary-volume'),
               ),
               Expanded(
-                child: _Stat(
-                  label: l.sessionSummaryDuration,
-                  value: sessionDuration(session),
-                  k: 'summary-duration',
-                ),
+                child: _Stat(label: l.sessionSummaryDuration, value: sessionDuration(session), k: 'summary-duration'),
               ),
             ],
           ),
           if (judged.isNotEmpty) ...[
             const SizedBox(height: 24),
-            Text(
-              l.sessionSummaryResults,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text(l.sessionSummaryResults, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             for (final se in judged)
               _ResultTile(
                 se: se,
-                name: exercises[se.exerciseId] == null
-                    ? '…'
-                    : exerciseDisplayName(context, exercises[se.exerciseId]!),
+                name: exercises[se.exerciseId] == null ? '…' : exerciseDisplayName(context, exercises[se.exerciseId]!),
               ),
           ],
           if (session.isProgram) ...[
             const SizedBox(height: 24),
-            Text(
-              l.sessionSummaryNext,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
+            Text(l.sessionSummaryNext, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             _NextPlan(session: session),
           ],
@@ -106,18 +85,26 @@ class SessionSummaryPage extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(l.sessionSummaryTitle),
-        automaticallyImplyLeading: false,
-      ),
+      appBar: AppBar(title: Text(l.sessionSummaryTitle), automaticallyImplyLeading: false),
       body: body,
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: FilledButton(
-            key: const Key('summary-done'),
-            onPressed: () => context.go(Routes.home),
-            child: Text(l.sessionSummaryDone),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              OutlinedButton(
+                key: const Key('summary-compare'),
+                onPressed: () => context.push(Routes.sessionComparison(sessionId)),
+                child: Text(l.progressCompareButton),
+              ),
+              const SizedBox(height: 8),
+              FilledButton(
+                key: const Key('summary-done'),
+                onPressed: () => context.go(Routes.home),
+                child: Text(l.sessionSummaryDone),
+              ),
+            ],
           ),
         ),
       ),
@@ -154,17 +141,11 @@ class _ResultTile extends StatelessWidget {
       key: Key('result-${se.id}'),
       dense: true,
       contentPadding: EdgeInsets.zero,
-      leading: Icon(
-        ok ? Icons.check_circle_outline : Icons.cancel_outlined,
-        color: ok ? scheme.primary : scheme.error,
-      ),
+      leading: Icon(ok ? Icons.check_circle_outline : Icons.cancel_outlined, color: ok ? scheme.primary : scheme.error),
       title: Text(name),
       trailing: Text(
         ok ? l.sessionSummarySuccess : l.sessionSummaryFailure,
-        style: TextStyle(
-          color: ok ? scheme.primary : scheme.error,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: ok ? scheme.primary : scheme.error, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -200,8 +181,7 @@ class _NextPlanState extends ConsumerState<_NextPlan> {
       await cache.refresh(instanceId: id);
       final p = await cache.nextPlan(id);
       // 서버가 방금 끝낸 회차를 아직 반영하지 못했거나(같은 planSeq) 예상치면 확정 값이 아니다.
-      if (p != null && p.confirmed && p.planSeq > (widget.session.planSeq ?? 0))
-        plan = p;
+      if (p != null && p.confirmed && p.planSeq > (widget.session.planSeq ?? 0)) plan = p;
     } catch (_) {
       plan = null;
     }
@@ -219,25 +199,16 @@ class _NextPlanState extends ConsumerState<_NextPlan> {
       return Row(
         key: const Key('summary-next-loading'),
         children: [
-          const SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
+          const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
           const SizedBox(width: 12),
           Text(l.sessionSummaryNextLoading),
         ],
       );
     }
     final plan = _plan;
-    if (plan == null)
-      return Text(
-        l.sessionSummaryNextPending,
-        key: const Key('summary-next-pending'),
-      );
+    if (plan == null) return Text(l.sessionSummaryNextPending, key: const Key('summary-next-pending'));
     final unit = ref.watch(settingsProvider).weightUnit;
-    final names =
-        ref.watch(exerciseMapProvider).value ?? const <String, Exercise>{};
+    final names = ref.watch(exerciseMapProvider).value ?? const <String, Exercise>{};
     return Card(
       key: const Key('summary-next'),
       child: Padding(
@@ -245,17 +216,12 @@ class _NextPlanState extends ConsumerState<_NextPlan> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              l.sessionSummaryNextTitle(plan.dayName, plan.week),
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
+            Text(l.sessionSummaryNextTitle(plan.dayName, plan.week), style: Theme.of(context).textTheme.titleSmall),
             const SizedBox(height: 4),
             for (final e in plan.exercises.where((e) => !e.accessory))
               Text(
                 planExerciseLine(
-                  names[e.exerciseId] == null
-                      ? e.key
-                      : exerciseDisplayName(context, names[e.exerciseId]!),
+                  names[e.exerciseId] == null ? e.key : exerciseDisplayName(context, names[e.exerciseId]!),
                   e,
                   unit,
                 ),

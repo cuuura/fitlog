@@ -1,12 +1,14 @@
 // B3 소유. STA-2·3·6 종목별 기록(최고 무게·추정 1RM·횟수별 최고) + 1RM 측정 기록. 온라인 전용(REST).
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/api/dto.dart';
 import '../../core/api/program_dto.dart' show ExerciseRecords, OneRmMeasurement, RecordPoint;
 import '../../core/clock.dart';
 import '../../core/ids.dart';
+import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
@@ -88,11 +90,8 @@ class ExerciseRecordsPage extends ConsumerWidget {
     final oneRms = ref.watch(oneRmListProvider(exerciseId));
     final theme = Theme.of(context);
 
-    String point(RecordPoint p) => l.recordsPoint(
-      Units.format(p.weightKg, unit),
-      p.reps,
-      formatDate(p.achievedAt.toLocal()),
-    );
+    String point(RecordPoint p) =>
+        l.recordsPoint(Units.format(p.weightKg, unit), p.reps, formatDate(p.achievedAt.toLocal()));
 
     Widget stat(String key, String title, String? value, {String? sub}) => ListTile(
       key: Key(key),
@@ -107,11 +106,7 @@ class ExerciseRecordsPage extends ConsumerWidget {
         children: [
           Text(l.recordsLoadFailed, key: const Key('records-error'), textAlign: TextAlign.center),
           const SizedBox(height: 12),
-          OutlinedButton(
-            key: const Key('records-retry'),
-            onPressed: () => _refresh(ref),
-            child: Text(l.commonRetry),
-          ),
+          OutlinedButton(key: const Key('records-retry'), onPressed: () => _refresh(ref), child: Text(l.commonRetry)),
         ],
       ),
     );
@@ -120,7 +115,12 @@ class ExerciseRecordsPage extends ConsumerWidget {
     if (records.hasError) {
       children.add(error());
     } else if (records.value == null) {
-      children.add(const Padding(padding: EdgeInsets.all(32), child: Center(child: CircularProgressIndicator())));
+      children.add(
+        const Padding(
+          padding: EdgeInsets.all(32),
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
     } else {
       final r = records.value!;
       final byReps = {for (final e in r.byReps) e.reps: e.point};
@@ -129,7 +129,9 @@ class ExerciseRecordsPage extends ConsumerWidget {
           'records-best-weight',
           l.recordsBestWeight,
           r.bestWeight == null ? null : Units.format(r.bestWeight!.weightKg, unit),
-          sub: r.bestWeight == null ? null : '${l.recordsRepsValue(r.bestWeight!.reps)} · ${formatDate(r.bestWeight!.achievedAt.toLocal())}',
+          sub: r.bestWeight == null
+              ? null
+              : '${l.recordsRepsValue(r.bestWeight!.reps)} · ${formatDate(r.bestWeight!.achievedAt.toLocal())}',
         ),
         stat(
           'records-best-e1rm',
@@ -183,7 +185,10 @@ class ExerciseRecordsPage extends ConsumerWidget {
         child: Row(
           children: [
             Expanded(
-              child: Text(l.recordsOneRmSection, style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary)),
+              child: Text(
+                l.recordsOneRmSection,
+                style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary),
+              ),
             ),
             TextButton.icon(
               key: const Key('records-add-onerm'),
@@ -219,7 +224,17 @@ class ExerciseRecordsPage extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(ex == null ? l.recordsTitle : exerciseDisplayName(context, ex))),
+      appBar: AppBar(
+        title: Text(ex == null ? l.recordsTitle : exerciseDisplayName(context, ex)),
+        actions: [
+          IconButton(
+            key: const Key('records-progress'),
+            tooltip: l.progressButton,
+            icon: const Icon(Icons.show_chart),
+            onPressed: () => context.push(Routes.exerciseProgress(exerciseId)),
+          ),
+        ],
+      ),
       body: ListView(children: [...children, const SizedBox(height: 24)]),
     );
   }

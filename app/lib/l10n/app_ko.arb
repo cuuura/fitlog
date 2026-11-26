@@ -1319,5 +1319,69 @@
   "exportDone": "파일을 만들었어요. 공유 화면에서 저장할 곳을 골라 주세요.",
   "exportFailed": "내보내지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.",
   "importReplaceWarningPermanent": "기존 내용을 그 자리에서 덮어써요. 되돌리기로도 이전 내용은 복원되지 않아요.",
-  "deletionForbidden": "기본 제공 항목이라 삭제할 수 없어요"
+  "deletionForbidden": "기본 제공 항목이라 삭제할 수 없어요",
+  "progressButton": "추이 그래프",
+  "progressTitle": "추이 그래프",
+  "progressPeriod3m": "3개월",
+  "progressPeriod6m": "6개월",
+  "progressPeriod1y": "1년",
+  "progressPeriodAll": "전체",
+  "progressMetricWeight": "최고 무게",
+  "progressMetricE1rm": "추정 1RM",
+  "progressMetricVolume": "볼륨",
+  "progressLegendNormal": "일반",
+  "progressLegendPr": "PR",
+  "progressLegendBest": "전체 최고",
+  "progressBestLine": "전체 최고 {value}",
+  "@progressBestLine": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "progressEmpty": "이 기간에는 기록이 없어요. 기간을 넓혀 보세요.",
+  "progressOffline": "연결 후 볼 수 있어요",
+  "progressLoadFailed": "그래프를 불러오지 못했어요. 잠시 후 다시 시도해 주세요.",
+  "progressSelected": "{date} · {value}",
+  "@progressSelected": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "progressWeightReps": "{weight} × {reps}회",
+  "@progressWeightReps": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "progressOpenSession": "이 세션 보기",
+  "progressCompareButton": "지난 세션과 비교",
+  "progressCompareTitle": "지난 세션과 비교",
+  "progressCompareEmpty": "비교할 종목이 없어요.",
+  "progressFirstRecord": "첫 기록",
+  "progressLegendPrevious": "지난 같은 세션",
+  "progressLegendToday": "오늘",
+  "progressLegendPrevPr": "이전 PR",
+  "progressWeightPrBadge": "최고 무게 PR",
+  "progressE1rmPrBadge": "추정 1RM PR",
+  "progressSetsHeader": "세트별 비교",
+  "progressSetLabel": "세트 {n}",
+  "@progressSetLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }
