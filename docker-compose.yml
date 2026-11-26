@@ -1,0 +1,89 @@
+# fitlog 서버 배포용 Docker Compose (PostgreSQL + 서버 + 일일 백업, 선택: Caddy HTTPS)
+#   cp server/deploy/.env.example .env   # 값을 채운다
+#   docker compose up -d --build         # 서버 + DB + 백업
+#   docker compose --profile https up -d # Caddy 자동 HTTPS 포함 (DOMAIN, TRUST_PROXY=true 필요)
+# 자세한 절차: server/docs/ops.md
+
+name: fitlog
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-fitlog}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      POSTGRES_DB: ${DB_NAME:-fitlog}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    image: ghcr.io/cuuura/fitlog-server:${TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: "8080"
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-fitlog}
+      DB_USER: ${DB_USER:-fitlog}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required (32+ chars)}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
+    ports:
+      - "${BIND_ADDR:-0.0.0.0}:${SERVER_PORT:-8080}:8080"
+    stop_grace_period: 40s
+
+  backup:
+    build:
+      context: server/deploy/backup
+    image: ghcr.io/cuuura/fitlog-backup:${TAG:-latest}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: ${DB_USER:-fitlog}
+      PGPASSWORD: ${DB_PASSWORD}
+      PGDATABASE: ${DB_NAME:-fitlog}
+      BACKUP_DIR: /backups
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      BACKUP_HOUR_UTC: ${BACKUP_HOUR_UTC:-3}
+      BACKUP_UPLOAD_CMD: ${BACKUP_UPLOAD_CMD:-}
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
+    volumes:
+      - ${BACKUP_DIR:-./backups}:/backups
+
+  # 선택: HTTPS 리버스 프록시 (--profile https). 이 경우 .env 에 TRUST_PROXY=true, BIND_ADDR=127.0.0.1 권장
+  caddy:
+    image: caddy:2
+    profiles: ["https"]
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN is required for the https profile}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./server/deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

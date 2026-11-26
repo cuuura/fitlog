@@ -26,7 +26,10 @@ import com.fitlog.security.installRateLimits
 import com.fitlog.security.withRateLimit
 import com.fitlog.stats.statsRoutes
 import io.ktor.server.application.Application
+import io.ktor.server.application.ApplicationStopped
 import io.ktor.server.auth.authenticate
+import io.ktor.server.engine.applicationEnvironment
+import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.response.respondText
@@ -36,7 +39,15 @@ import io.ktor.server.routing.routing
 
 fun main() {
     val config = AppConfig.fromEnv()
-    embeddedServer(Netty, port = config.port) { module(config) }.start(wait = true)
+    // 종료 신호(SIGTERM) 시 진행 중 요청을 최대 10초 기다리고, 30초 안에 강제 종료. 끝나면 DB 풀을 닫는다
+    embeddedServer(Netty, environment = applicationEnvironment { }, configure = {
+        connector { port = config.port }
+        shutdownGracePeriod = 10_000
+        shutdownTimeout = 30_000
+    }) {
+        module(config)
+        monitor.subscribe(ApplicationStopped) { com.fitlog.core.Database.close() }
+    }.start(wait = true)
 }
 
 /**
