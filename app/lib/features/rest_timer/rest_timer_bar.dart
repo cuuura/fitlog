@@ -49,6 +49,27 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
     final left = s.remaining(now);
     final ctrl = ref.read(restTimerProvider.notifier);
 
+    final large = MediaQuery.textScalerOf(context).scale(10) > 13;
+    final time = Text(
+      formatRestRemaining(left),
+      key: const Key('restTimerRemaining'),
+      style: Theme.of(context).textTheme.displaySmall
+          ?.copyWith(fontFeatures: const [FontFeature.tabularFigures()], color: scheme.onSecondaryContainer),
+    );
+    final buttons = <Widget>[
+      TextButton(
+        key: const Key('restTimerMinus'),
+        onPressed: () => ctrl.addSeconds(-15),
+        child: Text(l10n.timerSubSeconds(15)),
+      ),
+      TextButton(
+        key: const Key('restTimerPlus'),
+        onPressed: () => ctrl.addSeconds(15),
+        child: Text(l10n.timerAddSeconds(15)),
+      ),
+      FilledButton.tonal(key: const Key('restTimerSkip'), onPressed: ctrl.stop, child: Text(l10n.timerSkip)),
+    ];
+
     return Material(
       color: scheme.secondaryContainer,
       child: SafeArea(
@@ -60,35 +81,16 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (s.label != null && s.label!.isNotEmpty)
-                Text(s.label!, style: Theme.of(context).textTheme.labelMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
-              Row(
-                children: [
-                  Text(
-                    formatRestRemaining(left),
-                    key: const Key('restTimerRemaining'),
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                      color: scheme.onSecondaryContainer,
-                    ),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    key: const Key('restTimerMinus'),
-                    onPressed: () => ctrl.addSeconds(-15),
-                    child: Text(l10n.timerSubSeconds(15)),
-                  ),
-                  TextButton(
-                    key: const Key('restTimerPlus'),
-                    onPressed: () => ctrl.addSeconds(15),
-                    child: Text(l10n.timerAddSeconds(15)),
-                  ),
-                  FilledButton.tonal(
-                    key: const Key('restTimerSkip'),
-                    onPressed: ctrl.stop,
-                    child: Text(l10n.timerSkip),
-                  ),
-                ],
-              ),
+                Text(
+                  s.label!,
+                  style: Theme.of(context).textTheme.labelMedium,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              if (large)
+                Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [time, ...buttons])
+              else
+                Row(children: [time, const Spacer(), ...buttons]),
               const SizedBox(height: 4),
               Padding(
                 padding: const EdgeInsets.only(right: 8),

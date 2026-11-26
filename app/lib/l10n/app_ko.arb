@@ -1319,5 +1319,15 @@
   "exportDone": "파일을 만들었어요. 공유 화면에서 저장할 곳을 골라 주세요.",
   "exportFailed": "내보내지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.",
   "importReplaceWarningPermanent": "기존 내용을 그 자리에서 덮어써요. 되돌리기로도 이전 내용은 복원되지 않아요.",
-  "deletionForbidden": "기본 제공 항목이라 삭제할 수 없어요"
+  "deletionForbidden": "기본 제공 항목이라 삭제할 수 없어요",
+  "errorNetwork": "인터넷에 연결되어 있지 않아요. 연결을 확인하고 다시 시도해 주세요.",
+  "errorRateLimited": "요청이 많아요. 잠시 후 다시 시도해 주세요.",
+  "errorIntegrityFailed": "앱을 확인하지 못했어요. Play 스토어에서 설치한 앱인지 확인하고 다시 시도해 주세요.",
+  "errorGeneric": "문제가 생겼어요. 잠시 후 다시 시도해 주세요.",
+  "errorRetry": "다시 시도",
+  "qaCrashReportTitle": "오류 보고 보내기",
+  "qaCrashReportDesc": "앱이 멈추면 오류 내용만 개발자에게 보내요. 기록·이메일 등 개인 정보는 보내지 않아요. 다음 실행부터 적용돼요.",
+  "qaCrashReportSaveFailed": "설정을 저장하지 못했어요",
+  "qaStepDecrease": "줄이기",
+  "qaStepIncrease": "늘리기"
 }

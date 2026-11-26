@@ -64,6 +64,13 @@ class SyncEngine implements SyncService {
 
   /// 지금 예약된 재시도까지 남은 대기(테스트·표시용).
   Duration get nextRetryDelay => backoffFor(_failures);
+
+  /// 429를 받았을 때 Retry-After가 없으면 미루는 시간(계약 security.md).
+  static const defaultRateLimitDelay = Duration(seconds: 30);
+
+  /// 429로 미룬 시각. 이 시각 전에는 서버를 부르지 않는다(실패 백오프와 별개).
+  DateTime? _notBefore;
+  DateTime? get rateLimitedUntil => _notBefore;
   int get failures => _failures;
 
   void _setState({SyncPhase? phase, DateTime? lastSyncedAt, String? lastError, bool clearError = false}) {
@@ -117,6 +124,12 @@ class SyncEngine implements SyncService {
     if (_disposed) return Future.value();
     _debounce?.cancel();
     _retry?.cancel();
+    final wait = _deferRemaining();
+    if (wait != null) {
+      // 429로 미룬 동안은 기록만 로컬에 쌓고, 풀리는 시각에 다시 시도한다.
+      _retry = Timer(wait, () => unawaited(syncNow()));
+      return Future.value();
+    }
     final running = _running;
     if (running != null) {
       _rerun = true; // 도는 중에 쓰기가 생겼을 수 있으니 한 번 더
@@ -129,7 +142,18 @@ class SyncEngine implements SyncService {
     do {
       _rerun = false;
       await _runOnce();
-    } while (_rerun && _failures == 0 && !_disposed);
+    } while (_rerun && _failures == 0 && _deferRemaining() == null && !_disposed);
+  }
+
+  Duration? _deferRemaining() {
+    final until = _notBefore;
+    if (until == null) return null;
+    final left = until.difference(_clock());
+    if (left <= Duration.zero) {
+      _notBefore = null;
+      return null;
+    }
+    return left;
   }
 
   Future<void> _runOnce() async {
@@ -146,7 +170,16 @@ class SyncEngine implements SyncService {
         clearError: dead == null,
       );
     } on ApiException catch (e) {
-      if (e.isUnauthenticated) {
+      if (e.isRateLimited) {
+        // 429: 실패 횟수는 올리지 않고 Retry-After(없으면 30초)만큼만 미룬다.
+        final delay = e.retryAfter ?? defaultRateLimitDelay;
+        _notBefore = _clock().add(delay);
+        _setState(phase: SyncPhase.offline, lastError: e.code);
+        if (!_disposed) {
+          _retry?.cancel();
+          _retry = Timer(delay, () => unawaited(syncNow()));
+        }
+      } else if (e.isUnauthenticated) {
         // 로그인 안 됨/만료. 로그인하면 SyncLifecycle이 다시 트리거한다.
         _setState(phase: SyncPhase.offline, lastError: e.code);
       } else if (e.isNetwork) {
@@ -291,6 +324,7 @@ class SyncEngine implements SyncService {
     _debounce?.cancel();
     _retry?.cancel();
     _failures = 0;
+    _notBefore = null;
     _lastSyncedAt = null;
     _lastError = null;
     _phase = SyncPhase.idle;

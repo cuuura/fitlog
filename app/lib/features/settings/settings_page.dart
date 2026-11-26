@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/api/dto.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/config.dart';
+import '../../core/crash/crash_reporting.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../data/providers.dart';
@@ -40,8 +41,13 @@ class SettingsPage extends ConsumerWidget {
     }
   }
 
-  Future<bool> _confirm(BuildContext context,
-      {required String title, required String body, required String action, bool destructive = false}) async {
+  Future<bool> _confirm(
+    BuildContext context, {
+    required String title,
+    required String body,
+    required String action,
+    bool destructive = false,
+  }) async {
     final l = AppLocalizations.of(context);
     final ok = await showDialog<bool>(
       context: context,
@@ -72,6 +78,15 @@ class SettingsPage extends ConsumerWidget {
     }
   }
 
+  Future<void> _guardWith(BuildContext context, String failMsg, Future<void> Function() f) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await f();
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(failMsg)));
+    }
+  }
+
   Future<void> _signOut(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context);
     var pending = 0;
@@ -81,35 +96,45 @@ class SettingsPage extends ConsumerWidget {
     } catch (_) {}
     if (!context.mounted) return;
     final ok = pending > 0
-        ? await _confirm(context,
+        ? await _confirm(
+            context,
             title: l.settingsSignOutPendingTitle,
             body: l.settingsSignOutPendingBody(pending),
             action: l.settingsSignOutAnyway,
-            destructive: true)
-        : await _confirm(context,
-            title: l.settingsSignOutConfirmTitle, body: l.settingsSignOutConfirmBody, action: l.settingsSignOut);
+            destructive: true,
+          )
+        : await _confirm(
+            context,
+            title: l.settingsSignOutConfirmTitle,
+            body: l.settingsSignOutConfirmBody,
+            action: l.settingsSignOut,
+          );
     if (!ok || !context.mounted) return;
     await _guard(context, () => ref.read(authControllerProvider.notifier).signOut());
   }
 
   Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context);
-    final ok = await _confirm(context,
-        title: l.settingsDeleteConfirmTitle,
-        body: l.settingsDeleteConfirmBody,
-        action: l.settingsDeleteConfirmAction,
-        destructive: true);
+    final ok = await _confirm(
+      context,
+      title: l.settingsDeleteConfirmTitle,
+      body: l.settingsDeleteConfirmBody,
+      action: l.settingsDeleteConfirmAction,
+      destructive: true,
+    );
     if (!ok || !context.mounted) return;
     await _guard(context, () => ref.read(authControllerProvider.notifier).deleteAccount());
   }
 
   Future<void> _withdrawHealth(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context);
-    final ok = await _confirm(context,
-        title: l.settingsWithdrawHealth,
-        body: l.settingsWithdrawHealthBody,
-        action: l.settingsWithdrawAction,
-        destructive: true);
+    final ok = await _confirm(
+      context,
+      title: l.settingsWithdrawHealth,
+      body: l.settingsWithdrawHealthBody,
+      action: l.settingsWithdrawAction,
+      destructive: true,
+    );
     if (!ok || !context.mounted) return;
     await _guard(context, () async {
       final auth = ref.read(authControllerProvider.notifier);
@@ -128,9 +153,9 @@ class SettingsPage extends ConsumerWidget {
     final theme = Theme.of(context);
 
     Widget header(String text) => Padding(
-          padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-          child: Text(text, style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary)),
-        );
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
+      child: Text(text, style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary)),
+    );
 
     return Scaffold(
       appBar: AppBar(title: Text(l.settingsTitle)),
@@ -139,21 +164,26 @@ class SettingsPage extends ConsumerWidget {
           header(l.settingsSectionTraining),
           ListTile(
             title: Text(l.settingsWeightUnit),
-            trailing: SegmentedButton<WeightUnit>(
-              key: const Key('unitToggle'),
-              showSelectedIcon: false,
-              segments: [
-                ButtonSegment(value: WeightUnit.KG, label: Text(l.settingsUnitKg)),
-                ButtonSegment(value: WeightUnit.LB, label: Text(l.settingsUnitLb)),
-              ],
-              selected: {s.weightUnit},
-              onSelectionChanged: (v) => _update(context, ref, s.copyWith(weightUnit: v.first)),
+            // 큰 글씨·영어에서 trailing이 타일 폭을 다 먹지 않게 컨트롤은 제목 아래에 둔다.
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: SegmentedButton<WeightUnit>(
+                key: const Key('unitToggle'),
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(value: WeightUnit.KG, label: Text(l.settingsUnitKg)),
+                  ButtonSegment(value: WeightUnit.LB, label: Text(l.settingsUnitLb)),
+                ],
+                selected: {s.weightUnit},
+                onSelectionChanged: (v) => _update(context, ref, s.copyWith(weightUnit: v.first)),
+              ),
             ),
           ),
           ListTile(
             title: Text(l.settingsRestTime),
-            trailing: DropdownButton<int>(
+            subtitle: DropdownButton<int>(
               key: const Key('restDropdown'),
+              isExpanded: true,
               value: s.defaultRestSec,
               items: [for (final o in options) DropdownMenuItem(value: o, child: Text(l.settingsRestSeconds(o)))],
               onChanged: (v) => v == null ? null : _update(context, ref, s.copyWith(defaultRestSec: v)),
@@ -175,15 +205,18 @@ class SettingsPage extends ConsumerWidget {
           ),
           ListTile(
             title: Text(l.settingsE1rm),
-            subtitle: Text('${_e1rmDesc(l, s.e1rmFormula)}\n${l.settingsE1rmNote}', key: const Key('e1rmDesc')),
-            isThreeLine: true,
-            trailing: DropdownButton<E1rmFormula>(
-              key: const Key('e1rmDropdown'),
-              value: s.e1rmFormula,
-              items: [
-                for (final f in E1rmFormula.values) DropdownMenuItem(value: f, child: Text(_e1rmName(l, f))),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DropdownButton<E1rmFormula>(
+                  key: const Key('e1rmDropdown'),
+                  isExpanded: true,
+                  value: s.e1rmFormula,
+                  items: [for (final f in E1rmFormula.values) DropdownMenuItem(value: f, child: Text(_e1rmName(l, f)))],
+                  onChanged: (v) => v == null ? null : _update(context, ref, s.copyWith(e1rmFormula: v)),
+                ),
+                Text('${_e1rmDesc(l, s.e1rmFormula)}\n${l.settingsE1rmNote}', key: const Key('e1rmDesc')),
               ],
-              onChanged: (v) => v == null ? null : _update(context, ref, s.copyWith(e1rmFormula: v)),
             ),
           ),
           if (ref.watch(restTimerNotifierProvider).supportsExactAlarm)
@@ -207,7 +240,8 @@ class SettingsPage extends ConsumerWidget {
             onTap: () => context.push(Routes.body),
           ),
           header(l.settingsSectionAccount),
-          if (me != null) ListTile(title: Text(me.email), subtitle: me.displayName == null ? null : Text(me.displayName!)),
+          if (me != null)
+            ListTile(title: Text(me.email), subtitle: me.displayName == null ? null : Text(me.displayName!)),
           ListTile(
             key: const Key('aiTile'),
             title: Text(l.settingsAi),
@@ -219,16 +253,24 @@ class SettingsPage extends ConsumerWidget {
             title: Text(l.syncSheetTitle),
             onTap: () => showSyncStatusSheet(context),
           ),
+          if (ref.watch(crashReportingAvailableProvider))
+            SwitchListTile(
+              key: const Key('crashReport'),
+              title: Text(l.qaCrashReportTitle),
+              subtitle: Text(l.qaCrashReportDesc),
+              value: ref.watch(crashReportingEnabledProvider),
+              onChanged: (v) => _guardWith(
+                context,
+                l.qaCrashReportSaveFailed,
+                () => ref.read(crashReportingEnabledProvider.notifier).set(v),
+              ),
+            ),
           ListTile(
             key: const Key('withdrawHealth'),
             title: Text(l.settingsWithdrawHealth),
             onTap: () => _withdrawHealth(context, ref),
           ),
-          ListTile(
-            key: const Key('signOut'),
-            title: Text(l.settingsSignOut),
-            onTap: () => _signOut(context, ref),
-          ),
+          ListTile(key: const Key('signOut'), title: Text(l.settingsSignOut), onTap: () => _signOut(context, ref)),
           ListTile(
             key: const Key('deleteAccount'),
             title: Text(l.settingsDeleteAccount, style: TextStyle(color: theme.colorScheme.error)),

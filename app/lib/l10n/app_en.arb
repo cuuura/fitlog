@@ -1247,5 +1247,15 @@
     }
   },
   "importReplaceWarningPermanent": "The existing item is overwritten in place. Reverting won't restore the previous content.",
-  "deletionForbidden": "Built-in items can't be deleted"
+  "deletionForbidden": "Built-in items can't be deleted",
+  "errorNetwork": "You are offline. Check your connection and try again.",
+  "errorRateLimited": "Too many requests. Please try again in a moment.",
+  "errorIntegrityFailed": "We could not verify the app. Make sure it was installed from Google Play and try again.",
+  "errorGeneric": "Something went wrong. Please try again in a moment.",
+  "errorRetry": "Try again",
+  "qaCrashReportTitle": "Send error reports",
+  "qaCrashReportDesc": "If the app crashes, only the error details are sent to the developer. Workout data and email are never sent. Applies from the next launch.",
+  "qaCrashReportSaveFailed": "Could not save the setting",
+  "qaStepDecrease": "Decrease",
+  "qaStepIncrease": "Increase"
 }

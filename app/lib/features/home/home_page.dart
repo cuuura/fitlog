@@ -101,23 +101,31 @@ class HomePage extends ConsumerWidget {
             Card(
               key: const Key('home-resume-card'),
               color: Theme.of(context).colorScheme.primaryContainer,
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                title: Text(l.homeResumeTitle),
-                subtitle: Text(
-                  l.homeSummary(
-                    active.exercises.length,
-                    active.exercises.fold<int>(0, (a, e) => a + e.sets.length),
-                    formatVolume(sessionVolumeKg(active), unit),
-                  ),
-                ),
-                trailing: FilledButton(
-                  key: const Key('home-resume'),
-                  onPressed: () => context.push(Routes.session),
-                  child: Text(l.homeResumeAction),
+              // ListTile의 trailing에 버튼을 두면 큰 글씨·영어에서 타일 폭을 다 먹어 레이아웃이 깨진다.
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(l.homeResumeTitle, style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 4),
+                    Text(
+                      l.homeSummary(
+                        active.exercises.length,
+                        active.exercises.fold<int>(0, (a, e) => a + e.sets.length),
+                        formatVolume(sessionVolumeKg(active), unit),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: FilledButton(
+                        key: const Key('home-resume'),
+                        onPressed: () => context.push(Routes.session),
+                        child: Text(l.homeResumeAction),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             )
