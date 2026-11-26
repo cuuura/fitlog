@@ -5,6 +5,7 @@ import com.fitlog.core.AppConfig
 import com.fitlog.core.AppJson
 import com.fitlog.core.AppUsers
 import com.fitlog.core.DbConfig
+import com.fitlog.core.GoogleIdentity
 import com.fitlog.core.Ids
 import com.fitlog.core.JwtConfig
 import com.fitlog.core.Times
@@ -39,6 +40,11 @@ object TestEnv {
         ),
         jwt = JwtConfig(secret = "test-secret-test-secret-test-secret"),
         googleClientIds = listOf("test-client-id"),
+        // 가짜 Google 검증기: "test:<sub>:<email>" 형식만 유효
+        googleVerifier = { token ->
+            val parts = token.split(":")
+            if (parts.size == 3 && parts[0] == "test") GoogleIdentity(parts[1], parts[2], "Tester") else null
+        },
     )
     val tokens = AccessTokens(config.jwt)
 }

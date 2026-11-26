@@ -16,6 +16,8 @@ data class AppConfig(
     val jwt: JwtConfig,
     /** Google OAuth 클라이언트 ID 목록(Android/Web). ID 토큰 audience 검증에 쓴다 */
     val googleClientIds: List<String>,
+    /** null 이면 auth 패키지가 googleClientIds 로 실제 검증기를 만든다. 테스트에서 가짜 주입용 */
+    val googleVerifier: GoogleIdTokenVerifier? = null,
 ) {
     companion object {
         fun fromEnv(env: Map<String, String> = System.getenv()): AppConfig = AppConfig(
