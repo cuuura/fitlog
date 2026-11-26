@@ -3,6 +3,7 @@ import 'package:drift/native.dart';
 import 'package:dio/dio.dart';
 import 'package:fitlog/core/api/api_client.dart';
 import 'package:fitlog/core/api/dto.dart';
+import 'package:fitlog/core/api/program_dto.dart';
 import 'package:fitlog/core/ids.dart';
 import 'package:fitlog/data/local/app_database.dart';
 import 'package:fitlog/data/local/drift_repositories.dart';
@@ -194,7 +195,7 @@ void main() {
         'secondaryMuscles': ['TRICEPS'],
         'builtIn': true,
         'updatedAt': '2026-01-01T00:00:00Z',
-      }
+      },
     ];
     await exercises.refreshFromServer();
     expect((await outbox()).length, 1, reason: '기본 종목은 outbox에 넣지 않는다');
@@ -241,5 +242,85 @@ void main() {
     expect(await db.select(db.sessions).get(), isEmpty);
   });
 
-  test('스키마 버전 1', () => expect(db.schemaVersion, 1));
+  test('스키마 버전 2', () => expect(db.schemaVersion, 2));
+
+  // ---- v0.2 골격 ----
+
+  PlannedWorkout plan() => const PlannedWorkout(
+    instanceId: 'inst-1',
+    planSeq: 4,
+    dayIndex: 0,
+    dayKey: 'A',
+    dayName: 'Workout A',
+    week: 1,
+    cycle: 1,
+    confirmed: true,
+    exercises: [
+      PlannedExercise(
+        key: 'squat',
+        exerciseId: 'ex-sq',
+        accessory: false,
+        sets: [
+          PlannedSet(plannedSetKey: 'A.0.0', targetReps: 5, targetWeightKg: 100, isAmrap: false, isWarmup: false),
+          PlannedSet(plannedSetKey: 'A.0.1', targetReps: 5, targetWeightKg: 100, isAmrap: true, isWarmup: false),
+        ],
+      ),
+      PlannedExercise(
+        key: 'acc:1',
+        exerciseId: 'ex-curl',
+        accessory: true,
+        sets: [PlannedSet(plannedSetKey: 'A.1.0', targetReps: 10, isAmrap: false, isWarmup: false)],
+      ),
+    ],
+  );
+
+  test('v0.2 계획으로 세션 시작: 종목·세트 미리 채움, payload에 계획 필드', () async {
+    final s = await sessions.startSession(tz: 'Asia/Seoul', plan: plan());
+    expect(s.programInstanceId, 'inst-1');
+    expect(s.planSeq, 4);
+    expect(s.planDayKey, 'A');
+    expect(s.exercises.map((e) => e.liftKey), ['squat', 'acc:1']);
+    expect(s.exercises[1].accessory, isTrue);
+    final sq = s.exercises[0].sets;
+    expect(sq.map((w) => w.plannedSetKey), ['A.0.0', 'A.0.1']);
+    expect(sq[0].weightKg, 100);
+    expect(sq[0].reps, 5);
+    expect(sq[0].isCompleted, isFalse);
+    expect(sq[1].isAmrap, isTrue);
+    expect(s.exercises[1].sets.single.weightKg, isNull);
+
+    final ob = await outbox();
+    expect(ob.map((o) => o.entity), [
+      'workout_session',
+      'session_exercise',
+      'workout_set',
+      'workout_set',
+      'session_exercise',
+      'workout_set',
+    ]);
+    expect(ob.first.payload, contains('"planSeq":4'));
+    expect(ob[1].payload, contains('"liftKey":"squat"'));
+    expect(ob[2].payload, contains('"plannedSetKey":"A.0.0"'));
+    expect(ob[2].payload, contains('"targetWeightKg":100'));
+
+    expect(await sessions.planSeqsUsed('inst-1'), {4});
+    expect(await sessions.lastSessionForDay('inst-1', 'A'), isNull, reason: '진행 중은 제외');
+    await sessions.endSession(s.id);
+    expect((await sessions.lastSessionForDay('inst-1', 'A'))?.id, s.id);
+  });
+
+  test('v0.2 순서 변경과 시각 수정', () async {
+    final s = await sessions.startSession(tz: 'Asia/Seoul', plan: plan());
+    final sq = s.exercises[0];
+    await sessions.reorderSets(sq.id, [sq.sets[1].id, sq.sets[0].id]);
+    await sessions.reorderExercises(s.id, [s.exercises[1].id, sq.id]);
+    final after = (await sessions.watchSession(s.id).first)!;
+    expect(after.exercises.first.liftKey, 'acc:1');
+    expect(after.exercises.last.sets.first.plannedSetKey, 'A.0.1');
+    final start = DateTime.utc(2026, 11, 1, 9);
+    await sessions.updateSessionTimes(s.id, startedAt: start, endedAt: start.add(const Duration(hours: 1)));
+    final edited = (await sessions.watchSession(s.id).first)!;
+    expect(edited.startedAt, start);
+    expect(edited.endedAt, start.add(const Duration(hours: 1)));
+  });
 }

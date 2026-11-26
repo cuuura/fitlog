@@ -6,76 +6,89 @@ import 'app_database.dart';
 
 // ---------- 행 -> DTO ----------
 
-List<Muscle> parseMuscles(String s) =>
-    [for (final n in s.split(',')) if (n.isNotEmpty) Muscle.values.firstWhere((m) => m.name == n)];
+List<Muscle> parseMuscles(String s) => [
+  for (final n in s.split(','))
+    if (n.isNotEmpty) Muscle.values.firstWhere((m) => m.name == n),
+];
 
 Exercise exerciseOf(ExerciseRow r) => Exercise(
-      id: r.id,
-      nameKo: r.nameKo,
-      nameEn: r.nameEn,
-      type: ExerciseType.values.byName(r.type),
-      primaryMuscle: Muscle.values.byName(r.primaryMuscle),
-      secondaryMuscles: parseMuscles(r.secondaryMuscles),
-      builtIn: r.builtIn,
-      updatedAt: r.updatedAt.toUtc(),
-    );
+  id: r.id,
+  nameKo: r.nameKo,
+  nameEn: r.nameEn,
+  type: ExerciseType.values.byName(r.type),
+  primaryMuscle: Muscle.values.byName(r.primaryMuscle),
+  secondaryMuscles: parseMuscles(r.secondaryMuscles),
+  builtIn: r.builtIn,
+  updatedAt: r.updatedAt.toUtc(),
+);
 
 WorkoutSet setOf(WorkoutSetRow r) => WorkoutSet(
-      id: r.id,
-      position: r.position,
-      isWarmup: r.isWarmup,
-      weightKg: r.weightKg,
-      addedWeightKg: r.addedWeightKg,
-      reps: r.reps,
-      durationSec: r.durationSec,
-      distanceM: r.distanceM,
-      bandLevel: r.bandLevel,
-      rpe: r.rpe,
-      rir: r.rir,
-      restSec: r.restSec,
-      note: r.note,
-      completedAt: r.completedAt?.toUtc(),
-    );
+  id: r.id,
+  position: r.position,
+  isWarmup: r.isWarmup,
+  weightKg: r.weightKg,
+  addedWeightKg: r.addedWeightKg,
+  reps: r.reps,
+  durationSec: r.durationSec,
+  distanceM: r.distanceM,
+  bandLevel: r.bandLevel,
+  rpe: r.rpe,
+  rir: r.rir,
+  restSec: r.restSec,
+  note: r.note,
+  completedAt: r.completedAt?.toUtc(),
+  plannedSetKey: r.plannedSetKey,
+  targetReps: r.targetReps,
+  targetWeightKg: r.targetWeightKg,
+  isAmrap: r.isAmrap,
+);
 
-SessionExercise sessionExerciseOf(SessionExerciseRow r, List<WorkoutSet> sets) =>
-    SessionExercise(id: r.id, exerciseId: r.exerciseId, position: r.position, note: r.note, sets: sets);
+SessionExercise sessionExerciseOf(SessionExerciseRow r, List<WorkoutSet> sets) => SessionExercise(
+  id: r.id,
+  exerciseId: r.exerciseId,
+  position: r.position,
+  note: r.note,
+  sets: sets,
+  liftKey: r.liftKey,
+  accessory: r.accessory,
+);
 
 Session sessionOf(SessionRow r, List<SessionExercise> exercises) => Session(
-      id: r.id,
-      startedAt: r.startedAt.toUtc(),
-      endedAt: r.endedAt?.toUtc(),
-      tz: r.tz,
-      note: r.note,
-      source: r.source == null ? null : SessionSource.values.byName(r.source!),
-      exercises: exercises,
-      updatedAt: r.updatedAt.toUtc(),
-    );
+  id: r.id,
+  startedAt: r.startedAt.toUtc(),
+  endedAt: r.endedAt?.toUtc(),
+  tz: r.tz,
+  note: r.note,
+  source: r.source == null ? null : SessionSource.values.byName(r.source!),
+  exercises: exercises,
+  updatedAt: r.updatedAt.toUtc(),
+  programInstanceId: r.programInstanceId,
+  planSeq: r.planSeq,
+  planDayKey: r.planDayKey,
+);
 
 BodyMeasurement measurementOf(BodyMeasurementRow r) => BodyMeasurement(
-      id: r.id,
-      measuredAt: r.measuredAt.toUtc(),
-      weightKg: r.weightKg,
-      source: MeasurementSource.values.byName(r.source),
-    );
+  id: r.id,
+  measuredAt: r.measuredAt.toUtc(),
+  weightKg: r.weightKg,
+  source: MeasurementSource.values.byName(r.source),
+);
 
 // ---------- 행 -> sync payload (중첩 없음) ----------
 
 Map<String, Object?> exercisePayload(ExerciseRow r) => ExerciseInput(
-      id: r.id,
-      nameKo: r.nameKo,
-      nameEn: r.nameEn,
-      type: ExerciseType.values.byName(r.type),
-      primaryMuscle: Muscle.values.byName(r.primaryMuscle),
-      secondaryMuscles: parseMuscles(r.secondaryMuscles),
-    ).toJson();
+  id: r.id,
+  nameKo: r.nameKo,
+  nameEn: r.nameEn,
+  type: ExerciseType.values.byName(r.type),
+  primaryMuscle: Muscle.values.byName(r.primaryMuscle),
+  secondaryMuscles: parseMuscles(r.secondaryMuscles),
+).toJson();
 
-Map<String, Object?> sessionPayload(SessionRow r) => sessionOf(r, const [])
-    .toJson()
-  ..remove('exercises');
+Map<String, Object?> sessionPayload(SessionRow r) => sessionOf(r, const []).toJson()..remove('exercises');
 
-Map<String, Object?> sessionExercisePayload(SessionExerciseRow r) => sessionExerciseOf(r, const [])
-    .toJson()
-  ..remove('sets');
+Map<String, Object?> sessionExercisePayload(SessionExerciseRow r) =>
+    sessionExerciseOf(r, const []).toJson()..remove('sets');
 
 Map<String, Object?> setPayload(WorkoutSetRow r) => setOf(r).toJson();
 
@@ -86,15 +99,18 @@ Map<String, Object?> measurementPayload(BodyMeasurementRow r) => measurementOf(r
 String musclesToText(List<Muscle> m) => m.map((e) => e.name).join(',');
 
 SessionsCompanion sessionCompanion(Session s, {required DateTime updatedAt}) => SessionsCompanion(
-      id: Value(s.id),
-      startedAt: Value(s.startedAt.toUtc()),
-      endedAt: Value(s.endedAt?.toUtc()),
-      tz: Value(s.tz),
-      note: Value(s.note),
-      source: Value(s.source?.name),
-      updatedAt: Value(updatedAt.toUtc()),
-      deletedAt: const Value(null),
-    );
+  id: Value(s.id),
+  startedAt: Value(s.startedAt.toUtc()),
+  endedAt: Value(s.endedAt?.toUtc()),
+  tz: Value(s.tz),
+  note: Value(s.note),
+  source: Value(s.source?.name),
+  updatedAt: Value(updatedAt.toUtc()),
+  deletedAt: const Value(null),
+  programInstanceId: Value(s.programInstanceId),
+  planSeq: Value(s.planSeq),
+  planDayKey: Value(s.planDayKey),
+);
 
 WorkoutSetsCompanion setCompanion(WorkoutSet w, {required String sessionExerciseId, required DateTime updatedAt}) =>
     WorkoutSetsCompanion(
@@ -115,19 +131,23 @@ WorkoutSetsCompanion setCompanion(WorkoutSet w, {required String sessionExercise
       completedAt: Value(w.completedAt?.toUtc()),
       updatedAt: Value(updatedAt.toUtc()),
       deletedAt: const Value(null),
+      plannedSetKey: Value(w.plannedSetKey),
+      targetReps: Value(w.targetReps),
+      targetWeightKg: Value(w.targetWeightKg),
+      isAmrap: Value(w.isAmrap),
     );
 
 ExercisesCompanion exerciseCompanion(Exercise e, {DateTime? updatedAt}) => ExercisesCompanion(
-      id: Value(e.id),
-      nameKo: Value(e.nameKo),
-      nameEn: Value(e.nameEn),
-      type: Value(e.type.name),
-      primaryMuscle: Value(e.primaryMuscle.name),
-      secondaryMuscles: Value(musclesToText(e.secondaryMuscles)),
-      builtIn: Value(e.builtIn),
-      updatedAt: Value((updatedAt ?? e.updatedAt).toUtc()),
-      deletedAt: const Value(null),
-    );
+  id: Value(e.id),
+  nameKo: Value(e.nameKo),
+  nameEn: Value(e.nameEn),
+  type: Value(e.type.name),
+  primaryMuscle: Value(e.primaryMuscle.name),
+  secondaryMuscles: Value(musclesToText(e.secondaryMuscles)),
+  builtIn: Value(e.builtIn),
+  updatedAt: Value((updatedAt ?? e.updatedAt).toUtc()),
+  deletedAt: const Value(null),
+);
 
 // ---------- 서버 Change를 로컬에 덮어쓰기 ----------
 
@@ -153,29 +173,35 @@ extension ApplyServerChange on AppDatabase {
         case SyncEntity.session_exercise:
           final sessionId = (c.parentId ?? p['sessionId']) as String;
           final se = SessionExercise.fromJson(p);
-          await into(sessionExercises).insertOnConflictUpdate(SessionExercisesCompanion(
-            id: Value(se.id),
-            sessionId: Value(sessionId),
-            exerciseId: Value(se.exerciseId),
-            position: Value(se.position),
-            note: Value(se.note),
-            updatedAt: Value(at),
-            deletedAt: const Value(null),
-          ));
+          await into(sessionExercises).insertOnConflictUpdate(
+            SessionExercisesCompanion(
+              id: Value(se.id),
+              sessionId: Value(sessionId),
+              exerciseId: Value(se.exerciseId),
+              position: Value(se.position),
+              note: Value(se.note),
+              updatedAt: Value(at),
+              deletedAt: const Value(null),
+              liftKey: Value(se.liftKey),
+              accessory: Value(se.accessory),
+            ),
+          );
         case SyncEntity.workout_set:
           final seId = (c.parentId ?? p['sessionExerciseId']) as String;
           final w = WorkoutSet.fromJson(p);
           await into(workoutSets).insertOnConflictUpdate(setCompanion(w, sessionExerciseId: seId, updatedAt: at));
         case SyncEntity.body_measurement:
           final m = BodyMeasurement.fromJson(p);
-          await into(bodyMeasurements).insertOnConflictUpdate(BodyMeasurementsCompanion(
-            id: Value(m.id),
-            measuredAt: Value(m.measuredAt),
-            weightKg: Value(m.weightKg),
-            source: Value(m.source.name),
-            updatedAt: Value(at),
-            deletedAt: const Value(null),
-          ));
+          await into(bodyMeasurements).insertOnConflictUpdate(
+            BodyMeasurementsCompanion(
+              id: Value(m.id),
+              measuredAt: Value(m.measuredAt),
+              weightKg: Value(m.weightKg),
+              source: Value(m.source.name),
+              updatedAt: Value(at),
+              deletedAt: const Value(null),
+            ),
+          );
       }
       return true;
     } on TypeError {
@@ -192,23 +218,32 @@ extension ApplyServerChange on AppDatabase {
     final del = Value<DateTime?>(at);
     switch (entity) {
       case SyncEntity.exercise:
-        await (update(exercises)..where((t) => t.id.equals(id))).write(ExercisesCompanion(deletedAt: del, updatedAt: Value(at)));
+        await (update(
+          exercises,
+        )..where((t) => t.id.equals(id))).write(ExercisesCompanion(deletedAt: del, updatedAt: Value(at)));
       case SyncEntity.workout_session:
         final ses = await (select(sessionExercises)..where((t) => t.sessionId.equals(id))).get();
         for (final se in ses) {
           await _applyDelete(SyncEntity.session_exercise, se.id, at);
         }
-        await (update(sessions)..where((t) => t.id.equals(id))).write(SessionsCompanion(deletedAt: del, updatedAt: Value(at)));
+        await (update(
+          sessions,
+        )..where((t) => t.id.equals(id))).write(SessionsCompanion(deletedAt: del, updatedAt: Value(at)));
       case SyncEntity.session_exercise:
-        await (update(workoutSets)..where((t) => t.sessionExerciseId.equals(id)))
-            .write(WorkoutSetsCompanion(deletedAt: del, updatedAt: Value(at)));
-        await (update(sessionExercises)..where((t) => t.id.equals(id)))
-            .write(SessionExercisesCompanion(deletedAt: del, updatedAt: Value(at)));
+        await (update(workoutSets)..where((t) => t.sessionExerciseId.equals(id))).write(
+          WorkoutSetsCompanion(deletedAt: del, updatedAt: Value(at)),
+        );
+        await (update(
+          sessionExercises,
+        )..where((t) => t.id.equals(id))).write(SessionExercisesCompanion(deletedAt: del, updatedAt: Value(at)));
       case SyncEntity.workout_set:
-        await (update(workoutSets)..where((t) => t.id.equals(id))).write(WorkoutSetsCompanion(deletedAt: del, updatedAt: Value(at)));
+        await (update(
+          workoutSets,
+        )..where((t) => t.id.equals(id))).write(WorkoutSetsCompanion(deletedAt: del, updatedAt: Value(at)));
       case SyncEntity.body_measurement:
-        await (update(bodyMeasurements)..where((t) => t.id.equals(id)))
-            .write(BodyMeasurementsCompanion(deletedAt: del, updatedAt: Value(at)));
+        await (update(
+          bodyMeasurements,
+        )..where((t) => t.id.equals(id))).write(BodyMeasurementsCompanion(deletedAt: del, updatedAt: Value(at)));
     }
   }
 }

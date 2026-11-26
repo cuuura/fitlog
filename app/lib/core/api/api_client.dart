@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 
 import 'dto.dart';
+import 'program_dto.dart';
 
 /// 계약의 에러 형식 `{ "error": { code, message, field } }`.
 class ApiException implements Exception {
@@ -11,7 +12,10 @@ class ApiException implements Exception {
   final String code;
   final String message;
   final String? field;
-  const ApiException({this.statusCode, required this.code, required this.message, this.field});
+
+  /// v0.2 프로그램 검증 실패: JSON 포인터 경로별 메시지.
+  final List<({String path, String message})> details;
+  const ApiException({this.statusCode, required this.code, required this.message, this.field, this.details = const []});
 
   bool get isNetwork => code == 'NETWORK';
   bool get isUnauthenticated => statusCode == 401;
@@ -29,6 +33,10 @@ class ApiException implements Exception {
         code: err['code'] as String? ?? 'UNKNOWN',
         message: err['message'] as String? ?? '',
         field: err['field'] as String?,
+        details: [
+          for (final d in (err['details'] as List? ?? const []))
+            (path: (d as Map)['path'] as String? ?? '', message: d['message'] as String? ?? ''),
+        ],
       );
     }
     return ApiException(statusCode: res.statusCode, code: 'HTTP_${res.statusCode}', message: res.statusMessage ?? '');
@@ -133,4 +141,59 @@ class ApiClient {
 
   Future<PullResult> syncPull(int since) =>
       _call(() async => PullResult.fromJson(_map(await dio.get('/v1/sync/pull', queryParameters: {'since': since}))));
+
+  // ---------- v0.2: 프로그램 ----------
+
+  Future<List<ProgramSummary>> getPrograms({ProgramListSource? source}) => _call(() async => [
+        for (final j in _list(await dio.get('/v1/programs', queryParameters: {'source': ?source?.name})))
+          ProgramSummary.fromJson(j)
+      ]);
+  Future<Program> getProgram(String id) => _call(() async => Program.fromJson(_map(await dio.get('/v1/programs/$id'))));
+  Future<Program> postProgram(String id, Map<String, Object?> definition) => _call(
+      () async => Program.fromJson(_map(await dio.post('/v1/programs', data: {'id': id, 'definition': definition}))));
+
+  /// 저장 없이 검증. 실패면 ApiException(VALIDATION_FAILED, details).
+  Future<Program> validateProgram(Map<String, Object?> definition) =>
+      _call(() async => Program.fromJson(_map(await dio.post('/v1/programs/validate', data: definition))));
+  Future<void> deleteProgram(String id) => _call(() async => dio.delete('/v1/programs/$id'));
+  Future<List<SuggestItem>> suggest(String programId) => _call(() async =>
+      [for (final j in _list(await dio.get('/v1/programs/$programId/suggest'))) SuggestItem.fromJson(j)]);
+
+  // ---------- v0.2: 인스턴스 ----------
+
+  Future<List<Instance>> getInstances({InstanceStatus? status}) => _call(() async => [
+        for (final j in _list(await dio.get('/v1/program-instances', queryParameters: {'status': ?status?.name})))
+          Instance.fromJson(j)
+      ]);
+  Future<Instance> getInstance(String id) =>
+      _call(() async => Instance.fromJson(_map(await dio.get('/v1/program-instances/$id'))));
+  Future<Instance> startInstance(StartInstance s) =>
+      _call(() async => Instance.fromJson(_map(await dio.post('/v1/program-instances', data: s.toJson()))));
+  Future<Instance> patchInstance(String id, InstancePatch p) =>
+      _call(() async => Instance.fromJson(_map(await dio.patch('/v1/program-instances/$id', data: p.toJson()))));
+  Future<void> deleteInstance(String id) => _call(() async => dio.delete('/v1/program-instances/$id'));
+  Future<List<PlannedWorkout>> getPlan(String instanceId, {int count = 3}) => _call(() async => [
+        for (final j in _list(await dio.get('/v1/program-instances/$instanceId/plan', queryParameters: {'count': count})))
+          PlannedWorkout.fromJson(j)
+      ]);
+  Future<Instance> skip(String instanceId, int planSeq) => _call(() async =>
+      Instance.fromJson(_map(await dio.post('/v1/program-instances/$instanceId/skip', data: {'planSeq': planSeq}))));
+  Future<List<Accessory>> getAccessories(String instanceId) => _call(() async => [
+        for (final j in _list(await dio.get('/v1/program-instances/$instanceId/accessories'))) Accessory.fromJson(j)
+      ]);
+  Future<List<Accessory>> putAccessories(String instanceId, List<Accessory> list) => _call(() async => [
+        for (final j in _list(await dio.put('/v1/program-instances/$instanceId/accessories',
+            data: [for (final a in list) a.toJson()])))
+          Accessory.fromJson(j)
+      ]);
+
+  // ---------- v0.2: 기록 ----------
+
+  Future<ExerciseRecords> getRecords(String exerciseId) =>
+      _call(() async => ExerciseRecords.fromJson(_map(await dio.get('/v1/exercises/$exerciseId/records'))));
+  Future<List<OneRmMeasurement>> getOneRms(String exerciseId) => _call(() async =>
+      [for (final j in _list(await dio.get('/v1/exercises/$exerciseId/one-rm'))) OneRmMeasurement.fromJson(j)]);
+  Future<OneRmMeasurement> postOneRm(String exerciseId, OneRmMeasurement m) => _call(() async =>
+      OneRmMeasurement.fromJson(_map(await dio.post('/v1/exercises/$exerciseId/one-rm', data: m.toJson()))));
+  Future<void> deleteOneRm(String id) => _call(() async => dio.delete('/v1/one-rm/$id'));
 }

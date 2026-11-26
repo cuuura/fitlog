@@ -3,10 +3,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/repositories.dart';
+import '../core/api/api_providers.dart';
 import 'local/local_providers.dart';
+import 'plan_cache/plan_cache_providers.dart';
+import 'remote/remote_repositories.dart';
 
 final exerciseRepositoryProvider = Provider<ExerciseRepository>((ref) => ref.watch(driftExerciseRepositoryProvider));
 final sessionRepositoryProvider = Provider<SessionRepository>((ref) => ref.watch(driftSessionRepositoryProvider));
 final bodyRepositoryProvider = Provider<BodyRepository>((ref) => ref.watch(driftBodyRepositoryProvider));
 final syncServiceProvider = Provider<SyncService>((ref) => ref.watch(syncEngineProvider));
 final localDataStoreProvider = Provider<LocalDataStore>((ref) => ref.watch(driftLocalDataStoreProvider));
+
+// v0.2
+final programRepositoryProvider = Provider<ProgramRepository>(
+  (ref) => RemoteProgramRepository(ref.watch(apiClientProvider)),
+);
+final recordsRepositoryProvider = Provider<RecordsRepository>(
+  (ref) => RemoteRecordsRepository(ref.watch(apiClientProvider)),
+);
+final planCacheProvider = Provider<PlanCache>((ref) => ref.watch(planCacheImplProvider));

@@ -17,20 +17,40 @@ final appDatabaseProvider = Provider<AppDatabase>((ref) {
 });
 
 final syncEngineProvider = Provider<SyncEngine>((ref) {
-  final engine = SyncEngine(db: ref.watch(appDatabaseProvider), api: ref.watch(apiClientProvider), clock: ref.watch(clockProvider));
+  final engine = SyncEngine(
+    db: ref.watch(appDatabaseProvider),
+    api: ref.watch(apiClientProvider),
+    clock: ref.watch(clockProvider),
+  );
   ref.onDispose(engine.dispose);
   return engine;
 });
 
-final driftExerciseRepositoryProvider = Provider<ExerciseRepository>((ref) => DriftExerciseRepository(
-    ref.watch(appDatabaseProvider), ref.watch(syncEngineProvider), ref.watch(apiClientProvider),
-    clock: ref.watch(clockProvider)));
+final driftExerciseRepositoryProvider = Provider<ExerciseRepository>(
+  (ref) => DriftExerciseRepository(
+    ref.watch(appDatabaseProvider),
+    ref.watch(syncEngineProvider),
+    ref.watch(apiClientProvider),
+    clock: ref.watch(clockProvider),
+  ),
+);
 
-final driftSessionRepositoryProvider = Provider<SessionRepository>((ref) =>
-    DriftSessionRepository(ref.watch(appDatabaseProvider), ref.watch(syncEngineProvider), clock: ref.watch(clockProvider)));
+final driftSessionRepositoryProvider = Provider<SessionRepository>(
+  (ref) => DriftSessionRepository(
+    ref.watch(appDatabaseProvider),
+    ref.watch(syncEngineProvider),
+    clock: ref.watch(clockProvider),
+  ),
+);
 
-final driftBodyRepositoryProvider = Provider<BodyRepository>((ref) =>
-    DriftBodyRepository(ref.watch(appDatabaseProvider), ref.watch(syncEngineProvider), clock: ref.watch(clockProvider)));
+final driftBodyRepositoryProvider = Provider<BodyRepository>(
+  (ref) => DriftBodyRepository(
+    ref.watch(appDatabaseProvider),
+    ref.watch(syncEngineProvider),
+    clock: ref.watch(clockProvider),
+  ),
+);
 
 final driftLocalDataStoreProvider = Provider<LocalDataStore>(
-    (ref) => DriftLocalDataStore(ref.watch(appDatabaseProvider), engine: ref.watch(syncEngineProvider)));
+  (ref) => DriftLocalDataStore(ref.watch(appDatabaseProvider), engine: ref.watch(syncEngineProvider)),
+);

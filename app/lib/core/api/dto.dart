@@ -32,6 +32,9 @@ enum ConsentKind { TERMS, PRIVACY, HEALTH_DATA }
 
 enum WeightUnit { KG, LB }
 
+/// 1RM 추정식 (v0.2 engine.md §9).
+enum E1rmFormula { EPLEY, BRZYCKI, LOMBARDI }
+
 enum Sex { MALE, FEMALE, OTHER }
 
 enum UserRole { MEMBER, TRAINER }
@@ -90,6 +93,7 @@ class Settings {
   final double? heightCm;
   final Sex? sex;
   final int? birthYear;
+  final E1rmFormula e1rmFormula;
 
   /// 서버 기본값(V1__init.sql user_settings)과 같다.
   const Settings({
@@ -100,6 +104,7 @@ class Settings {
     this.heightCm,
     this.sex,
     this.birthYear,
+    this.e1rmFormula = E1rmFormula.EPLEY,
   });
 
   factory Settings.fromJson(Map<String, Object?> j) => Settings(
@@ -110,8 +115,11 @@ class Settings {
         heightCm: _num(j['heightCm']),
         sex: j['sex'] == null ? null : _enumByName(Sex.values, j['sex']),
         birthYear: j['birthYear'] as int?,
+        e1rmFormula: j['e1rmFormula'] == null ? E1rmFormula.EPLEY : _enumByName(E1rmFormula.values, j['e1rmFormula']),
       );
-  Map<String, Object?> toJson() => _compact({
+
+  /// v0.2: PUT은 JSON merge-patch. heightCm·sex·birthYear는 null을 명시해서 보내야 서버에서 비워진다.
+  Map<String, Object?> toJson() => {
         'weightUnit': weightUnit.name,
         'defaultRestSec': defaultRestSec,
         'keepScreenOn': keepScreenOn,
@@ -119,7 +127,8 @@ class Settings {
         'heightCm': heightCm,
         'sex': sex?.name,
         'birthYear': birthYear,
-      });
+        'e1rmFormula': e1rmFormula.name,
+      };
 
   Settings copyWith({
     WeightUnit? weightUnit,
@@ -129,6 +138,7 @@ class Settings {
     double? Function()? heightCm,
     Sex? Function()? sex,
     int? Function()? birthYear,
+    E1rmFormula? e1rmFormula,
   }) =>
       Settings(
         weightUnit: weightUnit ?? this.weightUnit,
@@ -138,6 +148,7 @@ class Settings {
         heightCm: heightCm != null ? heightCm() : this.heightCm,
         sex: sex != null ? sex() : this.sex,
         birthYear: birthYear != null ? birthYear() : this.birthYear,
+        e1rmFormula: e1rmFormula ?? this.e1rmFormula,
       );
 }
 
@@ -235,6 +246,12 @@ class WorkoutSet {
   final String? note;
   final DateTime? completedAt;
 
+  // v0.2 계획 연결(프로그램 세션일 때만). 계획 값은 기록 값과 따로 보관한다.
+  final String? plannedSetKey;
+  final int? targetReps;
+  final double? targetWeightKg;
+  final bool isAmrap;
+
   const WorkoutSet({
     required this.id,
     required this.position,
@@ -250,7 +267,13 @@ class WorkoutSet {
     this.restSec,
     this.note,
     this.completedAt,
+    this.plannedSetKey,
+    this.targetReps,
+    this.targetWeightKg,
+    this.isAmrap = false,
   });
+
+  bool get isPlanned => plannedSetKey != null;
 
   bool get isCompleted => completedAt != null;
 
@@ -269,6 +292,10 @@ class WorkoutSet {
         restSec: j['restSec'] as int?,
         note: j['note'] as String?,
         completedAt: _dt(j['completedAt']),
+        plannedSetKey: j['plannedSetKey'] as String?,
+        targetReps: j['targetReps'] as int?,
+        targetWeightKg: _num(j['targetWeightKg']),
+        isAmrap: j['isAmrap'] as bool? ?? false,
       );
 
   Map<String, Object?> toJson() => _compact({
@@ -286,6 +313,10 @@ class WorkoutSet {
         'restSec': restSec,
         'note': note,
         'completedAt': _iso(completedAt),
+        'plannedSetKey': plannedSetKey,
+        'targetReps': targetReps,
+        'targetWeightKg': targetWeightKg,
+        'isAmrap': isAmrap,
       });
 
   /// nullable 필드는 `() => null`처럼 함수로 넘겨야 null로 바꿀 수 있다.
@@ -319,6 +350,10 @@ class WorkoutSet {
         restSec: restSec != null ? restSec() : this.restSec,
         note: note != null ? note() : this.note,
         completedAt: completedAt != null ? completedAt() : this.completedAt,
+        plannedSetKey: plannedSetKey,
+        targetReps: targetReps,
+        targetWeightKg: targetWeightKg,
+        isAmrap: isAmrap,
       );
 }
 
@@ -328,7 +363,19 @@ class SessionExercise {
   final int position;
   final String? note;
   final List<WorkoutSet> sets;
-  const SessionExercise({required this.id, required this.exerciseId, required this.position, this.note, this.sets = const []});
+
+  /// v0.2: 프로그램 종목이면 lifts 키(인스턴스 보조운동은 `acc:<id>`), 보조운동이면 accessory=true.
+  final String? liftKey;
+  final bool accessory;
+  const SessionExercise({
+    required this.id,
+    required this.exerciseId,
+    required this.position,
+    this.note,
+    this.sets = const [],
+    this.liftKey,
+    this.accessory = false,
+  });
 
   factory SessionExercise.fromJson(Map<String, Object?> j) => SessionExercise(
         id: j['id'] as String,
@@ -336,12 +383,16 @@ class SessionExercise {
         position: j['position'] as int,
         note: j['note'] as String?,
         sets: [for (final s in (j['sets'] as List? ?? const [])) WorkoutSet.fromJson((s as Map).cast())],
+        liftKey: j['liftKey'] as String?,
+        accessory: j['accessory'] as bool? ?? false,
       );
   Map<String, Object?> toJson() => _compact({
         'id': id,
         'exerciseId': exerciseId,
         'position': position,
         'note': note,
+        'liftKey': liftKey,
+        'accessory': accessory,
         'sets': [for (final s in sets) s.toJson()],
       });
 }
@@ -355,6 +406,11 @@ class Session {
   final SessionSource? source;
   final List<SessionExercise> exercises;
   final DateTime? updatedAt;
+
+  /// v0.2: 프로그램 회차로 시작한 세션이면 채워진다. 자유 세션이면 null.
+  final String? programInstanceId;
+  final int? planSeq;
+  final String? planDayKey;
   const Session({
     required this.id,
     required this.startedAt,
@@ -364,7 +420,12 @@ class Session {
     this.source,
     this.exercises = const [],
     this.updatedAt,
+    this.programInstanceId,
+    this.planSeq,
+    this.planDayKey,
   });
+
+  bool get isProgram => programInstanceId != null;
 
   bool get isActive => endedAt == null;
 
@@ -377,6 +438,9 @@ class Session {
         source: j['source'] == null ? null : _enumByName(SessionSource.values, j['source']),
         exercises: [for (final e in (j['exercises'] as List? ?? const [])) SessionExercise.fromJson((e as Map).cast())],
         updatedAt: _dt(j['updatedAt']),
+        programInstanceId: j['programInstanceId'] as String?,
+        planSeq: j['planSeq'] as int?,
+        planDayKey: j['planDayKey'] as String?,
       );
 
   /// source, updatedAt은 readOnly라 보내지 않는다.
@@ -386,6 +450,9 @@ class Session {
         'endedAt': _iso(endedAt),
         'tz': tz,
         'note': note,
+        'programInstanceId': programInstanceId,
+        'planSeq': planSeq,
+        'planDayKey': planDayKey,
         'exercises': [for (final e in exercises) e.toJson()],
       });
 }

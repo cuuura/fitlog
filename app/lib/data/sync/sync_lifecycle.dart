@@ -11,8 +11,9 @@ import '../../core/auth/auth_controller.dart';
 import '../providers.dart';
 
 /// 네트워크 상태 스트림. 테스트는 override한다.
-final connectivityStreamProvider =
-    Provider<Stream<List<ConnectivityResult>>>((ref) => Connectivity().onConnectivityChanged);
+final connectivityStreamProvider = Provider<Stream<List<ConnectivityResult>>>(
+  (ref) => Connectivity().onConnectivityChanged,
+);
 
 class SyncLifecycle extends ConsumerStatefulWidget {
   final Widget child;

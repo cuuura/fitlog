@@ -42,12 +42,12 @@ class SyncEngine implements SyncService {
 
   /// push 순서: UPSERT는 부모 먼저, DELETE는 자식 먼저.
   static int entityRank(SyncEntity e) => switch (e) {
-        SyncEntity.exercise => 0,
-        SyncEntity.body_measurement => 0,
-        SyncEntity.workout_session => 1,
-        SyncEntity.session_exercise => 2,
-        SyncEntity.workout_set => 3,
-      };
+    SyncEntity.exercise => 0,
+    SyncEntity.body_measurement => 0,
+    SyncEntity.workout_session => 1,
+    SyncEntity.session_exercise => 2,
+    SyncEntity.workout_set => 3,
+  };
 
   // ---------- 상태 ----------
 
@@ -168,21 +168,23 @@ class SyncEngine implements SyncService {
   }
 
   Future<String?> _deadLetter() async {
-    final row = await (db.select(db.outbox)
-          ..where((t) => t.attempts.isBiggerOrEqualValue(maxAttempts))
-          ..limit(1))
-        .getSingleOrNull();
+    final row =
+        await (db.select(db.outbox)
+              ..where((t) => t.attempts.isBiggerOrEqualValue(maxAttempts))
+              ..limit(1))
+            .getSingleOrNull();
     return row == null ? null : '${row.entity} ${row.entityId}: ${row.lastError ?? 'rejected'}';
   }
 
   // ---------- push ----------
 
   Future<List<OutboxRow>> _nextBatch(Set<int> seen) async {
-    final rows = await (db.select(db.outbox)
-          ..where((t) => t.attempts.isSmallerThanValue(maxAttempts) & t.id.isNotIn(seen))
-          ..orderBy([(t) => OrderingTerm.asc(t.id)])
-          ..limit(batchSize))
-        .get();
+    final rows =
+        await (db.select(db.outbox)
+              ..where((t) => t.attempts.isSmallerThanValue(maxAttempts) & t.id.isNotIn(seen))
+              ..orderBy([(t) => OrderingTerm.asc(t.id)])
+              ..limit(batchSize))
+            .get();
     int rank(OutboxRow r) => entityRank(SyncEntity.values.byName(r.entity));
     rows.sort((a, b) {
       final au = a.op == ChangeOp.UPSERT.name, bu = b.op == ChangeOp.UPSERT.name;
@@ -194,13 +196,13 @@ class SyncEngine implements SyncService {
   }
 
   Change _toChange(OutboxRow r) => Change(
-        entity: SyncEntity.values.byName(r.entity),
-        id: r.entityId,
-        op: ChangeOp.values.byName(r.op),
-        parentId: r.parentId,
-        payload: r.payload == null ? null : (jsonDecode(r.payload!) as Map).cast<String, Object?>(),
-        clientUpdatedAt: r.clientUpdatedAt.toUtc(),
-      );
+    entity: SyncEntity.values.byName(r.entity),
+    id: r.entityId,
+    op: ChangeOp.values.byName(r.op),
+    parentId: r.parentId,
+    payload: r.payload == null ? null : (jsonDecode(r.payload!) as Map).cast<String, Object?>(),
+    clientUpdatedAt: r.clientUpdatedAt.toUtc(),
+  );
 
   Future<void> _push() async {
     final seen = <int>{};
@@ -232,9 +234,8 @@ class SyncEngine implements SyncService {
   }
 
   /// 보낸 뒤에 같은 행이 또 바뀌었으면(clientUpdatedAt이 달라졌으면) 남긴다.
-  Future<void> _deleteIfUnchanged(OutboxRow sent) => (db.delete(db.outbox)
-        ..where((t) => t.id.equals(sent.id) & t.clientUpdatedAt.equals(sent.clientUpdatedAt)))
-      .go();
+  Future<void> _deleteIfUnchanged(OutboxRow sent) =>
+      (db.delete(db.outbox)..where((t) => t.id.equals(sent.id) & t.clientUpdatedAt.equals(sent.clientUpdatedAt))).go();
 
   Future<void> _onConflict(OutboxRow sent, ChangeResult res) async {
     final cur = await (db.select(db.outbox)..where((t) => t.id.equals(sent.id))).getSingleOrNull();

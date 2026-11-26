@@ -40,6 +40,11 @@ class Sessions extends Table {
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
 
+  // v2: 프로그램 회차 연결
+  TextColumn get programInstanceId => text().nullable()();
+  IntColumn get planSeq => integer().nullable()();
+  TextColumn get planDayKey => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -55,6 +60,10 @@ class SessionExercises extends Table {
   TextColumn get note => text().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  // v2
+  TextColumn get liftKey => text().nullable()();
+  BoolColumn get accessory => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -80,6 +89,12 @@ class WorkoutSets extends Table {
   DateTimeColumn get completedAt => dateTime().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
+
+  // v2: 계획 값(기록 값과 별도)
+  TextColumn get plannedSetKey => text().nullable()();
+  IntColumn get targetReps => integer().nullable()();
+  RealColumn get targetWeightKg => real().nullable()();
+  BoolColumn get isAmrap => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -135,15 +150,28 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (m) async {
-          await m.createAll();
-          await into(syncState).insert(SyncStateCompanion.insert(id: const Value(1)));
-        },
-      );
+    onCreate: (m) async {
+      await m.createAll();
+      await into(syncState).insert(SyncStateCompanion.insert(id: const Value(1)));
+    },
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(sessions, sessions.programInstanceId);
+        await m.addColumn(sessions, sessions.planSeq);
+        await m.addColumn(sessions, sessions.planDayKey);
+        await m.addColumn(sessionExercises, sessionExercises.liftKey);
+        await m.addColumn(sessionExercises, sessionExercises.accessory);
+        await m.addColumn(workoutSets, workoutSets.plannedSetKey);
+        await m.addColumn(workoutSets, workoutSets.targetReps);
+        await m.addColumn(workoutSets, workoutSets.targetWeightKg);
+        await m.addColumn(workoutSets, workoutSets.isAmrap);
+      }
+    },
+  );
 
   // ---------- sync_state ----------
 
@@ -167,26 +195,31 @@ class AppDatabase extends _$AppDatabase {
     required DateTime clientUpdatedAt,
   }) async {
     final json = op == ChangeOp.DELETE || payload == null ? null : jsonEncode(payload);
-    final existing = await (select(outbox)..where((t) => t.entity.equals(entity.name) & t.entityId.equals(entityId)))
-        .getSingleOrNull();
+    final existing = await (select(
+      outbox,
+    )..where((t) => t.entity.equals(entity.name) & t.entityId.equals(entityId))).getSingleOrNull();
     if (existing == null) {
-      await into(outbox).insert(OutboxCompanion.insert(
-        entity: entity.name,
-        entityId: entityId,
-        op: op.name,
-        parentId: Value(parentId),
-        payload: Value(json),
-        clientUpdatedAt: clientUpdatedAt,
-      ));
+      await into(outbox).insert(
+        OutboxCompanion.insert(
+          entity: entity.name,
+          entityId: entityId,
+          op: op.name,
+          parentId: Value(parentId),
+          payload: Value(json),
+          clientUpdatedAt: clientUpdatedAt,
+        ),
+      );
     } else {
-      await (update(outbox)..where((t) => t.id.equals(existing.id))).write(OutboxCompanion(
-        op: Value(op.name),
-        parentId: Value(parentId),
-        payload: Value(json),
-        clientUpdatedAt: Value(clientUpdatedAt),
-        attempts: const Value(0),
-        lastError: const Value(null),
-      ));
+      await (update(outbox)..where((t) => t.id.equals(existing.id))).write(
+        OutboxCompanion(
+          op: Value(op.name),
+          parentId: Value(parentId),
+          payload: Value(json),
+          clientUpdatedAt: Value(clientUpdatedAt),
+          attempts: const Value(0),
+          lastError: const Value(null),
+        ),
+      );
     }
   }
 
@@ -202,9 +235,9 @@ class AppDatabase extends _$AppDatabase {
 
   /// 모든 테이블을 비운다(로그아웃·계정 삭제). lastServerSeq도 0으로.
   Future<void> wipe() => transaction(() async {
-        for (final t in allTables) {
-          await delete(t).go();
-        }
-        await into(syncState).insert(SyncStateCompanion.insert(id: const Value(1)));
-      });
+    for (final t in allTables) {
+      await delete(t).go();
+    }
+    await into(syncState).insert(SyncStateCompanion.insert(id: const Value(1)));
+  });
 }

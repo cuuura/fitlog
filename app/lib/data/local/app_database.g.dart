@@ -3,8 +3,7 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
-class $ExercisesTable extends Exercises
-    with TableInfo<$ExercisesTable, ExerciseRow> {
+class $ExercisesTable extends Exercises with TableInfo<$ExercisesTable, ExerciseRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -45,9 +44,7 @@ class $ExercisesTable extends Exercises
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _primaryMuscleMeta = const VerificationMeta(
-    'primaryMuscle',
-  );
+  static const VerificationMeta _primaryMuscleMeta = const VerificationMeta('primaryMuscle');
   @override
   late final GeneratedColumn<String> primaryMuscle = GeneratedColumn<String>(
     'primary_muscle',
@@ -56,9 +53,7 @@ class $ExercisesTable extends Exercises
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _secondaryMusclesMeta = const VerificationMeta(
-    'secondaryMuscles',
-  );
+  static const VerificationMeta _secondaryMusclesMeta = const VerificationMeta('secondaryMuscles');
   @override
   late final GeneratedColumn<String> secondaryMuscles = GeneratedColumn<String>(
     'secondary_muscles',
@@ -68,9 +63,7 @@ class $ExercisesTable extends Exercises
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
-  static const VerificationMeta _builtInMeta = const VerificationMeta(
-    'builtIn',
-  );
+  static const VerificationMeta _builtInMeta = const VerificationMeta('builtIn');
   @override
   late final GeneratedColumn<bool> builtIn = GeneratedColumn<bool>(
     'built_in',
@@ -78,14 +71,10 @@ class $ExercisesTable extends Exercises
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("built_in" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("built_in" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -94,9 +83,7 @@ class $ExercisesTable extends Exercises
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta('deletedAt');
   @override
   late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
     'deleted_at',
@@ -123,10 +110,7 @@ class $ExercisesTable extends Exercises
   String get actualTableName => $name;
   static const String $name = 'exercises';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ExerciseRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ExerciseRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -135,34 +119,22 @@ class $ExercisesTable extends Exercises
       context.missing(_idMeta);
     }
     if (data.containsKey('name_ko')) {
-      context.handle(
-        _nameKoMeta,
-        nameKo.isAcceptableOrUnknown(data['name_ko']!, _nameKoMeta),
-      );
+      context.handle(_nameKoMeta, nameKo.isAcceptableOrUnknown(data['name_ko']!, _nameKoMeta));
     } else if (isInserting) {
       context.missing(_nameKoMeta);
     }
     if (data.containsKey('name_en')) {
-      context.handle(
-        _nameEnMeta,
-        nameEn.isAcceptableOrUnknown(data['name_en']!, _nameEnMeta),
-      );
+      context.handle(_nameEnMeta, nameEn.isAcceptableOrUnknown(data['name_en']!, _nameEnMeta));
     }
     if (data.containsKey('type')) {
-      context.handle(
-        _typeMeta,
-        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
-      );
+      context.handle(_typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
     if (data.containsKey('primary_muscle')) {
       context.handle(
         _primaryMuscleMeta,
-        primaryMuscle.isAcceptableOrUnknown(
-          data['primary_muscle']!,
-          _primaryMuscleMeta,
-        ),
+        primaryMuscle.isAcceptableOrUnknown(data['primary_muscle']!, _primaryMuscleMeta),
       );
     } else if (isInserting) {
       context.missing(_primaryMuscleMeta);
@@ -170,31 +142,19 @@ class $ExercisesTable extends Exercises
     if (data.containsKey('secondary_muscles')) {
       context.handle(
         _secondaryMusclesMeta,
-        secondaryMuscles.isAcceptableOrUnknown(
-          data['secondary_muscles']!,
-          _secondaryMusclesMeta,
-        ),
+        secondaryMuscles.isAcceptableOrUnknown(data['secondary_muscles']!, _secondaryMusclesMeta),
       );
     }
     if (data.containsKey('built_in')) {
-      context.handle(
-        _builtInMeta,
-        builtIn.isAcceptableOrUnknown(data['built_in']!, _builtInMeta),
-      );
+      context.handle(_builtInMeta, builtIn.isAcceptableOrUnknown(data['built_in']!, _builtInMeta));
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
     if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
-      );
+      context.handle(_deletedAtMeta, deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
     }
     return context;
   }
@@ -205,42 +165,18 @@ class $ExercisesTable extends Exercises
   ExerciseRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ExerciseRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      nameKo: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name_ko'],
-      )!,
-      nameEn: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name_en'],
-      ),
-      type: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}type'],
-      )!,
-      primaryMuscle: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}primary_muscle'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      nameKo: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}name_ko'])!,
+      nameEn: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}name_en']),
+      type: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      primaryMuscle: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}primary_muscle'])!,
       secondaryMuscles: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}secondary_muscles'],
       )!,
-      builtIn: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}built_in'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
+      builtIn: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}built_in'])!,
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      deletedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
     );
   }
 
@@ -296,24 +232,17 @@ class ExerciseRow extends DataClass implements Insertable<ExerciseRow> {
     return ExercisesCompanion(
       id: Value(id),
       nameKo: Value(nameKo),
-      nameEn: nameEn == null && nullToAbsent
-          ? const Value.absent()
-          : Value(nameEn),
+      nameEn: nameEn == null && nullToAbsent ? const Value.absent() : Value(nameEn),
       type: Value(type),
       primaryMuscle: Value(primaryMuscle),
       secondaryMuscles: Value(secondaryMuscles),
       builtIn: Value(builtIn),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent ? const Value.absent() : Value(deletedAt),
     );
   }
 
-  factory ExerciseRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ExerciseRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ExerciseRow(
       id: serializer.fromJson<String>(json['id']),
@@ -370,12 +299,8 @@ class ExerciseRow extends DataClass implements Insertable<ExerciseRow> {
       nameKo: data.nameKo.present ? data.nameKo.value : this.nameKo,
       nameEn: data.nameEn.present ? data.nameEn.value : this.nameEn,
       type: data.type.present ? data.type.value : this.type,
-      primaryMuscle: data.primaryMuscle.present
-          ? data.primaryMuscle.value
-          : this.primaryMuscle,
-      secondaryMuscles: data.secondaryMuscles.present
-          ? data.secondaryMuscles.value
-          : this.secondaryMuscles,
+      primaryMuscle: data.primaryMuscle.present ? data.primaryMuscle.value : this.primaryMuscle,
+      secondaryMuscles: data.secondaryMuscles.present ? data.secondaryMuscles.value : this.secondaryMuscles,
       builtIn: data.builtIn.present ? data.builtIn.value : this.builtIn,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
@@ -399,17 +324,8 @@ class ExerciseRow extends DataClass implements Insertable<ExerciseRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    nameKo,
-    nameEn,
-    type,
-    primaryMuscle,
-    secondaryMuscles,
-    builtIn,
-    updatedAt,
-    deletedAt,
-  );
+  int get hashCode =>
+      Object.hash(id, nameKo, nameEn, type, primaryMuscle, secondaryMuscles, builtIn, updatedAt, deletedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -570,8 +486,7 @@ class ExercisesCompanion extends UpdateCompanion<ExerciseRow> {
   }
 }
 
-class $SessionsTable extends Sessions
-    with TableInfo<$SessionsTable, SessionRow> {
+class $SessionsTable extends Sessions with TableInfo<$SessionsTable, SessionRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -585,9 +500,7 @@ class $SessionsTable extends Sessions
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _startedAtMeta = const VerificationMeta(
-    'startedAt',
-  );
+  static const VerificationMeta _startedAtMeta = const VerificationMeta('startedAt');
   @override
   late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
     'started_at',
@@ -596,9 +509,7 @@ class $SessionsTable extends Sessions
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _endedAtMeta = const VerificationMeta(
-    'endedAt',
-  );
+  static const VerificationMeta _endedAtMeta = const VerificationMeta('endedAt');
   @override
   late final GeneratedColumn<DateTime> endedAt = GeneratedColumn<DateTime>(
     'ended_at',
@@ -634,9 +545,7 @@ class $SessionsTable extends Sessions
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -645,15 +554,40 @@ class $SessionsTable extends Sessions
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta('deletedAt');
   @override
   late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
     'deleted_at',
     aliasedName,
     true,
     type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _programInstanceIdMeta = const VerificationMeta('programInstanceId');
+  @override
+  late final GeneratedColumn<String> programInstanceId = GeneratedColumn<String>(
+    'program_instance_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _planSeqMeta = const VerificationMeta('planSeq');
+  @override
+  late final GeneratedColumn<int> planSeq = GeneratedColumn<int>(
+    'plan_seq',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _planDayKeyMeta = const VerificationMeta('planDayKey');
+  @override
+  late final GeneratedColumn<String> planDayKey = GeneratedColumn<String>(
+    'plan_day_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
   @override
@@ -666,6 +600,9 @@ class $SessionsTable extends Sessions
     source,
     updatedAt,
     deletedAt,
+    programInstanceId,
+    planSeq,
+    planDayKey,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -673,10 +610,7 @@ class $SessionsTable extends Sessions
   String get actualTableName => $name;
   static const String $name = 'sessions';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SessionRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SessionRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -685,18 +619,12 @@ class $SessionsTable extends Sessions
       context.missing(_idMeta);
     }
     if (data.containsKey('started_at')) {
-      context.handle(
-        _startedAtMeta,
-        startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta),
-      );
+      context.handle(_startedAtMeta, startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta));
     } else if (isInserting) {
       context.missing(_startedAtMeta);
     }
     if (data.containsKey('ended_at')) {
-      context.handle(
-        _endedAtMeta,
-        endedAt.isAcceptableOrUnknown(data['ended_at']!, _endedAtMeta),
-      );
+      context.handle(_endedAtMeta, endedAt.isAcceptableOrUnknown(data['ended_at']!, _endedAtMeta));
     }
     if (data.containsKey('tz')) {
       context.handle(_tzMeta, tz.isAcceptableOrUnknown(data['tz']!, _tzMeta));
@@ -704,30 +632,30 @@ class $SessionsTable extends Sessions
       context.missing(_tzMeta);
     }
     if (data.containsKey('note')) {
-      context.handle(
-        _noteMeta,
-        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
-      );
+      context.handle(_noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
     if (data.containsKey('source')) {
-      context.handle(
-        _sourceMeta,
-        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
-      );
+      context.handle(_sourceMeta, source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
     if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta, deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
+    if (data.containsKey('program_instance_id')) {
       context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+        _programInstanceIdMeta,
+        programInstanceId.isAcceptableOrUnknown(data['program_instance_id']!, _programInstanceIdMeta),
       );
+    }
+    if (data.containsKey('plan_seq')) {
+      context.handle(_planSeqMeta, planSeq.isAcceptableOrUnknown(data['plan_seq']!, _planSeqMeta));
+    }
+    if (data.containsKey('plan_day_key')) {
+      context.handle(_planDayKeyMeta, planDayKey.isAcceptableOrUnknown(data['plan_day_key']!, _planDayKeyMeta));
     }
     return context;
   }
@@ -738,38 +666,20 @@ class $SessionsTable extends Sessions
   SessionRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SessionRow(
-      id: attachedDatabase.typeMapping.read(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      startedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}started_at'])!,
+      endedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}ended_at']),
+      tz: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}tz'])!,
+      note: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}note']),
+      source: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source']),
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      deletedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
+      programInstanceId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      startedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}started_at'],
-      )!,
-      endedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}ended_at'],
+        data['${effectivePrefix}program_instance_id'],
       ),
-      tz: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}tz'],
-      )!,
-      note: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}note'],
-      ),
-      source: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}source'],
-      ),
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
+      planSeq: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}plan_seq']),
+      planDayKey: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}plan_day_key']),
     );
   }
 
@@ -788,6 +698,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
   final String? source;
   final DateTime updatedAt;
   final DateTime? deletedAt;
+  final String? programInstanceId;
+  final int? planSeq;
+  final String? planDayKey;
   const SessionRow({
     required this.id,
     required this.startedAt,
@@ -797,6 +710,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     this.source,
     required this.updatedAt,
     this.deletedAt,
+    this.programInstanceId,
+    this.planSeq,
+    this.planDayKey,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -817,6 +733,15 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
+    if (!nullToAbsent || programInstanceId != null) {
+      map['program_instance_id'] = Variable<String>(programInstanceId);
+    }
+    if (!nullToAbsent || planSeq != null) {
+      map['plan_seq'] = Variable<int>(planSeq);
+    }
+    if (!nullToAbsent || planDayKey != null) {
+      map['plan_day_key'] = Variable<String>(planDayKey);
+    }
     return map;
   }
 
@@ -824,25 +749,19 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     return SessionsCompanion(
       id: Value(id),
       startedAt: Value(startedAt),
-      endedAt: endedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(endedAt),
+      endedAt: endedAt == null && nullToAbsent ? const Value.absent() : Value(endedAt),
       tz: Value(tz),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
-      source: source == null && nullToAbsent
-          ? const Value.absent()
-          : Value(source),
+      source: source == null && nullToAbsent ? const Value.absent() : Value(source),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent ? const Value.absent() : Value(deletedAt),
+      programInstanceId: programInstanceId == null && nullToAbsent ? const Value.absent() : Value(programInstanceId),
+      planSeq: planSeq == null && nullToAbsent ? const Value.absent() : Value(planSeq),
+      planDayKey: planDayKey == null && nullToAbsent ? const Value.absent() : Value(planDayKey),
     );
   }
 
-  factory SessionRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SessionRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SessionRow(
       id: serializer.fromJson<String>(json['id']),
@@ -853,6 +772,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
       source: serializer.fromJson<String?>(json['source']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      programInstanceId: serializer.fromJson<String?>(json['programInstanceId']),
+      planSeq: serializer.fromJson<int?>(json['planSeq']),
+      planDayKey: serializer.fromJson<String?>(json['planDayKey']),
     );
   }
   @override
@@ -867,6 +789,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
       'source': serializer.toJson<String?>(source),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'programInstanceId': serializer.toJson<String?>(programInstanceId),
+      'planSeq': serializer.toJson<int?>(planSeq),
+      'planDayKey': serializer.toJson<String?>(planDayKey),
     };
   }
 
@@ -879,6 +804,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     Value<String?> source = const Value.absent(),
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> programInstanceId = const Value.absent(),
+    Value<int?> planSeq = const Value.absent(),
+    Value<String?> planDayKey = const Value.absent(),
   }) => SessionRow(
     id: id ?? this.id,
     startedAt: startedAt ?? this.startedAt,
@@ -888,6 +816,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     source: source.present ? source.value : this.source,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    programInstanceId: programInstanceId.present ? programInstanceId.value : this.programInstanceId,
+    planSeq: planSeq.present ? planSeq.value : this.planSeq,
+    planDayKey: planDayKey.present ? planDayKey.value : this.planDayKey,
   );
   SessionRow copyWithCompanion(SessionsCompanion data) {
     return SessionRow(
@@ -899,6 +830,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
       source: data.source.present ? data.source.value : this.source,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      programInstanceId: data.programInstanceId.present ? data.programInstanceId.value : this.programInstanceId,
+      planSeq: data.planSeq.present ? data.planSeq.value : this.planSeq,
+      planDayKey: data.planDayKey.present ? data.planDayKey.value : this.planDayKey,
     );
   }
 
@@ -912,7 +846,10 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
           ..write('note: $note, ')
           ..write('source: $source, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('programInstanceId: $programInstanceId, ')
+          ..write('planSeq: $planSeq, ')
+          ..write('planDayKey: $planDayKey')
           ..write(')'))
         .toString();
   }
@@ -927,6 +864,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     source,
     updatedAt,
     deletedAt,
+    programInstanceId,
+    planSeq,
+    planDayKey,
   );
   @override
   bool operator ==(Object other) =>
@@ -939,7 +879,10 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
           other.note == this.note &&
           other.source == this.source &&
           other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt);
+          other.deletedAt == this.deletedAt &&
+          other.programInstanceId == this.programInstanceId &&
+          other.planSeq == this.planSeq &&
+          other.planDayKey == this.planDayKey);
 }
 
 class SessionsCompanion extends UpdateCompanion<SessionRow> {
@@ -951,6 +894,9 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
   final Value<String?> source;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
+  final Value<String?> programInstanceId;
+  final Value<int?> planSeq;
+  final Value<String?> planDayKey;
   final Value<int> rowid;
   const SessionsCompanion({
     this.id = const Value.absent(),
@@ -961,6 +907,9 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     this.source = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
+    this.programInstanceId = const Value.absent(),
+    this.planSeq = const Value.absent(),
+    this.planDayKey = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SessionsCompanion.insert({
@@ -972,6 +921,9 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     this.source = const Value.absent(),
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
+    this.programInstanceId = const Value.absent(),
+    this.planSeq = const Value.absent(),
+    this.planDayKey = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        startedAt = Value(startedAt),
@@ -986,6 +938,9 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     Expression<String>? source,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
+    Expression<String>? programInstanceId,
+    Expression<int>? planSeq,
+    Expression<String>? planDayKey,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -997,6 +952,9 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
       if (source != null) 'source': source,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
+      if (programInstanceId != null) 'program_instance_id': programInstanceId,
+      if (planSeq != null) 'plan_seq': planSeq,
+      if (planDayKey != null) 'plan_day_key': planDayKey,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1010,6 +968,9 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     Value<String?>? source,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
+    Value<String?>? programInstanceId,
+    Value<int?>? planSeq,
+    Value<String?>? planDayKey,
     Value<int>? rowid,
   }) {
     return SessionsCompanion(
@@ -1021,6 +982,9 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
       source: source ?? this.source,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
+      programInstanceId: programInstanceId ?? this.programInstanceId,
+      planSeq: planSeq ?? this.planSeq,
+      planDayKey: planDayKey ?? this.planDayKey,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1052,6 +1016,15 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     if (deletedAt.present) {
       map['deleted_at'] = Variable<DateTime>(deletedAt.value);
     }
+    if (programInstanceId.present) {
+      map['program_instance_id'] = Variable<String>(programInstanceId.value);
+    }
+    if (planSeq.present) {
+      map['plan_seq'] = Variable<int>(planSeq.value);
+    }
+    if (planDayKey.present) {
+      map['plan_day_key'] = Variable<String>(planDayKey.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1069,14 +1042,16 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
           ..write('source: $source, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
+          ..write('programInstanceId: $programInstanceId, ')
+          ..write('planSeq: $planSeq, ')
+          ..write('planDayKey: $planDayKey, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
 }
 
-class $SessionExercisesTable extends SessionExercises
-    with TableInfo<$SessionExercisesTable, SessionExerciseRow> {
+class $SessionExercisesTable extends SessionExercises with TableInfo<$SessionExercisesTable, SessionExerciseRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -1090,9 +1065,7 @@ class $SessionExercisesTable extends SessionExercises
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _sessionIdMeta = const VerificationMeta(
-    'sessionId',
-  );
+  static const VerificationMeta _sessionIdMeta = const VerificationMeta('sessionId');
   @override
   late final GeneratedColumn<String> sessionId = GeneratedColumn<String>(
     'session_id',
@@ -1101,9 +1074,7 @@ class $SessionExercisesTable extends SessionExercises
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _exerciseIdMeta = const VerificationMeta(
-    'exerciseId',
-  );
+  static const VerificationMeta _exerciseIdMeta = const VerificationMeta('exerciseId');
   @override
   late final GeneratedColumn<String> exerciseId = GeneratedColumn<String>(
     'exercise_id',
@@ -1112,9 +1083,7 @@ class $SessionExercisesTable extends SessionExercises
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _positionMeta = const VerificationMeta(
-    'position',
-  );
+  static const VerificationMeta _positionMeta = const VerificationMeta('position');
   @override
   late final GeneratedColumn<int> position = GeneratedColumn<int>(
     'position',
@@ -1132,9 +1101,7 @@ class $SessionExercisesTable extends SessionExercises
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -1143,9 +1110,7 @@ class $SessionExercisesTable extends SessionExercises
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta('deletedAt');
   @override
   late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
     'deleted_at',
@@ -1153,6 +1118,26 @@ class $SessionExercisesTable extends SessionExercises
     true,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
+  );
+  static const VerificationMeta _liftKeyMeta = const VerificationMeta('liftKey');
+  @override
+  late final GeneratedColumn<String> liftKey = GeneratedColumn<String>(
+    'lift_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _accessoryMeta = const VerificationMeta('accessory');
+  @override
+  late final GeneratedColumn<bool> accessory = GeneratedColumn<bool>(
+    'accessory',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("accessory" IN (0, 1))'),
+    defaultValue: const Constant(false),
   );
   @override
   List<GeneratedColumn> get $columns => [
@@ -1163,6 +1148,8 @@ class $SessionExercisesTable extends SessionExercises
     note,
     updatedAt,
     deletedAt,
+    liftKey,
+    accessory,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1170,10 +1157,7 @@ class $SessionExercisesTable extends SessionExercises
   String get actualTableName => $name;
   static const String $name = 'session_exercises';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SessionExerciseRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SessionExerciseRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -1182,48 +1166,36 @@ class $SessionExercisesTable extends SessionExercises
       context.missing(_idMeta);
     }
     if (data.containsKey('session_id')) {
-      context.handle(
-        _sessionIdMeta,
-        sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta),
-      );
+      context.handle(_sessionIdMeta, sessionId.isAcceptableOrUnknown(data['session_id']!, _sessionIdMeta));
     } else if (isInserting) {
       context.missing(_sessionIdMeta);
     }
     if (data.containsKey('exercise_id')) {
-      context.handle(
-        _exerciseIdMeta,
-        exerciseId.isAcceptableOrUnknown(data['exercise_id']!, _exerciseIdMeta),
-      );
+      context.handle(_exerciseIdMeta, exerciseId.isAcceptableOrUnknown(data['exercise_id']!, _exerciseIdMeta));
     } else if (isInserting) {
       context.missing(_exerciseIdMeta);
     }
     if (data.containsKey('position')) {
-      context.handle(
-        _positionMeta,
-        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
-      );
+      context.handle(_positionMeta, position.isAcceptableOrUnknown(data['position']!, _positionMeta));
     } else if (isInserting) {
       context.missing(_positionMeta);
     }
     if (data.containsKey('note')) {
-      context.handle(
-        _noteMeta,
-        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
-      );
+      context.handle(_noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
     if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
-      );
+      context.handle(_deletedAtMeta, deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
+    if (data.containsKey('lift_key')) {
+      context.handle(_liftKeyMeta, liftKey.isAcceptableOrUnknown(data['lift_key']!, _liftKeyMeta));
+    }
+    if (data.containsKey('accessory')) {
+      context.handle(_accessoryMeta, accessory.isAcceptableOrUnknown(data['accessory']!, _accessoryMeta));
     }
     return context;
   }
@@ -1234,34 +1206,15 @@ class $SessionExercisesTable extends SessionExercises
   SessionExerciseRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SessionExerciseRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      sessionId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}session_id'],
-      )!,
-      exerciseId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}exercise_id'],
-      )!,
-      position: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}position'],
-      )!,
-      note: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}note'],
-      ),
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      sessionId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}session_id'])!,
+      exerciseId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}exercise_id'])!,
+      position: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}position'])!,
+      note: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}note']),
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      deletedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
+      liftKey: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}lift_key']),
+      accessory: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}accessory'])!,
     );
   }
 
@@ -1271,8 +1224,7 @@ class $SessionExercisesTable extends SessionExercises
   }
 }
 
-class SessionExerciseRow extends DataClass
-    implements Insertable<SessionExerciseRow> {
+class SessionExerciseRow extends DataClass implements Insertable<SessionExerciseRow> {
   final String id;
   final String sessionId;
   final String exerciseId;
@@ -1280,6 +1232,8 @@ class SessionExerciseRow extends DataClass
   final String? note;
   final DateTime updatedAt;
   final DateTime? deletedAt;
+  final String? liftKey;
+  final bool accessory;
   const SessionExerciseRow({
     required this.id,
     required this.sessionId,
@@ -1288,6 +1242,8 @@ class SessionExerciseRow extends DataClass
     this.note,
     required this.updatedAt,
     this.deletedAt,
+    this.liftKey,
+    required this.accessory,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1303,6 +1259,10 @@ class SessionExerciseRow extends DataClass
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
+    if (!nullToAbsent || liftKey != null) {
+      map['lift_key'] = Variable<String>(liftKey);
+    }
+    map['accessory'] = Variable<bool>(accessory);
     return map;
   }
 
@@ -1314,16 +1274,13 @@ class SessionExerciseRow extends DataClass
       position: Value(position),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent ? const Value.absent() : Value(deletedAt),
+      liftKey: liftKey == null && nullToAbsent ? const Value.absent() : Value(liftKey),
+      accessory: Value(accessory),
     );
   }
 
-  factory SessionExerciseRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SessionExerciseRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SessionExerciseRow(
       id: serializer.fromJson<String>(json['id']),
@@ -1333,6 +1290,8 @@ class SessionExerciseRow extends DataClass
       note: serializer.fromJson<String?>(json['note']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      liftKey: serializer.fromJson<String?>(json['liftKey']),
+      accessory: serializer.fromJson<bool>(json['accessory']),
     );
   }
   @override
@@ -1346,6 +1305,8 @@ class SessionExerciseRow extends DataClass
       'note': serializer.toJson<String?>(note),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'liftKey': serializer.toJson<String?>(liftKey),
+      'accessory': serializer.toJson<bool>(accessory),
     };
   }
 
@@ -1357,6 +1318,8 @@ class SessionExerciseRow extends DataClass
     Value<String?> note = const Value.absent(),
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> liftKey = const Value.absent(),
+    bool? accessory,
   }) => SessionExerciseRow(
     id: id ?? this.id,
     sessionId: sessionId ?? this.sessionId,
@@ -1365,18 +1328,20 @@ class SessionExerciseRow extends DataClass
     note: note.present ? note.value : this.note,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    liftKey: liftKey.present ? liftKey.value : this.liftKey,
+    accessory: accessory ?? this.accessory,
   );
   SessionExerciseRow copyWithCompanion(SessionExercisesCompanion data) {
     return SessionExerciseRow(
       id: data.id.present ? data.id.value : this.id,
       sessionId: data.sessionId.present ? data.sessionId.value : this.sessionId,
-      exerciseId: data.exerciseId.present
-          ? data.exerciseId.value
-          : this.exerciseId,
+      exerciseId: data.exerciseId.present ? data.exerciseId.value : this.exerciseId,
       position: data.position.present ? data.position.value : this.position,
       note: data.note.present ? data.note.value : this.note,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      liftKey: data.liftKey.present ? data.liftKey.value : this.liftKey,
+      accessory: data.accessory.present ? data.accessory.value : this.accessory,
     );
   }
 
@@ -1389,21 +1354,15 @@ class SessionExerciseRow extends DataClass
           ..write('position: $position, ')
           ..write('note: $note, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('liftKey: $liftKey, ')
+          ..write('accessory: $accessory')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    sessionId,
-    exerciseId,
-    position,
-    note,
-    updatedAt,
-    deletedAt,
-  );
+  int get hashCode => Object.hash(id, sessionId, exerciseId, position, note, updatedAt, deletedAt, liftKey, accessory);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1414,7 +1373,9 @@ class SessionExerciseRow extends DataClass
           other.position == this.position &&
           other.note == this.note &&
           other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt);
+          other.deletedAt == this.deletedAt &&
+          other.liftKey == this.liftKey &&
+          other.accessory == this.accessory);
 }
 
 class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
@@ -1425,6 +1386,8 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
   final Value<String?> note;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
+  final Value<String?> liftKey;
+  final Value<bool> accessory;
   final Value<int> rowid;
   const SessionExercisesCompanion({
     this.id = const Value.absent(),
@@ -1434,6 +1397,8 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
     this.note = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
+    this.liftKey = const Value.absent(),
+    this.accessory = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SessionExercisesCompanion.insert({
@@ -1444,6 +1409,8 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
     this.note = const Value.absent(),
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
+    this.liftKey = const Value.absent(),
+    this.accessory = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        sessionId = Value(sessionId),
@@ -1458,6 +1425,8 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
     Expression<String>? note,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
+    Expression<String>? liftKey,
+    Expression<bool>? accessory,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1468,6 +1437,8 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
       if (note != null) 'note': note,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
+      if (liftKey != null) 'lift_key': liftKey,
+      if (accessory != null) 'accessory': accessory,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1480,6 +1451,8 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
     Value<String?>? note,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
+    Value<String?>? liftKey,
+    Value<bool>? accessory,
     Value<int>? rowid,
   }) {
     return SessionExercisesCompanion(
@@ -1490,6 +1463,8 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
       note: note ?? this.note,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
+      liftKey: liftKey ?? this.liftKey,
+      accessory: accessory ?? this.accessory,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1518,6 +1493,12 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
     if (deletedAt.present) {
       map['deleted_at'] = Variable<DateTime>(deletedAt.value);
     }
+    if (liftKey.present) {
+      map['lift_key'] = Variable<String>(liftKey.value);
+    }
+    if (accessory.present) {
+      map['accessory'] = Variable<bool>(accessory.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1534,14 +1515,15 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
           ..write('note: $note, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
+          ..write('liftKey: $liftKey, ')
+          ..write('accessory: $accessory, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
 }
 
-class $WorkoutSetsTable extends WorkoutSets
-    with TableInfo<$WorkoutSetsTable, WorkoutSetRow> {
+class $WorkoutSetsTable extends WorkoutSets with TableInfo<$WorkoutSetsTable, WorkoutSetRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -1555,21 +1537,16 @@ class $WorkoutSetsTable extends WorkoutSets
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _sessionExerciseIdMeta = const VerificationMeta(
-    'sessionExerciseId',
-  );
+  static const VerificationMeta _sessionExerciseIdMeta = const VerificationMeta('sessionExerciseId');
   @override
-  late final GeneratedColumn<String> sessionExerciseId =
-      GeneratedColumn<String>(
-        'session_exercise_id',
-        aliasedName,
-        false,
-        type: DriftSqlType.string,
-        requiredDuringInsert: true,
-      );
-  static const VerificationMeta _positionMeta = const VerificationMeta(
-    'position',
+  late final GeneratedColumn<String> sessionExerciseId = GeneratedColumn<String>(
+    'session_exercise_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
   );
+  static const VerificationMeta _positionMeta = const VerificationMeta('position');
   @override
   late final GeneratedColumn<int> position = GeneratedColumn<int>(
     'position',
@@ -1578,9 +1555,7 @@ class $WorkoutSetsTable extends WorkoutSets
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _isWarmupMeta = const VerificationMeta(
-    'isWarmup',
-  );
+  static const VerificationMeta _isWarmupMeta = const VerificationMeta('isWarmup');
   @override
   late final GeneratedColumn<bool> isWarmup = GeneratedColumn<bool>(
     'is_warmup',
@@ -1588,14 +1563,10 @@ class $WorkoutSetsTable extends WorkoutSets
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_warmup" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("is_warmup" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _weightKgMeta = const VerificationMeta(
-    'weightKg',
-  );
+  static const VerificationMeta _weightKgMeta = const VerificationMeta('weightKg');
   @override
   late final GeneratedColumn<double> weightKg = GeneratedColumn<double>(
     'weight_kg',
@@ -1604,9 +1575,7 @@ class $WorkoutSetsTable extends WorkoutSets
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _addedWeightKgMeta = const VerificationMeta(
-    'addedWeightKg',
-  );
+  static const VerificationMeta _addedWeightKgMeta = const VerificationMeta('addedWeightKg');
   @override
   late final GeneratedColumn<double> addedWeightKg = GeneratedColumn<double>(
     'added_weight_kg',
@@ -1624,9 +1593,7 @@ class $WorkoutSetsTable extends WorkoutSets
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _durationSecMeta = const VerificationMeta(
-    'durationSec',
-  );
+  static const VerificationMeta _durationSecMeta = const VerificationMeta('durationSec');
   @override
   late final GeneratedColumn<int> durationSec = GeneratedColumn<int>(
     'duration_sec',
@@ -1635,9 +1602,7 @@ class $WorkoutSetsTable extends WorkoutSets
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _distanceMMeta = const VerificationMeta(
-    'distanceM',
-  );
+  static const VerificationMeta _distanceMMeta = const VerificationMeta('distanceM');
   @override
   late final GeneratedColumn<double> distanceM = GeneratedColumn<double>(
     'distance_m',
@@ -1646,9 +1611,7 @@ class $WorkoutSetsTable extends WorkoutSets
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _bandLevelMeta = const VerificationMeta(
-    'bandLevel',
-  );
+  static const VerificationMeta _bandLevelMeta = const VerificationMeta('bandLevel');
   @override
   late final GeneratedColumn<String> bandLevel = GeneratedColumn<String>(
     'band_level',
@@ -1675,9 +1638,7 @@ class $WorkoutSetsTable extends WorkoutSets
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _restSecMeta = const VerificationMeta(
-    'restSec',
-  );
+  static const VerificationMeta _restSecMeta = const VerificationMeta('restSec');
   @override
   late final GeneratedColumn<int> restSec = GeneratedColumn<int>(
     'rest_sec',
@@ -1695,9 +1656,7 @@ class $WorkoutSetsTable extends WorkoutSets
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _completedAtMeta = const VerificationMeta(
-    'completedAt',
-  );
+  static const VerificationMeta _completedAtMeta = const VerificationMeta('completedAt');
   @override
   late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
     'completed_at',
@@ -1706,9 +1665,7 @@ class $WorkoutSetsTable extends WorkoutSets
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -1717,9 +1674,7 @@ class $WorkoutSetsTable extends WorkoutSets
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta('deletedAt');
   @override
   late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
     'deleted_at',
@@ -1727,6 +1682,44 @@ class $WorkoutSetsTable extends WorkoutSets
     true,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
+  );
+  static const VerificationMeta _plannedSetKeyMeta = const VerificationMeta('plannedSetKey');
+  @override
+  late final GeneratedColumn<String> plannedSetKey = GeneratedColumn<String>(
+    'planned_set_key',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _targetRepsMeta = const VerificationMeta('targetReps');
+  @override
+  late final GeneratedColumn<int> targetReps = GeneratedColumn<int>(
+    'target_reps',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _targetWeightKgMeta = const VerificationMeta('targetWeightKg');
+  @override
+  late final GeneratedColumn<double> targetWeightKg = GeneratedColumn<double>(
+    'target_weight_kg',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isAmrapMeta = const VerificationMeta('isAmrap');
+  @override
+  late final GeneratedColumn<bool> isAmrap = GeneratedColumn<bool>(
+    'is_amrap',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("is_amrap" IN (0, 1))'),
+    defaultValue: const Constant(false),
   );
   @override
   List<GeneratedColumn> get $columns => [
@@ -1747,6 +1740,10 @@ class $WorkoutSetsTable extends WorkoutSets
     completedAt,
     updatedAt,
     deletedAt,
+    plannedSetKey,
+    targetReps,
+    targetWeightKg,
+    isAmrap,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1754,10 +1751,7 @@ class $WorkoutSetsTable extends WorkoutSets
   String get actualTableName => $name;
   static const String $name = 'workout_sets';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<WorkoutSetRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<WorkoutSetRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -1768,116 +1762,80 @@ class $WorkoutSetsTable extends WorkoutSets
     if (data.containsKey('session_exercise_id')) {
       context.handle(
         _sessionExerciseIdMeta,
-        sessionExerciseId.isAcceptableOrUnknown(
-          data['session_exercise_id']!,
-          _sessionExerciseIdMeta,
-        ),
+        sessionExerciseId.isAcceptableOrUnknown(data['session_exercise_id']!, _sessionExerciseIdMeta),
       );
     } else if (isInserting) {
       context.missing(_sessionExerciseIdMeta);
     }
     if (data.containsKey('position')) {
-      context.handle(
-        _positionMeta,
-        position.isAcceptableOrUnknown(data['position']!, _positionMeta),
-      );
+      context.handle(_positionMeta, position.isAcceptableOrUnknown(data['position']!, _positionMeta));
     } else if (isInserting) {
       context.missing(_positionMeta);
     }
     if (data.containsKey('is_warmup')) {
-      context.handle(
-        _isWarmupMeta,
-        isWarmup.isAcceptableOrUnknown(data['is_warmup']!, _isWarmupMeta),
-      );
+      context.handle(_isWarmupMeta, isWarmup.isAcceptableOrUnknown(data['is_warmup']!, _isWarmupMeta));
     }
     if (data.containsKey('weight_kg')) {
-      context.handle(
-        _weightKgMeta,
-        weightKg.isAcceptableOrUnknown(data['weight_kg']!, _weightKgMeta),
-      );
+      context.handle(_weightKgMeta, weightKg.isAcceptableOrUnknown(data['weight_kg']!, _weightKgMeta));
     }
     if (data.containsKey('added_weight_kg')) {
       context.handle(
         _addedWeightKgMeta,
-        addedWeightKg.isAcceptableOrUnknown(
-          data['added_weight_kg']!,
-          _addedWeightKgMeta,
-        ),
+        addedWeightKg.isAcceptableOrUnknown(data['added_weight_kg']!, _addedWeightKgMeta),
       );
     }
     if (data.containsKey('reps')) {
-      context.handle(
-        _repsMeta,
-        reps.isAcceptableOrUnknown(data['reps']!, _repsMeta),
-      );
+      context.handle(_repsMeta, reps.isAcceptableOrUnknown(data['reps']!, _repsMeta));
     }
     if (data.containsKey('duration_sec')) {
-      context.handle(
-        _durationSecMeta,
-        durationSec.isAcceptableOrUnknown(
-          data['duration_sec']!,
-          _durationSecMeta,
-        ),
-      );
+      context.handle(_durationSecMeta, durationSec.isAcceptableOrUnknown(data['duration_sec']!, _durationSecMeta));
     }
     if (data.containsKey('distance_m')) {
-      context.handle(
-        _distanceMMeta,
-        distanceM.isAcceptableOrUnknown(data['distance_m']!, _distanceMMeta),
-      );
+      context.handle(_distanceMMeta, distanceM.isAcceptableOrUnknown(data['distance_m']!, _distanceMMeta));
     }
     if (data.containsKey('band_level')) {
-      context.handle(
-        _bandLevelMeta,
-        bandLevel.isAcceptableOrUnknown(data['band_level']!, _bandLevelMeta),
-      );
+      context.handle(_bandLevelMeta, bandLevel.isAcceptableOrUnknown(data['band_level']!, _bandLevelMeta));
     }
     if (data.containsKey('rpe')) {
-      context.handle(
-        _rpeMeta,
-        rpe.isAcceptableOrUnknown(data['rpe']!, _rpeMeta),
-      );
+      context.handle(_rpeMeta, rpe.isAcceptableOrUnknown(data['rpe']!, _rpeMeta));
     }
     if (data.containsKey('rir')) {
-      context.handle(
-        _rirMeta,
-        rir.isAcceptableOrUnknown(data['rir']!, _rirMeta),
-      );
+      context.handle(_rirMeta, rir.isAcceptableOrUnknown(data['rir']!, _rirMeta));
     }
     if (data.containsKey('rest_sec')) {
-      context.handle(
-        _restSecMeta,
-        restSec.isAcceptableOrUnknown(data['rest_sec']!, _restSecMeta),
-      );
+      context.handle(_restSecMeta, restSec.isAcceptableOrUnknown(data['rest_sec']!, _restSecMeta));
     }
     if (data.containsKey('note')) {
-      context.handle(
-        _noteMeta,
-        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
-      );
+      context.handle(_noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
     if (data.containsKey('completed_at')) {
-      context.handle(
-        _completedAtMeta,
-        completedAt.isAcceptableOrUnknown(
-          data['completed_at']!,
-          _completedAtMeta,
-        ),
-      );
+      context.handle(_completedAtMeta, completedAt.isAcceptableOrUnknown(data['completed_at']!, _completedAtMeta));
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
     if (data.containsKey('deleted_at')) {
+      context.handle(_deletedAtMeta, deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
+    }
+    if (data.containsKey('planned_set_key')) {
       context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+        _plannedSetKeyMeta,
+        plannedSetKey.isAcceptableOrUnknown(data['planned_set_key']!, _plannedSetKeyMeta),
       );
+    }
+    if (data.containsKey('target_reps')) {
+      context.handle(_targetRepsMeta, targetReps.isAcceptableOrUnknown(data['target_reps']!, _targetRepsMeta));
+    }
+    if (data.containsKey('target_weight_kg')) {
+      context.handle(
+        _targetWeightKgMeta,
+        targetWeightKg.isAcceptableOrUnknown(data['target_weight_kg']!, _targetWeightKgMeta),
+      );
+    }
+    if (data.containsKey('is_amrap')) {
+      context.handle(_isAmrapMeta, isAmrap.isAcceptableOrUnknown(data['is_amrap']!, _isAmrapMeta));
     }
     return context;
   }
@@ -1888,74 +1846,33 @@ class $WorkoutSetsTable extends WorkoutSets
   WorkoutSetRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return WorkoutSetRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
       sessionExerciseId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}session_exercise_id'],
       )!,
-      position: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}position'],
-      )!,
-      isWarmup: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_warmup'],
-      )!,
-      weightKg: attachedDatabase.typeMapping.read(
+      position: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}position'])!,
+      isWarmup: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}is_warmup'])!,
+      weightKg: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}weight_kg']),
+      addedWeightKg: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}added_weight_kg']),
+      reps: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}reps']),
+      durationSec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}duration_sec']),
+      distanceM: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}distance_m']),
+      bandLevel: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}band_level']),
+      rpe: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}rpe']),
+      rir: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}rir']),
+      restSec: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}rest_sec']),
+      note: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}note']),
+      completedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}completed_at']),
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      deletedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
+      plannedSetKey: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}planned_set_key']),
+      targetReps: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}target_reps']),
+      targetWeightKg: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
-        data['${effectivePrefix}weight_kg'],
+        data['${effectivePrefix}target_weight_kg'],
       ),
-      addedWeightKg: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}added_weight_kg'],
-      ),
-      reps: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}reps'],
-      ),
-      durationSec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}duration_sec'],
-      ),
-      distanceM: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}distance_m'],
-      ),
-      bandLevel: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}band_level'],
-      ),
-      rpe: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}rpe'],
-      ),
-      rir: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}rir'],
-      ),
-      restSec: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}rest_sec'],
-      ),
-      note: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}note'],
-      ),
-      completedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}completed_at'],
-      ),
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
+      isAmrap: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}is_amrap'])!,
     );
   }
 
@@ -1983,6 +1900,10 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
   final DateTime? completedAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
+  final String? plannedSetKey;
+  final int? targetReps;
+  final double? targetWeightKg;
+  final bool isAmrap;
   const WorkoutSetRow({
     required this.id,
     required this.sessionExerciseId,
@@ -2001,6 +1922,10 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     this.completedAt,
     required this.updatedAt,
     this.deletedAt,
+    this.plannedSetKey,
+    this.targetReps,
+    this.targetWeightKg,
+    required this.isAmrap,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2046,6 +1971,16 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     if (!nullToAbsent || deletedAt != null) {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
+    if (!nullToAbsent || plannedSetKey != null) {
+      map['planned_set_key'] = Variable<String>(plannedSetKey);
+    }
+    if (!nullToAbsent || targetReps != null) {
+      map['target_reps'] = Variable<int>(targetReps);
+    }
+    if (!nullToAbsent || targetWeightKg != null) {
+      map['target_weight_kg'] = Variable<double>(targetWeightKg);
+    }
+    map['is_amrap'] = Variable<bool>(isAmrap);
     return map;
   }
 
@@ -2055,42 +1990,27 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
       sessionExerciseId: Value(sessionExerciseId),
       position: Value(position),
       isWarmup: Value(isWarmup),
-      weightKg: weightKg == null && nullToAbsent
-          ? const Value.absent()
-          : Value(weightKg),
-      addedWeightKg: addedWeightKg == null && nullToAbsent
-          ? const Value.absent()
-          : Value(addedWeightKg),
+      weightKg: weightKg == null && nullToAbsent ? const Value.absent() : Value(weightKg),
+      addedWeightKg: addedWeightKg == null && nullToAbsent ? const Value.absent() : Value(addedWeightKg),
       reps: reps == null && nullToAbsent ? const Value.absent() : Value(reps),
-      durationSec: durationSec == null && nullToAbsent
-          ? const Value.absent()
-          : Value(durationSec),
-      distanceM: distanceM == null && nullToAbsent
-          ? const Value.absent()
-          : Value(distanceM),
-      bandLevel: bandLevel == null && nullToAbsent
-          ? const Value.absent()
-          : Value(bandLevel),
+      durationSec: durationSec == null && nullToAbsent ? const Value.absent() : Value(durationSec),
+      distanceM: distanceM == null && nullToAbsent ? const Value.absent() : Value(distanceM),
+      bandLevel: bandLevel == null && nullToAbsent ? const Value.absent() : Value(bandLevel),
       rpe: rpe == null && nullToAbsent ? const Value.absent() : Value(rpe),
       rir: rir == null && nullToAbsent ? const Value.absent() : Value(rir),
-      restSec: restSec == null && nullToAbsent
-          ? const Value.absent()
-          : Value(restSec),
+      restSec: restSec == null && nullToAbsent ? const Value.absent() : Value(restSec),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
-      completedAt: completedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(completedAt),
+      completedAt: completedAt == null && nullToAbsent ? const Value.absent() : Value(completedAt),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent ? const Value.absent() : Value(deletedAt),
+      plannedSetKey: plannedSetKey == null && nullToAbsent ? const Value.absent() : Value(plannedSetKey),
+      targetReps: targetReps == null && nullToAbsent ? const Value.absent() : Value(targetReps),
+      targetWeightKg: targetWeightKg == null && nullToAbsent ? const Value.absent() : Value(targetWeightKg),
+      isAmrap: Value(isAmrap),
     );
   }
 
-  factory WorkoutSetRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory WorkoutSetRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return WorkoutSetRow(
       id: serializer.fromJson<String>(json['id']),
@@ -2110,6 +2030,10 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+      plannedSetKey: serializer.fromJson<String?>(json['plannedSetKey']),
+      targetReps: serializer.fromJson<int?>(json['targetReps']),
+      targetWeightKg: serializer.fromJson<double?>(json['targetWeightKg']),
+      isAmrap: serializer.fromJson<bool>(json['isAmrap']),
     );
   }
   @override
@@ -2133,6 +2057,10 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
       'completedAt': serializer.toJson<DateTime?>(completedAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+      'plannedSetKey': serializer.toJson<String?>(plannedSetKey),
+      'targetReps': serializer.toJson<int?>(targetReps),
+      'targetWeightKg': serializer.toJson<double?>(targetWeightKg),
+      'isAmrap': serializer.toJson<bool>(isAmrap),
     };
   }
 
@@ -2154,15 +2082,17 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     Value<DateTime?> completedAt = const Value.absent(),
     DateTime? updatedAt,
     Value<DateTime?> deletedAt = const Value.absent(),
+    Value<String?> plannedSetKey = const Value.absent(),
+    Value<int?> targetReps = const Value.absent(),
+    Value<double?> targetWeightKg = const Value.absent(),
+    bool? isAmrap,
   }) => WorkoutSetRow(
     id: id ?? this.id,
     sessionExerciseId: sessionExerciseId ?? this.sessionExerciseId,
     position: position ?? this.position,
     isWarmup: isWarmup ?? this.isWarmup,
     weightKg: weightKg.present ? weightKg.value : this.weightKg,
-    addedWeightKg: addedWeightKg.present
-        ? addedWeightKg.value
-        : this.addedWeightKg,
+    addedWeightKg: addedWeightKg.present ? addedWeightKg.value : this.addedWeightKg,
     reps: reps.present ? reps.value : this.reps,
     durationSec: durationSec.present ? durationSec.value : this.durationSec,
     distanceM: distanceM.present ? distanceM.value : this.distanceM,
@@ -2174,34 +2104,34 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
     updatedAt: updatedAt ?? this.updatedAt,
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+    plannedSetKey: plannedSetKey.present ? plannedSetKey.value : this.plannedSetKey,
+    targetReps: targetReps.present ? targetReps.value : this.targetReps,
+    targetWeightKg: targetWeightKg.present ? targetWeightKg.value : this.targetWeightKg,
+    isAmrap: isAmrap ?? this.isAmrap,
   );
   WorkoutSetRow copyWithCompanion(WorkoutSetsCompanion data) {
     return WorkoutSetRow(
       id: data.id.present ? data.id.value : this.id,
-      sessionExerciseId: data.sessionExerciseId.present
-          ? data.sessionExerciseId.value
-          : this.sessionExerciseId,
+      sessionExerciseId: data.sessionExerciseId.present ? data.sessionExerciseId.value : this.sessionExerciseId,
       position: data.position.present ? data.position.value : this.position,
       isWarmup: data.isWarmup.present ? data.isWarmup.value : this.isWarmup,
       weightKg: data.weightKg.present ? data.weightKg.value : this.weightKg,
-      addedWeightKg: data.addedWeightKg.present
-          ? data.addedWeightKg.value
-          : this.addedWeightKg,
+      addedWeightKg: data.addedWeightKg.present ? data.addedWeightKg.value : this.addedWeightKg,
       reps: data.reps.present ? data.reps.value : this.reps,
-      durationSec: data.durationSec.present
-          ? data.durationSec.value
-          : this.durationSec,
+      durationSec: data.durationSec.present ? data.durationSec.value : this.durationSec,
       distanceM: data.distanceM.present ? data.distanceM.value : this.distanceM,
       bandLevel: data.bandLevel.present ? data.bandLevel.value : this.bandLevel,
       rpe: data.rpe.present ? data.rpe.value : this.rpe,
       rir: data.rir.present ? data.rir.value : this.rir,
       restSec: data.restSec.present ? data.restSec.value : this.restSec,
       note: data.note.present ? data.note.value : this.note,
-      completedAt: data.completedAt.present
-          ? data.completedAt.value
-          : this.completedAt,
+      completedAt: data.completedAt.present ? data.completedAt.value : this.completedAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+      plannedSetKey: data.plannedSetKey.present ? data.plannedSetKey.value : this.plannedSetKey,
+      targetReps: data.targetReps.present ? data.targetReps.value : this.targetReps,
+      targetWeightKg: data.targetWeightKg.present ? data.targetWeightKg.value : this.targetWeightKg,
+      isAmrap: data.isAmrap.present ? data.isAmrap.value : this.isAmrap,
     );
   }
 
@@ -2224,13 +2154,17 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
           ..write('note: $note, ')
           ..write('completedAt: $completedAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('deletedAt: $deletedAt')
+          ..write('deletedAt: $deletedAt, ')
+          ..write('plannedSetKey: $plannedSetKey, ')
+          ..write('targetReps: $targetReps, ')
+          ..write('targetWeightKg: $targetWeightKg, ')
+          ..write('isAmrap: $isAmrap')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
+  int get hashCode => Object.hashAll([
     id,
     sessionExerciseId,
     position,
@@ -2248,7 +2182,11 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     completedAt,
     updatedAt,
     deletedAt,
-  );
+    plannedSetKey,
+    targetReps,
+    targetWeightKg,
+    isAmrap,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2269,7 +2207,11 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
           other.note == this.note &&
           other.completedAt == this.completedAt &&
           other.updatedAt == this.updatedAt &&
-          other.deletedAt == this.deletedAt);
+          other.deletedAt == this.deletedAt &&
+          other.plannedSetKey == this.plannedSetKey &&
+          other.targetReps == this.targetReps &&
+          other.targetWeightKg == this.targetWeightKg &&
+          other.isAmrap == this.isAmrap);
 }
 
 class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
@@ -2290,6 +2232,10 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
   final Value<DateTime?> completedAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
+  final Value<String?> plannedSetKey;
+  final Value<int?> targetReps;
+  final Value<double?> targetWeightKg;
+  final Value<bool> isAmrap;
   final Value<int> rowid;
   const WorkoutSetsCompanion({
     this.id = const Value.absent(),
@@ -2309,6 +2255,10 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     this.completedAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
+    this.plannedSetKey = const Value.absent(),
+    this.targetReps = const Value.absent(),
+    this.targetWeightKg = const Value.absent(),
+    this.isAmrap = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   WorkoutSetsCompanion.insert({
@@ -2329,6 +2279,10 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     this.completedAt = const Value.absent(),
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
+    this.plannedSetKey = const Value.absent(),
+    this.targetReps = const Value.absent(),
+    this.targetWeightKg = const Value.absent(),
+    this.isAmrap = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        sessionExerciseId = Value(sessionExerciseId),
@@ -2352,6 +2306,10 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     Expression<DateTime>? completedAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
+    Expression<String>? plannedSetKey,
+    Expression<int>? targetReps,
+    Expression<double>? targetWeightKg,
+    Expression<bool>? isAmrap,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2372,6 +2330,10 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
       if (completedAt != null) 'completed_at': completedAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
+      if (plannedSetKey != null) 'planned_set_key': plannedSetKey,
+      if (targetReps != null) 'target_reps': targetReps,
+      if (targetWeightKg != null) 'target_weight_kg': targetWeightKg,
+      if (isAmrap != null) 'is_amrap': isAmrap,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2394,6 +2356,10 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     Value<DateTime?>? completedAt,
     Value<DateTime>? updatedAt,
     Value<DateTime?>? deletedAt,
+    Value<String?>? plannedSetKey,
+    Value<int?>? targetReps,
+    Value<double?>? targetWeightKg,
+    Value<bool>? isAmrap,
     Value<int>? rowid,
   }) {
     return WorkoutSetsCompanion(
@@ -2414,6 +2380,10 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
       completedAt: completedAt ?? this.completedAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
+      plannedSetKey: plannedSetKey ?? this.plannedSetKey,
+      targetReps: targetReps ?? this.targetReps,
+      targetWeightKg: targetWeightKg ?? this.targetWeightKg,
+      isAmrap: isAmrap ?? this.isAmrap,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2472,6 +2442,18 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     if (deletedAt.present) {
       map['deleted_at'] = Variable<DateTime>(deletedAt.value);
     }
+    if (plannedSetKey.present) {
+      map['planned_set_key'] = Variable<String>(plannedSetKey.value);
+    }
+    if (targetReps.present) {
+      map['target_reps'] = Variable<int>(targetReps.value);
+    }
+    if (targetWeightKg.present) {
+      map['target_weight_kg'] = Variable<double>(targetWeightKg.value);
+    }
+    if (isAmrap.present) {
+      map['is_amrap'] = Variable<bool>(isAmrap.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2498,14 +2480,17 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
           ..write('completedAt: $completedAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
+          ..write('plannedSetKey: $plannedSetKey, ')
+          ..write('targetReps: $targetReps, ')
+          ..write('targetWeightKg: $targetWeightKg, ')
+          ..write('isAmrap: $isAmrap, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
 }
 
-class $BodyMeasurementsTable extends BodyMeasurements
-    with TableInfo<$BodyMeasurementsTable, BodyMeasurementRow> {
+class $BodyMeasurementsTable extends BodyMeasurements with TableInfo<$BodyMeasurementsTable, BodyMeasurementRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2519,9 +2504,7 @@ class $BodyMeasurementsTable extends BodyMeasurements
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _measuredAtMeta = const VerificationMeta(
-    'measuredAt',
-  );
+  static const VerificationMeta _measuredAtMeta = const VerificationMeta('measuredAt');
   @override
   late final GeneratedColumn<DateTime> measuredAt = GeneratedColumn<DateTime>(
     'measured_at',
@@ -2530,9 +2513,7 @@ class $BodyMeasurementsTable extends BodyMeasurements
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _weightKgMeta = const VerificationMeta(
-    'weightKg',
-  );
+  static const VerificationMeta _weightKgMeta = const VerificationMeta('weightKg');
   @override
   late final GeneratedColumn<double> weightKg = GeneratedColumn<double>(
     'weight_kg',
@@ -2551,9 +2532,7 @@ class $BodyMeasurementsTable extends BodyMeasurements
     requiredDuringInsert: false,
     defaultValue: const Constant('MANUAL'),
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -2562,9 +2541,7 @@ class $BodyMeasurementsTable extends BodyMeasurements
     type: DriftSqlType.dateTime,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
-    'deletedAt',
-  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta('deletedAt');
   @override
   late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
     'deleted_at',
@@ -2574,24 +2551,14 @@ class $BodyMeasurementsTable extends BodyMeasurements
     requiredDuringInsert: false,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    measuredAt,
-    weightKg,
-    source,
-    updatedAt,
-    deletedAt,
-  ];
+  List<GeneratedColumn> get $columns => [id, measuredAt, weightKg, source, updatedAt, deletedAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'body_measurements';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<BodyMeasurementRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<BodyMeasurementRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -2600,40 +2567,25 @@ class $BodyMeasurementsTable extends BodyMeasurements
       context.missing(_idMeta);
     }
     if (data.containsKey('measured_at')) {
-      context.handle(
-        _measuredAtMeta,
-        measuredAt.isAcceptableOrUnknown(data['measured_at']!, _measuredAtMeta),
-      );
+      context.handle(_measuredAtMeta, measuredAt.isAcceptableOrUnknown(data['measured_at']!, _measuredAtMeta));
     } else if (isInserting) {
       context.missing(_measuredAtMeta);
     }
     if (data.containsKey('weight_kg')) {
-      context.handle(
-        _weightKgMeta,
-        weightKg.isAcceptableOrUnknown(data['weight_kg']!, _weightKgMeta),
-      );
+      context.handle(_weightKgMeta, weightKg.isAcceptableOrUnknown(data['weight_kg']!, _weightKgMeta));
     } else if (isInserting) {
       context.missing(_weightKgMeta);
     }
     if (data.containsKey('source')) {
-      context.handle(
-        _sourceMeta,
-        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
-      );
+      context.handle(_sourceMeta, source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
     }
     if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
+      context.handle(_updatedAtMeta, updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
     if (data.containsKey('deleted_at')) {
-      context.handle(
-        _deletedAtMeta,
-        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
-      );
+      context.handle(_deletedAtMeta, deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta));
     }
     return context;
   }
@@ -2644,30 +2596,12 @@ class $BodyMeasurementsTable extends BodyMeasurements
   BodyMeasurementRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return BodyMeasurementRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      measuredAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}measured_at'],
-      )!,
-      weightKg: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}weight_kg'],
-      )!,
-      source: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}source'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
-      deletedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}deleted_at'],
-      ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      measuredAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}measured_at'])!,
+      weightKg: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}weight_kg'])!,
+      source: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source'])!,
+      updatedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      deletedAt: attachedDatabase.typeMapping.read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
     );
   }
 
@@ -2677,8 +2611,7 @@ class $BodyMeasurementsTable extends BodyMeasurements
   }
 }
 
-class BodyMeasurementRow extends DataClass
-    implements Insertable<BodyMeasurementRow> {
+class BodyMeasurementRow extends DataClass implements Insertable<BodyMeasurementRow> {
   final String id;
   final DateTime measuredAt;
   final double weightKg;
@@ -2714,16 +2647,11 @@ class BodyMeasurementRow extends DataClass
       weightKg: Value(weightKg),
       source: Value(source),
       updatedAt: Value(updatedAt),
-      deletedAt: deletedAt == null && nullToAbsent
-          ? const Value.absent()
-          : Value(deletedAt),
+      deletedAt: deletedAt == null && nullToAbsent ? const Value.absent() : Value(deletedAt),
     );
   }
 
-  factory BodyMeasurementRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory BodyMeasurementRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return BodyMeasurementRow(
       id: serializer.fromJson<String>(json['id']),
@@ -2765,9 +2693,7 @@ class BodyMeasurementRow extends DataClass
   BodyMeasurementRow copyWithCompanion(BodyMeasurementsCompanion data) {
     return BodyMeasurementRow(
       id: data.id.present ? data.id.value : this.id,
-      measuredAt: data.measuredAt.present
-          ? data.measuredAt.value
-          : this.measuredAt,
+      measuredAt: data.measuredAt.present ? data.measuredAt.value : this.measuredAt,
       weightKg: data.weightKg.present ? data.weightKg.value : this.weightKg,
       source: data.source.present ? data.source.value : this.source,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -2789,8 +2715,7 @@ class BodyMeasurementRow extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, measuredAt, weightKg, source, updatedAt, deletedAt);
+  int get hashCode => Object.hash(id, measuredAt, weightKg, source, updatedAt, deletedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2928,9 +2853,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
     hasAutoIncrement: true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'),
   );
   static const VerificationMeta _entityMeta = const VerificationMeta('entity');
   @override
@@ -2941,9 +2864,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _entityIdMeta = const VerificationMeta(
-    'entityId',
-  );
+  static const VerificationMeta _entityIdMeta = const VerificationMeta('entityId');
   @override
   late final GeneratedColumn<String> entityId = GeneratedColumn<String>(
     'entity_id',
@@ -2961,9 +2882,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _parentIdMeta = const VerificationMeta(
-    'parentId',
-  );
+  static const VerificationMeta _parentIdMeta = const VerificationMeta('parentId');
   @override
   late final GeneratedColumn<String> parentId = GeneratedColumn<String>(
     'parent_id',
@@ -2972,9 +2891,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _payloadMeta = const VerificationMeta(
-    'payload',
-  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta('payload');
   @override
   late final GeneratedColumn<String> payload = GeneratedColumn<String>(
     'payload',
@@ -2983,21 +2900,16 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _clientUpdatedAtMeta = const VerificationMeta(
-    'clientUpdatedAt',
-  );
+  static const VerificationMeta _clientUpdatedAtMeta = const VerificationMeta('clientUpdatedAt');
   @override
-  late final GeneratedColumn<DateTime> clientUpdatedAt =
-      GeneratedColumn<DateTime>(
-        'client_updated_at',
-        aliasedName,
-        false,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: true,
-      );
-  static const VerificationMeta _attemptsMeta = const VerificationMeta(
-    'attempts',
+  late final GeneratedColumn<DateTime> clientUpdatedAt = GeneratedColumn<DateTime>(
+    'client_updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
   );
+  static const VerificationMeta _attemptsMeta = const VerificationMeta('attempts');
   @override
   late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
     'attempts',
@@ -3007,9 +2919,7 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
-    'lastError',
-  );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta('lastError');
   @override
   late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
     'last_error',
@@ -3036,28 +2946,19 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
   String get actualTableName => $name;
   static const String $name = 'outbox';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<OutboxRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<OutboxRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('entity')) {
-      context.handle(
-        _entityMeta,
-        entity.isAcceptableOrUnknown(data['entity']!, _entityMeta),
-      );
+      context.handle(_entityMeta, entity.isAcceptableOrUnknown(data['entity']!, _entityMeta));
     } else if (isInserting) {
       context.missing(_entityMeta);
     }
     if (data.containsKey('entity_id')) {
-      context.handle(
-        _entityIdMeta,
-        entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
-      );
+      context.handle(_entityIdMeta, entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta));
     } else if (isInserting) {
       context.missing(_entityIdMeta);
     }
@@ -3067,39 +2968,24 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
       context.missing(_opMeta);
     }
     if (data.containsKey('parent_id')) {
-      context.handle(
-        _parentIdMeta,
-        parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta),
-      );
+      context.handle(_parentIdMeta, parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta));
     }
     if (data.containsKey('payload')) {
-      context.handle(
-        _payloadMeta,
-        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
-      );
+      context.handle(_payloadMeta, payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta));
     }
     if (data.containsKey('client_updated_at')) {
       context.handle(
         _clientUpdatedAtMeta,
-        clientUpdatedAt.isAcceptableOrUnknown(
-          data['client_updated_at']!,
-          _clientUpdatedAtMeta,
-        ),
+        clientUpdatedAt.isAcceptableOrUnknown(data['client_updated_at']!, _clientUpdatedAtMeta),
       );
     } else if (isInserting) {
       context.missing(_clientUpdatedAtMeta);
     }
     if (data.containsKey('attempts')) {
-      context.handle(
-        _attemptsMeta,
-        attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta),
-      );
+      context.handle(_attemptsMeta, attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta));
     }
     if (data.containsKey('last_error')) {
-      context.handle(
-        _lastErrorMeta,
-        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
-      );
+      context.handle(_lastErrorMeta, lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta));
     }
     return context;
   }
@@ -3110,42 +2996,18 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
   OutboxRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return OutboxRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      entity: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}entity'],
-      )!,
-      entityId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}entity_id'],
-      )!,
-      op: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}op'],
-      )!,
-      parentId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}parent_id'],
-      ),
-      payload: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}payload'],
-      ),
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      entity: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}entity'])!,
+      entityId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}entity_id'])!,
+      op: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}op'])!,
+      parentId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}parent_id']),
+      payload: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}payload']),
       clientUpdatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}client_updated_at'],
       )!,
-      attempts: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}attempts'],
-      )!,
-      lastError: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}last_error'],
-      ),
+      attempts: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}attempts'])!,
+      lastError: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}last_error']),
     );
   }
 
@@ -3209,24 +3071,15 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
       entity: Value(entity),
       entityId: Value(entityId),
       op: Value(op),
-      parentId: parentId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(parentId),
-      payload: payload == null && nullToAbsent
-          ? const Value.absent()
-          : Value(payload),
+      parentId: parentId == null && nullToAbsent ? const Value.absent() : Value(parentId),
+      payload: payload == null && nullToAbsent ? const Value.absent() : Value(payload),
       clientUpdatedAt: Value(clientUpdatedAt),
       attempts: Value(attempts),
-      lastError: lastError == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastError),
+      lastError: lastError == null && nullToAbsent ? const Value.absent() : Value(lastError),
     );
   }
 
-  factory OutboxRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory OutboxRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return OutboxRow(
       id: serializer.fromJson<int>(json['id']),
@@ -3285,9 +3138,7 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
       op: data.op.present ? data.op.value : this.op,
       parentId: data.parentId.present ? data.parentId.value : this.parentId,
       payload: data.payload.present ? data.payload.value : this.payload,
-      clientUpdatedAt: data.clientUpdatedAt.present
-          ? data.clientUpdatedAt.value
-          : this.clientUpdatedAt,
+      clientUpdatedAt: data.clientUpdatedAt.present ? data.clientUpdatedAt.value : this.clientUpdatedAt,
       attempts: data.attempts.present ? data.attempts.value : this.attempts,
       lastError: data.lastError.present ? data.lastError.value : this.lastError,
     );
@@ -3310,17 +3161,7 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    entity,
-    entityId,
-    op,
-    parentId,
-    payload,
-    clientUpdatedAt,
-    attempts,
-    lastError,
-  );
+  int get hashCode => Object.hash(id, entity, entityId, op, parentId, payload, clientUpdatedAt, attempts, lastError);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3469,8 +3310,7 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
   }
 }
 
-class $SyncStateTable extends SyncState
-    with TableInfo<$SyncStateTable, SyncStateRow> {
+class $SyncStateTable extends SyncState with TableInfo<$SyncStateTable, SyncStateRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -3484,9 +3324,7 @@ class $SyncStateTable extends SyncState
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _lastServerSeqMeta = const VerificationMeta(
-    'lastServerSeq',
-  );
+  static const VerificationMeta _lastServerSeqMeta = const VerificationMeta('lastServerSeq');
   @override
   late final GeneratedColumn<int> lastServerSeq = GeneratedColumn<int>(
     'last_server_seq',
@@ -3504,10 +3342,7 @@ class $SyncStateTable extends SyncState
   String get actualTableName => $name;
   static const String $name = 'sync_state';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SyncStateRow> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SyncStateRow> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -3516,10 +3351,7 @@ class $SyncStateTable extends SyncState
     if (data.containsKey('last_server_seq')) {
       context.handle(
         _lastServerSeqMeta,
-        lastServerSeq.isAcceptableOrUnknown(
-          data['last_server_seq']!,
-          _lastServerSeqMeta,
-        ),
+        lastServerSeq.isAcceptableOrUnknown(data['last_server_seq']!, _lastServerSeqMeta),
       );
     }
     return context;
@@ -3531,14 +3363,8 @@ class $SyncStateTable extends SyncState
   SyncStateRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SyncStateRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      lastServerSeq: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}last_server_seq'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      lastServerSeq: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}last_server_seq'])!,
     );
   }
 
@@ -3562,16 +3388,10 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
   }
 
   SyncStateCompanion toCompanion(bool nullToAbsent) {
-    return SyncStateCompanion(
-      id: Value(id),
-      lastServerSeq: Value(lastServerSeq),
-    );
+    return SyncStateCompanion(id: Value(id), lastServerSeq: Value(lastServerSeq));
   }
 
-  factory SyncStateRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SyncStateRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SyncStateRow(
       id: serializer.fromJson<int>(json['id']),
@@ -3581,22 +3401,15 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
   @override
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'lastServerSeq': serializer.toJson<int>(lastServerSeq),
-    };
+    return <String, dynamic>{'id': serializer.toJson<int>(id), 'lastServerSeq': serializer.toJson<int>(lastServerSeq)};
   }
 
-  SyncStateRow copyWith({int? id, int? lastServerSeq}) => SyncStateRow(
-    id: id ?? this.id,
-    lastServerSeq: lastServerSeq ?? this.lastServerSeq,
-  );
+  SyncStateRow copyWith({int? id, int? lastServerSeq}) =>
+      SyncStateRow(id: id ?? this.id, lastServerSeq: lastServerSeq ?? this.lastServerSeq);
   SyncStateRow copyWithCompanion(SyncStateCompanion data) {
     return SyncStateRow(
       id: data.id.present ? data.id.value : this.id,
-      lastServerSeq: data.lastServerSeq.present
-          ? data.lastServerSeq.value
-          : this.lastServerSeq,
+      lastServerSeq: data.lastServerSeq.present ? data.lastServerSeq.value : this.lastServerSeq,
     );
   }
 
@@ -3614,37 +3427,20 @@ class SyncStateRow extends DataClass implements Insertable<SyncStateRow> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is SyncStateRow &&
-          other.id == this.id &&
-          other.lastServerSeq == this.lastServerSeq);
+      (other is SyncStateRow && other.id == this.id && other.lastServerSeq == this.lastServerSeq);
 }
 
 class SyncStateCompanion extends UpdateCompanion<SyncStateRow> {
   final Value<int> id;
   final Value<int> lastServerSeq;
-  const SyncStateCompanion({
-    this.id = const Value.absent(),
-    this.lastServerSeq = const Value.absent(),
-  });
-  SyncStateCompanion.insert({
-    this.id = const Value.absent(),
-    this.lastServerSeq = const Value.absent(),
-  });
-  static Insertable<SyncStateRow> custom({
-    Expression<int>? id,
-    Expression<int>? lastServerSeq,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (lastServerSeq != null) 'last_server_seq': lastServerSeq,
-    });
+  const SyncStateCompanion({this.id = const Value.absent(), this.lastServerSeq = const Value.absent()});
+  SyncStateCompanion.insert({this.id = const Value.absent(), this.lastServerSeq = const Value.absent()});
+  static Insertable<SyncStateRow> custom({Expression<int>? id, Expression<int>? lastServerSeq}) {
+    return RawValuesInsertable({if (id != null) 'id': id, if (lastServerSeq != null) 'last_server_seq': lastServerSeq});
   }
 
   SyncStateCompanion copyWith({Value<int>? id, Value<int>? lastServerSeq}) {
-    return SyncStateCompanion(
-      id: id ?? this.id,
-      lastServerSeq: lastServerSeq ?? this.lastServerSeq,
-    );
+    return SyncStateCompanion(id: id ?? this.id, lastServerSeq: lastServerSeq ?? this.lastServerSeq);
   }
 
   @override
@@ -3674,13 +3470,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $ExercisesTable exercises = $ExercisesTable(this);
   late final $SessionsTable sessions = $SessionsTable(this);
-  late final $SessionExercisesTable sessionExercises = $SessionExercisesTable(
-    this,
-  );
+  late final $SessionExercisesTable sessionExercises = $SessionExercisesTable(this);
   late final $WorkoutSetsTable workoutSets = $WorkoutSetsTable(this);
-  late final $BodyMeasurementsTable bodyMeasurements = $BodyMeasurementsTable(
-    this,
-  );
+  late final $BodyMeasurementsTable bodyMeasurements = $BodyMeasurementsTable(this);
   late final $OutboxTable outbox = $OutboxTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final Index idxExercisesDeleted = Index(
@@ -3703,10 +3495,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_se_exercise',
     'CREATE INDEX idx_se_exercise ON session_exercises (exercise_id)',
   );
-  late final Index idxSetsSe = Index(
-    'idx_sets_se',
-    'CREATE INDEX idx_sets_se ON workout_sets (session_exercise_id)',
-  );
+  late final Index idxSetsSe = Index('idx_sets_se', 'CREATE INDEX idx_sets_se ON workout_sets (session_exercise_id)');
   late final Index idxBodyMeasured = Index(
     'idx_body_measured',
     'CREATE INDEX idx_body_measured ON body_measurements (measured_at)',
@@ -3716,8 +3505,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'CREATE UNIQUE INDEX idx_outbox_entity ON outbox (entity, entity_id)',
   );
   @override
-  Iterable<TableInfo<Table, Object?>> get allTables =>
-      allSchemaEntities.whereType<TableInfo<Table, Object?>>();
+  Iterable<TableInfo<Table, Object?>> get allTables => allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     exercises,
@@ -3737,8 +3525,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     idxOutboxEntity,
   ];
   @override
-  DriftDatabaseOptions get options =>
-      const DriftDatabaseOptions(storeDateTimeAsText: true);
+  DriftDatabaseOptions get options => const DriftDatabaseOptions(storeDateTimeAsText: true);
 }
 
 typedef $$ExercisesTableCreateCompanionBuilder = ExercisesCompanion Function({
@@ -3766,8 +3553,7 @@ typedef $$ExercisesTableUpdateCompanionBuilder = ExercisesCompanion Function({
   Value<int> rowid,
 });
 
-class $$ExercisesTableFilterComposer
-    extends Composer<_$AppDatabase, $ExercisesTable> {
+class $$ExercisesTableFilterComposer extends Composer<_$AppDatabase, $ExercisesTable> {
   $$ExercisesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -3775,54 +3561,33 @@ class $$ExercisesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get nameKo => $composableBuilder(
-    column: $table.nameKo,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get nameKo =>
+      $composableBuilder(column: $table.nameKo, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get nameEn => $composableBuilder(
-    column: $table.nameEn,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get nameEn =>
+      $composableBuilder(column: $table.nameEn, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get type => $composableBuilder(column: $table.type, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get primaryMuscle => $composableBuilder(
-    column: $table.primaryMuscle,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get primaryMuscle =>
+      $composableBuilder(column: $table.primaryMuscle, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get secondaryMuscles => $composableBuilder(
-    column: $table.secondaryMuscles,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get secondaryMuscles =>
+      $composableBuilder(column: $table.secondaryMuscles, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get builtIn => $composableBuilder(
-    column: $table.builtIn,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get builtIn =>
+      $composableBuilder(column: $table.builtIn, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => ColumnFilters(column));
 }
 
-class $$ExercisesTableOrderingComposer
-    extends Composer<_$AppDatabase, $ExercisesTable> {
+class $$ExercisesTableOrderingComposer extends Composer<_$AppDatabase, $ExercisesTable> {
   $$ExercisesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -3830,54 +3595,34 @@ class $$ExercisesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get nameKo => $composableBuilder(
-    column: $table.nameKo,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get nameKo =>
+      $composableBuilder(column: $table.nameKo, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get nameEn => $composableBuilder(
-    column: $table.nameEn,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get nameEn =>
+      $composableBuilder(column: $table.nameEn, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get primaryMuscle => $composableBuilder(
-    column: $table.primaryMuscle,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get primaryMuscle =>
+      $composableBuilder(column: $table.primaryMuscle, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get secondaryMuscles => $composableBuilder(
-    column: $table.secondaryMuscles,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get secondaryMuscles =>
+      $composableBuilder(column: $table.secondaryMuscles, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get builtIn => $composableBuilder(
-    column: $table.builtIn,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get builtIn =>
+      $composableBuilder(column: $table.builtIn, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
 }
 
-class $$ExercisesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ExercisesTable> {
+class $$ExercisesTableAnnotationComposer extends Composer<_$AppDatabase, $ExercisesTable> {
   $$ExercisesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -3885,36 +3630,25 @@ class $$ExercisesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get nameKo =>
-      $composableBuilder(column: $table.nameKo, builder: (column) => column);
+  GeneratedColumn<String> get nameKo => $composableBuilder(column: $table.nameKo, builder: (column) => column);
 
-  GeneratedColumn<String> get nameEn =>
-      $composableBuilder(column: $table.nameEn, builder: (column) => column);
+  GeneratedColumn<String> get nameEn => $composableBuilder(column: $table.nameEn, builder: (column) => column);
 
-  GeneratedColumn<String> get type =>
-      $composableBuilder(column: $table.type, builder: (column) => column);
+  GeneratedColumn<String> get type => $composableBuilder(column: $table.type, builder: (column) => column);
 
-  GeneratedColumn<String> get primaryMuscle => $composableBuilder(
-    column: $table.primaryMuscle,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get primaryMuscle =>
+      $composableBuilder(column: $table.primaryMuscle, builder: (column) => column);
 
-  GeneratedColumn<String> get secondaryMuscles => $composableBuilder(
-    column: $table.secondaryMuscles,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get secondaryMuscles =>
+      $composableBuilder(column: $table.secondaryMuscles, builder: (column) => column);
 
-  GeneratedColumn<bool> get builtIn =>
-      $composableBuilder(column: $table.builtIn, builder: (column) => column);
+  GeneratedColumn<bool> get builtIn => $composableBuilder(column: $table.builtIn, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get deletedAt => $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$ExercisesTableTableManager
@@ -3928,10 +3662,7 @@ class $$ExercisesTableTableManager
           $$ExercisesTableAnnotationComposer,
           $$ExercisesTableCreateCompanionBuilder,
           $$ExercisesTableUpdateCompanionBuilder,
-          (
-            ExerciseRow,
-            BaseReferences<_$AppDatabase, $ExercisesTable, ExerciseRow>,
-          ),
+          (ExerciseRow, BaseReferences<_$AppDatabase, $ExercisesTable, ExerciseRow>),
           ExerciseRow,
           PrefetchHooks Function()
         > {
@@ -3940,12 +3671,9 @@ class $$ExercisesTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ExercisesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ExercisesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ExercisesTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$ExercisesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ExercisesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ExercisesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -3998,11 +3726,7 @@ class $$ExercisesTableTableManager
               .map(
                 (e) => (
                   e.readTable<$ExercisesTable, ExerciseRow>(table),
-                  BaseReferences<_$AppDatabase, $ExercisesTable, ExerciseRow>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$AppDatabase, $ExercisesTable, ExerciseRow>(db, table, e),
                 ),
               )
               .toList(),
@@ -4021,10 +3745,7 @@ typedef $$ExercisesTableProcessedTableManager =
       $$ExercisesTableAnnotationComposer,
       $$ExercisesTableCreateCompanionBuilder,
       $$ExercisesTableUpdateCompanionBuilder,
-      (
-        ExerciseRow,
-        BaseReferences<_$AppDatabase, $ExercisesTable, ExerciseRow>,
-      ),
+      (ExerciseRow, BaseReferences<_$AppDatabase, $ExercisesTable, ExerciseRow>),
       ExerciseRow,
       PrefetchHooks Function()
     >;
@@ -4037,6 +3758,9 @@ typedef $$SessionsTableCreateCompanionBuilder = SessionsCompanion Function({
   Value<String?> source,
   required DateTime updatedAt,
   Value<DateTime?> deletedAt,
+  Value<String?> programInstanceId,
+  Value<int?> planSeq,
+  Value<String?> planDayKey,
   Value<int> rowid,
 });
 typedef $$SessionsTableUpdateCompanionBuilder = SessionsCompanion Function({
@@ -4048,11 +3772,13 @@ typedef $$SessionsTableUpdateCompanionBuilder = SessionsCompanion Function({
   Value<String?> source,
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
+  Value<String?> programInstanceId,
+  Value<int?> planSeq,
+  Value<String?> planDayKey,
   Value<int> rowid,
 });
 
-class $$SessionsTableFilterComposer
-    extends Composer<_$AppDatabase, $SessionsTable> {
+class $$SessionsTableFilterComposer extends Composer<_$AppDatabase, $SessionsTable> {
   $$SessionsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -4060,49 +3786,38 @@ class $$SessionsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get startedAt => $composableBuilder(
-    column: $table.startedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get endedAt => $composableBuilder(
-    column: $table.endedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get endedAt =>
+      $composableBuilder(column: $table.endedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get tz => $composableBuilder(
-    column: $table.tz,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get tz => $composableBuilder(column: $table.tz, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get note => $composableBuilder(column: $table.note, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get source => $composableBuilder(
-    column: $table.source,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get programInstanceId =>
+      $composableBuilder(column: $table.programInstanceId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get planSeq =>
+      $composableBuilder(column: $table.planSeq, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get planDayKey =>
+      $composableBuilder(column: $table.planDayKey, builder: (column) => ColumnFilters(column));
 }
 
-class $$SessionsTableOrderingComposer
-    extends Composer<_$AppDatabase, $SessionsTable> {
+class $$SessionsTableOrderingComposer extends Composer<_$AppDatabase, $SessionsTable> {
   $$SessionsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -4110,49 +3825,39 @@ class $$SessionsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
-    column: $table.startedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get endedAt => $composableBuilder(
-    column: $table.endedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get endedAt =>
+      $composableBuilder(column: $table.endedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get tz => $composableBuilder(
-    column: $table.tz,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get tz => $composableBuilder(column: $table.tz, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get source => $composableBuilder(
-    column: $table.source,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get programInstanceId =>
+      $composableBuilder(column: $table.programInstanceId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get planSeq =>
+      $composableBuilder(column: $table.planSeq, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get planDayKey =>
+      $composableBuilder(column: $table.planDayKey, builder: (column) => ColumnOrderings(column));
 }
 
-class $$SessionsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SessionsTable> {
+class $$SessionsTableAnnotationComposer extends Composer<_$AppDatabase, $SessionsTable> {
   $$SessionsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -4160,29 +3865,28 @@ class $$SessionsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get startedAt =>
-      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get startedAt => $composableBuilder(column: $table.startedAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get endedAt =>
-      $composableBuilder(column: $table.endedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get endedAt => $composableBuilder(column: $table.endedAt, builder: (column) => column);
 
-  GeneratedColumn<String> get tz =>
-      $composableBuilder(column: $table.tz, builder: (column) => column);
+  GeneratedColumn<String> get tz => $composableBuilder(column: $table.tz, builder: (column) => column);
 
-  GeneratedColumn<String> get note =>
-      $composableBuilder(column: $table.note, builder: (column) => column);
+  GeneratedColumn<String> get note => $composableBuilder(column: $table.note, builder: (column) => column);
 
-  GeneratedColumn<String> get source =>
-      $composableBuilder(column: $table.source, builder: (column) => column);
+  GeneratedColumn<String> get source => $composableBuilder(column: $table.source, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get deletedAt => $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get programInstanceId =>
+      $composableBuilder(column: $table.programInstanceId, builder: (column) => column);
+
+  GeneratedColumn<int> get planSeq => $composableBuilder(column: $table.planSeq, builder: (column) => column);
+
+  GeneratedColumn<String> get planDayKey => $composableBuilder(column: $table.planDayKey, builder: (column) => column);
 }
 
 class $$SessionsTableTableManager
@@ -4196,10 +3900,7 @@ class $$SessionsTableTableManager
           $$SessionsTableAnnotationComposer,
           $$SessionsTableCreateCompanionBuilder,
           $$SessionsTableUpdateCompanionBuilder,
-          (
-            SessionRow,
-            BaseReferences<_$AppDatabase, $SessionsTable, SessionRow>,
-          ),
+          (SessionRow, BaseReferences<_$AppDatabase, $SessionsTable, SessionRow>),
           SessionRow,
           PrefetchHooks Function()
         > {
@@ -4208,12 +3909,9 @@ class $$SessionsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SessionsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SessionsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SessionsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$SessionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SessionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$SessionsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -4224,6 +3922,9 @@ class $$SessionsTableTableManager
                 Value<String?> source = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> programInstanceId = const Value.absent(),
+                Value<int?> planSeq = const Value.absent(),
+                Value<String?> planDayKey = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
@@ -4234,6 +3935,9 @@ class $$SessionsTableTableManager
                 source: source,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
+                programInstanceId: programInstanceId,
+                planSeq: planSeq,
+                planDayKey: planDayKey,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4246,6 +3950,9 @@ class $$SessionsTableTableManager
                 Value<String?> source = const Value.absent(),
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> programInstanceId = const Value.absent(),
+                Value<int?> planSeq = const Value.absent(),
+                Value<String?> planDayKey = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
@@ -4256,17 +3963,16 @@ class $$SessionsTableTableManager
                 source: source,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
+                programInstanceId: programInstanceId,
+                planSeq: planSeq,
+                planDayKey: planDayKey,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
                   e.readTable<$SessionsTable, SessionRow>(table),
-                  BaseReferences<_$AppDatabase, $SessionsTable, SessionRow>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$AppDatabase, $SessionsTable, SessionRow>(db, table, e),
                 ),
               )
               .toList(),
@@ -4289,31 +3995,32 @@ typedef $$SessionsTableProcessedTableManager =
       SessionRow,
       PrefetchHooks Function()
     >;
-typedef $$SessionExercisesTableCreateCompanionBuilder =
-    SessionExercisesCompanion Function({
-      required String id,
-      required String sessionId,
-      required String exerciseId,
-      required int position,
-      Value<String?> note,
-      required DateTime updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<int> rowid,
-    });
-typedef $$SessionExercisesTableUpdateCompanionBuilder =
-    SessionExercisesCompanion Function({
-      Value<String> id,
-      Value<String> sessionId,
-      Value<String> exerciseId,
-      Value<int> position,
-      Value<String?> note,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<int> rowid,
-    });
+typedef $$SessionExercisesTableCreateCompanionBuilder = SessionExercisesCompanion Function({
+  required String id,
+  required String sessionId,
+  required String exerciseId,
+  required int position,
+  Value<String?> note,
+  required DateTime updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String?> liftKey,
+  Value<bool> accessory,
+  Value<int> rowid,
+});
+typedef $$SessionExercisesTableUpdateCompanionBuilder = SessionExercisesCompanion Function({
+  Value<String> id,
+  Value<String> sessionId,
+  Value<String> exerciseId,
+  Value<int> position,
+  Value<String?> note,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String?> liftKey,
+  Value<bool> accessory,
+  Value<int> rowid,
+});
 
-class $$SessionExercisesTableFilterComposer
-    extends Composer<_$AppDatabase, $SessionExercisesTable> {
+class $$SessionExercisesTableFilterComposer extends Composer<_$AppDatabase, $SessionExercisesTable> {
   $$SessionExercisesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -4321,44 +4028,33 @@ class $$SessionExercisesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get sessionId => $composableBuilder(
-    column: $table.sessionId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get exerciseId => $composableBuilder(
-    column: $table.exerciseId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get exerciseId =>
+      $composableBuilder(column: $table.exerciseId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get position => $composableBuilder(
-    column: $table.position,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get note => $composableBuilder(column: $table.note, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get liftKey =>
+      $composableBuilder(column: $table.liftKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get accessory =>
+      $composableBuilder(column: $table.accessory, builder: (column) => ColumnFilters(column));
 }
 
-class $$SessionExercisesTableOrderingComposer
-    extends Composer<_$AppDatabase, $SessionExercisesTable> {
+class $$SessionExercisesTableOrderingComposer extends Composer<_$AppDatabase, $SessionExercisesTable> {
   $$SessionExercisesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -4366,44 +4062,34 @@ class $$SessionExercisesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get sessionId => $composableBuilder(
-    column: $table.sessionId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get sessionId =>
+      $composableBuilder(column: $table.sessionId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get exerciseId => $composableBuilder(
-    column: $table.exerciseId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get exerciseId =>
+      $composableBuilder(column: $table.exerciseId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get position => $composableBuilder(
-    column: $table.position,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get liftKey =>
+      $composableBuilder(column: $table.liftKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get accessory =>
+      $composableBuilder(column: $table.accessory, builder: (column) => ColumnOrderings(column));
 }
 
-class $$SessionExercisesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SessionExercisesTable> {
+class $$SessionExercisesTableAnnotationComposer extends Composer<_$AppDatabase, $SessionExercisesTable> {
   $$SessionExercisesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -4411,28 +4097,23 @@ class $$SessionExercisesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get sessionId =>
-      $composableBuilder(column: $table.sessionId, builder: (column) => column);
+  GeneratedColumn<String> get sessionId => $composableBuilder(column: $table.sessionId, builder: (column) => column);
 
-  GeneratedColumn<String> get exerciseId => $composableBuilder(
-    column: $table.exerciseId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get exerciseId => $composableBuilder(column: $table.exerciseId, builder: (column) => column);
 
-  GeneratedColumn<int> get position =>
-      $composableBuilder(column: $table.position, builder: (column) => column);
+  GeneratedColumn<int> get position => $composableBuilder(column: $table.position, builder: (column) => column);
 
-  GeneratedColumn<String> get note =>
-      $composableBuilder(column: $table.note, builder: (column) => column);
+  GeneratedColumn<String> get note => $composableBuilder(column: $table.note, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get deletedAt => $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get liftKey => $composableBuilder(column: $table.liftKey, builder: (column) => column);
+
+  GeneratedColumn<bool> get accessory => $composableBuilder(column: $table.accessory, builder: (column) => column);
 }
 
 class $$SessionExercisesTableTableManager
@@ -4446,30 +4127,18 @@ class $$SessionExercisesTableTableManager
           $$SessionExercisesTableAnnotationComposer,
           $$SessionExercisesTableCreateCompanionBuilder,
           $$SessionExercisesTableUpdateCompanionBuilder,
-          (
-            SessionExerciseRow,
-            BaseReferences<
-              _$AppDatabase,
-              $SessionExercisesTable,
-              SessionExerciseRow
-            >,
-          ),
+          (SessionExerciseRow, BaseReferences<_$AppDatabase, $SessionExercisesTable, SessionExerciseRow>),
           SessionExerciseRow,
           PrefetchHooks Function()
         > {
-  $$SessionExercisesTableTableManager(
-    _$AppDatabase db,
-    $SessionExercisesTable table,
-  ) : super(
+  $$SessionExercisesTableTableManager(_$AppDatabase db, $SessionExercisesTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SessionExercisesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SessionExercisesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SessionExercisesTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$SessionExercisesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SessionExercisesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$SessionExercisesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -4479,6 +4148,8 @@ class $$SessionExercisesTableTableManager
                 Value<String?> note = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> liftKey = const Value.absent(),
+                Value<bool> accessory = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionExercisesCompanion(
                 id: id,
@@ -4488,6 +4159,8 @@ class $$SessionExercisesTableTableManager
                 note: note,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
+                liftKey: liftKey,
+                accessory: accessory,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4499,6 +4172,8 @@ class $$SessionExercisesTableTableManager
                 Value<String?> note = const Value.absent(),
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> liftKey = const Value.absent(),
+                Value<bool> accessory = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionExercisesCompanion.insert(
                 id: id,
@@ -4508,19 +4183,15 @@ class $$SessionExercisesTableTableManager
                 note: note,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
+                liftKey: liftKey,
+                accessory: accessory,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable<$SessionExercisesTable, SessionExerciseRow>(
-                    table,
-                  ),
-                  BaseReferences<
-                    _$AppDatabase,
-                    $SessionExercisesTable,
-                    SessionExerciseRow
-                  >(db, table, e),
+                  e.readTable<$SessionExercisesTable, SessionExerciseRow>(table),
+                  BaseReferences<_$AppDatabase, $SessionExercisesTable, SessionExerciseRow>(db, table, e),
                 ),
               )
               .toList(),
@@ -4539,62 +4210,60 @@ typedef $$SessionExercisesTableProcessedTableManager =
       $$SessionExercisesTableAnnotationComposer,
       $$SessionExercisesTableCreateCompanionBuilder,
       $$SessionExercisesTableUpdateCompanionBuilder,
-      (
-        SessionExerciseRow,
-        BaseReferences<
-          _$AppDatabase,
-          $SessionExercisesTable,
-          SessionExerciseRow
-        >,
-      ),
+      (SessionExerciseRow, BaseReferences<_$AppDatabase, $SessionExercisesTable, SessionExerciseRow>),
       SessionExerciseRow,
       PrefetchHooks Function()
     >;
-typedef $$WorkoutSetsTableCreateCompanionBuilder =
-    WorkoutSetsCompanion Function({
-      required String id,
-      required String sessionExerciseId,
-      required int position,
-      Value<bool> isWarmup,
-      Value<double?> weightKg,
-      Value<double?> addedWeightKg,
-      Value<int?> reps,
-      Value<int?> durationSec,
-      Value<double?> distanceM,
-      Value<String?> bandLevel,
-      Value<double?> rpe,
-      Value<int?> rir,
-      Value<int?> restSec,
-      Value<String?> note,
-      Value<DateTime?> completedAt,
-      required DateTime updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<int> rowid,
-    });
-typedef $$WorkoutSetsTableUpdateCompanionBuilder =
-    WorkoutSetsCompanion Function({
-      Value<String> id,
-      Value<String> sessionExerciseId,
-      Value<int> position,
-      Value<bool> isWarmup,
-      Value<double?> weightKg,
-      Value<double?> addedWeightKg,
-      Value<int?> reps,
-      Value<int?> durationSec,
-      Value<double?> distanceM,
-      Value<String?> bandLevel,
-      Value<double?> rpe,
-      Value<int?> rir,
-      Value<int?> restSec,
-      Value<String?> note,
-      Value<DateTime?> completedAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<int> rowid,
-    });
+typedef $$WorkoutSetsTableCreateCompanionBuilder = WorkoutSetsCompanion Function({
+  required String id,
+  required String sessionExerciseId,
+  required int position,
+  Value<bool> isWarmup,
+  Value<double?> weightKg,
+  Value<double?> addedWeightKg,
+  Value<int?> reps,
+  Value<int?> durationSec,
+  Value<double?> distanceM,
+  Value<String?> bandLevel,
+  Value<double?> rpe,
+  Value<int?> rir,
+  Value<int?> restSec,
+  Value<String?> note,
+  Value<DateTime?> completedAt,
+  required DateTime updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String?> plannedSetKey,
+  Value<int?> targetReps,
+  Value<double?> targetWeightKg,
+  Value<bool> isAmrap,
+  Value<int> rowid,
+});
+typedef $$WorkoutSetsTableUpdateCompanionBuilder = WorkoutSetsCompanion Function({
+  Value<String> id,
+  Value<String> sessionExerciseId,
+  Value<int> position,
+  Value<bool> isWarmup,
+  Value<double?> weightKg,
+  Value<double?> addedWeightKg,
+  Value<int?> reps,
+  Value<int?> durationSec,
+  Value<double?> distanceM,
+  Value<String?> bandLevel,
+  Value<double?> rpe,
+  Value<int?> rir,
+  Value<int?> restSec,
+  Value<String?> note,
+  Value<DateTime?> completedAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String?> plannedSetKey,
+  Value<int?> targetReps,
+  Value<double?> targetWeightKg,
+  Value<bool> isAmrap,
+  Value<int> rowid,
+});
 
-class $$WorkoutSetsTableFilterComposer
-    extends Composer<_$AppDatabase, $WorkoutSetsTable> {
+class $$WorkoutSetsTableFilterComposer extends Composer<_$AppDatabase, $WorkoutSetsTable> {
   $$WorkoutSetsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -4602,94 +4271,66 @@ class $$WorkoutSetsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get sessionExerciseId => $composableBuilder(
-    column: $table.sessionExerciseId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get sessionExerciseId =>
+      $composableBuilder(column: $table.sessionExerciseId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get position => $composableBuilder(
-    column: $table.position,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get isWarmup => $composableBuilder(
-    column: $table.isWarmup,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get isWarmup =>
+      $composableBuilder(column: $table.isWarmup, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get weightKg => $composableBuilder(
-    column: $table.weightKg,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get weightKg =>
+      $composableBuilder(column: $table.weightKg, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get addedWeightKg => $composableBuilder(
-    column: $table.addedWeightKg,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get addedWeightKg =>
+      $composableBuilder(column: $table.addedWeightKg, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get reps => $composableBuilder(
-    column: $table.reps,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get reps => $composableBuilder(column: $table.reps, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get durationSec => $composableBuilder(
-    column: $table.durationSec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get durationSec =>
+      $composableBuilder(column: $table.durationSec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get distanceM => $composableBuilder(
-    column: $table.distanceM,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get distanceM =>
+      $composableBuilder(column: $table.distanceM, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get bandLevel => $composableBuilder(
-    column: $table.bandLevel,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get bandLevel =>
+      $composableBuilder(column: $table.bandLevel, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get rpe => $composableBuilder(
-    column: $table.rpe,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get rpe => $composableBuilder(column: $table.rpe, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get rir => $composableBuilder(
-    column: $table.rir,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get rir => $composableBuilder(column: $table.rir, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get restSec => $composableBuilder(
-    column: $table.restSec,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get restSec =>
+      $composableBuilder(column: $table.restSec, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get note => $composableBuilder(column: $table.note, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get completedAt => $composableBuilder(
-    column: $table.completedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get completedAt =>
+      $composableBuilder(column: $table.completedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get plannedSetKey =>
+      $composableBuilder(column: $table.plannedSetKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get targetReps =>
+      $composableBuilder(column: $table.targetReps, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<double> get targetWeightKg =>
+      $composableBuilder(column: $table.targetWeightKg, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get isAmrap =>
+      $composableBuilder(column: $table.isAmrap, builder: (column) => ColumnFilters(column));
 }
 
-class $$WorkoutSetsTableOrderingComposer
-    extends Composer<_$AppDatabase, $WorkoutSetsTable> {
+class $$WorkoutSetsTableOrderingComposer extends Composer<_$AppDatabase, $WorkoutSetsTable> {
   $$WorkoutSetsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -4697,94 +4338,69 @@ class $$WorkoutSetsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get sessionExerciseId => $composableBuilder(
-    column: $table.sessionExerciseId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get sessionExerciseId =>
+      $composableBuilder(column: $table.sessionExerciseId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get position => $composableBuilder(
-    column: $table.position,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get position =>
+      $composableBuilder(column: $table.position, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get isWarmup => $composableBuilder(
-    column: $table.isWarmup,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get isWarmup =>
+      $composableBuilder(column: $table.isWarmup, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get weightKg => $composableBuilder(
-    column: $table.weightKg,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get weightKg =>
+      $composableBuilder(column: $table.weightKg, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get addedWeightKg => $composableBuilder(
-    column: $table.addedWeightKg,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get addedWeightKg =>
+      $composableBuilder(column: $table.addedWeightKg, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get reps => $composableBuilder(
-    column: $table.reps,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get reps =>
+      $composableBuilder(column: $table.reps, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get durationSec => $composableBuilder(
-    column: $table.durationSec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get durationSec =>
+      $composableBuilder(column: $table.durationSec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get distanceM => $composableBuilder(
-    column: $table.distanceM,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get distanceM =>
+      $composableBuilder(column: $table.distanceM, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get bandLevel => $composableBuilder(
-    column: $table.bandLevel,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get bandLevel =>
+      $composableBuilder(column: $table.bandLevel, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get rpe => $composableBuilder(
-    column: $table.rpe,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get rpe =>
+      $composableBuilder(column: $table.rpe, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get rir => $composableBuilder(
-    column: $table.rir,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get rir => $composableBuilder(column: $table.rir, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get restSec => $composableBuilder(
-    column: $table.restSec,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get restSec =>
+      $composableBuilder(column: $table.restSec, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
-    column: $table.completedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get completedAt =>
+      $composableBuilder(column: $table.completedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get plannedSetKey =>
+      $composableBuilder(column: $table.plannedSetKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get targetReps =>
+      $composableBuilder(column: $table.targetReps, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<double> get targetWeightKg =>
+      $composableBuilder(column: $table.targetWeightKg, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get isAmrap =>
+      $composableBuilder(column: $table.isAmrap, builder: (column) => ColumnOrderings(column));
 }
 
-class $$WorkoutSetsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $WorkoutSetsTable> {
+class $$WorkoutSetsTableAnnotationComposer extends Composer<_$AppDatabase, $WorkoutSetsTable> {
   $$WorkoutSetsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -4792,64 +4408,52 @@ class $$WorkoutSetsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get sessionExerciseId => $composableBuilder(
-    column: $table.sessionExerciseId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get sessionExerciseId =>
+      $composableBuilder(column: $table.sessionExerciseId, builder: (column) => column);
 
-  GeneratedColumn<int> get position =>
-      $composableBuilder(column: $table.position, builder: (column) => column);
+  GeneratedColumn<int> get position => $composableBuilder(column: $table.position, builder: (column) => column);
 
-  GeneratedColumn<bool> get isWarmup =>
-      $composableBuilder(column: $table.isWarmup, builder: (column) => column);
+  GeneratedColumn<bool> get isWarmup => $composableBuilder(column: $table.isWarmup, builder: (column) => column);
 
-  GeneratedColumn<double> get weightKg =>
-      $composableBuilder(column: $table.weightKg, builder: (column) => column);
+  GeneratedColumn<double> get weightKg => $composableBuilder(column: $table.weightKg, builder: (column) => column);
 
-  GeneratedColumn<double> get addedWeightKg => $composableBuilder(
-    column: $table.addedWeightKg,
-    builder: (column) => column,
-  );
+  GeneratedColumn<double> get addedWeightKg =>
+      $composableBuilder(column: $table.addedWeightKg, builder: (column) => column);
 
-  GeneratedColumn<int> get reps =>
-      $composableBuilder(column: $table.reps, builder: (column) => column);
+  GeneratedColumn<int> get reps => $composableBuilder(column: $table.reps, builder: (column) => column);
 
-  GeneratedColumn<int> get durationSec => $composableBuilder(
-    column: $table.durationSec,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get durationSec => $composableBuilder(column: $table.durationSec, builder: (column) => column);
 
-  GeneratedColumn<double> get distanceM =>
-      $composableBuilder(column: $table.distanceM, builder: (column) => column);
+  GeneratedColumn<double> get distanceM => $composableBuilder(column: $table.distanceM, builder: (column) => column);
 
-  GeneratedColumn<String> get bandLevel =>
-      $composableBuilder(column: $table.bandLevel, builder: (column) => column);
+  GeneratedColumn<String> get bandLevel => $composableBuilder(column: $table.bandLevel, builder: (column) => column);
 
-  GeneratedColumn<double> get rpe =>
-      $composableBuilder(column: $table.rpe, builder: (column) => column);
+  GeneratedColumn<double> get rpe => $composableBuilder(column: $table.rpe, builder: (column) => column);
 
-  GeneratedColumn<int> get rir =>
-      $composableBuilder(column: $table.rir, builder: (column) => column);
+  GeneratedColumn<int> get rir => $composableBuilder(column: $table.rir, builder: (column) => column);
 
-  GeneratedColumn<int> get restSec =>
-      $composableBuilder(column: $table.restSec, builder: (column) => column);
+  GeneratedColumn<int> get restSec => $composableBuilder(column: $table.restSec, builder: (column) => column);
 
-  GeneratedColumn<String> get note =>
-      $composableBuilder(column: $table.note, builder: (column) => column);
+  GeneratedColumn<String> get note => $composableBuilder(column: $table.note, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
-    column: $table.completedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get completedAt =>
+      $composableBuilder(column: $table.completedAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get deletedAt => $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get plannedSetKey =>
+      $composableBuilder(column: $table.plannedSetKey, builder: (column) => column);
+
+  GeneratedColumn<int> get targetReps => $composableBuilder(column: $table.targetReps, builder: (column) => column);
+
+  GeneratedColumn<double> get targetWeightKg =>
+      $composableBuilder(column: $table.targetWeightKg, builder: (column) => column);
+
+  GeneratedColumn<bool> get isAmrap => $composableBuilder(column: $table.isAmrap, builder: (column) => column);
 }
 
 class $$WorkoutSetsTableTableManager
@@ -4863,10 +4467,7 @@ class $$WorkoutSetsTableTableManager
           $$WorkoutSetsTableAnnotationComposer,
           $$WorkoutSetsTableCreateCompanionBuilder,
           $$WorkoutSetsTableUpdateCompanionBuilder,
-          (
-            WorkoutSetRow,
-            BaseReferences<_$AppDatabase, $WorkoutSetsTable, WorkoutSetRow>,
-          ),
+          (WorkoutSetRow, BaseReferences<_$AppDatabase, $WorkoutSetsTable, WorkoutSetRow>),
           WorkoutSetRow,
           PrefetchHooks Function()
         > {
@@ -4875,12 +4476,9 @@ class $$WorkoutSetsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$WorkoutSetsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$WorkoutSetsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$WorkoutSetsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$WorkoutSetsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$WorkoutSetsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$WorkoutSetsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -4900,6 +4498,10 @@ class $$WorkoutSetsTableTableManager
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> plannedSetKey = const Value.absent(),
+                Value<int?> targetReps = const Value.absent(),
+                Value<double?> targetWeightKg = const Value.absent(),
+                Value<bool> isAmrap = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkoutSetsCompanion(
                 id: id,
@@ -4919,6 +4521,10 @@ class $$WorkoutSetsTableTableManager
                 completedAt: completedAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
+                plannedSetKey: plannedSetKey,
+                targetReps: targetReps,
+                targetWeightKg: targetWeightKg,
+                isAmrap: isAmrap,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -4940,6 +4546,10 @@ class $$WorkoutSetsTableTableManager
                 Value<DateTime?> completedAt = const Value.absent(),
                 required DateTime updatedAt,
                 Value<DateTime?> deletedAt = const Value.absent(),
+                Value<String?> plannedSetKey = const Value.absent(),
+                Value<int?> targetReps = const Value.absent(),
+                Value<double?> targetWeightKg = const Value.absent(),
+                Value<bool> isAmrap = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkoutSetsCompanion.insert(
                 id: id,
@@ -4959,17 +4569,17 @@ class $$WorkoutSetsTableTableManager
                 completedAt: completedAt,
                 updatedAt: updatedAt,
                 deletedAt: deletedAt,
+                plannedSetKey: plannedSetKey,
+                targetReps: targetReps,
+                targetWeightKg: targetWeightKg,
+                isAmrap: isAmrap,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
                   e.readTable<$WorkoutSetsTable, WorkoutSetRow>(table),
-                  BaseReferences<
-                    _$AppDatabase,
-                    $WorkoutSetsTable,
-                    WorkoutSetRow
-                  >(db, table, e),
+                  BaseReferences<_$AppDatabase, $WorkoutSetsTable, WorkoutSetRow>(db, table, e),
                 ),
               )
               .toList(),
@@ -4988,36 +4598,30 @@ typedef $$WorkoutSetsTableProcessedTableManager =
       $$WorkoutSetsTableAnnotationComposer,
       $$WorkoutSetsTableCreateCompanionBuilder,
       $$WorkoutSetsTableUpdateCompanionBuilder,
-      (
-        WorkoutSetRow,
-        BaseReferences<_$AppDatabase, $WorkoutSetsTable, WorkoutSetRow>,
-      ),
+      (WorkoutSetRow, BaseReferences<_$AppDatabase, $WorkoutSetsTable, WorkoutSetRow>),
       WorkoutSetRow,
       PrefetchHooks Function()
     >;
-typedef $$BodyMeasurementsTableCreateCompanionBuilder =
-    BodyMeasurementsCompanion Function({
-      required String id,
-      required DateTime measuredAt,
-      required double weightKg,
-      Value<String> source,
-      required DateTime updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<int> rowid,
-    });
-typedef $$BodyMeasurementsTableUpdateCompanionBuilder =
-    BodyMeasurementsCompanion Function({
-      Value<String> id,
-      Value<DateTime> measuredAt,
-      Value<double> weightKg,
-      Value<String> source,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<int> rowid,
-    });
+typedef $$BodyMeasurementsTableCreateCompanionBuilder = BodyMeasurementsCompanion Function({
+  required String id,
+  required DateTime measuredAt,
+  required double weightKg,
+  Value<String> source,
+  required DateTime updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<int> rowid,
+});
+typedef $$BodyMeasurementsTableUpdateCompanionBuilder = BodyMeasurementsCompanion Function({
+  Value<String> id,
+  Value<DateTime> measuredAt,
+  Value<double> weightKg,
+  Value<String> source,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<int> rowid,
+});
 
-class $$BodyMeasurementsTableFilterComposer
-    extends Composer<_$AppDatabase, $BodyMeasurementsTable> {
+class $$BodyMeasurementsTableFilterComposer extends Composer<_$AppDatabase, $BodyMeasurementsTable> {
   $$BodyMeasurementsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5025,39 +4629,25 @@ class $$BodyMeasurementsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get measuredAt => $composableBuilder(
-    column: $table.measuredAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get measuredAt =>
+      $composableBuilder(column: $table.measuredAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get weightKg => $composableBuilder(
-    column: $table.weightKg,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get weightKg =>
+      $composableBuilder(column: $table.weightKg, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get source => $composableBuilder(
-    column: $table.source,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => ColumnFilters(column));
 }
 
-class $$BodyMeasurementsTableOrderingComposer
-    extends Composer<_$AppDatabase, $BodyMeasurementsTable> {
+class $$BodyMeasurementsTableOrderingComposer extends Composer<_$AppDatabase, $BodyMeasurementsTable> {
   $$BodyMeasurementsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -5065,39 +4655,25 @@ class $$BodyMeasurementsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get measuredAt => $composableBuilder(
-    column: $table.measuredAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get measuredAt =>
+      $composableBuilder(column: $table.measuredAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get weightKg => $composableBuilder(
-    column: $table.weightKg,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get weightKg =>
+      $composableBuilder(column: $table.weightKg, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get source => $composableBuilder(
-    column: $table.source,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
-    column: $table.deletedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => ColumnOrderings(column));
 }
 
-class $$BodyMeasurementsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $BodyMeasurementsTable> {
+class $$BodyMeasurementsTableAnnotationComposer extends Composer<_$AppDatabase, $BodyMeasurementsTable> {
   $$BodyMeasurementsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -5105,25 +4681,18 @@ class $$BodyMeasurementsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get measuredAt => $composableBuilder(
-    column: $table.measuredAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get measuredAt =>
+      $composableBuilder(column: $table.measuredAt, builder: (column) => column);
 
-  GeneratedColumn<double> get weightKg =>
-      $composableBuilder(column: $table.weightKg, builder: (column) => column);
+  GeneratedColumn<double> get weightKg => $composableBuilder(column: $table.weightKg, builder: (column) => column);
 
-  GeneratedColumn<String> get source =>
-      $composableBuilder(column: $table.source, builder: (column) => column);
+  GeneratedColumn<String> get source => $composableBuilder(column: $table.source, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
-      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get updatedAt => $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get deletedAt =>
-      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+  GeneratedColumn<DateTime> get deletedAt => $composableBuilder(column: $table.deletedAt, builder: (column) => column);
 }
 
 class $$BodyMeasurementsTableTableManager
@@ -5137,30 +4706,18 @@ class $$BodyMeasurementsTableTableManager
           $$BodyMeasurementsTableAnnotationComposer,
           $$BodyMeasurementsTableCreateCompanionBuilder,
           $$BodyMeasurementsTableUpdateCompanionBuilder,
-          (
-            BodyMeasurementRow,
-            BaseReferences<
-              _$AppDatabase,
-              $BodyMeasurementsTable,
-              BodyMeasurementRow
-            >,
-          ),
+          (BodyMeasurementRow, BaseReferences<_$AppDatabase, $BodyMeasurementsTable, BodyMeasurementRow>),
           BodyMeasurementRow,
           PrefetchHooks Function()
         > {
-  $$BodyMeasurementsTableTableManager(
-    _$AppDatabase db,
-    $BodyMeasurementsTable table,
-  ) : super(
+  $$BodyMeasurementsTableTableManager(_$AppDatabase db, $BodyMeasurementsTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$BodyMeasurementsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$BodyMeasurementsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$BodyMeasurementsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$BodyMeasurementsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$BodyMeasurementsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$BodyMeasurementsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -5200,14 +4757,8 @@ class $$BodyMeasurementsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable<$BodyMeasurementsTable, BodyMeasurementRow>(
-                    table,
-                  ),
-                  BaseReferences<
-                    _$AppDatabase,
-                    $BodyMeasurementsTable,
-                    BodyMeasurementRow
-                  >(db, table, e),
+                  e.readTable<$BodyMeasurementsTable, BodyMeasurementRow>(table),
+                  BaseReferences<_$AppDatabase, $BodyMeasurementsTable, BodyMeasurementRow>(db, table, e),
                 ),
               )
               .toList(),
@@ -5226,14 +4777,7 @@ typedef $$BodyMeasurementsTableProcessedTableManager =
       $$BodyMeasurementsTableAnnotationComposer,
       $$BodyMeasurementsTableCreateCompanionBuilder,
       $$BodyMeasurementsTableUpdateCompanionBuilder,
-      (
-        BodyMeasurementRow,
-        BaseReferences<
-          _$AppDatabase,
-          $BodyMeasurementsTable,
-          BodyMeasurementRow
-        >,
-      ),
+      (BodyMeasurementRow, BaseReferences<_$AppDatabase, $BodyMeasurementsTable, BodyMeasurementRow>),
       BodyMeasurementRow,
       PrefetchHooks Function()
     >;
@@ -5260,8 +4804,7 @@ typedef $$OutboxTableUpdateCompanionBuilder = OutboxCompanion Function({
   Value<String?> lastError,
 });
 
-class $$OutboxTableFilterComposer
-    extends Composer<_$AppDatabase, $OutboxTable> {
+class $$OutboxTableFilterComposer extends Composer<_$AppDatabase, $OutboxTable> {
   $$OutboxTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5269,54 +4812,33 @@ class $$OutboxTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get entity => $composableBuilder(
-    column: $table.entity,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get entity =>
+      $composableBuilder(column: $table.entity, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get entityId => $composableBuilder(
-    column: $table.entityId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get entityId =>
+      $composableBuilder(column: $table.entityId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get op => $composableBuilder(
-    column: $table.op,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get op => $composableBuilder(column: $table.op, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get parentId => $composableBuilder(
-    column: $table.parentId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get parentId =>
+      $composableBuilder(column: $table.parentId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get payload => $composableBuilder(
-    column: $table.payload,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get clientUpdatedAt => $composableBuilder(
-    column: $table.clientUpdatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get clientUpdatedAt =>
+      $composableBuilder(column: $table.clientUpdatedAt, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get attempts => $composableBuilder(
-    column: $table.attempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get lastError => $composableBuilder(
-    column: $table.lastError,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => ColumnFilters(column));
 }
 
-class $$OutboxTableOrderingComposer
-    extends Composer<_$AppDatabase, $OutboxTable> {
+class $$OutboxTableOrderingComposer extends Composer<_$AppDatabase, $OutboxTable> {
   $$OutboxTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -5324,54 +4846,33 @@ class $$OutboxTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get entity => $composableBuilder(
-    column: $table.entity,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get entity =>
+      $composableBuilder(column: $table.entity, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get entityId => $composableBuilder(
-    column: $table.entityId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get entityId =>
+      $composableBuilder(column: $table.entityId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get op => $composableBuilder(
-    column: $table.op,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get op => $composableBuilder(column: $table.op, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get parentId => $composableBuilder(
-    column: $table.parentId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get parentId =>
+      $composableBuilder(column: $table.parentId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get payload => $composableBuilder(
-    column: $table.payload,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get clientUpdatedAt => $composableBuilder(
-    column: $table.clientUpdatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get clientUpdatedAt =>
+      $composableBuilder(column: $table.clientUpdatedAt, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get attempts => $composableBuilder(
-    column: $table.attempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get lastError => $composableBuilder(
-    column: $table.lastError,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => ColumnOrderings(column));
 }
 
-class $$OutboxTableAnnotationComposer
-    extends Composer<_$AppDatabase, $OutboxTable> {
+class $$OutboxTableAnnotationComposer extends Composer<_$AppDatabase, $OutboxTable> {
   $$OutboxTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -5379,34 +4880,24 @@ class $$OutboxTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get entity =>
-      $composableBuilder(column: $table.entity, builder: (column) => column);
+  GeneratedColumn<String> get entity => $composableBuilder(column: $table.entity, builder: (column) => column);
 
-  GeneratedColumn<String> get entityId =>
-      $composableBuilder(column: $table.entityId, builder: (column) => column);
+  GeneratedColumn<String> get entityId => $composableBuilder(column: $table.entityId, builder: (column) => column);
 
-  GeneratedColumn<String> get op =>
-      $composableBuilder(column: $table.op, builder: (column) => column);
+  GeneratedColumn<String> get op => $composableBuilder(column: $table.op, builder: (column) => column);
 
-  GeneratedColumn<String> get parentId =>
-      $composableBuilder(column: $table.parentId, builder: (column) => column);
+  GeneratedColumn<String> get parentId => $composableBuilder(column: $table.parentId, builder: (column) => column);
 
-  GeneratedColumn<String> get payload =>
-      $composableBuilder(column: $table.payload, builder: (column) => column);
+  GeneratedColumn<String> get payload => $composableBuilder(column: $table.payload, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get clientUpdatedAt => $composableBuilder(
-    column: $table.clientUpdatedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumn<DateTime> get clientUpdatedAt =>
+      $composableBuilder(column: $table.clientUpdatedAt, builder: (column) => column);
 
-  GeneratedColumn<int> get attempts =>
-      $composableBuilder(column: $table.attempts, builder: (column) => column);
+  GeneratedColumn<int> get attempts => $composableBuilder(column: $table.attempts, builder: (column) => column);
 
-  GeneratedColumn<String> get lastError =>
-      $composableBuilder(column: $table.lastError, builder: (column) => column);
+  GeneratedColumn<String> get lastError => $composableBuilder(column: $table.lastError, builder: (column) => column);
 }
 
 class $$OutboxTableTableManager
@@ -5429,12 +4920,9 @@ class $$OutboxTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$OutboxTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$OutboxTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$OutboxTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$OutboxTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$OutboxTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$OutboxTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
@@ -5483,11 +4971,7 @@ class $$OutboxTableTableManager
               .map(
                 (e) => (
                   e.readTable<$OutboxTable, OutboxRow>(table),
-                  BaseReferences<_$AppDatabase, $OutboxTable, OutboxRow>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$AppDatabase, $OutboxTable, OutboxRow>(db, table, e),
                 ),
               )
               .toList(),
@@ -5510,17 +4994,10 @@ typedef $$OutboxTableProcessedTableManager =
       OutboxRow,
       PrefetchHooks Function()
     >;
-typedef $$SyncStateTableCreateCompanionBuilder = SyncStateCompanion Function({
-  Value<int> id,
-  Value<int> lastServerSeq,
-});
-typedef $$SyncStateTableUpdateCompanionBuilder = SyncStateCompanion Function({
-  Value<int> id,
-  Value<int> lastServerSeq,
-});
+typedef $$SyncStateTableCreateCompanionBuilder = SyncStateCompanion Function({Value<int> id, Value<int> lastServerSeq});
+typedef $$SyncStateTableUpdateCompanionBuilder = SyncStateCompanion Function({Value<int> id, Value<int> lastServerSeq});
 
-class $$SyncStateTableFilterComposer
-    extends Composer<_$AppDatabase, $SyncStateTable> {
+class $$SyncStateTableFilterComposer extends Composer<_$AppDatabase, $SyncStateTable> {
   $$SyncStateTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5528,19 +5005,13 @@ class $$SyncStateTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get lastServerSeq => $composableBuilder(
-    column: $table.lastServerSeq,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get lastServerSeq =>
+      $composableBuilder(column: $table.lastServerSeq, builder: (column) => ColumnFilters(column));
 }
 
-class $$SyncStateTableOrderingComposer
-    extends Composer<_$AppDatabase, $SyncStateTable> {
+class $$SyncStateTableOrderingComposer extends Composer<_$AppDatabase, $SyncStateTable> {
   $$SyncStateTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -5548,19 +5019,13 @@ class $$SyncStateTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get id => $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get lastServerSeq => $composableBuilder(
-    column: $table.lastServerSeq,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get lastServerSeq =>
+      $composableBuilder(column: $table.lastServerSeq, builder: (column) => ColumnOrderings(column));
 }
 
-class $$SyncStateTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SyncStateTable> {
+class $$SyncStateTableAnnotationComposer extends Composer<_$AppDatabase, $SyncStateTable> {
   $$SyncStateTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -5568,13 +5033,10 @@ class $$SyncStateTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<int> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<int> get lastServerSeq => $composableBuilder(
-    column: $table.lastServerSeq,
-    builder: (column) => column,
-  );
+  GeneratedColumn<int> get lastServerSeq =>
+      $composableBuilder(column: $table.lastServerSeq, builder: (column) => column);
 }
 
 class $$SyncStateTableTableManager
@@ -5588,10 +5050,7 @@ class $$SyncStateTableTableManager
           $$SyncStateTableAnnotationComposer,
           $$SyncStateTableCreateCompanionBuilder,
           $$SyncStateTableUpdateCompanionBuilder,
-          (
-            SyncStateRow,
-            BaseReferences<_$AppDatabase, $SyncStateTable, SyncStateRow>,
-          ),
+          (SyncStateRow, BaseReferences<_$AppDatabase, $SyncStateTable, SyncStateRow>),
           SyncStateRow,
           PrefetchHooks Function()
         > {
@@ -5600,12 +5059,9 @@ class $$SyncStateTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SyncStateTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SyncStateTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SyncStateTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$SyncStateTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SyncStateTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$SyncStateTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<int> id = const Value.absent(),
             Value<int> lastServerSeq = const Value.absent(),
@@ -5618,11 +5074,7 @@ class $$SyncStateTableTableManager
               .map(
                 (e) => (
                   e.readTable<$SyncStateTable, SyncStateRow>(table),
-                  BaseReferences<_$AppDatabase, $SyncStateTable, SyncStateRow>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$AppDatabase, $SyncStateTable, SyncStateRow>(db, table, e),
                 ),
               )
               .toList(),
@@ -5641,10 +5093,7 @@ typedef $$SyncStateTableProcessedTableManager =
       $$SyncStateTableAnnotationComposer,
       $$SyncStateTableCreateCompanionBuilder,
       $$SyncStateTableUpdateCompanionBuilder,
-      (
-        SyncStateRow,
-        BaseReferences<_$AppDatabase, $SyncStateTable, SyncStateRow>,
-      ),
+      (SyncStateRow, BaseReferences<_$AppDatabase, $SyncStateTable, SyncStateRow>),
       SyncStateRow,
       PrefetchHooks Function()
     >;
@@ -5652,18 +5101,13 @@ typedef $$SyncStateTableProcessedTableManager =
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
-  $$ExercisesTableTableManager get exercises =>
-      $$ExercisesTableTableManager(_db, _db.exercises);
-  $$SessionsTableTableManager get sessions =>
-      $$SessionsTableTableManager(_db, _db.sessions);
+  $$ExercisesTableTableManager get exercises => $$ExercisesTableTableManager(_db, _db.exercises);
+  $$SessionsTableTableManager get sessions => $$SessionsTableTableManager(_db, _db.sessions);
   $$SessionExercisesTableTableManager get sessionExercises =>
       $$SessionExercisesTableTableManager(_db, _db.sessionExercises);
-  $$WorkoutSetsTableTableManager get workoutSets =>
-      $$WorkoutSetsTableTableManager(_db, _db.workoutSets);
+  $$WorkoutSetsTableTableManager get workoutSets => $$WorkoutSetsTableTableManager(_db, _db.workoutSets);
   $$BodyMeasurementsTableTableManager get bodyMeasurements =>
       $$BodyMeasurementsTableTableManager(_db, _db.bodyMeasurements);
-  $$OutboxTableTableManager get outbox =>
-      $$OutboxTableTableManager(_db, _db.outbox);
-  $$SyncStateTableTableManager get syncState =>
-      $$SyncStateTableTableManager(_db, _db.syncState);
+  $$OutboxTableTableManager get outbox => $$OutboxTableTableManager(_db, _db.outbox);
+  $$SyncStateTableTableManager get syncState => $$SyncStateTableTableManager(_db, _db.syncState);
 }

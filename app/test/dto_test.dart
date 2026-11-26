@@ -1,4 +1,5 @@
 import 'package:fitlog/core/api/dto.dart';
+import 'package:fitlog/core/api/program_dto.dart';
 import 'package:fitlog/core/units.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,10 +16,10 @@ void main() {
           'exerciseId': '0193f2a0-0000-7000-8000-000000000003',
           'position': 0,
           'sets': [
-            {'id': '0193f2a0-0000-7000-8000-000000000004', 'position': 0, 'weightKg': 100, 'reps': 5, 'rpe': 8.5}
-          ]
-        }
-      ]
+            {'id': '0193f2a0-0000-7000-8000-000000000004', 'position': 0, 'weightKg': 100, 'reps': 5, 'rpe': 8.5},
+          ],
+        },
+      ],
     };
     final s = Session.fromJson(j);
     expect(s.startedAt.isUtc, isTrue);
@@ -31,11 +32,12 @@ void main() {
 
   test('Change DELETE omits payload', () {
     final c = Change(
-        entity: SyncEntity.workout_set,
-        id: 'x',
-        op: ChangeOp.DELETE,
-        payload: const {'a': 1},
-        clientUpdatedAt: DateTime.utc(2026, 11, 26));
+      entity: SyncEntity.workout_set,
+      id: 'x',
+      op: ChangeOp.DELETE,
+      payload: const {'a': 1},
+      clientUpdatedAt: DateTime.utc(2026, 11, 26),
+    );
     expect(c.toJson().containsKey('payload'), isFalse);
     expect(c.toJson()['clientUpdatedAt'], '2026-11-26T00:00:00.000Z');
   });
@@ -44,5 +46,56 @@ void main() {
     expect(Units.format(62.5, WeightUnit.KG), '62.5 kg');
     expect(Units.format(100, WeightUnit.LB), '220.5 lb');
     expect(Units.fromDisplay(225, WeightUnit.LB), 102.06);
+  });
+
+  test('v0.2 Settings는 비울 필드를 null로 명시한다(merge-patch)', () {
+    final j = const Settings(heightCm: null, e1rmFormula: E1rmFormula.BRZYCKI).toJson();
+    expect(j.containsKey('heightCm'), isTrue);
+    expect(j['heightCm'], isNull);
+    expect(j['e1rmFormula'], 'BRZYCKI');
+    expect(Settings.fromJson(j).e1rmFormula, E1rmFormula.BRZYCKI);
+  });
+
+  test('v0.2 Instance·PlannedWorkout 파싱', () {
+    final i = Instance.fromJson({
+      'id': 'i',
+      'programId': 'p',
+      'name': '5x5',
+      'status': 'ACTIVE',
+      'skipPolicy': 'SHIFT',
+      'startDate': '2026-11-26',
+      'state': {
+        'tm': {},
+        'working': {'squat': 100},
+        'week': 1,
+        'cycle': 1,
+        'seq': 3,
+      },
+      'next': {
+        'instanceId': 'i',
+        'planSeq': 4,
+        'dayIndex': 1,
+        'dayKey': 'B',
+        'dayName': 'B',
+        'week': 1,
+        'cycle': 1,
+        'confirmed': true,
+        'exercises': [
+          {
+            'key': 'squat',
+            'exerciseId': 'e',
+            'accessory': false,
+            'sets': [
+              {'plannedSetKey': 'B.0.0', 'targetReps': 5, 'targetWeightKg': 102.5, 'isAmrap': false, 'isWarmup': false},
+            ],
+          },
+        ],
+      },
+    });
+    expect(i.state.working['squat'], 100.0);
+    expect(i.next!.planSeq, i.state.seq! + 1);
+    expect(i.next!.exercises.single.sets.single.targetWeightKg, 102.5);
+    expect(formatDate(i.startDate), '2026-11-26');
+    expect(PlannedWorkout.fromJson(i.next!.toJson()).dayKey, 'B');
   });
 }

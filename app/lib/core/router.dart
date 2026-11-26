@@ -7,6 +7,14 @@ import '../features/auth/consent_page.dart';
 import '../features/auth/login_page.dart';
 import '../features/auth/splash_page.dart';
 import '../features/exercise_picker/exercise_picker_page.dart';
+import '../features/history/history_page.dart';
+import '../features/history/session_edit_page.dart';
+import '../features/programs/instance_detail_page.dart';
+import '../features/programs/program_detail_page.dart';
+import '../features/programs/program_start_page.dart';
+import '../features/programs/programs_page.dart';
+import '../features/records/exercise_records_page.dart';
+import '../features/session/session_summary_page.dart';
 import '../features/home/home_page.dart';
 import '../features/profile/body_weight_page.dart';
 import '../features/profile/profile_page.dart';
@@ -50,6 +58,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.settings, builder: (_, _) => const SettingsPage()),
       GoRoute(path: Routes.profile, builder: (_, _) => const ProfilePage()),
       GoRoute(path: Routes.body, builder: (_, _) => const BodyWeightPage()),
+      // v0.2
+      GoRoute(path: Routes.programs, builder: (_, _) => const ProgramsPage()),
+      GoRoute(path: '/programs/:id', builder: (_, s) => ProgramDetailPage(programId: s.pathParameters['id']!)),
+      GoRoute(path: '/programs/:id/start', builder: (_, s) => ProgramStartPage(programId: s.pathParameters['id']!)),
+      GoRoute(path: '/instances/:id', builder: (_, s) => InstanceDetailPage(instanceId: s.pathParameters['id']!)),
+      GoRoute(path: Routes.history, builder: (_, _) => const HistoryPage()),
+      GoRoute(path: '/sessions/:id/edit', builder: (_, s) => SessionEditPage(sessionId: s.pathParameters['id']!)),
+      GoRoute(path: '/sessions/:id/summary', builder: (_, s) => SessionSummaryPage(sessionId: s.pathParameters['id']!)),
+      GoRoute(
+          path: '/exercises/:id/records', builder: (_, s) => ExerciseRecordsPage(exerciseId: s.pathParameters['id']!)),
     ],
   );
 });
