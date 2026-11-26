@@ -13,10 +13,13 @@ import '../exercise_picker/exercise_labels.dart';
 import '../session/session_controller.dart' show exerciseMapProvider;
 import 'progress_logic.dart';
 
-final sessionComparisonProvider = FutureProvider.autoDispose.family<SessionComparison, String>(
-  (ref, id) => ref.watch(statsRepositoryProvider).comparison(id),
-  retry: (_, _) => null,
-);
+final sessionComparisonProvider = FutureProvider.autoDispose.family<SessionComparison, String>((ref, id) async {
+  // 방금 끝낸 세션은 아직 서버에 없을 수 있다. 먼저 동기화를 시도한다(실패해도 진행).
+  try {
+    await ref.read(syncServiceProvider).syncNow().timeout(const Duration(seconds: 8));
+  } catch (_) {}
+  return ref.watch(statsRepositoryProvider).comparison(id);
+}, retry: (_, _) => null);
 
 class SessionComparisonPage extends ConsumerStatefulWidget {
   const SessionComparisonPage({super.key, required this.sessionId});
@@ -38,6 +41,7 @@ class _SessionComparisonPageState extends ConsumerState<SessionComparisonPage> {
     if (async.hasError) {
       final err = async.error;
       final offline = err is ApiException && err.isNetwork;
+      final notSynced = err is ApiException && err.statusCode == 404;
       body = Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -45,8 +49,12 @@ class _SessionComparisonPageState extends ConsumerState<SessionComparisonPage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                offline ? l.progressOffline : l.progressLoadFailed,
-                key: Key(offline ? 'compare-offline' : 'compare-error'),
+                offline
+                    ? l.progressOffline
+                    : notSynced
+                    ? l.progressCompareNotSynced
+                    : l.progressLoadFailed,
+                key: Key(offline ? 'compare-offline' : (notSynced ? 'compare-not-synced' : 'compare-error')),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 12),

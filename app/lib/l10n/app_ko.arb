@@ -1383,5 +1383,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "progressCompareNotSynced": "아직 서버에 올라가지 않은 세션이에요. 동기화된 뒤 다시 시도해 주세요"
 }

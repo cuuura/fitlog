@@ -1311,5 +1311,6 @@
         "type": "int"
       }
     }
-  }
+  },
+  "progressCompareNotSynced": "This session has not reached the server yet. Try again after it syncs"
 }
