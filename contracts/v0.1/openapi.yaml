@@ -1,0 +1,377 @@
+openapi: 3.1.0
+info:
+  title: Fitlog API
+  version: 0.1.0
+  description: v0.1 계약. 규칙은 conventions.md, 동기화는 sync.md 참고.
+servers:
+  - url: https://api.example.invalid
+security:
+  - bearer: []
+paths:
+  /v1/auth/google:
+    post:
+      tags: [auth]
+      summary: Google ID 토큰으로 로그인(없으면 가입)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [idToken]
+              properties:
+                idToken: { type: string }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/AuthTokens' } } } }
+        '401': { $ref: '#/components/responses/Error' }
+  /v1/auth/refresh:
+    post:
+      tags: [auth]
+      summary: 리프레시 토큰 회전
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [refreshToken], properties: { refreshToken: { type: string } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/AuthTokens' } } } }
+        '401': { $ref: '#/components/responses/Error' }
+  /v1/auth/logout:
+    post:
+      tags: [auth]
+      summary: 현재 리프레시 토큰 폐기
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { type: object, required: [refreshToken], properties: { refreshToken: { type: string } } }
+      responses:
+        '204': { description: No Content }
+
+  /v1/me:
+    get:
+      tags: [account]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Me' } } } }
+    delete:
+      tags: [account]
+      summary: 계정과 모든 데이터 즉시 삭제 (ACC-5)
+      responses:
+        '204': { description: No Content }
+  /v1/me/settings:
+    get:
+      tags: [account]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Settings' } } } }
+    put:
+      tags: [account]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Settings' } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Settings' } } } }
+        '400': { $ref: '#/components/responses/Error' }
+  /v1/me/consents:
+    get:
+      tags: [account]
+      summary: 종류별 최신 동의 상태
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Consent' } } } }
+    post:
+      tags: [account]
+      summary: 동의 또는 철회 기록 (ACC-6)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ConsentInput' } } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Consent' } } } }
+
+  /v1/exercises:
+    get:
+      tags: [exercise]
+      summary: 기본 종목 + 내 종목
+      parameters:
+        - { name: q, in: query, schema: { type: string }, description: 이름 검색(한/영) }
+        - { name: muscle, in: query, schema: { $ref: '#/components/schemas/Muscle' } }
+        - { name: type, in: query, schema: { $ref: '#/components/schemas/ExerciseType' } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Exercise' } } } } }
+    post:
+      tags: [exercise]
+      summary: 내 종목 추가 (EXR-2)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ExerciseInput' } } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Exercise' } } } }
+        '400': { $ref: '#/components/responses/Error' }
+  /v1/exercises/{id}:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    put:
+      tags: [exercise]
+      summary: 내 종목 수정 (기본 종목은 403)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ExerciseInput' } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Exercise' } } } }
+        '403': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [exercise]
+      responses:
+        '204': { description: No Content }
+        '403': { $ref: '#/components/responses/Error' }
+
+  /v1/sessions:
+    get:
+      tags: [session]
+      parameters:
+        - { name: before, in: query, schema: { type: string, format: date-time } }
+        - { name: limit, in: query, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/SessionSummary' } } } } }
+  /v1/sessions/{id}:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [session]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Session' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+    put:
+      tags: [session]
+      summary: 세션 전체 업서트(종목·세트 포함). 온라인 직접 저장용, 오프라인은 sync 사용
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/Session' } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Session' } } } }
+        '400': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [session]
+      responses:
+        '204': { description: No Content }
+  /v1/exercises/{id}/last:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [session]
+      summary: 이 종목을 한 가장 최근 세션의 세트들 (세트 입력 시 기본값용)
+      responses:
+        '200':
+          description: OK
+          content: { application/json: { schema: { type: object, properties: { sessionId: { type: string, format: uuid }, startedAt: { type: string, format: date-time }, sets: { type: array, items: { $ref: '#/components/schemas/WorkoutSet' } } } } } }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /v1/body/measurements:
+    get:
+      tags: [body]
+      parameters:
+        - { name: from, in: query, schema: { type: string, format: date-time } }
+        - { name: to, in: query, schema: { type: string, format: date-time } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/BodyMeasurement' } } } } }
+    post:
+      tags: [body]
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/BodyMeasurement' } } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/BodyMeasurement' } } } }
+  /v1/body/measurements/{id}:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    delete:
+      tags: [body]
+      responses:
+        '204': { description: No Content }
+
+  /v1/sync/push:
+    post:
+      tags: [sync]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [changes]
+              properties:
+                changes: { type: array, maxItems: 200, items: { $ref: '#/components/schemas/Change' } }
+      responses:
+        '200':
+          description: 변경별 결과
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results: { type: array, items: { $ref: '#/components/schemas/ChangeResult' } }
+  /v1/sync/pull:
+    get:
+      tags: [sync]
+      parameters:
+        - { name: since, in: query, required: true, schema: { type: integer, format: int64, minimum: 0 } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [changes, nextSince, hasMore]
+                properties:
+                  changes: { type: array, items: { $ref: '#/components/schemas/Change' } }
+                  nextSince: { type: integer, format: int64 }
+                  hasMore: { type: boolean }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    Id: { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+  responses:
+    Error:
+      description: 에러
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                required: [code, message]
+                properties:
+                  code: { type: string, enum: [VALIDATION_FAILED, UNAUTHENTICATED, FORBIDDEN, NOT_FOUND, CONFLICT, RATE_LIMITED, PARENT_MISSING] }
+                  message: { type: string }
+                  field: { type: string }
+  schemas:
+    AuthTokens:
+      type: object
+      required: [accessToken, refreshToken, expiresIn, isNewUser]
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresIn: { type: integer, description: 초 }
+        isNewUser: { type: boolean, description: true면 앱이 동의 화면을 띄움 }
+    Me:
+      type: object
+      required: [id, email, role, consentsRequired]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string }
+        displayName: { type: string }
+        role: { type: string, enum: [MEMBER, TRAINER] }
+        consentsRequired: { type: array, items: { $ref: '#/components/schemas/ConsentKind' }, description: 아직 동의하지 않은 필수 항목 }
+    Settings:
+      type: object
+      properties:
+        weightUnit: { type: string, enum: [KG, LB] }
+        defaultRestSec: { type: integer, minimum: 0, maximum: 3600 }
+        keepScreenOn: { type: boolean }
+        rpeInputEnabled: { type: boolean }
+        heightCm: { type: number }
+        sex: { type: string, enum: [MALE, FEMALE, OTHER] }
+        birthYear: { type: integer }
+    ConsentKind: { type: string, enum: [TERMS, PRIVACY, HEALTH_DATA] }
+    ConsentInput:
+      type: object
+      required: [kind, version, granted]
+      properties:
+        kind: { $ref: '#/components/schemas/ConsentKind' }
+        version: { type: string }
+        granted: { type: boolean }
+    Consent:
+      allOf:
+        - $ref: '#/components/schemas/ConsentInput'
+        - type: object
+          properties:
+            createdAt: { type: string, format: date-time }
+    Muscle:
+      type: string
+      enum: [CHEST, BACK, LATS, TRAPS, SHOULDERS, REAR_DELTS, BICEPS, TRICEPS, FOREARMS, QUADS, HAMSTRINGS, GLUTES, CALVES, ADDUCTORS, ABS, OBLIQUES, LOWER_BACK, FULL_BODY, CARDIO]
+    ExerciseType: { type: string, enum: [BARBELL, DUMBBELL, MACHINE, BODYWEIGHT, BAND, CARDIO] }
+    ExerciseInput:
+      type: object
+      required: [id, nameKo, type, primaryMuscle]
+      properties:
+        id: { type: string, format: uuid }
+        nameKo: { type: string, minLength: 1, maxLength: 60 }
+        nameEn: { type: string, maxLength: 60 }
+        type: { $ref: '#/components/schemas/ExerciseType' }
+        primaryMuscle: { $ref: '#/components/schemas/Muscle' }
+        secondaryMuscles: { type: array, items: { $ref: '#/components/schemas/Muscle' } }
+    Exercise:
+      allOf:
+        - $ref: '#/components/schemas/ExerciseInput'
+        - type: object
+          required: [builtIn, updatedAt]
+          properties:
+            builtIn: { type: boolean }
+            updatedAt: { type: string, format: date-time }
+    WorkoutSet:
+      type: object
+      required: [id, position]
+      properties:
+        id: { type: string, format: uuid }
+        position: { type: integer, minimum: 0 }
+        isWarmup: { type: boolean, default: false }
+        weightKg: { type: number, description: DUMBBELL은 한쪽 무게 }
+        addedWeightKg: { type: number }
+        reps: { type: integer, minimum: 0 }
+        durationSec: { type: integer, minimum: 0 }
+        distanceM: { type: number }
+        bandLevel: { type: string }
+        rpe: { type: number, minimum: 1, maximum: 10, multipleOf: 0.5 }
+        rir: { type: integer, minimum: 0, maximum: 10 }
+        restSec: { type: integer, minimum: 0 }
+        note: { type: string }
+        completedAt: { type: string, format: date-time }
+    SessionExercise:
+      type: object
+      required: [id, exerciseId, position, sets]
+      properties:
+        id: { type: string, format: uuid }
+        exerciseId: { type: string, format: uuid }
+        position: { type: integer }
+        note: { type: string }
+        sets: { type: array, items: { $ref: '#/components/schemas/WorkoutSet' } }
+    Session:
+      type: object
+      required: [id, startedAt, tz, exercises]
+      properties:
+        id: { type: string, format: uuid }
+        startedAt: { type: string, format: date-time }
+        endedAt: { type: string, format: date-time }
+        tz: { type: string, example: Asia/Seoul }
+        note: { type: string }
+        source: { type: string, enum: [APP, AI_JSON, AI_MCP, IMPORT], readOnly: true }
+        exercises: { type: array, items: { $ref: '#/components/schemas/SessionExercise' } }
+        updatedAt: { type: string, format: date-time, readOnly: true }
+    SessionSummary:
+      type: object
+      required: [id, startedAt, tz, exerciseCount, setCount, totalVolumeKg]
+      properties:
+        id: { type: string, format: uuid }
+        startedAt: { type: string, format: date-time }
+        endedAt: { type: string, format: date-time }
+        tz: { type: string }
+        exerciseCount: { type: integer }
+        setCount: { type: integer, description: 워밍업 제외 }
+        totalVolumeKg: { type: number, description: 워밍업 제외 무게×횟수 합 }
+    BodyMeasurement:
+      type: object
+      required: [id, measuredAt, weightKg]
+      properties:
+        id: { type: string, format: uuid }
+        measuredAt: { type: string, format: date-time }
+        weightKg: { type: number, minimum: 20, maximum: 400 }
+        source: { type: string, enum: [MANUAL, HEALTH_CONNECT, HEALTHKIT, OCR], default: MANUAL }
+    Change:
+      type: object
+      required: [entity, id, op, clientUpdatedAt]
+      properties:
+        entity: { type: string, enum: [exercise, workout_session, session_exercise, workout_set, body_measurement] }
+        id: { type: string, format: uuid }
+        op: { type: string, enum: [UPSERT, DELETE] }
+        parentId: { type: string, format: uuid, description: session_exercise는 sessionId, workout_set은 sessionExerciseId }
+        payload: { type: object, description: 엔티티 필드(camelCase). DELETE면 생략 }
+        clientUpdatedAt: { type: string, format: date-time }
+        serverSeq: { type: integer, format: int64, description: pull 응답에서만 }
+    ChangeResult:
+      type: object
+      required: [id, status]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string, enum: [applied, conflict, rejected] }
+        code: { type: string }
+        server: { $ref: '#/components/schemas/Change', description: conflict일 때 서버 값 }
