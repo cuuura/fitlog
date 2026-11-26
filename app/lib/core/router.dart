@@ -30,6 +30,8 @@ import '../features/session/session_detail_page.dart';
 import '../features/settings/settings_page.dart';
 import 'auth/auth_controller.dart';
 import 'routes.dart';
+import '../features/progress/exercise_progress_page.dart';
+import '../features/progress/session_comparison_page.dart';
 
 /// 로그인 상태에 따른 이동. null이면 그대로 둔다.
 String? authRedirect(AuthStatus status, String location) {
@@ -83,6 +85,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.deletionRequests, builder: (_, _) => const DeletionRequestsPage()),
       GoRoute(path: Routes.aiConnect, builder: (_, _) => const AiConnectPage()),
       GoRoute(path: Routes.export, builder: (_, _) => const ExportPage()),
+      // v1.0
+      GoRoute(
+          path: '/exercises/:id/progress', builder: (_, s) => ExerciseProgressPage(exerciseId: s.pathParameters['id']!)),
+      GoRoute(
+          path: '/sessions/:id/comparison',
+          builder: (_, s) => SessionComparisonPage(sessionId: s.pathParameters['id']!)),
     ],
   );
 });
