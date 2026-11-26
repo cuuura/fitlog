@@ -159,7 +159,7 @@ class StatsApiTest {
         val c = jsonClient()
         val uid = createUser()
         val other = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         seed(
             uid, day(0),
             E(ex, listOf(s("100", 5), S("140", 5, warmup = true), S("150", 5, completed = false), S("160", 5, deleted = true),
@@ -185,8 +185,8 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
-        val other = insertExercise(null)
+        val ex = insertExercise(uid)
+        val other = insertExercise(uid)
         // 입력 순서를 섞어서 넣는다
         val s2 = seed(uid, day(7), E(ex, listOf(s("100", 5), s("100", 8), s("90", 12))), E(other, listOf(s("300", 1))))
         val s1 = seed(uid, day(0), E(ex, listOf(s("80", 10))))
@@ -213,7 +213,7 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         seed(uid, day(0), E(ex, listOf(s("100", 5)))) // 첫 기록은 PR
         seed(uid, day(1), E(ex, listOf(s("100", 5)))) // 같으면 PR 아님(무게·e1rm 모두)
         seed(uid, day(2), E(ex, listOf(s("100", 6)))) // 무게 같고 e1rm 더 큼
@@ -232,7 +232,7 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         val old = seed(uid, day(0), E(ex, listOf(s("150", 3))))
         seed(uid, day(30), E(ex, listOf(s("140", 3)))) // 기간 밖의 150 보다 낮으므로 PR 아님
         seed(uid, day(31), E(ex, listOf(s("155", 3))))
@@ -255,7 +255,7 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         seed(uid, day(0), E(ex, listOf(s("100", 5), s("110", 3), s("110", 2))))
         seed(uid, day(1), E(ex, listOf(s("90", 10), S("200", 1, warmup = true))))
         seed(uid, day(2), E(ex, listOf(s("110", 3))))
@@ -274,7 +274,7 @@ class StatsApiTest {
         val c = jsonClient()
         val uid = createUser()
         setFormula(uid, "BRZYCKI")
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         seed(uid, day(0), E(ex, listOf(s("100", 5))))
         val body = c.progress(uid, ex).json()
         assertEquals("BRZYCKI", body.str("formula"))
@@ -289,7 +289,7 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         val empty = c.get("/v1/exercises/$ex/progress") { auth(uid) }
         assertEquals(HttpStatusCode.OK, empty.status)
         val eb = empty.json()
@@ -312,7 +312,7 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         val ids = (0L until 6L).map { seed(uid, day(it), E(ex, listOf(s("100", 5)))) }
         val pts = c.progress(uid, ex, "$wide&limit=3").json().points()
         assertEquals(ids.takeLast(3).map { it.toString() }, pts.map { it.str("sessionId") })
@@ -327,7 +327,7 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         val ids = (0L until 105L).map { seed(uid, day(it), E(ex, listOf(s("100", 5)))) }
         val pts = c.progress(uid, ex).json().points()
         assertEquals(100, pts.size)
@@ -340,7 +340,7 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         for (q in listOf("limit=0", "limit=501", "limit=-1", "limit=abc", "from=yesterday", "to=2026-13-40", "from=2026-05-01T00:00:00Z&to=2026-04-01T00:00:00Z")) {
             val r = c.get("/v1/exercises/$ex/progress?$q") { auth(uid) }
             assertEquals(HttpStatusCode.BadRequest, r.status, q)
@@ -373,9 +373,9 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val a = insertExercise(null)
-        val b = insertExercise(null)
-        val d = insertExercise(null)
+        val a = insertExercise(uid)
+        val b = insertExercise(uid)
+        val d = insertExercise(uid)
         val sid = seed(
             uid, day(0),
             E(b, listOf(s("50", 10))),
@@ -406,7 +406,7 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         val sid = seed(uid, day(0), E(ex, listOf(s("100", 5), S("40", 10, warmup = true), s("110", 3), s("90", 12))))
         val cur = c.comparison(uid, sid).json()["exercises"]!!.jsonArray[0].jsonObject["current"]!!.jsonObject
         assertEquals(listOf(100.0 to 5, 110.0 to 3, 90.0 to 12), cur["sets"]!!.jsonArray.map { it.jsonObject.num("weightKg") to it.jsonObject.int("reps") })
@@ -421,7 +421,7 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         val inst = seedInstance(uid)
         val a1 = seed(uid, day(0), E(ex, listOf(s("100", 5))), instanceId = inst, dayKey = "A")
         seed(uid, day(2), E(ex, listOf(s("60", 5))), instanceId = inst, dayKey = "B") // 직전이지만 다른 day
@@ -440,8 +440,8 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
-        val otherEx = insertExercise(null)
+        val ex = insertExercise(uid)
+        val otherEx = insertExercise(uid)
         val inst = seedInstance(uid)
         seed(uid, day(0), E(ex, listOf(s("50", 5))))
         val latest = seed(uid, day(3), E(ex, listOf(s("60", 5))), instanceId = inst, dayKey = "B")
@@ -463,7 +463,7 @@ class StatsApiTest {
         val c = jsonClient()
         val uid = createUser()
         val other = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         val sid = seed(uid, day(5), E(ex, listOf(s("70", 5))))
         seed(uid, day(1), E(ex, listOf(s("500", 5))), deleted = true) // 지운 세션
         seed(uid, day(2), E(ex, listOf(s("500", 5)), deleted = true)) // 지운 종목 행
@@ -481,7 +481,7 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         val older = seed(uid, day(0), E(ex, listOf(s("80", 5))))
         val prevNoSets = seed(uid, day(3), E(ex, listOf(S("90", 5, completed = false)))) // 종목은 있으나 센 세트가 없음
         val sid = seed(uid, day(6), E(ex, listOf(s("85", 5))))
@@ -501,7 +501,7 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         seed(uid, day(0), E(ex, listOf(s("100", 5))))
         seed(uid, day(2), E(ex, listOf(s("110", 3), S("300", 1, warmup = true))))
         val sid = seed(uid, day(4), E(ex, listOf(s("120", 3), s("90", 12))))
@@ -523,7 +523,7 @@ class StatsApiTest {
         val c = jsonClient()
         val uid = createUser()
         setFormula(uid, "LOMBARDI")
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         seed(uid, day(0), E(ex, listOf(s("100", 1))))
         val sid = seed(uid, day(1), E(ex, listOf(s("100", 10))))
         val body = c.comparison(uid, sid).json()
@@ -539,7 +539,7 @@ class StatsApiTest {
         val c = jsonClient()
         val uid = createUser()
         val other = createUser()
-        val ex = insertExercise(null)
+        val ex = insertExercise(uid)
         val theirs = seed(other, day(0), E(ex, listOf(s("100", 5))))
         val deleted = seed(uid, day(1), E(ex, listOf(s("100", 5))), deleted = true)
         val mine = seed(uid, day(2), E(ex, listOf(s("100", 5))))
@@ -570,7 +570,7 @@ class StatsApiTest {
         startApplication()
         val c = jsonClient()
         val uid = createUser()
-        val exercises = (0 until 5).map { insertExercise(null) }
+        val exercises = (0 until 5).map { insertExercise(uid) }
         val start = Instant.now().minus(364, ChronoUnit.DAYS)
         val sessionCount = 52 * 4
         // 한 트랜잭션에서 일괄 삽입: 세션 208, 종목 행 1040, 세트 5200
@@ -613,11 +613,13 @@ class StatsApiTest {
         }
 
         val target = exercises[0]
+        // 기본 기간(180일)보다 긴 1년치를 모두 받는다
+        val q = "limit=500&from=${start.minus(1, ChronoUnit.DAYS)}"
         // 워밍업(JIT·커넥션 풀)
-        repeat(3) { assertEquals(HttpStatusCode.OK, c.get("/v1/exercises/$target/progress?limit=500") { auth(uid) }.status) }
+        repeat(3) { assertEquals(HttpStatusCode.OK, c.get("/v1/exercises/$target/progress?$q") { auth(uid) }.status) }
         val times = (0 until 5).map {
             val t0 = System.nanoTime()
-            val r = c.get("/v1/exercises/$target/progress?limit=500") { auth(uid) }
+            val r = c.get("/v1/exercises/$target/progress?$q") { auth(uid) }
             val ms = (System.nanoTime() - t0) / 1_000_000
             assertEquals(HttpStatusCode.OK, r.status)
             assertEquals(sessionCount, r.json().points().size)
