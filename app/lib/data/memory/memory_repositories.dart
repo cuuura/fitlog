@@ -460,20 +460,28 @@ class MemoryProgramRepository implements ProgramRepository {
     return i;
   }
 
-  Instance _with(Instance i, {InstanceStatus? status, SkipPolicy? skipPolicy}) => Instance(
-    id: i.id,
-    programId: i.programId,
-    name: i.name,
-    status: status ?? i.status,
-    skipPolicy: skipPolicy ?? i.skipPolicy,
-    startDate: i.startDate,
-    state: i.state,
-    next: i.next,
-  );
-
   @override
   Future<Instance> patchInstance(String id, InstancePatch patch) async {
-    final i = _with(instances[id]!, status: patch.status, skipPolicy: patch.skipPolicy);
+    final old = instances[id]!;
+    final st = old.state;
+    final i = Instance(
+      id: old.id,
+      programId: old.programId,
+      name: old.name,
+      status: patch.status ?? old.status,
+      skipPolicy: patch.skipPolicy ?? old.skipPolicy,
+      startDate: old.startDate,
+      state: InstanceState(
+        tm: {...st.tm, ...?patch.adjustTm},
+        working: {...st.working, ...?patch.adjustWorking},
+        stage: st.stage,
+        failStreak: st.failStreak,
+        week: st.week,
+        cycle: st.cycle,
+        seq: st.seq,
+      ),
+      next: old.next,
+    );
     instances[id] = i;
     _changed(id);
     return i;
