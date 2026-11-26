@@ -75,6 +75,9 @@ object Exercises : Table("exercise") {
     val updatedAt = timestamp("updated_at")
     val deletedAt = timestamp("deleted_at").nullable()
     val serverSeq = long("server_seq")
+    val importBatchId = uuid("import_batch_id").nullable()
+    /** APP | AI_JSON | AI_MCP | IMPORT (V4) */
+    val sourceCol = text("source").default("APP")
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -93,6 +96,7 @@ object WorkoutSessions : Table("workout_session") {
     val programInstanceId = uuid("program_instance_id").nullable()
     val planSeq = integer("plan_seq").nullable()
     val planDayKey = text("plan_day_key").nullable()
+    val importBatchId = uuid("import_batch_id").nullable()
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -145,6 +149,7 @@ object BodyMeasurements : Table("body_measurement") {
     val updatedAt = timestamp("updated_at")
     val deletedAt = timestamp("deleted_at").nullable()
     val serverSeq = long("server_seq")
+    val importBatchId = uuid("import_batch_id").nullable()
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -162,6 +167,7 @@ object Programs : Table("program") {
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
     val deletedAt = timestamp("deleted_at").nullable()
+    val importBatchId = uuid("import_batch_id").nullable()
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -180,6 +186,7 @@ object ProgramInstances : Table("program_instance") {
     val createdAt = timestamp("created_at")
     val updatedAt = timestamp("updated_at")
     val deletedAt = timestamp("deleted_at").nullable()
+    val importBatchId = uuid("import_batch_id").nullable()
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -227,5 +234,101 @@ object OneRmMeasurements : Table("one_rm_measurement") {
     val note = text("note").nullable()
     val createdAt = timestamp("created_at")
     val deletedAt = timestamp("deleted_at").nullable()
+    override val primaryKey = PrimaryKey(id)
+}
+
+// ---------------------------------------------------------------- v0.3 (V4__ai.sql)
+
+object ImportBatches : Table("import_batch") {
+    val id = uuid("id")
+    val userId = uuid("user_id")
+    val channel = text("channel")
+    val clientName = text("client_name").nullable()
+    val aiConnectionId = uuid("ai_connection_id").nullable()
+    val note = text("note").nullable()
+    val bundleHash = text("bundle_hash")
+    val summary = jsonbText("summary")
+    val createdAt = timestamp("created_at")
+    val revertedAt = timestamp("reverted_at").nullable()
+    override val primaryKey = PrimaryKey(id)
+}
+
+object ImportItems : Table("import_item") {
+    val id = uuid("id")
+    val batchId = uuid("batch_id")
+    val entity = text("entity")
+    val entityId = uuid("entity_id")
+    val action = text("action")
+    val label = text("label").nullable()
+    override val primaryKey = PrimaryKey(id)
+}
+
+object OAuthClients : Table("oauth_client") {
+    val id = uuid("id")
+    val clientId = text("client_id")
+    val clientName = text("client_name")
+    val redirectUris = array<String>("redirect_uris")
+    val createdAt = timestamp("created_at")
+    override val primaryKey = PrimaryKey(id)
+}
+
+object AiConnections : Table("ai_connection") {
+    val id = uuid("id")
+    val userId = uuid("user_id")
+    val clientId = uuid("client_id")
+    val scopes = array<String>("scopes")
+    val createdAt = timestamp("created_at")
+    val lastUsedAt = timestamp("last_used_at").nullable()
+    val revokedAt = timestamp("revoked_at").nullable()
+    override val primaryKey = PrimaryKey(id)
+}
+
+object OAuthAuthCodes : Table("oauth_auth_code") {
+    val codeHash = text("code_hash")
+    val connectionId = uuid("connection_id")
+    val redirectUri = text("redirect_uri")
+    val codeChallenge = text("code_challenge")
+    val scopes = array<String>("scopes")
+    val expiresAt = timestamp("expires_at")
+    val usedAt = timestamp("used_at").nullable()
+    override val primaryKey = PrimaryKey(codeHash)
+}
+
+object OAuthTokens : Table("oauth_token") {
+    val id = uuid("id")
+    val connectionId = uuid("connection_id")
+    val kind = text("kind")
+    val tokenHash = text("token_hash")
+    val familyId = uuid("family_id")
+    val expiresAt = timestamp("expires_at")
+    val revokedAt = timestamp("revoked_at").nullable()
+    val createdAt = timestamp("created_at")
+    override val primaryKey = PrimaryKey(id)
+}
+
+object AiToolCalls : Table("ai_tool_call") {
+    val id = long("id").autoIncrement()
+    val connectionId = uuid("connection_id")
+    val tool = text("tool")
+    val resultCode = text("result_code")
+    val durationMs = integer("duration_ms")
+    val createdAt = timestamp("created_at")
+    override val primaryKey = PrimaryKey(id)
+}
+
+object DeletionRequests : Table("deletion_request") {
+    val id = uuid("id")
+    val userId = uuid("user_id")
+    val connectionId = uuid("connection_id").nullable()
+    val clientName = text("client_name").nullable()
+    val entity = text("entity")
+    val entityId = uuid("entity_id")
+    val label = text("label").nullable()
+    val reason = text("reason").nullable()
+    val status = text("status")
+    val note = text("note").nullable()
+    val createdAt = timestamp("created_at")
+    val expiresAt = timestamp("expires_at")
+    val decidedAt = timestamp("decided_at").nullable()
     override val primaryKey = PrimaryKey(id)
 }

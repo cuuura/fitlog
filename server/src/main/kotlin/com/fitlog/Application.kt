@@ -2,6 +2,13 @@ package com.fitlog
 
 import com.fitlog.account.accountRoutes
 import com.fitlog.auth.authRoutes
+import com.fitlog.aiconnection.aiConnectionRoutes
+import com.fitlog.deletion.deletionRoutes
+import com.fitlog.export.exportRoutes
+import com.fitlog.importing.importRoutes
+import com.fitlog.importing.publicSchemaRoutes
+import com.fitlog.mcp.mcpRoutes
+import com.fitlog.oauth.oauthRoutes
 import com.fitlog.body.bodyRoutes
 import com.fitlog.core.AppConfig
 import com.fitlog.core.Database
@@ -36,8 +43,12 @@ fun Application.module(config: AppConfig) {
     installCore(config)
     routing {
         get("/health") { call.respondText("ok") }
+        // v0.3 원격 MCP·OAuth (자체 인증)
+        oauthRoutes(config)
+        mcpRoutes(config)
         route("/v1") {
             authRoutes(config)
+            publicSchemaRoutes(config)
             authenticate(com.fitlog.core.AUTH_BEARER) {
                 accountRoutes(config)
                 exerciseRoutes(config)
@@ -48,6 +59,11 @@ fun Application.module(config: AppConfig) {
                 programRoutes(config)
                 instanceRoutes(config)
                 recordsRoutes(config)
+                // v0.3
+                importRoutes(config)
+                exportRoutes(config)
+                deletionRoutes(config)
+                aiConnectionRoutes(config)
             }
         }
     }
