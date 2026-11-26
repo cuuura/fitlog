@@ -18,6 +18,18 @@ class SettingsPage extends ConsumerWidget {
 
   static const restOptions = [30, 45, 60, 90, 120, 150, 180, 240, 300];
 
+  static String _e1rmName(AppLocalizations l, E1rmFormula f) => switch (f) {
+    E1rmFormula.EPLEY => l.settingsE1rmEpley,
+    E1rmFormula.BRZYCKI => l.settingsE1rmBrzycki,
+    E1rmFormula.LOMBARDI => l.settingsE1rmLombardi,
+  };
+
+  static String _e1rmDesc(AppLocalizations l, E1rmFormula f) => switch (f) {
+    E1rmFormula.EPLEY => l.settingsE1rmEpleyDesc,
+    E1rmFormula.BRZYCKI => l.settingsE1rmBrzyckiDesc,
+    E1rmFormula.LOMBARDI => l.settingsE1rmLombardiDesc,
+  };
+
   Future<void> _update(BuildContext context, WidgetRef ref, Settings next) async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
@@ -160,6 +172,19 @@ class SettingsPage extends ConsumerWidget {
             subtitle: Text(l.settingsRpeDesc),
             value: s.rpeInputEnabled,
             onChanged: (v) => _update(context, ref, s.copyWith(rpeInputEnabled: v)),
+          ),
+          ListTile(
+            title: Text(l.settingsE1rm),
+            subtitle: Text('${_e1rmDesc(l, s.e1rmFormula)}\n${l.settingsE1rmNote}', key: const Key('e1rmDesc')),
+            isThreeLine: true,
+            trailing: DropdownButton<E1rmFormula>(
+              key: const Key('e1rmDropdown'),
+              value: s.e1rmFormula,
+              items: [
+                for (final f in E1rmFormula.values) DropdownMenuItem(value: f, child: Text(_e1rmName(l, f))),
+              ],
+              onChanged: (v) => v == null ? null : _update(context, ref, s.copyWith(e1rmFormula: v)),
+            ),
           ),
           if (ref.watch(restTimerNotifierProvider).supportsExactAlarm)
             ListTile(

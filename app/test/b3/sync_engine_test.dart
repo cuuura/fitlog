@@ -120,7 +120,7 @@ void main() {
     expect(sessionRow.attempts, 1);
     expect(sessionRow.lastError, 'VALIDATION_FAILED');
     final childRow = rows.firstWhere((r) => r.entity == 'session_exercise');
-    expect(childRow.attempts, 0, reason: 'PARENT_MISSING은 시도 횟수를 늘리지 않는다');
+    expect(childRow.attempts, 1, reason: 'PARENT_MISSING도 시도 횟수를 늘린다(무한 재시도 방지)');
     expect(childRow.lastError, 'PARENT_MISSING');
 
     env.server.forceReject.clear();

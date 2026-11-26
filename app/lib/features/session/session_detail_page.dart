@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/api/dto.dart';
+import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
@@ -34,6 +35,12 @@ class SessionDetailPage extends ConsumerWidget {
       appBar: AppBar(
         title: Text(formatDate(local)),
         actions: [
+          IconButton(
+            key: const Key('detail-edit'),
+            tooltip: l.historyEdit,
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => context.push(Routes.sessionEdit(s.id)),
+          ),
           IconButton(
             key: const Key('detail-delete'),
             tooltip: l.commonDelete,
