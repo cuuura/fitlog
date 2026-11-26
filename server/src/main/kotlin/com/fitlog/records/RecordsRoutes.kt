@@ -99,7 +99,7 @@ data class SuggestItem(
 // ---------------------------------------------------------------- 내부 도구
 
 /** 판정 대상 세트(워밍업·삭제 제외, 끝낸 세트, 무게·횟수 있음) */
-private class DoneSet(
+internal class DoneSet(
     val setId: UUID,
     val sessionId: UUID,
     val exerciseId: UUID,
@@ -122,13 +122,13 @@ private fun ResultRow.toOneRm(): OneRmMeasurement = OneRmMeasurement(
     note = this[OneRmMeasurements.note],
 )
 
-private fun userFormula(uid: UUID): E1rmFormula =
+internal fun userFormula(uid: UUID): E1rmFormula =
     parseFormula(
         UserSettingsTable.selectAll().where { UserSettingsTable.userId eq uid }.singleOrNull()?.get(UserSettingsTable.e1rmFormula),
     )
 
 /** 기본 종목이거나 내 종목(삭제 안 됨)이어야 한다. 아니면 404 */
-private fun requireVisibleExercise(uid: UUID, exerciseId: UUID) {
+internal fun requireVisibleExercise(uid: UUID, exerciseId: UUID) {
     val row = Exercises.selectAll().where {
         (Exercises.id eq exerciseId) and Exercises.deletedAt.isNull() and (Exercises.ownerId.isNull() or (Exercises.ownerId eq uid))
     }.singleOrNull()
@@ -165,7 +165,7 @@ private fun loadDoneSets(uid: UUID, exerciseIds: Collection<UUID>, since: Instan
     }
 }
 
-private fun point(s: DoneSet, formula: E1rmFormula) = RecordPoint(
+internal fun point(s: DoneSet, formula: E1rmFormula) = RecordPoint(
     weightKg = s.weightKg,
     reps = s.reps,
     e1rmKg = ProgramEngine.estimateOneRm(formula, s.weightKg, s.reps),
@@ -175,9 +175,9 @@ private fun point(s: DoneSet, formula: E1rmFormula) = RecordPoint(
 )
 
 /** 가장 무거운 세트. 같으면 횟수 많은 쪽, 그래도 같으면 먼저 한 쪽 */
-private val heavier = compareByDescending<DoneSet> { it.weightKg }.thenByDescending { it.reps }.thenBy { it.at }.thenBy { it.setId }
+internal val heavier = compareByDescending<DoneSet> { it.weightKg }.thenByDescending { it.reps }.thenBy { it.at }.thenBy { it.setId }
 
-private fun bestEstimated(sets: List<DoneSet>, formula: E1rmFormula): Pair<DoneSet, Double>? =
+internal fun bestEstimated(sets: List<DoneSet>, formula: E1rmFormula): Pair<DoneSet, Double>? =
     sets.mapNotNull { s -> ProgramEngine.estimateOneRm(formula, s.weightKg, s.reps)?.let { s to it } }
         .minWithOrNull(compareByDescending<Pair<DoneSet, Double>> { it.second }.thenBy { it.first.at }.thenBy { it.first.setId })
 
