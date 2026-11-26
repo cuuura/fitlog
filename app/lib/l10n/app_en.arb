@@ -1161,5 +1161,89 @@
         "type": "int"
       }
     }
+  },
+  "aiHubTitle": "AI",
+  "aiHubConnect": "Connect AI (MCP)",
+  "aiHubConnectDesc": "Let AI apps like Claude, ChatGPT and Gemini read and write your workout log.",
+  "aiHubConnectedCount": "{count} connected",
+  "aiHubImport": "Import by pasting JSON",
+  "aiHubImportDesc": "Paste workout or program JSON made by an AI.",
+  "aiHubHistory": "Import history",
+  "aiHubHistoryDesc": "Review what AI added and undo it.",
+  "aiHubDeletions": "Deletion requests",
+  "aiHubDeletionsDesc": "Approve or reject deletions requested by AI.",
+  "aiHubPending": "{count} pending",
+  "aiHubExport": "Export",
+  "aiHubExportDesc": "Save your data as a full backup (JSON) or CSV for spreadsheets.",
+  "aiConnectTitle": "Connect AI",
+  "aiConnectUrlLabel": "MCP address",
+  "aiConnectCopyUrl": "Copy address",
+  "aiConnectCopied": "Copied.",
+  "aiConnectPermission": "AI can only read and write. Deletions run only after you approve them in the app.",
+  "aiConnectGuides": "How to connect",
+  "aiConnectDocUrl": "Guide address",
+  "aiConnectCopyDoc": "Copy guide address",
+  "aiConnectDefaultName": "Your AI app",
+  "aiConnectDefaultStep1": "Open Settings → Connectors in the AI app.",
+  "aiConnectDefaultStep2": "Choose Add custom connector.",
+  "aiConnectDefaultStep3": "Paste the MCP address above.",
+  "aiConnectDefaultStep4": "Sign in with your fitlog account and allow access.",
+  "aiConnectConnected": "Connected AI",
+  "aiConnectNone": "No AI connected yet.",
+  "aiConnectRead": "Read",
+  "aiConnectWrite": "Write",
+  "aiConnectCreated": "Connected {date}",
+  "aiConnectLastUsed": "Last used {date}",
+  "aiConnectNeverUsed": "Not used yet",
+  "aiConnectDisconnect": "Disconnect",
+  "aiConnectDisconnectTitle": "Disconnect {name}?",
+  "aiConnectDisconnectBody": "This AI can no longer access your data. Records already imported stay.",
+  "aiConnectCancel": "Cancel",
+  "aiConnectLoadFailed": "Could not load. Check your connection and try again. AI connections need internet.",
+  "aiConnectActionFailed": "Something went wrong. Try again.",
+  "aiConnectRetry": "Retry",
+  "exportTitle": "Export",
+  "exportJson": "Full backup (JSON)",
+  "exportJsonDesc": "Saves everything in one file to move to another account or device. Restore it in the new account via AI → Import JSON.",
+  "exportSets": "Set log CSV (Excel)",
+  "exportSetsDesc": "One row per set, as a table you can open in Excel.",
+  "exportBody": "Body weight CSV",
+  "exportBodyDesc": "Your body weight entries as a table you can open in Excel.",
+  "exportDone": "File ready. Pick where to save it in the share sheet.",
+  "exportFailed": "Could not export. Check your connection and try again.",
+  "@aiHubConnectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@aiHubPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@aiConnectCreated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@aiConnectLastUsed": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@aiConnectDisconnectTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
   }
 }

@@ -1233,5 +1233,89 @@
         "type": "int"
       }
     }
-  }
+  },
+  "aiHubTitle": "AI 연동",
+  "aiHubConnect": "AI 연결(MCP)",
+  "aiHubConnectDesc": "Claude·ChatGPT·Gemini 같은 AI가 내 운동 기록을 읽고 쓰도록 연결해요.",
+  "aiHubConnectedCount": "연결된 AI {count}개",
+  "@aiHubConnectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHubImport": "JSON 붙여넣기로 가져오기",
+  "aiHubImportDesc": "AI가 만들어 준 운동 기록·프로그램 JSON을 붙여 넣어 가져와요.",
+  "aiHubHistory": "가져오기 이력",
+  "aiHubHistoryDesc": "AI로 들어온 기록을 확인하고 되돌려요.",
+  "aiHubDeletions": "삭제 요청",
+  "aiHubDeletionsDesc": "AI가 요청한 삭제를 승인하거나 거절해요.",
+  "aiHubPending": "대기 {count}건",
+  "@aiHubPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHubExport": "내보내기",
+  "aiHubExportDesc": "전체 백업(JSON)과 엑셀용 CSV로 내 데이터를 저장해요.",
+  "aiConnectTitle": "AI 연결",
+  "aiConnectUrlLabel": "MCP 주소",
+  "aiConnectCopyUrl": "주소 복사",
+  "aiConnectCopied": "복사했어요.",
+  "aiConnectPermission": "AI는 읽기·쓰기만 하고, 삭제는 앱에서 승인해야 실행돼요.",
+  "aiConnectGuides": "AI별 연결 방법",
+  "aiConnectDocUrl": "안내 주소",
+  "aiConnectCopyDoc": "안내 주소 복사",
+  "aiConnectDefaultName": "내 AI 앱",
+  "aiConnectDefaultStep1": "AI 앱의 설정 → 커넥터로 가요.",
+  "aiConnectDefaultStep2": "사용자 지정 커넥터 추가를 눌러요.",
+  "aiConnectDefaultStep3": "위의 MCP 주소를 붙여 넣어요.",
+  "aiConnectDefaultStep4": "fitlog 계정으로 로그인하고 권한을 허용해요.",
+  "aiConnectConnected": "연결된 AI",
+  "aiConnectNone": "아직 연결된 AI가 없어요.",
+  "aiConnectRead": "읽기",
+  "aiConnectWrite": "쓰기",
+  "aiConnectCreated": "연결 {date}",
+  "@aiConnectCreated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "aiConnectLastUsed": "마지막 사용 {date}",
+  "@aiConnectLastUsed": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "aiConnectNeverUsed": "아직 사용 안 함",
+  "aiConnectDisconnect": "연결 끊기",
+  "aiConnectDisconnectTitle": "{name} 연결을 끊을까요?",
+  "@aiConnectDisconnectTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiConnectDisconnectBody": "이 AI는 더 이상 내 기록에 접근할 수 없어요. 이미 가져온 기록은 그대로 남아요.",
+  "aiConnectCancel": "취소",
+  "aiConnectLoadFailed": "불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요. AI 연결은 온라인에서만 쓸 수 있어요.",
+  "aiConnectActionFailed": "처리하지 못했어요. 다시 시도해 주세요.",
+  "aiConnectRetry": "다시 시도",
+  "exportTitle": "내보내기",
+  "exportJson": "전체 백업(JSON)",
+  "exportJsonDesc": "모든 기록을 한 파일로 저장해요. 다른 계정·기기로 옮길 수 있어요. 새 계정에서 AI 연동 → JSON 가져오기로 복원해요.",
+  "exportSets": "세트 기록 CSV(엑셀)",
+  "exportSetsDesc": "세트마다 한 줄씩, 엑셀에서 열 수 있는 표로 저장해요.",
+  "exportBody": "체중 CSV",
+  "exportBodyDesc": "체중 기록을 엑셀에서 열 수 있는 표로 저장해요.",
+  "exportDone": "파일을 만들었어요. 공유 화면에서 저장할 곳을 골라 주세요.",
+  "exportFailed": "내보내지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요."
 }
