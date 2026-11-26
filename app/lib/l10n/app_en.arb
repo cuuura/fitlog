@@ -1247,5 +1247,8 @@
     }
   },
   "importReplaceWarningPermanent": "The existing item is overwritten in place. Reverting won't restore the previous content.",
-  "deletionForbidden": "Built-in items can't be deleted"
+  "deletionForbidden": "Built-in items can't be deleted",
+  "releasePrivacyPolicy": "Privacy policy",
+  "releasePrivacyPolicySubtitle": "Opens in your browser",
+  "releasePrivacyOpenFailed": "Couldn't open the link. Please try again later."
 }

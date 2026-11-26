@@ -1319,5 +1319,8 @@
   "exportDone": "파일을 만들었어요. 공유 화면에서 저장할 곳을 골라 주세요.",
   "exportFailed": "내보내지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.",
   "importReplaceWarningPermanent": "기존 내용을 그 자리에서 덮어써요. 되돌리기로도 이전 내용은 복원되지 않아요.",
-  "deletionForbidden": "기본 제공 항목이라 삭제할 수 없어요"
+  "deletionForbidden": "기본 제공 항목이라 삭제할 수 없어요",
+  "releasePrivacyPolicy": "개인정보 처리방침",
+  "releasePrivacyPolicySubtitle": "브라우저에서 열려요",
+  "releasePrivacyOpenFailed": "링크를 열지 못했어요. 잠시 후 다시 시도해 주세요."
 }

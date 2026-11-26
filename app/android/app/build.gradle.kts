@@ -1,8 +1,26 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// 릴리스 서명 정보: app/android/key.properties(gitignore) 또는 환경 변수(CI). 둘 다 없으면 디버그 키로 폴백(로컬 실행용).
+// key.properties 키: storeFile, storePassword, keyAlias, keyPassword
+val keyProps = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
+fun signingValue(propName: String, envName: String): String? =
+    (keyProps.getProperty(propName) ?: System.getenv(envName))?.takeIf { it.isNotBlank() }
+
+val releaseStoreFile = signingValue("storeFile", "FITLOG_KEYSTORE_PATH")
+val releaseStorePassword = signingValue("storePassword", "FITLOG_KEYSTORE_PASSWORD")
+val releaseKeyAlias = signingValue("keyAlias", "FITLOG_KEY_ALIAS")
+val releaseKeyPassword = signingValue("keyPassword", "FITLOG_KEY_PASSWORD")
+val hasReleaseSigning = listOf(releaseStoreFile, releaseStorePassword, releaseKeyAlias, releaseKeyPassword).all { it != null }
 
 android {
     namespace = "com.fitlog.fitlog"
@@ -17,7 +35,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
+        // 주의: 첫 Play 업로드 전에 확정한다. 업로드 후에는 바꿀 수 없다(app/store/release-checklist.md).
         applicationId = "com.fitlog.fitlog"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
@@ -31,11 +49,23 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = rootProject.file(releaseStoreFile!!)
+                storePassword = releaseStorePassword
+                keyAlias = releaseKeyAlias
+                keyPassword = releaseKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }
@@ -48,6 +78,8 @@ kotlin {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // Play Integrity Standard API(contracts/v1.0/security.md).
+    implementation("com.google.android.play:integrity:1.4.0")
 }
 
 flutter {

@@ -1,0 +1,104 @@
+name: app
+
+on:
+  push:
+    branches: [main]
+    paths: ["app/**", ".github/workflows/app.yml"]
+  pull_request:
+    paths: ["app/**", ".github/workflows/app.yml"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    env:
+      # 저장소 Variables(Settings > Secrets and variables > Actions > Variables) 또는 Secrets.
+      API_BASE_URL: ${{ vars.API_BASE_URL || secrets.API_BASE_URL }}
+      GOOGLE_SERVER_CLIENT_ID: ${{ vars.GOOGLE_SERVER_CLIENT_ID || secrets.GOOGLE_SERVER_CLIENT_ID }}
+      PLAY_CLOUD_PROJECT_NUMBER: ${{ vars.PLAY_CLOUD_PROJECT_NUMBER || secrets.PLAY_CLOUD_PROJECT_NUMBER }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN || vars.SENTRY_DSN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.50.1"
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+      # 릴리스 빌드는 main 푸시에서만. API_BASE_URL이 없으면 실패시킨다(기본값 10.0.2.2가 릴리스에 들어가면 안 된다).
+      - name: Require API_BASE_URL
+        if: github.event_name == 'push'
+        run: |
+          if [ -z "$API_BASE_URL" ]; then
+            echo "::error::API_BASE_URL 변수(또는 시크릿)가 없어 릴리스 빌드를 할 수 없습니다."
+            exit 1
+          fi
+
+      - name: Prepare signing (secrets가 있을 때만)
+        if: github.event_name == 'push'
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ] && [ -n "$ANDROID_KEYSTORE_PASSWORD" ] && [ -n "$ANDROID_KEY_ALIAS" ] && [ -n "$ANDROID_KEY_PASSWORD" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+            {
+              echo "FITLOG_KEYSTORE_PATH=$RUNNER_TEMP/upload.jks"
+              echo "FITLOG_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD"
+              echo "FITLOG_KEY_ALIAS=$ANDROID_KEY_ALIAS"
+              echo "FITLOG_KEY_PASSWORD=$ANDROID_KEY_PASSWORD"
+            } >> "$GITHUB_ENV"
+            echo "서명 키를 사용합니다."
+          else
+            echo "::warning::서명 시크릿이 없어 디버그 키로 서명합니다(Play 업로드 불가)."
+          fi
+
+      - name: Build appbundle (release, obfuscated)
+        if: github.event_name == 'push'
+        run: |
+          flutter build appbundle --release --obfuscate --split-debug-info=build/symbols \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=GOOGLE_SERVER_CLIENT_ID="$GOOGLE_SERVER_CLIENT_ID" \
+            --dart-define=PLAY_CLOUD_PROJECT_NUMBER="$PLAY_CLOUD_PROJECT_NUMBER" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN"
+
+      - name: Build apk (release, obfuscated)
+        if: github.event_name == 'push'
+        run: |
+          flutter build apk --release --obfuscate --split-debug-info=build/symbols \
+            --dart-define=API_BASE_URL="$API_BASE_URL" \
+            --dart-define=GOOGLE_SERVER_CLIENT_ID="$GOOGLE_SERVER_CLIENT_ID" \
+            --dart-define=PLAY_CLOUD_PROJECT_NUMBER="$PLAY_CLOUD_PROJECT_NUMBER" \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN"
+
+      # Kotlin·R8 컴파일 검증: PR에서도 디버그 APK는 빌드해 MainActivity.kt·build.gradle.kts를 확인한다.
+      - name: Build debug apk (compile check)
+        if: github.event_name == 'pull_request'
+        run: flutter build apk --debug
+
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push'
+        with:
+          name: app-release
+          path: |
+            app/build/app/outputs/bundle/release/*.aab
+            app/build/app/outputs/flutter-apk/*.apk
+          if-no-files-found: error
+      # 난독화 스택트레이스 복원용. Play Console·Sentry에 올릴 때 필요하니 릴리스마다 보관한다.
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'push'
+        with:
+          name: app-symbols
+          path: app/build/symbols
+          if-no-files-found: error
