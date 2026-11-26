@@ -107,17 +107,26 @@ class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
     if (session == null)
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
+    final largeText = MediaQuery.textScalerOf(context).scale(10) > 13;
     return SessionWakelock(
       child: Scaffold(
         appBar: AppBar(
-          title: Text(l.sessionTitle),
+          // 큰 글씨에서는 제목 자리에 경과 시간만 두고, 종료 버튼은 줄여서 앱바 폭을 넘지 않게 한다.
+          title: largeText ? _Elapsed(startedAt: session.startedAt) : Text(l.sessionTitle),
           actions: [
-            Center(child: _Elapsed(startedAt: session.startedAt)),
-            const SizedBox(width: 8),
+            if (!largeText) ...[
+              Center(child: _Elapsed(startedAt: session.startedAt)),
+              const SizedBox(width: 8),
+            ],
             TextButton(
               key: const Key('end-session'),
               onPressed: () => _end(session),
-              child: Text(l.sessionEnd),
+              child: largeText
+                  ? ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 140),
+                      child: FittedBox(fit: BoxFit.scaleDown, child: Text(l.sessionEnd)),
+                    )
+                  : Text(l.sessionEnd),
             ),
           ],
         ),

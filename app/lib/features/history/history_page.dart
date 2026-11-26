@@ -178,24 +178,21 @@ class _SessionTile extends ConsumerWidget {
     void edit() => context.push(Routes.sessionEdit(s.id));
     return ListTile(
       key: Key('history-${s.id}'),
-      title: Row(
+      title: Wrap(
+        spacing: 8,
+        runSpacing: 4,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Text('${formatDate(local)} ${formatClock(local)}'),
-          if (full != null && full.isFromAi) ...[
-            const SizedBox(width: 8),
+          if (full != null && full.isFromAi)
             SourceBadge(key: Key('source-${s.id}'), source: full.source, importBatchId: full.importBatchId),
-          ],
-          if (badge != null) ...[
-            const SizedBox(width: 8),
-            Flexible(
-              child: Chip(
-                key: Key('badge-${s.id}'),
-                label: Text(badge, overflow: TextOverflow.ellipsis),
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-              ),
+          if (badge != null)
+            Chip(
+              key: Key('badge-${s.id}'),
+              label: Text(badge, overflow: TextOverflow.ellipsis),
+              visualDensity: VisualDensity.compact,
+              padding: EdgeInsets.zero,
             ),
-          ],
         ],
       ),
       subtitle: Text(l.historySummary(s.exerciseCount, s.setCount, formatVolume(s.totalVolumeKg, unit))),
@@ -205,9 +202,7 @@ class _SessionTile extends ConsumerWidget {
         key: Key('menu-${s.id}'),
         tooltip: l.historyMenu,
         onSelected: (_) => edit(),
-        itemBuilder: (_) => [
-          PopupMenuItem(value: 'edit', key: Key('menu-edit-${s.id}'), child: Text(l.historyEdit)),
-        ],
+        itemBuilder: (_) => [PopupMenuItem(value: 'edit', key: Key('menu-edit-${s.id}'), child: Text(l.historyEdit))],
       ),
     );
   }

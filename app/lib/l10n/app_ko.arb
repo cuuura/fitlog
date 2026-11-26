@@ -1387,5 +1387,15 @@
   "progressCompareNotSynced": "아직 서버에 올라가지 않은 세션이에요. 동기화된 뒤 다시 시도해 주세요",
   "releasePrivacyPolicy": "개인정보 처리방침",
   "releasePrivacyPolicySubtitle": "브라우저에서 열려요",
-  "releasePrivacyOpenFailed": "링크를 열지 못했어요. 잠시 후 다시 시도해 주세요."
+  "releasePrivacyOpenFailed": "링크를 열지 못했어요. 잠시 후 다시 시도해 주세요.",
+  "errorNetwork": "인터넷에 연결되어 있지 않아요. 연결을 확인하고 다시 시도해 주세요.",
+  "errorRateLimited": "요청이 많아요. 잠시 후 다시 시도해 주세요.",
+  "errorIntegrityFailed": "앱을 확인하지 못했어요. Play 스토어에서 설치한 앱인지 확인하고 다시 시도해 주세요.",
+  "errorGeneric": "문제가 생겼어요. 잠시 후 다시 시도해 주세요.",
+  "errorRetry": "다시 시도",
+  "qaCrashReportTitle": "오류 보고 보내기",
+  "qaCrashReportDesc": "앱이 멈추면 오류 내용만 개발자에게 보내요. 기록·이메일 등 개인 정보는 보내지 않아요. 다음 실행부터 적용돼요.",
+  "qaCrashReportSaveFailed": "설정을 저장하지 못했어요",
+  "qaStepDecrease": "줄이기",
+  "qaStepIncrease": "늘리기"
 }

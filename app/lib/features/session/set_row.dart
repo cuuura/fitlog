@@ -250,6 +250,7 @@ class _SetRowState extends ConsumerState<SetRow> {
             : IconButton(
                 key: Key('$id-minus-${widget.set.id}'),
                 visualDensity: VisualDensity.compact,
+                tooltip: AppLocalizations.of(context).qaStepDecrease,
                 icon: const Icon(Icons.remove, size: 18),
                 onPressed: onMinus,
               ),
@@ -258,6 +259,7 @@ class _SetRowState extends ConsumerState<SetRow> {
             : IconButton(
                 key: Key('$id-plus-${widget.set.id}'),
                 visualDensity: VisualDensity.compact,
+                tooltip: AppLocalizations.of(context).qaStepIncrease,
                 icon: const Icon(Icons.add, size: 18),
                 onPressed: onPlus,
               ),
