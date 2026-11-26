@@ -1026,5 +1026,212 @@
       }
     }
   },
-  "importClear": "지우기"
+  "importClear": "지우기",
+  "sourceAiJson": "AI·JSON",
+  "sourceAiMcp": "AI·MCP",
+  "sourceImport": "가져옴",
+  "aiHistoryTitle": "가져오기 이력",
+  "aiHistoryEmpty": "아직 AI로 만든 묶음이 없어요",
+  "aiHistoryLoadMore": "더 보기",
+  "aiHistoryChannelApp": "앱 JSON",
+  "aiHistoryChannelMcp": "MCP",
+  "aiHistoryReverted": "되돌림",
+  "aiHistorySummarySessions": "세션 {n}",
+  "@aiHistorySummarySessions": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistorySummaryPrograms": "프로그램 {n}",
+  "@aiHistorySummaryPrograms": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistorySummaryReplaced": "교체 {n}",
+  "@aiHistorySummaryReplaced": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistorySummaryOther": "{key} {n}",
+  "@aiHistorySummaryOther": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistoryDetailTitle": "묶음 상세",
+  "aiHistoryActionCreated": "생성",
+  "aiHistoryActionReplacedOld": "교체됨(이전 것)",
+  "aiHistoryRevert": "되돌리기",
+  "aiHistoryRevertTitle": "이 묶음을 되돌릴까요?",
+  "aiHistoryRevertCreated": "이 묶음으로 만든 {list}가 지워집니다.",
+  "@aiHistoryRevertCreated": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "aiHistoryRevertNothingCreated": "지워지는 항목은 없습니다.",
+  "aiHistoryRevertRestored": "교체된 {n}개가 복원됩니다.",
+  "@aiHistoryRevertRestored": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistoryRevertDone": "되돌렸어요",
+  "aiHistoryRevertFailed": "되돌리지 못했어요",
+  "aiHistoryRevertedAt": "{time}에 되돌림",
+  "@aiHistoryRevertedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "aiHistoryNoItems": "항목이 없어요",
+  "aiEntityExercise": "종목",
+  "aiEntityProgram": "프로그램",
+  "aiEntityProgramInstance": "진행 중 프로그램",
+  "aiEntitySession": "세션",
+  "aiEntityBody": "체중 기록",
+  "aiCountExercise": "종목 {n}개",
+  "@aiCountExercise": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountProgram": "프로그램 {n}개",
+  "@aiCountProgram": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountProgramInstance": "진행 중 프로그램 {n}개",
+  "@aiCountProgramInstance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountSession": "세션 {n}개",
+  "@aiCountSession": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountBody": "체중 기록 {n}개",
+  "@aiCountBody": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "deletionTitle": "AI 삭제 요청",
+  "deletionTabPending": "대기",
+  "deletionTabDone": "처리됨",
+  "deletionEmptyPending": "대기 중인 요청이 없어요",
+  "deletionEmptyDone": "처리된 요청이 없어요",
+  "deletionRequestedBy": "요청한 AI: {name}",
+  "@deletionRequestedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionReason": "사유: {reason}",
+  "@deletionReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionRequestedAt": "요청 {time}",
+  "@deletionRequestedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionExpiresIn": "만료까지 {time}",
+  "@deletionExpiresIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionExpired": "만료됨",
+  "deletionDurationHm": "{h}시간 {m}분",
+  "@deletionDurationHm": {
+    "placeholders": {
+      "h": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "deletionDurationM": "{m}분",
+  "@deletionDurationM": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "deletionApprove": "승인",
+  "deletionReject": "거절",
+  "deletionApproveTitle": "삭제합니다, 되돌릴 수 없습니다",
+  "deletionApproveBody": "{label}을(를) 삭제할까요?",
+  "@deletionApproveBody": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionRejectTitle": "이 요청을 거절할까요?",
+  "deletionApproved": "삭제했어요",
+  "deletionRejected": "거절했어요",
+  "deletionAlreadyDecided": "이미 처리된 요청이에요",
+  "deletionGone": "만료된 요청이에요",
+  "deletionFailed": "처리하지 못했어요",
+  "deletionStatusApproved": "승인됨",
+  "deletionStatusRejected": "거절됨",
+  "deletionStatusExpired": "만료됨",
+  "deletionBanner": "AI가 삭제를 요청했어요 ({n}건)",
+  "@deletionBanner": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }

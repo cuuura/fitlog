@@ -6,6 +6,7 @@ import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../../domain/repositories.dart';
+import '../deletion_requests/pending_deletion_banner.dart';
 import '../exercise_picker/exercise_labels.dart';
 import '../session/plan_logic.dart';
 import '../session/session_controller.dart';
@@ -95,6 +96,7 @@ class HomePage extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          const PendingDeletionBanner(),
           if (active != null)
             Card(
               key: const Key('home-resume-card'),

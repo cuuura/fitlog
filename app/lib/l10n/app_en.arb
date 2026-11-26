@@ -954,5 +954,212 @@
       }
     }
   },
-  "importClear": "Clear"
+  "importClear": "Clear",
+  "sourceAiJson": "AI·JSON",
+  "sourceAiMcp": "AI·MCP",
+  "sourceImport": "Imported",
+  "aiHistoryTitle": "Import history",
+  "aiHistoryEmpty": "Nothing created by AI yet",
+  "aiHistoryLoadMore": "Load more",
+  "aiHistoryChannelApp": "App JSON",
+  "aiHistoryChannelMcp": "MCP",
+  "aiHistoryReverted": "Reverted",
+  "aiHistorySummarySessions": "Sessions {n}",
+  "@aiHistorySummarySessions": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistorySummaryPrograms": "Programs {n}",
+  "@aiHistorySummaryPrograms": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistorySummaryReplaced": "Replaced {n}",
+  "@aiHistorySummaryReplaced": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistorySummaryOther": "{key} {n}",
+  "@aiHistorySummaryOther": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistoryDetailTitle": "Batch details",
+  "aiHistoryActionCreated": "Created",
+  "aiHistoryActionReplacedOld": "Replaced (old one)",
+  "aiHistoryRevert": "Revert",
+  "aiHistoryRevertTitle": "Revert this batch?",
+  "aiHistoryRevertCreated": "{list} created by this batch will be deleted.",
+  "@aiHistoryRevertCreated": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "aiHistoryRevertNothingCreated": "Nothing will be deleted.",
+  "aiHistoryRevertRestored": "{n} replaced item(s) will be restored.",
+  "@aiHistoryRevertRestored": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistoryRevertDone": "Reverted",
+  "aiHistoryRevertFailed": "Could not revert",
+  "aiHistoryRevertedAt": "Reverted at {time}",
+  "@aiHistoryRevertedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "aiHistoryNoItems": "No items",
+  "aiEntityExercise": "Exercise",
+  "aiEntityProgram": "Program",
+  "aiEntityProgramInstance": "Active program",
+  "aiEntitySession": "Session",
+  "aiEntityBody": "Body weight entry",
+  "aiCountExercise": "{n} exercise(s)",
+  "@aiCountExercise": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountProgram": "{n} program(s)",
+  "@aiCountProgram": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountProgramInstance": "{n} active program(s)",
+  "@aiCountProgramInstance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountSession": "{n} session(s)",
+  "@aiCountSession": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountBody": "{n} body weight entry(ies)",
+  "@aiCountBody": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "deletionTitle": "AI deletion requests",
+  "deletionTabPending": "Pending",
+  "deletionTabDone": "Decided",
+  "deletionEmptyPending": "No pending requests",
+  "deletionEmptyDone": "No decided requests",
+  "deletionRequestedBy": "Requested by: {name}",
+  "@deletionRequestedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionReason": "Reason: {reason}",
+  "@deletionReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionRequestedAt": "Requested {time}",
+  "@deletionRequestedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionExpiresIn": "Expires in {time}",
+  "@deletionExpiresIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionExpired": "Expired",
+  "deletionDurationHm": "{h}h {m}m",
+  "@deletionDurationHm": {
+    "placeholders": {
+      "h": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "deletionDurationM": "{m}m",
+  "@deletionDurationM": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "deletionApprove": "Approve",
+  "deletionReject": "Reject",
+  "deletionApproveTitle": "This will delete it and cannot be undone",
+  "deletionApproveBody": "Delete {label}?",
+  "@deletionApproveBody": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionRejectTitle": "Reject this request?",
+  "deletionApproved": "Deleted",
+  "deletionRejected": "Rejected",
+  "deletionAlreadyDecided": "This request was already decided",
+  "deletionGone": "This request has expired",
+  "deletionFailed": "Could not process the request",
+  "deletionStatusApproved": "Approved",
+  "deletionStatusRejected": "Rejected",
+  "deletionStatusExpired": "Expired",
+  "deletionBanner": "AI requested deletion ({n})",
+  "@deletionBanner": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  }
 }
