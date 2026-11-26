@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fitlog.app/schemas/import/v1.json",
+  "title": "Fitlog Import Bundle",
+  "description": "AI·사용자가 앱(JSON 붙여넣기)이나 MCP로 넣는 묶음. 규칙은 import.md. 무게는 kg, 시각은 ISO-8601(시간대 포함), id는 생략 가능(서버가 만듦).",
+  "type": "object",
+  "required": ["schemaVersion"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "note": { "type": "string", "maxLength": 500, "description": "AI가 남기는 설명(이력 화면에 표시)" },
+    "exercises": { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/exercise" } },
+    "programs": { "type": "array", "maxItems": 10, "items": { "$ref": "#/$defs/program" } },
+    "startPrograms": { "type": "array", "maxItems": 5, "items": { "$ref": "#/$defs/startProgram" } },
+    "sessions": { "type": "array", "maxItems": 200, "items": { "$ref": "#/$defs/session" } },
+    "bodyMeasurements": { "type": "array", "maxItems": 1000, "items": { "$ref": "#/$defs/body" } }
+  },
+  "$defs": {
+    "uuid": { "type": "string", "format": "uuid" },
+    "exerciseRef": {
+      "oneOf": [
+        { "type": "object", "required": ["id"], "additionalProperties": false, "properties": { "id": { "$ref": "#/$defs/uuid" } } },
+        { "type": "object", "required": ["name"], "additionalProperties": false, "properties": { "name": { "type": "string", "minLength": 1 } } }
+      ]
+    },
+    "exercise": {
+      "type": "object",
+      "required": ["nameKo", "type", "primaryMuscle"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "nameKo": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "nameEn": { "type": "string", "maxLength": 60 },
+        "type": { "enum": ["BARBELL", "DUMBBELL", "MACHINE", "BODYWEIGHT", "BAND", "CARDIO"] },
+        "primaryMuscle": { "enum": ["CHEST", "BACK", "LATS", "TRAPS", "SHOULDERS", "REAR_DELTS", "BICEPS", "TRICEPS", "FOREARMS", "QUADS", "HAMSTRINGS", "GLUTES", "CALVES", "ADDUCTORS", "ABS", "OBLIQUES", "LOWER_BACK", "FULL_BODY", "CARDIO"] },
+        "secondaryMuscles": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "program": {
+      "type": "object",
+      "required": ["definition"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "ref": { "type": "string", "pattern": "^[a-z0-9_-]{1,32}$", "description": "같은 묶음의 startPrograms가 가리킬 이름" },
+        "definition": { "$ref": "https://fitlog.app/schemas/program/v1.json" }
+      }
+    },
+    "startProgram": {
+      "type": "object",
+      "required": ["program", "startDate"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "program": {
+          "description": "기존 프로그램 id, 템플릿 키(예: stronglifts-5x5), 또는 이 묶음 programs[].ref",
+          "oneOf": [
+            { "type": "object", "required": ["id"], "additionalProperties": false, "properties": { "id": { "$ref": "#/$defs/uuid" } } },
+            { "type": "object", "required": ["templateKey"], "additionalProperties": false, "properties": { "templateKey": { "type": "string" } } },
+            { "type": "object", "required": ["ref"], "additionalProperties": false, "properties": { "ref": { "type": "string" } } }
+          ]
+        },
+        "startDate": { "type": "string", "format": "date" },
+        "tz": { "type": "string", "description": "없으면 사용자 기기 시간대(앱) 또는 Asia/Seoul(MCP 기본)" },
+        "skipPolicy": { "enum": ["SHIFT", "FIXED_DATE"], "default": "SHIFT" },
+        "tm": { "type": "object", "additionalProperties": { "type": "number", "exclusiveMinimum": 0 } },
+        "working": { "type": "object", "additionalProperties": { "type": "number", "exclusiveMinimum": 0 } }
+      }
+    },
+    "set": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "isWarmup": { "type": "boolean", "default": false },
+        "weightKg": { "type": "number", "minimum": 0, "description": "DUMBBELL은 한쪽 무게" },
+        "addedWeightKg": { "type": "number" },
+        "reps": { "type": "integer", "minimum": 0 },
+        "durationSec": { "type": "integer", "minimum": 0 },
+        "distanceM": { "type": "number", "minimum": 0 },
+        "rpe": { "type": "number", "minimum": 1, "maximum": 10, "multipleOf": 0.5 },
+        "rir": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "restSec": { "type": "integer", "minimum": 0 },
+        "note": { "type": "string" }
+      }
+    },
+    "session": {
+      "type": "object",
+      "required": ["startedAt", "exercises"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "endedAt": { "type": "string", "format": "date-time", "description": "없으면 startedAt + 세트 수×3분으로 채워 끝난 세션으로 저장" },
+        "tz": { "type": "string" },
+        "note": { "type": "string" },
+        "program": {
+          "type": "object",
+          "required": ["instanceId", "planSeq"],
+          "additionalProperties": false,
+          "description": "프로그램 회차 기록이면. 서버가 계획(plannedSetKey·목표)을 세트 순서대로 붙인다",
+          "properties": { "instanceId": { "$ref": "#/$defs/uuid" }, "planSeq": { "type": "integer", "minimum": 0 } }
+        },
+        "exercises": {
+          "type": "array", "minItems": 1, "maxItems": 30,
+          "items": {
+            "type": "object",
+            "required": ["exercise", "sets"],
+            "additionalProperties": false,
+            "properties": {
+              "exercise": { "$ref": "#/$defs/exerciseRef" },
+              "note": { "type": "string" },
+              "sets": { "type": "array", "minItems": 1, "maxItems": 50, "items": { "$ref": "#/$defs/set" } }
+            }
+          }
+        }
+      }
+    },
+    "body": {
+      "type": "object",
+      "required": ["measuredAt", "weightKg"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "measuredAt": { "type": "string", "format": "date-time" },
+        "weightKg": { "type": "number", "minimum": 20, "maximum": 400 }
+      }
+    }
+  }
+}

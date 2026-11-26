@@ -92,6 +92,7 @@ internal fun Transaction.loadSession(userId: UUID, id: UUID): Session? {
         programInstanceId = s[WorkoutSessions.programInstanceId],
         planSeq = s[WorkoutSessions.planSeq],
         planDayKey = s[WorkoutSessions.planDayKey],
+        importBatchId = s[WorkoutSessions.importBatchId],
     )
 }
 
