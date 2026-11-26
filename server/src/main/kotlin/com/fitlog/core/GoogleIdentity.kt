@@ -8,3 +8,8 @@ fun interface GoogleIdTokenVerifier {
     /** 유효하지 않으면 null */
     fun verify(idToken: String): GoogleIdentity?
 }
+
+/** Google 웹 OAuth 인가 코드 → ID 토큰 교환 (MCP 로그인 페이지). 실패하면 null */
+fun interface GoogleCodeExchanger {
+    fun exchange(code: String, redirectUri: String): String?
+}

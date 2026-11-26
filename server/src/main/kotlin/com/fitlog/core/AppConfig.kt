@@ -20,8 +20,18 @@ data class AppConfig(
     val googleVerifier: GoogleIdTokenVerifier? = null,
     /** null 이면 com.fitlog.engine.ProgramEngine. 테스트에서 가짜 엔진 주입용 */
     val calculator: com.fitlog.engine.ProgramCalculator? = null,
+    /** 외부에서 보이는 서버 주소(끝 슬래시 없음). MCP 리소스 URL·OAuth 메타데이터·리다이렉트에 쓴다 */
+    val publicBaseUrl: String = "http://localhost:8080",
+    /** MCP 로그인 페이지용 Google 웹 OAuth 클라이언트(인가 코드 흐름) */
+    val googleWebClientId: String? = null,
+    val googleWebClientSecret: String? = null,
+    /** null 이면 oauth 패키지의 실제 구현(Google 토큰 엔드포인트). 테스트에서 가짜 주입용 */
+    val googleCodeExchanger: GoogleCodeExchanger? = null,
+    /** null 이면 com.fitlog.importing.ImportPipeline. 테스트에서 가짜 주입용 */
+    val importerOverride: com.fitlog.importing.Importer? = null,
 ) {
     val engine: com.fitlog.engine.ProgramCalculator get() = calculator ?: com.fitlog.engine.ProgramEngine
+    val importer: com.fitlog.importing.Importer get() = importerOverride ?: com.fitlog.importing.ImportPipeline
 
     companion object {
         fun fromEnv(env: Map<String, String> = System.getenv()): AppConfig = AppConfig(
@@ -34,6 +44,9 @@ data class AppConfig(
             jwt = JwtConfig(secret = env["JWT_SECRET"] ?: error("JWT_SECRET is required")),
             googleClientIds = env["GOOGLE_CLIENT_IDS"]?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
                 ?: emptyList(),
+            publicBaseUrl = (env["PUBLIC_BASE_URL"] ?: "http://localhost:8080").trimEnd('/'),
+            googleWebClientId = env["GOOGLE_WEB_CLIENT_ID"],
+            googleWebClientSecret = env["GOOGLE_WEB_CLIENT_SECRET"],
         )
     }
 }

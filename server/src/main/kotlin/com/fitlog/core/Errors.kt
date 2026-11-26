@@ -11,6 +11,10 @@ enum class ErrorCode(val status: HttpStatusCode) {
     CONFLICT(HttpStatusCode.Conflict),
     RATE_LIMITED(HttpStatusCode.TooManyRequests),
     PARENT_MISSING(HttpStatusCode.Conflict),
+    /** v0.3 가져오기: 해결 안 된 충돌 */
+    CONFLICT_UNRESOLVED(HttpStatusCode.Conflict),
+    /** v0.3 만료된 삭제 요청 결정 시도 */
+    GONE(HttpStatusCode.Gone),
 }
 
 /** 핸들러에서 던지면 StatusPages가 계약의 에러 형식으로 바꾼다 */

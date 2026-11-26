@@ -58,6 +58,8 @@ data class Session(
     val programInstanceId: UUID? = null,
     val planSeq: Int? = null,
     val planDayKey: String? = null,
+    /** readOnly (v0.3): 가져오기 묶음으로 만들었으면 그 id, 아니면 생략 */
+    val importBatchId: UUID? = null,
 )
 
 @Serializable
@@ -69,6 +71,9 @@ data class SessionSummary(
     val exerciseCount: Int,
     val setCount: Int,
     val totalVolumeKg: Double,
+    /** v0.3 출처 */
+    val source: String? = null,
+    val importBatchId: UUID? = null,
 )
 
 @Serializable

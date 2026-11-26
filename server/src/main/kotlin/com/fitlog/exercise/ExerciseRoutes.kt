@@ -59,6 +59,9 @@ data class Exercise(
     val secondaryMuscles: List<String> = emptyList(),
     val builtIn: Boolean,
     @Serializable(with = InstantSerializer::class) val updatedAt: Instant,
+    /** v0.3 출처: APP | AI_JSON | AI_MCP | IMPORT */
+    val source: String? = null,
+    @Serializable(with = UUIDSerializer::class) val importBatchId: UUID? = null,
 )
 
 val EXERCISE_TYPES = setOf("BARBELL", "DUMBBELL", "MACHINE", "BODYWEIGHT", "BAND", "CARDIO")
@@ -99,6 +102,8 @@ fun ResultRow.toExercise(): Exercise = Exercise(
     secondaryMuscles = this[Exercises.secondaryMuscles],
     builtIn = this[Exercises.ownerId] == null,
     updatedAt = this[Exercises.updatedAt],
+    source = this[Exercises.sourceCol],
+    importBatchId = this[Exercises.importBatchId],
 )
 
 private fun normalizeForSearch(s: String): String = s.filterNot { it.isWhitespace() }.lowercase()
