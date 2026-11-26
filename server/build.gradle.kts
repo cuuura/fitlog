@@ -57,3 +57,8 @@ tasks.test {
     // 테스트 DB: FITLOG_TEST_DB_URL (기본 jdbc:postgresql://localhost:5432/fitlog_test, 사용자/암호 fitlog)
     maxParallelForks = 1
 }
+
+// 개인정보 처리방침 계약(md)을 jar 의 site/ 로 묶는다 (/privacy 렌더링용)
+tasks.processResources {
+    from("../contracts/v1.0/privacy-policy.md") { into("site") }
+}

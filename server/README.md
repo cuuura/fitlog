@@ -33,6 +33,17 @@ Claude·ChatGPT·Gemini 가 붙으려면 **https 공개 주소**가 필요하다
 | `GOOGLE_WEB_CLIENT_ID` / `GOOGLE_WEB_CLIENT_SECRET` | MCP 로그인 페이지용 Google 웹 OAuth 클라이언트 |
 | `GOOGLE_CLIENT_IDS` | 앱 로그인 ID 토큰 audience(쉼표 구분) |
 
+## Docker로 실행·배포 — v1.0
+서버 + PostgreSQL 16 + 일일 백업을 Docker Compose 로 띄운다(저장소 루트 `docker-compose.yml`). 빌드 컨텍스트는 저장소 루트다(계약의 개인정보 처리방침 md 를 jar 에 묶는다).
+```bash
+cp server/deploy/.env.example .env     # JWT_SECRET(32자 이상), DB_PASSWORD, PUBLIC_BASE_URL, CONTACT_EMAIL 등 입력
+docker compose up -d --build           # http://localhost:8080/health/ready → ok
+docker compose --profile https up -d   # 선택: Caddy 자동 HTTPS (DOMAIN, TRUST_PROXY=true)
+```
+이미지는 main 푸시 때 GitHub Actions(`.github/workflows/server-image.yml`)가 `ghcr.io/<소유자>/fitlog-server` 로 올린다. 배포·백업·복구·모니터링은 [docs/ops.md](docs/ops.md), Play 스토어 등록은 [docs/play-store.md](docs/play-store.md).
+
+공개 페이지: `/privacy`, `/account-deletion`, 준비 상태 `/health/ready`(DB 확인). 모든 응답에 `X-Request-Id`.
+
 ## 테스트
 로컬 PostgreSQL 이 필요하다 (`fitlog_test` DB, 사용자/암호 `fitlog`). 다른 DB 는 `FITLOG_TEST_DB_URL` 로 지정.
 ```bash
