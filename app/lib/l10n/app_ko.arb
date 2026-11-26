@@ -168,5 +168,124 @@
   "exerciseTypeMachine": "머신",
   "exerciseTypeBodyweight": "맨몸",
   "exerciseTypeBand": "밴드",
-  "exerciseTypeCardio": "유산소"
+  "exerciseTypeCardio": "유산소",
+  "authLoginSubtitle": "운동 기록을 안전하게 저장하고 어디서나 이어서 쓰세요.",
+  "authSignInGoogle": "Google로 계속하기",
+  "authErrorNetwork": "네트워크에 연결할 수 없어요. 연결을 확인하고 다시 시도해 주세요.",
+  "authErrorServer": "로그인에 실패했어요. 잠시 후 다시 시도해 주세요.",
+  "authErrorNoToken": "Google 계정 정보를 받지 못했어요. 다시 시도해 주세요.",
+  "authErrorOther": "로그인 중 문제가 생겼어요. 다시 시도해 주세요.",
+  "authConsentTitle": "서비스 이용 동의",
+  "authConsentIntro": "fitlog를 쓰려면 아래 항목에 모두 동의해야 해요.",
+  "authConsentTerms": "이용약관 (필수)",
+  "authConsentPrivacy": "개인정보 처리방침 (필수)",
+  "authConsentHealth": "건강 데이터 수집·이용 (필수)",
+  "authConsentView": "전문 보기",
+  "authConsentAgreeAll": "모두 동의",
+  "authConsentContinue": "동의하고 시작하기",
+  "authConsentDecline": "동의하지 않고 로그아웃",
+  "authConsentDocPending": "전문은 준비 중이에요.",
+  "authConsentError": "동의를 저장하지 못했어요. 다시 시도해 주세요.",
+  "settingsTitle": "설정",
+  "settingsSectionTraining": "운동",
+  "settingsWeightUnit": "무게 단위",
+  "settingsUnitKg": "kg",
+  "settingsUnitLb": "lb",
+  "settingsRestTime": "기본 휴식 시간",
+  "settingsRestSeconds": "{sec}초",
+  "@settingsRestSeconds": {
+    "placeholders": {
+      "sec": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsKeepScreenOn": "화면 꺼짐 방지",
+  "settingsKeepScreenOnDesc": "운동 중에는 화면이 꺼지지 않게 해요.",
+  "settingsRpe": "RPE/RIR 입력 사용",
+  "settingsRpeDesc": "세트마다 운동 강도를 기록해요.",
+  "settingsSectionBody": "내 몸",
+  "settingsProfile": "프로필",
+  "settingsBodyWeight": "체중 기록",
+  "settingsSectionAccount": "계정",
+  "settingsSignOut": "로그아웃",
+  "settingsSignOutPendingTitle": "아직 동기화되지 않은 변경이 있어요",
+  "settingsSignOutPendingBody": "{count}건의 변경이 서버에 올라가지 않았어요. 지금 로그아웃하면 사라져요.",
+  "@settingsSignOutPendingBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSignOutAnyway": "그래도 로그아웃",
+  "settingsSignOutConfirmTitle": "로그아웃할까요?",
+  "settingsSignOutConfirmBody": "이 기기의 기록은 지워지고, 다시 로그인하면 서버에서 불러와요.",
+  "settingsDeleteAccount": "계정 삭제",
+  "settingsDeleteConfirmTitle": "계정을 삭제할까요?",
+  "settingsDeleteConfirmBody": "계정과 모든 운동·체중 기록이 즉시 삭제되고 되돌릴 수 없어요.",
+  "settingsDeleteConfirmAction": "영구 삭제",
+  "settingsWithdrawHealth": "건강 데이터 동의 철회",
+  "settingsWithdrawHealthBody": "철회하면 건강 데이터 동의가 다시 필요해요. 동의하기 전까지는 앱을 쓸 수 없어요.",
+  "settingsWithdrawAction": "철회",
+  "settingsSaveFailed": "저장하지 못했어요. 이전 값으로 되돌렸어요.",
+  "settingsActionFailed": "처리하지 못했어요. 다시 시도해 주세요.",
+  "profileTitle": "프로필",
+  "profileHeight": "키 (cm)",
+  "profileSex": "성별",
+  "profileSexUnset": "선택 안 함",
+  "profileSexMale": "남성",
+  "profileSexFemale": "여성",
+  "profileSexOther": "기타",
+  "profileBirthYear": "출생 연도",
+  "profileHeightInvalid": "{min}~{max} cm 사이로 입력해 주세요.",
+  "@profileHeightInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "profileBirthInvalid": "{min}~{max} 사이로 입력해 주세요.",
+  "@profileBirthInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSaved": "저장했어요.",
+  "bodyTitle": "체중",
+  "bodyEmpty": "아직 기록이 없어요. 아래에서 체중을 추가해 보세요.",
+  "bodyWeightLabel": "체중 ({unit})",
+  "@bodyWeightLabel": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "bodyAdd": "추가",
+  "bodyInvalid": "{min}~{max} {unit} 사이로 입력해 주세요.",
+  "@bodyInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "bodyDeleteConfirm": "이 기록을 삭제할까요?",
+  "bodyDeleteTooltip": "기록 삭제"
 }
