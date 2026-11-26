@@ -1,6 +1,6 @@
 # fitlog 앱 (Flutter)
 
-Android 우선, 이후 웹·iOS. 계약은 `../contracts/v0.1/`.
+Android 우선, 이후 웹·iOS. 계약은 `../contracts/v0.1/`~`v1.0/`.
 
 ## 실행
 
@@ -54,3 +54,12 @@ flutter run --dart-define=API_BASE_URL=http://<PC의 LAN IP>:8080 \
 | 9 | (v0.3) AI 연동 → AI 연결 → 주소 복사 → Claude/ChatGPT 커넥터에 추가·로그인 | 연결된 AI 목록에 나타남. AI가 삭제를 요청하면 홈에 배너 |
 | 10 | (v0.3) 프롬프트 복사 → AI 답변 붙여넣기 → 미리보기 → 저장 | 세션에 "AI" 배지, 이력에서 되돌리기 가능 |
 | 7 | 릴리스 빌드 `flutter build apk --obfuscate --split-debug-info=build/symbols` | 빌드 성공, 설치 후 1번 동작 |
+| 11 | (v1.0) 기록 화면 → 추이 그래프 아이콘 → 기간·지표 바꾸기 → 점 탭 | 꺾은선과 PR 점(다른 색), 전체 최고 점선, 점 탭 시 날짜·무게×횟수와 "이 세션 보기" |
+| 12 | (v1.0) 세션 종료 → 요약 → "지난 세션과 비교" | 종목별 막대(지난·오늘·이전 PR 색 구분), 세트별 표, 처음 하는 종목은 "첫 기록" |
+| 13 | (v1.0) GitHub Actions `app` 워크플로의 릴리스 APK 설치(서명 시크릿·`API_BASE_URL` 설정 후) | 설치·로그인·동기화 정상(R8 난독화로 깨지는 기능 없음: 알림, 로그인, 가져오기, 내보내기) |
+| 14 | (v1.0) 서버 `INTEGRITY_MODE=report`로 로그인 | 서버 로그에 무결성 판정이 남음. Play 내부 테스트 트랙 설치본이어야 PLAY_RECOGNIZED |
+| 15 | (v1.0) `SENTRY_DSN` 넣은 빌드에서 일부러 오류(개발자 옵션 없이 어렵다면 생략) | Sentry에 이벤트가 오고 이메일·토큰이 가려져 있음. 설정에서 끄면 다음 실행부터 안 보냄 |
+| 16 | (v1.0) 폰 글씨 크기 최대 + 다크 모드로 홈·세션·설정 | 글자 잘림·겹침 없음 |
+| 17 | (v1.0) 설정 → 개인정보 처리방침 | 브라우저에서 `{API_BASE_URL}/privacy`가 열림 |
+
+v1.0 릴리스 준비(서명 키, Play Console, 스토어 자료, 사용자 결정 항목)는 `store/release-checklist.md`, 등록 문구는 `store/listing-ko.md`.
