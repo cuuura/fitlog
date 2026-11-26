@@ -338,8 +338,11 @@ class SessionLinkTest {
             change("workout_session", first, at = at(2), payload = sessionPayload(mine, 1)),
             change("workout_session", second, at = at(3), payload = sessionPayload(mine, 1, startedAt = "2026-11-03T01:00:00Z")),
         ).objOf()
-        assertEquals(listOf("applied", "rejected"), results(r2).map { it.str("status") })
-        assertEquals("CONFLICT", results(r2)[1].str("code"))
+        assertEquals(listOf("applied", "applied"), results(r2).map { it.str("status") })
+        // 둘째는 연결이 끊긴 채 저장된다(유실 없음)
+        val demoted = c.getSession(w.uid, second).objOf()
+        assertNull(demoted["programInstanceId"])
+        assertNull(demoted["planSeq"])
         assertEquals(1, c.getInstance(w.uid, mine).objOf().seq())
         // 같은 push 에서 첫 세션을 지우고 둘째를 넣으면 통과
         val r3 = c.push(

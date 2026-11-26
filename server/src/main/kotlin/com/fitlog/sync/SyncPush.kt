@@ -151,8 +151,15 @@ private fun Transaction.applySession(userId: UUID, c: Change, at: Instant): Chan
     val p = decodePayload<SessionPayload>(c)
     checkTz(p.tz, "payload.tz")
     if (p.endedAt != null && p.endedAt < p.startedAt) validation("endedAt must be >= startedAt", "payload.endedAt")
-    checkProgramLink(userId, c.id, p.programInstanceId, p.planSeq, "payload.")
-    upsertSessionRow(userId, c.id, p.startedAt, p.endedAt, p.tz, p.note, at, p.programInstanceId, p.planSeq, p.planDayKey)
+    // 같은 (인스턴스, planSeq) 에 이미 다른 살아있는 세션이 있으면 거절하지 않고 연결만 끊어 저장한다(데이터 유실 방지)
+    var link = Triple(p.programInstanceId, p.planSeq, p.planDayKey)
+    try {
+        checkProgramLink(userId, c.id, p.programInstanceId, p.planSeq, "payload.")
+    } catch (e: ApiException) {
+        if (e.code != ErrorCode.CONFLICT) throw e
+        link = Triple(null, null, null)
+    }
+    upsertSessionRow(userId, c.id, p.startedAt, p.endedAt, p.tz, p.note, at, link.first, link.second, link.third)
     return applied(c)
 }
 
