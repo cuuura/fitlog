@@ -448,5 +448,127 @@
   "instanceDelete": "Delete from my programs",
   "instanceDeleteConfirmTitle": "Delete this program in progress?",
   "instanceDeleteConfirmBody": "Your logs stay; only the link to the program is removed.",
-  "instanceActionFailed": "Action failed"
+  "instanceActionFailed": "Action failed",
+  "homePlanSection": "Today's workout",
+  "homePlanWeek": "Week {week}",
+  "@homePlanWeek": {
+    "placeholders": {
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "homePlanEstimated": "Estimated",
+  "homePlanStart": "Start",
+  "homePlanUnavailable": "Couldn't load the next workout",
+  "homePlanStartError": "Couldn't start the workout",
+  "homePlanFinishFirst": "Finish the session in progress first",
+  "homeProgramsTooltip": "Programs",
+  "homeHistoryTooltip": "History",
+  "sessionPlanHeader": "{program} · {day} · Week {week}",
+  "@sessionPlanHeader": {
+    "placeholders": {
+      "program": {
+        "type": "String"
+      },
+      "day": {
+        "type": "String"
+      },
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionPlanHeaderNoName": "{day} · Week {week}",
+  "@sessionPlanHeaderNoName": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionTarget": "Target {reps} reps × {weight}",
+  "@sessionTarget": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      },
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionTargetReps": "Target {reps} reps",
+  "@sessionTargetReps": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionTargetAmrap": "Target {reps}+ reps × {weight}",
+  "@sessionTargetAmrap": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      },
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionTargetAmrapReps": "Target {reps}+ reps",
+  "@sessionTargetAmrapReps": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionPlanDiffers": "Differs from plan",
+  "sessionSetFailed": "Missed",
+  "sessionAccessoryBadge": "Accessory",
+  "sessionLastDay": "Last time: {text}",
+  "@sessionLastDay": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionReorderHandle": "Reorder",
+  "sessionSummaryTitle": "Session summary",
+  "sessionSummarySets": "Sets",
+  "sessionSummaryVolume": "Volume",
+  "sessionSummaryDuration": "Time",
+  "sessionSummaryResults": "Results by exercise",
+  "sessionSummarySuccess": "Success",
+  "sessionSummaryFailure": "Missed",
+  "sessionSummaryNext": "Next workout",
+  "sessionSummaryNextLoading": "Calculating the next workout…",
+  "sessionSummaryNextPending": "Calculated once you're online",
+  "sessionSummaryNextTitle": "{day} · Week {week}",
+  "@sessionSummaryNextTitle": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionSummaryDone": "Done",
+  "sessionSummaryNotFound": "Session not found",
+  "sessionEndUnfinishedWarning": "{count} sets are unfinished and will count as failed",
+  "@sessionEndUnfinishedWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

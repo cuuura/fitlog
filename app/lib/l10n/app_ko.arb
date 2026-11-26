@@ -520,5 +520,127 @@
   "instanceDelete": "프로그램 연결 삭제",
   "instanceDeleteConfirmTitle": "진행 중 프로그램을 삭제할까요?",
   "instanceDeleteConfirmBody": "기록은 남고 연결만 끊깁니다.",
-  "instanceActionFailed": "처리하지 못했어요"
+  "instanceActionFailed": "처리하지 못했어요",
+  "homePlanSection": "오늘 할 운동",
+  "homePlanWeek": "{week}주차",
+  "@homePlanWeek": {
+    "placeholders": {
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "homePlanEstimated": "예상",
+  "homePlanStart": "시작",
+  "homePlanUnavailable": "다음 회차를 불러오지 못했어요",
+  "homePlanStartError": "회차를 시작하지 못했어요",
+  "homePlanFinishFirst": "진행 중인 세션을 먼저 끝내 주세요",
+  "homeProgramsTooltip": "프로그램",
+  "homeHistoryTooltip": "기록",
+  "sessionPlanHeader": "{program} · {day} · {week}주차",
+  "@sessionPlanHeader": {
+    "placeholders": {
+      "program": {
+        "type": "String"
+      },
+      "day": {
+        "type": "String"
+      },
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionPlanHeaderNoName": "{day} · {week}주차",
+  "@sessionPlanHeaderNoName": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionTarget": "목표 {reps}회 × {weight}",
+  "@sessionTarget": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      },
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionTargetReps": "목표 {reps}회",
+  "@sessionTargetReps": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionTargetAmrap": "목표 {reps}+회 × {weight}",
+  "@sessionTargetAmrap": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      },
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionTargetAmrapReps": "목표 {reps}+회",
+  "@sessionTargetAmrapReps": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionPlanDiffers": "계획과 다름",
+  "sessionSetFailed": "실패",
+  "sessionAccessoryBadge": "보조",
+  "sessionLastDay": "지난번: {text}",
+  "@sessionLastDay": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionReorderHandle": "순서 변경",
+  "sessionSummaryTitle": "세션 요약",
+  "sessionSummarySets": "총 세트",
+  "sessionSummaryVolume": "볼륨",
+  "sessionSummaryDuration": "시간",
+  "sessionSummaryResults": "종목별 결과",
+  "sessionSummarySuccess": "성공",
+  "sessionSummaryFailure": "실패",
+  "sessionSummaryNext": "다음 회차",
+  "sessionSummaryNextLoading": "다음 회차를 계산하는 중…",
+  "sessionSummaryNextPending": "연결되면 계산됩니다",
+  "sessionSummaryNextTitle": "{day} · {week}주차",
+  "@sessionSummaryNextTitle": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "week": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionSummaryDone": "확인",
+  "sessionSummaryNotFound": "세션을 찾을 수 없어요",
+  "sessionEndUnfinishedWarning": "{count}개 세트가 미완료로 실패 처리됩니다",
+  "@sessionEndUnfinishedWarning": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

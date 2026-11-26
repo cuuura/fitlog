@@ -11,7 +11,8 @@ Future<void> settle(WidgetTester t, [int n = 6]) async {
   }
 }
 
-Future<Session> active(Harness h) => h.sessions.watchActiveSession().first.then((s) => s!);
+Future<Session> active(Harness h) =>
+    h.sessions.watchActiveSession().first.then((s) => s!);
 
 Future<void> startAndAdd(WidgetTester t, Harness h, String exerciseId) async {
   await t.tap(find.byKey(const Key('add-exercise')));
@@ -77,13 +78,16 @@ void main() {
     s = await active(h);
     expect(s.exercises.single.sets[1].completedAt, isNull);
 
-    // 세션 종료 -> 홈
+    // 세션 종료 -> 요약 -> 홈
     await t.tap(find.byKey(const Key('end-session')));
     await settle(t);
     await t.tap(find.byKey(const Key('end-confirm')));
     await settle(t, 10);
-    expect(find.byKey(const Key('home-start')), findsOneWidget);
+    expect(find.byKey(const Key('summary-done')), findsOneWidget);
     expect(h.container.read(restTimerProvider).running, isFalse);
+    await t.tap(find.byKey(const Key('summary-done')));
+    await settle(t);
+    expect(find.byKey(const Key('home-start')), findsOneWidget);
   });
 
   testWidgets('덤벨은 한쪽 표시, 맨몸은 추가 중량(음수 가능)과 무게칸 없음', (t) async {
@@ -153,14 +157,20 @@ void main() {
     await settle(t);
     s = await active(h);
     expect(s.exercises.single.sets.single.weightKg, 102.06);
-    expect(t.widget<TextField>(find.byKey(Key('weight-${set.id}'))).controller!.text, '225');
+    expect(
+      t.widget<TextField>(find.byKey(Key('weight-${set.id}'))).controller!.text,
+      '225',
+    );
 
     // + 버튼은 5lb 단위
     await t.tap(find.byKey(Key('weight-plus-${set.id}')));
     await settle(t);
     s = await active(h);
     expect(s.exercises.single.sets.single.weightKg, 104.33);
-    expect(t.widget<TextField>(find.byKey(Key('weight-${set.id}'))).controller!.text, '230');
+    expect(
+      t.widget<TextField>(find.byKey(Key('weight-${set.id}'))).controller!.text,
+      '230',
+    );
   });
 
   testWidgets('kg + / - 버튼과 입력 검증', (t) async {
@@ -242,8 +252,14 @@ void main() {
     // 지난 세션: 스쿼트 100x5, 110x3
     final old = await h.sessions.startSession(tz: 'Asia/Seoul');
     final se = await h.sessions.addExercise(old.id, squat.id);
-    await h.sessions.addSet(se.id, const WorkoutSet(id: 'o1', position: 0, weightKg: 100, reps: 5));
-    await h.sessions.addSet(se.id, const WorkoutSet(id: 'o2', position: 1, weightKg: 110, reps: 3));
+    await h.sessions.addSet(
+      se.id,
+      const WorkoutSet(id: 'o1', position: 0, weightKg: 100, reps: 5),
+    );
+    await h.sessions.addSet(
+      se.id,
+      const WorkoutSet(id: 'o2', position: 1, weightKg: 110, reps: 3),
+    );
     await h.sessions.endSession(old.id);
     h.now = h.now.add(const Duration(days: 2));
 
