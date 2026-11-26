@@ -24,7 +24,8 @@ val hasReleaseSigning = listOf(releaseStoreFile, releaseStorePassword, releaseKe
 
 android {
     namespace = "com.fitlog.fitlog"
-    compileSdk = flutter.compileSdkVersion
+    // androidx.core 1.19(플러그인 의존성)가 compileSdk 37 이상을 요구한다(Flutter 기본은 36).
+    compileSdk = maxOf(flutter.compileSdkVersion, 37)
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
