@@ -19,7 +19,11 @@ import com.fitlog.core.validation
 import com.fitlog.exercise.ExerciseInput
 import com.fitlog.exercise.validated
 import com.fitlog.session.WorkoutSet
+import com.fitlog.session.checkProgramLink
 import com.fitlog.session.checkSet
+import com.fitlog.session.sessionInstanceId
+import com.fitlog.engine.ProgramCalculator
+import com.fitlog.program.instance.replayInstances
 import com.fitlog.session.checkTz
 import com.fitlog.session.exerciseRefs
 import com.fitlog.session.softDeleteSession
@@ -67,13 +71,18 @@ private inline fun <reified T> decodePayload(c: Change, extra: Map<String, JsonE
 }
 
 /** 한 번의 push: 사용자 락 한 번, 변경마다 savepoint 로 독립 처리 */
-internal fun Transaction.push(userId: UUID, changes: List<Change>): List<ChangeResult> {
+internal fun Transaction.push(userId: UUID, changes: List<Change>, engine: ProgramCalculator): List<ChangeResult> {
     lockUser(userId)
-    return changes.map { c ->
+    // 프로그램 인스턴스에 연결된 세션(또는 그 하위)이 바뀐 변경이 있으면, 전체를 처리한 뒤 인스턴스별로 한 번 replay 한다
+    val affected = LinkedHashSet<UUID>()
+    val results = changes.map { c ->
+        val before = linkedInstanceOf(c)
         exec("SAVEPOINT change_sp")
         try {
             val r = applyChange(userId, c)
             exec("RELEASE SAVEPOINT change_sp")
+            before?.let(affected::add)
+            linkedInstanceOf(c)?.let(affected::add)
             r
         } catch (e: ApiException) {
             exec("ROLLBACK TO SAVEPOINT change_sp")
@@ -84,6 +93,35 @@ internal fun Transaction.push(userId: UUID, changes: List<Change>): List<ChangeR
             rejected(c, "SERVER_ERROR")
         }
     }
+    if (affected.isNotEmpty()) {
+        // replay 실패가 이미 적용된 변경을 막지 않도록 savepoint 로 감싼다(캐시는 다음 replay 때 바로잡힌다)
+        exec("SAVEPOINT replay_sp")
+        try {
+            replayInstances(engine, userId, affected)
+            exec("RELEASE SAVEPOINT replay_sp")
+        } catch (e: Exception) {
+            log.error("program replay failed after sync push: $affected", e)
+            exec("ROLLBACK TO SAVEPOINT replay_sp")
+        }
+    }
+    return results
+}
+
+/** 이 변경이 속한 세션이 지금 연결된 인스턴스(변경 적용 전·후에 각각 부른다). 해당 없으면 null */
+private fun Transaction.linkedInstanceOf(c: Change): UUID? {
+    val sessionId: UUID = when (c.entity) {
+        "workout_session" -> c.id
+        "session_exercise" ->
+            SessionExercises.selectAll().where { SessionExercises.id eq c.id }.singleOrNull()?.get(SessionExercises.sessionId)
+                ?: c.parentId
+        "workout_set" -> {
+            val seId = WorkoutSets.selectAll().where { WorkoutSets.id eq c.id }.singleOrNull()?.get(WorkoutSets.sessionExerciseId)
+                ?: c.parentId
+            seId?.let { id -> SessionExercises.selectAll().where { SessionExercises.id eq id }.singleOrNull()?.get(SessionExercises.sessionId) }
+        }
+        else -> null
+    } ?: return null
+    return sessionInstanceId(sessionId)
 }
 
 private fun Transaction.applyChange(userId: UUID, c: Change): ChangeResult {
@@ -113,7 +151,8 @@ private fun Transaction.applySession(userId: UUID, c: Change, at: Instant): Chan
     val p = decodePayload<SessionPayload>(c)
     checkTz(p.tz, "payload.tz")
     if (p.endedAt != null && p.endedAt < p.startedAt) validation("endedAt must be >= startedAt", "payload.endedAt")
-    upsertSessionRow(userId, c.id, p.startedAt, p.endedAt, p.tz, p.note, at)
+    checkProgramLink(userId, c.id, p.programInstanceId, p.planSeq, "payload.")
+    upsertSessionRow(userId, c.id, p.startedAt, p.endedAt, p.tz, p.note, at, p.programInstanceId, p.planSeq, p.planDayKey)
     return applied(c)
 }
 
@@ -139,7 +178,7 @@ private fun Transaction.applySessionExercise(userId: UUID, c: Change, at: Instan
     if (p.position < 0) validation("position must be >= 0", "payload.position")
     val ref = exerciseRefs(listOf(p.exerciseId))[p.exerciseId] ?: parentMissing("exercise not found")
     if (ref.ownerId != null && ref.ownerId != userId) validation("unknown exercise", "payload.exerciseId")
-    upsertSessionExerciseRow(c.id, parentId, p.exerciseId, p.position, p.note, at)
+    upsertSessionExerciseRow(c.id, parentId, p.exerciseId, p.position, p.note, at, p.liftKey, p.accessory)
     return applied(c)
 }
 

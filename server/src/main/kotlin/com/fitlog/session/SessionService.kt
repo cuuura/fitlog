@@ -1,6 +1,8 @@
 package com.fitlog.session
 
 import com.fitlog.core.ChangeSeq
+import com.fitlog.engine.ProgramCalculator
+import com.fitlog.program.instance.replayInstances
 import com.fitlog.core.SessionExercises
 import com.fitlog.core.Times
 import com.fitlog.core.WorkoutSessions
@@ -26,7 +28,7 @@ import java.time.Instant
 import java.util.UUID
 
 /** PUT /sessions/{id}: 전체 업서트. 호출자는 lockUser 를 먼저 호출해야 한다 */
-internal fun Transaction.putSession(userId: UUID, id: UUID, body: Session): Session {
+internal fun Transaction.putSession(userId: UUID, id: UUID, body: Session, engine: ProgramCalculator): Session {
     // ---- 검증 (쓰기 전에 모두) ----
     checkTz(body.tz)
     if (body.endedAt != null && body.endedAt < body.startedAt) validation("endedAt must be >= startedAt", "endedAt")
@@ -73,11 +75,17 @@ internal fun Transaction.putSession(userId: UUID, id: UUID, body: Session): Sess
         }
     }
 
+    checkProgramLink(userId, id, body.programInstanceId, body.planSeq)
+    val previousInstance = if (existing != null) existing[WorkoutSessions.programInstanceId] else null
+
     // ---- 쓰기 ----
     val now = Times.now()
-    upsertSessionRow(userId, id, body.startedAt, body.endedAt, body.tz, body.note, now)
+    upsertSessionRow(
+        userId, id, body.startedAt, body.endedAt, body.tz, body.note, now,
+        body.programInstanceId, body.planSeq, body.planDayKey,
+    )
     body.exercises.forEach { ex ->
-        upsertSessionExerciseRow(ex.id, id, ex.exerciseId, ex.position, ex.note, now)
+        upsertSessionExerciseRow(ex.id, id, ex.exerciseId, ex.position, ex.note, now, ex.liftKey, ex.accessory)
         checkedSets.getValue(ex.id).forEach { upsertSetRow(ex.id, it, now) }
     }
     // 본문에 없는 기존 종목·세트는 소프트 삭제
@@ -97,14 +105,17 @@ internal fun Transaction.putSession(userId: UUID, id: UUID, body: Session): Sess
         it[updatedAt] = now
         it[serverSeq] = ChangeSeq.next
     }
+    // 연결된 인스턴스(이전·새 인스턴스 모두)를 같은 트랜잭션 끝에서 다시 계산한다
+    replayInstances(engine, userId, setOfNotNull(previousInstance, body.programInstanceId))
     return loadSession(userId, id)!!
 }
 
-internal fun Transaction.deleteSessionRest(userId: UUID, id: UUID) {
+internal fun Transaction.deleteSessionRest(userId: UUID, id: UUID, engine: ProgramCalculator) {
     val row = WorkoutSessions.selectAll().where { WorkoutSessions.id eq id }.singleOrNull() ?: return
     if (row[WorkoutSessions.userId] != userId) notFound("session not found")
     if (row[WorkoutSessions.deletedAt] != null) return
     softDeleteSession(id, Times.now())
+    row[WorkoutSessions.programInstanceId]?.let { replayInstances(engine, userId, setOf(it)) }
 }
 
 internal fun Transaction.listSummaries(userId: UUID, before: Instant?, limit: Int): List<SessionSummary> {
