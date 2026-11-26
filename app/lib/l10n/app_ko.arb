@@ -5,5 +5,168 @@
   "commonCancel": "취소",
   "commonDelete": "삭제",
   "commonRetry": "다시 시도",
-  "commonError": "문제가 생겼어요"
+  "commonError": "문제가 생겼어요",
+  "homeResumeTitle": "진행 중인 세션",
+  "homeResumeAction": "이어서 기록",
+  "homeStartFree": "자유 세션 시작",
+  "homeStartError": "세션을 시작하지 못했어요",
+  "homeRecent": "최근 기록",
+  "homeEmpty": "아직 기록이 없어요",
+  "homeActiveBadge": "진행 중",
+  "homeSettingsTooltip": "설정",
+  "homeProfileTooltip": "프로필",
+  "homeBodyTooltip": "체중",
+  "homeSummary": "종목 {exercises}개 · {sets}세트 · {volume}",
+  "@homeSummary": {
+    "placeholders": {
+      "exercises": {
+        "type": "int"
+      },
+      "sets": {
+        "type": "int"
+      },
+      "volume": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionTitle": "운동 기록",
+  "sessionNoteHint": "세션 메모",
+  "sessionExerciseNoteHint": "종목 메모",
+  "sessionAddExercise": "종목 추가",
+  "sessionRemoveExercise": "종목 삭제",
+  "sessionRemoveExerciseConfirm": "{name}을(를) 삭제할까요? 입력한 세트도 함께 지워져요.",
+  "@sessionRemoveExerciseConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionEnd": "세션 종료",
+  "sessionEndConfirmTitle": "세션을 종료할까요?",
+  "sessionEndConfirmBody": "종료하면 기록이 확정돼요.",
+  "sessionEmptyExercises": "종목을 추가해서 기록을 시작해요",
+  "sessionAddSet": "세트 추가",
+  "sessionWeight": "무게 ({unit})",
+  "@sessionWeight": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionWeightPerSide": "무게 ({unit}, 한쪽)",
+  "@sessionWeightPerSide": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionPerSide": "한쪽",
+  "sessionReps": "횟수",
+  "sessionAddedWeight": "추가 중량 ({unit})",
+  "@sessionAddedWeight": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionAddedWeightHelp": "음수는 보조",
+  "sessionWarmup": "워밍업",
+  "sessionRpe": "RPE",
+  "sessionRir": "RIR",
+  "sessionSetNote": "세트 메모",
+  "sessionLast": "지난번: {text}",
+  "@sessionLast": {
+    "placeholders": {
+      "text": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionSetDelete": "세트 삭제",
+  "sessionSetMore": "세부 입력",
+  "sessionSetComplete": "세트 완료",
+  "sessionNeedsReps": "횟수를 입력해 주세요",
+  "sessionNeedsWeight": "무게를 입력해 주세요",
+  "sessionInvalidReps": "0 이상의 정수",
+  "sessionInvalidWeight": "0 이상의 숫자",
+  "sessionInvalidAdded": "숫자를 입력해 주세요",
+  "sessionInvalidRpe": "1~10, 0.5 단위",
+  "sessionInvalidRir": "0~10 정수",
+  "sessionRestLabel": "{exercise} {n}세트 후",
+  "@sessionRestLabel": {
+    "placeholders": {
+      "exercise": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionWarmupShort": "W",
+  "sessionVolume": "볼륨 {volume}",
+  "@sessionVolume": {
+    "placeholders": {
+      "volume": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionDetailTitle": "기록 보기",
+  "sessionDetailDeleteConfirm": "이 세션을 삭제할까요?",
+  "sessionNotFound": "세션을 찾을 수 없어요",
+  "sessionNoSets": "세트 없음",
+  "exercisePickerTitle": "종목 선택",
+  "exerciseSearchHint": "종목 이름 검색",
+  "exerciseAllMuscles": "전체 부위",
+  "exerciseAllTypes": "전체 유형",
+  "exerciseEmpty": "맞는 종목이 없어요",
+  "exerciseAddCustom": "내 종목 추가",
+  "exerciseEditCustom": "내 종목 수정",
+  "exerciseCustomBadge": "내 종목",
+  "exerciseNameKo": "이름",
+  "exerciseNameEn": "영문 이름 (선택)",
+  "exerciseNameInvalid": "1~60자로 입력해 주세요",
+  "exerciseTypeLabel": "기록 유형",
+  "exercisePrimaryMuscle": "주 부위",
+  "exerciseSecondaryMuscles": "보조 부위",
+  "exerciseEdit": "수정",
+  "exerciseDeleteConfirm": "{name}을(를) 삭제할까요?",
+  "@exerciseDeleteConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "exerciseMuscleChest": "가슴",
+  "exerciseMuscleBack": "등",
+  "exerciseMuscleLats": "광배근",
+  "exerciseMuscleTraps": "승모근",
+  "exerciseMuscleShoulders": "어깨",
+  "exerciseMuscleRearDelts": "후면 어깨",
+  "exerciseMuscleBiceps": "이두",
+  "exerciseMuscleTriceps": "삼두",
+  "exerciseMuscleForearms": "전완",
+  "exerciseMuscleQuads": "대퇴사두",
+  "exerciseMuscleHamstrings": "햄스트링",
+  "exerciseMuscleGlutes": "둔근",
+  "exerciseMuscleCalves": "종아리",
+  "exerciseMuscleAdductors": "내전근",
+  "exerciseMuscleAbs": "복근",
+  "exerciseMuscleObliques": "복사근",
+  "exerciseMuscleLowerBack": "허리",
+  "exerciseMuscleFullBody": "전신",
+  "exerciseMuscleCardio": "유산소",
+  "exerciseTypeBarbell": "바벨",
+  "exerciseTypeDumbbell": "덤벨",
+  "exerciseTypeMachine": "머신",
+  "exerciseTypeBodyweight": "맨몸",
+  "exerciseTypeBand": "밴드",
+  "exerciseTypeCardio": "유산소"
 }
