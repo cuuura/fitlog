@@ -34,6 +34,7 @@ Claude·ChatGPT·Gemini가 사람 개입 없이 연결할 수 있게 MCP 인증 
 | `list_sessions` | `from?`, `to?`, `limit?=20` | 세션 요약(날짜, 종목 수, 세트 수, 볼륨) |
 | `get_session` | `id` | 세션 전체(종목·세트·계획 목표) |
 | `get_exercise_records` | `exerciseId` | PR·1RM(v0.2 ExerciseRecords) |
+| `get_exercise_progress` | `exerciseId`, `from?`, `to?`, `limit?=100` | 종목 추이(v1.0 ExerciseProgress, REST `/v1/exercises/{id}/progress`와 같음) |
 | `get_training_summary` | `from`, `to` | 종목별 세트 수·볼륨·최고 무게·최고 추정 1RM, 주 단위 운동 횟수 |
 | `get_body_measurements` | `from?`, `to?` | 체중 기록 |
 | `list_deletion_requests` | `status?` | 이 연결이 만든 삭제 요청과 상태 |

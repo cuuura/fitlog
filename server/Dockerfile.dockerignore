@@ -1,0 +1,14 @@
+# server/Dockerfile 전용 무시 목록(빌드 컨텍스트가 저장소 루트라 BuildKit 이 Dockerfile 옆의 이 파일을 쓴다)
+.git
+.github
+.claude
+app
+**/build
+**/.gradle
+**/.kotlin
+**/.idea
+**/*.iml
+.env
+backups
+server/deploy
+server/docs

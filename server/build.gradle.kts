@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.fitlog"
-version = "0.1.0"
+version = "1.0.0"
 
 application {
     mainClass.set("com.fitlog.ApplicationKt")
@@ -27,6 +27,12 @@ dependencies {
     implementation("io.ktor:ktor-server-auth:$ktorVersion")
     implementation("io.ktor:ktor-server-auth-jwt:$ktorVersion")
     implementation("io.ktor:ktor-server-call-logging:$ktorVersion")
+    // v1.0
+    implementation("io.ktor:ktor-server-rate-limit:$ktorVersion")
+    implementation("io.ktor:ktor-server-forwarded-header:$ktorVersion")
+    implementation("io.ktor:ktor-server-call-id:$ktorVersion")
+    implementation("io.ktor:ktor-server-default-headers:$ktorVersion")
+    implementation("com.google.auth:google-auth-library-oauth2-http:1.30.0")
 
     implementation("org.jetbrains.exposed:exposed-core:$exposedVersion")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposedVersion")
@@ -50,4 +56,9 @@ tasks.test {
     useJUnitPlatform()
     // 테스트 DB: FITLOG_TEST_DB_URL (기본 jdbc:postgresql://localhost:5432/fitlog_test, 사용자/암호 fitlog)
     maxParallelForks = 1
+}
+
+// 개인정보 처리방침 계약(md)을 jar 의 site/ 로 묶는다 (/privacy 렌더링용)
+tasks.processResources {
+    from("../contracts/v1.0/privacy-policy.md") { into("site") }
 }

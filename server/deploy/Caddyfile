@@ -1,0 +1,9 @@
+# HTTPS 리버스 프록시(compose profile "https"). 인증서는 Let's Encrypt 로 자동 발급·갱신된다.
+# DOMAIN 의 DNS A/AAAA 가 이 서버를 가리키고 80/443 이 열려 있어야 한다.
+# 서버 쪽은 .env 에 TRUST_PROXY=true 로 두어야 X-Forwarded-For 를 호출 제한에 쓴다.
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy server:8080 {
+		header_up X-Request-Id {http.request.uuid}
+	}
+}

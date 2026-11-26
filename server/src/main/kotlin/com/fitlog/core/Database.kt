@@ -10,12 +10,14 @@ import javax.sql.DataSource
 import org.jetbrains.exposed.sql.Database as ExposedDb
 
 object Database {
-    lateinit var dataSource: DataSource
-        private set
+    private var ds: HikariDataSource? = null
 
+    val dataSource: DataSource get() = ds ?: error("Database not initialised")
+
+    @Synchronized
     fun init(cfg: DbConfig) {
-        if (::dataSource.isInitialized) return
-        val ds = HikariDataSource(HikariConfig().apply {
+        if (ds != null) return
+        val pool = HikariDataSource(HikariConfig().apply {
             jdbcUrl = cfg.url
             username = cfg.user
             password = cfg.password
@@ -23,9 +25,16 @@ object Database {
             isAutoCommit = false
             transactionIsolation = "TRANSACTION_READ_COMMITTED"
         })
-        Flyway.configure().dataSource(ds).locations("classpath:db/migration").load().migrate()
-        ExposedDb.connect(ds)
-        dataSource = ds
+        Flyway.configure().dataSource(pool).locations("classpath:db/migration").load().migrate()
+        ExposedDb.connect(pool)
+        ds = pool
+    }
+
+    /** 서버 종료 시 커넥션 풀을 닫는다(main 에서 ApplicationStopped 에 연결). 다시 init 하면 새 풀을 만든다 */
+    @Synchronized
+    fun close() {
+        ds?.close()
+        ds = null
     }
 }
 

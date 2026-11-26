@@ -87,6 +87,11 @@ class McpToolsTest {
         val ctx = plainClient().ctx()
         val uid = ctx.conn.userId
         val ex = insertExercise(uid, "BARBELL")
+        // 테스트 DB 에 같은 이름의 기본 종목이 쌓여도 limit 안에 들도록 고유 이름으로 바꾼다
+        val uniqueName = "테스트 종목 ${ex.toString().takeLast(8)}"
+        org.jetbrains.exposed.sql.transactions.transaction {
+            com.fitlog.core.Exercises.update({ com.fitlog.core.Exercises.id eq ex }) { it[com.fitlog.core.Exercises.nameKo] = uniqueName }
+        }
 
         val profile = ctx.call("get_profile")
         assertFalse(profile.isError())
@@ -95,7 +100,7 @@ class McpToolsTest {
         assertEquals("EPLEY", profile.sc()["e1rmFormula"]!!.jsonPrimitive.content)
         assertTrue(profile.text().isNotBlank() && !profile.text().contains("\n"))
 
-        val found = ctx.call("search_exercises", """{"query":"테스트 종목","limit":5}""")
+        val found = ctx.call("search_exercises", """{"query":"$uniqueName","limit":5}""")
         assertTrue(found.sc()["exercises"]!!.jsonArray.any { it.jsonObject["id"]!!.jsonPrimitive.content == ex.toString() })
         assertEquals(0, ctx.call("search_exercises", """{"query":"zzzz없는종목"}""").sc()["count"]!!.jsonPrimitive.int)
         assertTrue(ctx.call("search_exercises", """{"type":"NOPE"}""").isError())
@@ -168,6 +173,13 @@ class McpToolsTest {
         assertNotNull(rec["bestE1rm"])
         assertTrue(rec["byReps"]!!.jsonArray.any { it.jsonObject["reps"]!!.jsonPrimitive.int == 5 })
         assertTrue(ctx.call("get_exercise_records", """{"exerciseId":"${UUID.randomUUID()}"}""").isError())
+
+        // v1.0 종목 추이: REST와 같은 출력
+        val prog = ctx.call("get_exercise_progress", """{"exerciseId":"$ex","from":"2026-01-01T00:00:00Z","to":"2026-12-31T00:00:00Z"}""").sc()["progress"]!!.jsonObject
+        assertEquals(2, prog["points"]!!.jsonArray.size)
+        assertEquals(110.0, prog["bestWeight"]!!.jsonObject["weightKg"]!!.jsonPrimitive.double)
+        assertTrue(ctx.call("get_exercise_progress", """{"exerciseId":"$ex","limit":501}""").isError())
+        assertTrue(ctx.call("get_exercise_progress", """{"exerciseId":"${UUID.randomUUID()}"}""").isError())
 
         val sum = ctx.call("get_training_summary", """{"from":"2026-11-01","to":"2026-11-30"}""").sc()
         assertEquals(2, sum["sessionCount"]!!.jsonPrimitive.int)
