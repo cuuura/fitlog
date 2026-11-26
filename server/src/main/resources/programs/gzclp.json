@@ -1,0 +1,466 @@
+{
+  "schemaVersion": 1,
+  "name": "GZCLP",
+  "description": "T1(5x3+ → 6x2+ → 10x1+), T2(3x10 → 3x8 → 3x6), T3(3x15+, 25회 이상이면 +2.5kg). 실패하면 다음 단계로 가고 마지막 단계에서 실패하면 무게를 낮춰 처음부터. T2 시작 무게는 T1보다 가볍게 직접 입력. T3는 TM 자리에 시작 무게를 입력.",
+  "workingPercent": 0.8,
+  "tmPercent": 0.8,
+  "roundingKg": 2.5,
+  "lifts": {
+    "squat_t1": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000001"
+      }
+    },
+    "squat_t2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000001"
+      }
+    },
+    "bench_t1": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000003"
+      }
+    },
+    "bench_t2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000003"
+      }
+    },
+    "ohp_t1": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000009"
+      }
+    },
+    "ohp_t2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000009"
+      }
+    },
+    "deadlift_t1": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000006"
+      }
+    },
+    "deadlift_t2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000006"
+      }
+    },
+    "pulldown": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000028"
+      }
+    },
+    "db_row": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000015"
+      }
+    }
+  },
+  "progression": {
+    "squat_t1": {
+      "type": "STAGES",
+      "incrementKg": 5,
+      "stages": [
+        {
+          "sets": 5,
+          "reps": 3,
+          "lastAmrap": true
+        },
+        {
+          "sets": 6,
+          "reps": 2,
+          "lastAmrap": true
+        },
+        {
+          "sets": 10,
+          "reps": 1,
+          "lastAmrap": true
+        }
+      ]
+    },
+    "squat_t2": {
+      "type": "STAGES",
+      "incrementKg": 5,
+      "stages": [
+        {
+          "sets": 3,
+          "reps": 10
+        },
+        {
+          "sets": 3,
+          "reps": 8
+        },
+        {
+          "sets": 3,
+          "reps": 6
+        }
+      ]
+    },
+    "bench_t1": {
+      "type": "STAGES",
+      "incrementKg": 2.5,
+      "stages": [
+        {
+          "sets": 5,
+          "reps": 3,
+          "lastAmrap": true
+        },
+        {
+          "sets": 6,
+          "reps": 2,
+          "lastAmrap": true
+        },
+        {
+          "sets": 10,
+          "reps": 1,
+          "lastAmrap": true
+        }
+      ]
+    },
+    "bench_t2": {
+      "type": "STAGES",
+      "incrementKg": 2.5,
+      "stages": [
+        {
+          "sets": 3,
+          "reps": 10
+        },
+        {
+          "sets": 3,
+          "reps": 8
+        },
+        {
+          "sets": 3,
+          "reps": 6
+        }
+      ]
+    },
+    "ohp_t1": {
+      "type": "STAGES",
+      "incrementKg": 2.5,
+      "stages": [
+        {
+          "sets": 5,
+          "reps": 3,
+          "lastAmrap": true
+        },
+        {
+          "sets": 6,
+          "reps": 2,
+          "lastAmrap": true
+        },
+        {
+          "sets": 10,
+          "reps": 1,
+          "lastAmrap": true
+        }
+      ]
+    },
+    "ohp_t2": {
+      "type": "STAGES",
+      "incrementKg": 2.5,
+      "stages": [
+        {
+          "sets": 3,
+          "reps": 10
+        },
+        {
+          "sets": 3,
+          "reps": 8
+        },
+        {
+          "sets": 3,
+          "reps": 6
+        }
+      ]
+    },
+    "deadlift_t1": {
+      "type": "STAGES",
+      "incrementKg": 5,
+      "stages": [
+        {
+          "sets": 5,
+          "reps": 3,
+          "lastAmrap": true
+        },
+        {
+          "sets": 6,
+          "reps": 2,
+          "lastAmrap": true
+        },
+        {
+          "sets": 10,
+          "reps": 1,
+          "lastAmrap": true
+        }
+      ]
+    },
+    "deadlift_t2": {
+      "type": "STAGES",
+      "incrementKg": 5,
+      "stages": [
+        {
+          "sets": 3,
+          "reps": 10
+        },
+        {
+          "sets": 3,
+          "reps": 8
+        },
+        {
+          "sets": 3,
+          "reps": 6
+        }
+      ]
+    },
+    "pulldown": {
+      "type": "AMRAP_TABLE",
+      "applyAt": "SESSION",
+      "failuresBeforeDeload": 99,
+      "deloadPercent": 0,
+      "table": [
+        {
+          "minReps": 0,
+          "maxReps": 24,
+          "incrementKg": 0
+        },
+        {
+          "minReps": 25,
+          "incrementKg": 2.5
+        }
+      ]
+    },
+    "db_row": {
+      "type": "AMRAP_TABLE",
+      "applyAt": "SESSION",
+      "failuresBeforeDeload": 99,
+      "deloadPercent": 0,
+      "table": [
+        {
+          "minReps": 0,
+          "maxReps": 24,
+          "incrementKg": 0
+        },
+        {
+          "minReps": 25,
+          "incrementKg": 2.5
+        }
+      ]
+    }
+  },
+  "days": [
+    {
+      "key": "A1",
+      "name": "Day A1",
+      "weekday": "MON",
+      "exercises": [
+        {
+          "lift": "squat_t1",
+          "sets": [
+            {
+              "count": 5,
+              "reps": 3,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "bench_t2",
+          "sets": [
+            {
+              "count": 3,
+              "reps": 10,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "pulldown",
+          "amrapSet": 2,
+          "sets": [
+            {
+              "count": 2,
+              "reps": 15,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              }
+            },
+            {
+              "reps": 15,
+              "amrap": true,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "B1",
+      "name": "Day B1",
+      "weekday": "TUE",
+      "exercises": [
+        {
+          "lift": "ohp_t1",
+          "sets": [
+            {
+              "count": 5,
+              "reps": 3,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "deadlift_t2",
+          "sets": [
+            {
+              "count": 3,
+              "reps": 10,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "db_row",
+          "amrapSet": 2,
+          "sets": [
+            {
+              "count": 2,
+              "reps": 15,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              }
+            },
+            {
+              "reps": 15,
+              "amrap": true,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "A2",
+      "name": "Day A2",
+      "weekday": "THU",
+      "exercises": [
+        {
+          "lift": "bench_t1",
+          "sets": [
+            {
+              "count": 5,
+              "reps": 3,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "squat_t2",
+          "sets": [
+            {
+              "count": 3,
+              "reps": 10,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "pulldown",
+          "amrapSet": 2,
+          "sets": [
+            {
+              "count": 2,
+              "reps": 15,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              }
+            },
+            {
+              "reps": 15,
+              "amrap": true,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "B2",
+      "name": "Day B2",
+      "weekday": "FRI",
+      "exercises": [
+        {
+          "lift": "deadlift_t1",
+          "sets": [
+            {
+              "count": 5,
+              "reps": 3,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "ohp_t2",
+          "sets": [
+            {
+              "count": 3,
+              "reps": 10,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "db_row",
+          "amrapSet": 2,
+          "sets": [
+            {
+              "count": 2,
+              "reps": 15,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              }
+            },
+            {
+              "reps": 15,
+              "amrap": true,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

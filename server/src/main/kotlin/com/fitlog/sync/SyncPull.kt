@@ -47,6 +47,7 @@ internal fun Transaction.buildChanges(entity: String, ids: Collection<UUID>): Li
                 if (del) null else payloadOf(
                     SessionPayload(
                         it[WorkoutSessions.startedAt], it[WorkoutSessions.endedAt], it[WorkoutSessions.tz], it[WorkoutSessions.note],
+                        it[WorkoutSessions.programInstanceId], it[WorkoutSessions.planSeq], it[WorkoutSessions.planDayKey],
                     ),
                 ),
                 it[WorkoutSessions.updatedAt], it[WorkoutSessions.serverSeq],
@@ -57,7 +58,10 @@ internal fun Transaction.buildChanges(entity: String, ids: Collection<UUID>): Li
             Change(
                 entity, it[SessionExercises.id], if (del) "DELETE" else "UPSERT", it[SessionExercises.sessionId],
                 if (del) null else payloadOf(
-                    SessionExercisePayload(it[SessionExercises.exerciseId], it[SessionExercises.position], it[SessionExercises.note]),
+                    SessionExercisePayload(
+                        it[SessionExercises.exerciseId], it[SessionExercises.position], it[SessionExercises.note],
+                        it[SessionExercises.liftKey], it[SessionExercises.accessory],
+                    ),
                 ),
                 it[SessionExercises.updatedAt], it[SessionExercises.serverSeq],
             )

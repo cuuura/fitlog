@@ -14,7 +14,13 @@ enum class ErrorCode(val status: HttpStatusCode) {
 }
 
 /** 핸들러에서 던지면 StatusPages가 계약의 에러 형식으로 바꾼다 */
-class ApiException(val code: ErrorCode, override val message: String, val field: String? = null) :
+class ApiException(
+    val code: ErrorCode,
+    override val message: String,
+    val field: String? = null,
+    /** 프로그램 검증 등 여러 에러를 JSON 포인터 경로별로 줄 때 */
+    val details: List<ErrorDetail>? = null,
+) :
     RuntimeException(message)
 
 fun validation(message: String, field: String? = null): Nothing =
@@ -26,7 +32,16 @@ fun unauthenticated(message: String = "unauthenticated"): Nothing =
     throw ApiException(ErrorCode.UNAUTHENTICATED, message)
 
 @Serializable
-data class ErrorBody(val code: String, val message: String, val field: String? = null)
+data class ErrorBody(
+    val code: String,
+    val message: String,
+    val field: String? = null,
+    val details: List<ErrorDetail>? = null,
+)
+
+/** path = JSON 포인터(예: /days/0/exercises/1/lift) */
+@Serializable
+data class ErrorDetail(val path: String, val message: String)
 
 @Serializable
 data class ErrorResponse(val error: ErrorBody)

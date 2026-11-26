@@ -1,0 +1,164 @@
+{
+  "schemaVersion": 1,
+  "name": "Texas Method",
+  "description": "주 3회: 월 볼륨(5x5 @90%), 수 회복(2x5 @72%), 금 강도(1x5 @100%). 강도일에 5회를 모두 성공하면 +2.5kg(데드리프트 +5kg). 작업 무게 = 지금 5회를 할 수 있는 무게.",
+  "workingPercent": 0.9,
+  "roundingKg": 2.5,
+  "lifts": {
+    "squat": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000001"
+      }
+    },
+    "bench": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000003"
+      }
+    },
+    "ohp": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000009"
+      }
+    },
+    "deadlift": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000006"
+      }
+    }
+  },
+  "progression": {
+    "squat": {
+      "type": "LINEAR",
+      "incrementKg": 2.5
+    },
+    "bench": {
+      "type": "LINEAR",
+      "incrementKg": 2.5
+    },
+    "ohp": {
+      "type": "LINEAR",
+      "incrementKg": 2.5
+    },
+    "deadlift": {
+      "type": "LINEAR",
+      "incrementKg": 5
+    }
+  },
+  "days": [
+    {
+      "key": "VOL",
+      "name": "볼륨일",
+      "weekday": "MON",
+      "exercises": [
+        {
+          "lift": "squat",
+          "sets": [
+            {
+              "count": 5,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.9
+              }
+            }
+          ],
+          "countsForProgression": false
+        },
+        {
+          "lift": "bench",
+          "sets": [
+            {
+              "count": 5,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.9
+              }
+            }
+          ],
+          "countsForProgression": false
+        }
+      ]
+    },
+    {
+      "key": "REC",
+      "name": "회복일",
+      "weekday": "WED",
+      "exercises": [
+        {
+          "lift": "squat",
+          "sets": [
+            {
+              "count": 2,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.72
+              }
+            }
+          ],
+          "countsForProgression": false
+        },
+        {
+          "lift": "ohp",
+          "sets": [
+            {
+              "count": 3,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 1.0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "INT",
+      "name": "강도일",
+      "weekday": "FRI",
+      "exercises": [
+        {
+          "lift": "squat",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 1.0
+              }
+            }
+          ]
+        },
+        {
+          "lift": "bench",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 1.0
+              }
+            }
+          ]
+        },
+        {
+          "lift": "deadlift",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 1.0
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

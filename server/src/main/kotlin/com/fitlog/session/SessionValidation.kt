@@ -36,6 +36,8 @@ internal fun checkSet(s: WorkoutSet, type: String?, path: String): WorkoutSet {
     }
     s.rir?.let { if (it < 0 || it > 10) bad("rir", "rir must be between 0 and 10") }
     s.restSec?.let { if (it < 0) bad("restSec", "restSec must be >= 0") }
+    s.targetReps?.let { if (it < 0) bad("targetReps", "targetReps must be >= 0") }
+    s.targetWeightKg?.let { if (!it.isFinite() || it < 0 || it > 9999.99) bad("targetWeightKg", "targetWeightKg must be between 0 and 9999.99") }
     if (s.completedAt != null && type != null) {
         val required: List<Pair<String, Any?>> = when (type) {
             "BARBELL", "DUMBBELL", "MACHINE" -> listOf("weightKg" to s.weightKg, "reps" to s.reps)
@@ -49,5 +51,6 @@ internal fun checkSet(s: WorkoutSet, type: String?, path: String): WorkoutSet {
         weightKg = s.weightKg?.let { bd2(it).toDouble() },
         addedWeightKg = s.addedWeightKg?.let { bd2(it).toDouble() },
         distanceM = s.distanceM?.let { bd1(it).toDouble() },
+        targetWeightKg = s.targetWeightKg?.let { bd2(it).toDouble() },
     )
 }

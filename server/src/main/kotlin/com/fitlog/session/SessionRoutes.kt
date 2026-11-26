@@ -40,7 +40,7 @@ fun Route.sessionRoutes(config: AppConfig) {
         if (body.id != id) validation("path id and body id differ", "id")
         val saved = dbQuery {
             lockUser(uid)
-            putSession(uid, id, body)
+            putSession(uid, id, body, config.engine)
         }
         call.respond(HttpStatusCode.OK, saved)
     }
@@ -50,7 +50,7 @@ fun Route.sessionRoutes(config: AppConfig) {
         val id = Ids.parse(call.parameters["id"])
         dbQuery {
             lockUser(uid)
-            deleteSessionRest(uid, id)
+            deleteSessionRest(uid, id, config.engine)
         }
         call.respond(HttpStatusCode.NoContent)
     }

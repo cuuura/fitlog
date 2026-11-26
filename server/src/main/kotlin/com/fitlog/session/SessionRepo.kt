@@ -15,6 +15,8 @@ import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
+import com.fitlog.core.validation
 import org.jetbrains.exposed.sql.select
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.statements.UpdateBuilder
@@ -48,6 +50,10 @@ internal fun ResultRow.toWorkoutSet() = WorkoutSet(
     restSec = this[WorkoutSets.restSec],
     note = this[WorkoutSets.note],
     completedAt = this[WorkoutSets.completedAt],
+    plannedSetKey = this[WorkoutSets.plannedSetKey],
+    targetReps = this[WorkoutSets.targetReps],
+    targetWeightKg = this[WorkoutSets.targetWeightKg]?.toDouble(),
+    isAmrap = this[WorkoutSets.isAmrap],
 )
 
 /** 삭제되지 않은 내 세션 전체(종목·세트 포함). 없으면 null */
@@ -78,9 +84,14 @@ internal fun Transaction.loadSession(userId: UUID, id: UUID): Session? {
                 position = it[SessionExercises.position],
                 note = it[SessionExercises.note],
                 sets = setsBySe[it[SessionExercises.id]].orEmpty(),
+                liftKey = it[SessionExercises.liftKey],
+                accessory = it[SessionExercises.accessory],
             )
         },
         updatedAt = s[WorkoutSessions.updatedAt],
+        programInstanceId = s[WorkoutSessions.programInstanceId],
+        planSeq = s[WorkoutSessions.planSeq],
+        planDayKey = s[WorkoutSessions.planDayKey],
     )
 }
 
@@ -88,12 +99,16 @@ internal fun Transaction.loadSession(userId: UUID, id: UUID): Session? {
 
 internal fun Transaction.upsertSessionRow(
     userId: UUID, id: UUID, startedAt: Instant, endedAt: Instant?, tz: String, note: String?, at: Instant,
+    programInstanceId: UUID? = null, planSeq: Int? = null, planDayKey: String? = null,
 ) {
     fun fill(b: UpdateBuilder<*>) {
         b[WorkoutSessions.startedAt] = startedAt
         b[WorkoutSessions.endedAt] = endedAt
         b[WorkoutSessions.tz] = tz
         b[WorkoutSessions.note] = note
+        b[WorkoutSessions.programInstanceId] = programInstanceId
+        b[WorkoutSessions.planSeq] = planSeq
+        b[WorkoutSessions.planDayKey] = planDayKey
         b[WorkoutSessions.updatedAt] = at
         b[WorkoutSessions.deletedAt] = null
         b[WorkoutSessions.serverSeq] = ChangeSeq.next
@@ -110,12 +125,15 @@ internal fun Transaction.upsertSessionRow(
 
 internal fun Transaction.upsertSessionExerciseRow(
     id: UUID, sessionId: UUID, exerciseId: UUID, position: Int, note: String?, at: Instant,
+    liftKey: String? = null, accessory: Boolean = false,
 ) {
     fun fill(b: UpdateBuilder<*>) {
         b[SessionExercises.sessionId] = sessionId
         b[SessionExercises.exerciseId] = exerciseId
         b[SessionExercises.position] = position
         b[SessionExercises.note] = note
+        b[SessionExercises.liftKey] = liftKey
+        b[SessionExercises.accessory] = accessory
         b[SessionExercises.updatedAt] = at
         b[SessionExercises.deletedAt] = null
         b[SessionExercises.serverSeq] = ChangeSeq.next
@@ -143,6 +161,10 @@ internal fun Transaction.upsertSetRow(sessionExerciseId: UUID, s: WorkoutSet, at
         b[WorkoutSets.restSec] = s.restSec
         b[WorkoutSets.note] = s.note
         b[WorkoutSets.completedAt] = s.completedAt
+        b[WorkoutSets.plannedSetKey] = s.plannedSetKey
+        b[WorkoutSets.targetReps] = s.targetReps
+        b[WorkoutSets.targetWeightKg] = s.targetWeightKg?.let(::bd2)
+        b[WorkoutSets.isAmrap] = s.isAmrap
         b[WorkoutSets.updatedAt] = at
         b[WorkoutSets.deletedAt] = null
         b[WorkoutSets.serverSeq] = ChangeSeq.next
@@ -210,3 +232,37 @@ internal fun setsWithExercise() =
 
 internal fun sessionsWithExercise() =
     WorkoutSessions.join(SessionExercises, org.jetbrains.exposed.sql.JoinType.INNER, WorkoutSessions.id, SessionExercises.sessionId)
+
+/** 세션 행이 현재 가리키는 인스턴스(없거나 연결 없음이면 null). 삭제된 세션도 포함한다 */
+internal fun Transaction.sessionInstanceId(sessionId: UUID): UUID? =
+    WorkoutSessions.select(WorkoutSessions.programInstanceId).where { WorkoutSessions.id eq sessionId }
+        .singleOrNull()?.get(WorkoutSessions.programInstanceId)
+
+/**
+ * 세션을 인스턴스에 연결해도 되는지 확인한다: 내 인스턴스여야 하고(400), 같은 (인스턴스, planSeq) 에
+ * 이미 다른 살아있는 세션이 있으면 부분 유니크 인덱스가 막으므로 미리 409 로 바꾼다.
+ */
+internal fun Transaction.checkProgramLink(
+    userId: UUID, sessionId: UUID, instanceId: UUID?, planSeq: Int?, fieldPrefix: String = "",
+) {
+    planSeq?.let { if (it < 1) validation("planSeq must be >= 1", fieldPrefix + "planSeq") }
+    if (instanceId == null) return
+    val owned = com.fitlog.core.ProgramInstances.select(com.fitlog.core.ProgramInstances.id)
+        .where {
+            (com.fitlog.core.ProgramInstances.id eq instanceId) and (com.fitlog.core.ProgramInstances.userId eq userId) and
+                com.fitlog.core.ProgramInstances.deletedAt.isNull()
+        }.firstOrNull()
+    if (owned == null) validation("unknown program instance", fieldPrefix + "programInstanceId")
+    if (planSeq != null) {
+        val clash = WorkoutSessions.select(WorkoutSessions.id)
+            .where {
+                (WorkoutSessions.programInstanceId eq instanceId) and (WorkoutSessions.planSeq eq planSeq) and
+                    WorkoutSessions.deletedAt.isNull() and (WorkoutSessions.id neq sessionId)
+            }.firstOrNull()
+        if (clash != null) {
+            throw com.fitlog.core.ApiException(
+                com.fitlog.core.ErrorCode.CONFLICT, "another session is already linked to this planSeq", fieldPrefix + "planSeq",
+            )
+        }
+    }
+}
