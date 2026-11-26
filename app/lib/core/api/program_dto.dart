@@ -50,7 +50,7 @@ class ProgramSummary {
   });
 
   factory ProgramSummary.fromJson(Map<String, Object?> j) => ProgramSummary(
-    id: j['id'] as String,
+    id: j['id'] as String? ?? '', // POST /programs/validate 응답은 id 생략
     templateKey: j['templateKey'] as String?,
     name: j['name'] as String,
     description: j['description'] as String?,
