@@ -107,7 +107,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             controller: _height,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
             inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-            decoration: InputDecoration(labelText: l.profileHeight, errorText: _heightError),
+            decoration: InputDecoration(
+              labelText: l.profileHeight,
+              errorText: _heightError,
+              suffixIcon: IconButton(
+                key: const Key('profileHeightClear'),
+                tooltip: l.profileClear,
+                icon: const Icon(Icons.clear),
+                onPressed: () => setState(() {
+                  _height.clear();
+                  _heightError = null;
+                  _dirty = true;
+                }),
+              ),
+            ),
             onChanged: (_) => _dirty = true,
           ),
           const SizedBox(height: 16),
@@ -132,7 +145,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             controller: _birth,
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(4)],
-            decoration: InputDecoration(labelText: l.profileBirthYear, errorText: _birthError),
+            decoration: InputDecoration(
+              labelText: l.profileBirthYear,
+              errorText: _birthError,
+              suffixIcon: IconButton(
+                key: const Key('profileBirthClear'),
+                tooltip: l.profileClear,
+                icon: const Icon(Icons.clear),
+                onPressed: () => setState(() {
+                  _birth.clear();
+                  _birthError = null;
+                  _dirty = true;
+                }),
+              ),
+            ),
             onChanged: (_) => _dirty = true,
           ),
           const SizedBox(height: 24),

@@ -1,6 +1,6 @@
 // B3 소유. outbox push → pull 동기화(contracts/v0.1/sync.md).
 // - 부모 먼저(세션 → 종목 → 세트), 삭제는 자식 먼저. 한 번에 최대 200개.
-// - applied: outbox 정리(보낸 뒤 또 바뀐 행은 남김). conflict: 서버 값으로 덮어씀. PARENT_MISSING: 남겨서 재시도.
+// - applied: outbox 정리(보낸 뒤 또 바뀐 행은 남김). conflict: 서버 값으로 덮어씀. PARENT_MISSING: 남겨서 재시도(상한까지).
 // - pull은 outbox에 남은 행을 덮어쓰지 않는다(다음 push가 LWW로 결정).
 // - 실패하면 지수 백오프 5s → 최대 5분. 401은 B1의 Dio 인터셉터가 갱신을 시도한 뒤에도 실패한 경우라 재시도하지 않는다.
 import 'dart:async';
@@ -171,6 +171,7 @@ class SyncEngine implements SyncService {
     final row =
         await (db.select(db.outbox)
               ..where((t) => t.attempts.isBiggerOrEqualValue(maxAttempts))
+              ..orderBy([(t) => OrderingTerm.asc(t.id)])
               ..limit(1))
             .getSingleOrNull();
     return row == null ? null : '${row.entity} ${row.entityId}: ${row.lastError ?? 'rejected'}';
@@ -250,16 +251,14 @@ class SyncEngine implements SyncService {
     final code = res.code ?? 'REJECTED';
     final q = db.update(db.outbox)..where((t) => t.id.equals(sent.id) & t.clientUpdatedAt.equals(sent.clientUpdatedAt));
     if (code == 'PARENT_MISSING') {
-      if (sent.op == ChangeOp.DELETE.name) {
-        // 지울 대상의 부모가 서버에 없다 = 이미 없는 것과 같다. 몇 번 시도해도 안 되면 포기.
-        if (sent.attempts + 1 >= maxAttempts) {
-          await (db.delete(db.outbox)..where((t) => t.id.equals(sent.id))).go();
-          return;
-        }
-        await q.write(OutboxCompanion(attempts: Value(sent.attempts + 1), lastError: Value(code)));
-      } else {
-        await q.write(OutboxCompanion(lastError: Value(code)));
+      // 부모가 아직 안 갔거나(곧 해결) 서버에서 지워졌다(영영 안 됨). 시도 횟수를 늘려 상한에서 멈춘다.
+      if (sent.op == ChangeOp.DELETE.name && sent.attempts + 1 >= maxAttempts) {
+        // 지울 대상의 부모가 서버에 없다 = 이미 없는 것과 같다. 포기.
+        await (db.delete(db.outbox)..where((t) => t.id.equals(sent.id))).go();
+        return;
       }
+      // UPSERT는 상한에 닿으면 outbox에 남아 dead letter로 lastError를 보여준다.
+      await q.write(OutboxCompanion(attempts: Value(sent.attempts + 1), lastError: Value(code)));
       return;
     }
     await q.write(OutboxCompanion(attempts: Value(sent.attempts + 1), lastError: Value(code)));

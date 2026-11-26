@@ -269,5 +269,154 @@
   "syncLastErrorLabel": "Last error",
   "syncNowAction": "Sync now",
   "settingsExactAlarm": "Get rest-end alerts on time",
-  "settingsExactAlarmDesc": "Ask for the exact alarm permission so the alert fires right when rest ends"
+  "settingsExactAlarmDesc": "Ask for the exact alarm permission so the alert fires right when rest ends",
+  "historyTitle": "History",
+  "historyEmpty": "No finished workouts yet",
+  "historyMonth": "{month}/{year}",
+  "@historyMonth": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      }
+    }
+  },
+  "historyExerciseRecords": "Records by exercise",
+  "historySummary": "{exercises} exercises · {sets} sets · {volume}",
+  "@historySummary": {
+    "placeholders": {
+      "exercises": {
+        "type": "int"
+      },
+      "sets": {
+        "type": "int"
+      },
+      "volume": {
+        "type": "String"
+      }
+    }
+  },
+  "historyProgram": "Program",
+  "historyPlanBadge": "Program {day} · #{seq}",
+  "@historyPlanBadge": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "seq": {
+        "type": "int"
+      }
+    }
+  },
+  "historyMenu": "Menu",
+  "historyEdit": "Edit",
+  "historyLoadMore": "Loading…",
+  "historyLoadFailed": "Couldn't load history",
+  "historyEditTitle": "Edit session",
+  "historyEditNotFound": "Session not found",
+  "historyEditStart": "Start",
+  "historyEditEnd": "End",
+  "historyEditEndBeforeStart": "The end time must be after the start time.",
+  "historyEditNote": "Note",
+  "historyEditProgramNotice": "Editing recalculates the upcoming plan.",
+  "historyEditAddExercise": "Add exercise",
+  "historyEditRemoveExercise": "Remove exercise",
+  "historyEditRemoveExerciseConfirm": "Remove this exercise and its sets?",
+  "historyEditAddSet": "Add set",
+  "historyEditDeleteSet": "Delete set",
+  "historyEditMoveUp": "Move up",
+  "historyEditMoveDown": "Move down",
+  "historyEditTarget": "Target {target}",
+  "@historyEditTarget": {
+    "placeholders": {
+      "target": {
+        "type": "String"
+      }
+    }
+  },
+  "historyEditWeight": "Weight ({unit})",
+  "@historyEditWeight": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "historyEditAdded": "Added weight ({unit})",
+  "@historyEditAdded": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "historyEditReps": "Reps",
+  "historyEditWarmup": "Warm-up",
+  "historyEditInvalid": "Enter a valid value",
+  "historyEditSaveFailed": "Couldn't save. Please try again.",
+  "recordsTitle": "Records",
+  "recordsBestWeight": "Best weight",
+  "recordsBestE1rm": "Best estimated 1RM",
+  "recordsFormulaUsed": "Formula {formula}",
+  "@recordsFormulaUsed": {
+    "placeholders": {
+      "formula": {
+        "type": "String"
+      }
+    }
+  },
+  "recordsLatestMeasured": "Latest measured 1RM",
+  "recordsByReps": "Best weight by reps",
+  "recordsRepsHeader": "Reps",
+  "recordsRepsValue": "{reps} reps",
+  "@recordsRepsValue": {
+    "placeholders": {
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "recordsNone": "No record",
+  "recordsPoint": "{weight} × {reps} · {date}",
+  "@recordsPoint": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      },
+      "reps": {
+        "type": "int"
+      },
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "recordsOneRmSection": "Measured 1RM",
+  "recordsOneRmAdd": "Add measurement",
+  "recordsOneRmEmpty": "No measured 1RM yet",
+  "recordsOneRmWeight": "Weight ({unit})",
+  "@recordsOneRmWeight": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "recordsOneRmDate": "Date",
+  "recordsOneRmNote": "Note",
+  "recordsOneRmDeleteConfirm": "Delete this measurement?",
+  "recordsInvalidWeight": "Enter a weight above 0.",
+  "recordsLoadFailed": "Couldn't load. Check your connection and try again. Records are available online only.",
+  "recordsActionFailed": "That didn't work. Please try again.",
+  "settingsE1rm": "1RM formula",
+  "settingsE1rmEpley": "Epley",
+  "settingsE1rmBrzycki": "Brzycki",
+  "settingsE1rmLombardi": "Lombardi",
+  "settingsE1rmEpleyDesc": "Weight × (1 + reps/30). The most common formula (default).",
+  "settingsE1rmBrzyckiDesc": "Weight × 36 / (37 − reps). Fits low reps well.",
+  "settingsE1rmLombardiDesc": "Weight × reps^0.10. Rises gently as reps grow.",
+  "settingsE1rmNote": "Only sets of 1–10 reps count; warm-ups are excluded.",
+  "profileClear": "Clear"
 }
