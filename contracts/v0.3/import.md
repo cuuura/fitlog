@@ -29,6 +29,8 @@ bundle → 검증 → 이름 해석 → 충돌 탐지 → (충돌 없음 또는 
 | `PLAN_MISMATCH` | 세션의 `program.planSeq`가 그 인스턴스의 다음 회차와 다름 | `UNLINK`(프로그램 연결 없이 저장), `SKIP` | 필수 |
 | `INSTANCE_NEEDS_VALUE` | 인스턴스 시작에 필요한 TM·작업 무게를 묶음에도 제안(suggest)에도 못 구함 | `SET`(값 지정), `SKIP` | 필수 |
 
+- `INSTANCE_NEEDS_VALUE`의 `suggested`는 `{ "tm": { 키: kg | null }, "working": { 키: kg | null } }`. 그 인스턴스에 값이 필요한 키(엔진 requiredInputs)를 **모두** 넣고, 제안값을 모르는 키는 `null`. 필요 없는 쪽은 `{}`
+- `SET` 해결은 `value: { "tm": { 키: kg }, "working": { 키: kg } }`. 묶음에 준 값과 합친 뒤에도 빠진 키가 있으면 여전히 미해결
 - 같은 id·같은 내용이면 충돌이 아니라 `UNCHANGED`(아무것도 안 함). 그래서 **같은 묶음을 두 번 보내도 결과가 같다**(멱등)
 - 충돌마다 서버가 결정적인 `conflictId`를 준다: `"{code}:{bundle 안 JSON 포인터}"` (예: `SESSION_OVERLAP:/sessions/3`). 같은 묶음이면 매번 같은 id
 - 해결은 요청의 `resolutions: { conflictId: { action, exerciseId?, value? } }`로 준다. 해결 안 된 충돌이 하나라도 있으면 저장하지 않고 409 + 충돌 목록
