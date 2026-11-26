@@ -48,7 +48,7 @@ data class BodyMeasurement(
     val importBatchId: UUID? = null,
 )
 
-private val SOURCES = setOf("MANUAL", "HEALTH_CONNECT", "HEALTHKIT", "OCR")
+private val SOURCES = setOf("MANUAL", "HEALTH_CONNECT", "HEALTHKIT", "OCR", "AI_JSON", "AI_MCP", "IMPORT")
 
 /** 체중 검증·정규화(둘째 자리 반올림, source 기본 MANUAL). sync 도 같이 쓴다 */
 internal fun checkMeasurement(m: BodyMeasurement): BodyMeasurement {

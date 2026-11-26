@@ -10,6 +10,29 @@ export GOOGLE_CLIENT_IDS=<Android/Web OAuth 클라이언트 ID, 쉼표 구분>
 ./gradlew run        # :8080, 시작 시 Flyway 마이그레이션
 ```
 
+## AI 연동(MCP) 실행 — v0.3
+Claude·ChatGPT·Gemini 가 붙으려면 **https 공개 주소**가 필요하다. 자세한 절차는 [docs/mcp-connect.md](docs/mcp-connect.md).
+
+1. PostgreSQL 16 준비(예: `docker run -d -p 5432:5432 -e POSTGRES_USER=fitlog -e POSTGRES_PASSWORD=fitlog -e POSTGRES_DB=fitlog postgres:16`)
+2. 터널로 공개 주소 만들기: `cloudflared tunnel --url http://localhost:8080` (또는 `ngrok http 8080`) → `https://….trycloudflare.com`
+3. Google Cloud 콘솔에서 **웹 애플리케이션** OAuth 클라이언트를 만들고 승인된 리디렉션 URI 에 `<공개 주소>/oauth/google/callback` 등록
+4. 환경 변수와 실행
+   ```bash
+   export PUBLIC_BASE_URL=https://….trycloudflare.com      # 끝 슬래시 없음
+   export GOOGLE_WEB_CLIENT_ID=… GOOGLE_WEB_CLIENT_SECRET=…
+   export GOOGLE_CLIENT_IDS=<앱(Android) 클라이언트 ID>,<웹 클라이언트 ID>
+   export JWT_SECRET=<32자 이상>
+   ./gradlew run
+   ```
+5. 확인: `npx @modelcontextprotocol/inspector` → Streamable HTTP, `<공개 주소>/mcp` → OAuth 로그인 → 도구 21개
+6. AI 연결: Claude(커넥터 추가) · ChatGPT(개발자 모드 커넥터) · Gemini CLI(`settings.json` 의 `mcpServers.<이름>.httpUrl`)에 `<공개 주소>/mcp`
+
+| 환경 변수 | 뜻 |
+| --- | --- |
+| `PUBLIC_BASE_URL` | 외부에서 보이는 서버 주소. MCP 리소스·OAuth 메타데이터·리다이렉트에 쓴다 |
+| `GOOGLE_WEB_CLIENT_ID` / `GOOGLE_WEB_CLIENT_SECRET` | MCP 로그인 페이지용 Google 웹 OAuth 클라이언트 |
+| `GOOGLE_CLIENT_IDS` | 앱 로그인 ID 토큰 audience(쉼표 구분) |
+
 ## 테스트
 로컬 PostgreSQL 이 필요하다 (`fitlog_test` DB, 사용자/암호 `fitlog`). 다른 DB 는 `FITLOG_TEST_DB_URL` 로 지정.
 ```bash
@@ -24,6 +47,9 @@ export GOOGLE_CLIENT_IDS=<Android/Web OAuth 클라이언트 ID, 쉼표 구분>
 | `auth/`, `account/` | Google 로그인, 토큰 회전, 내 정보·설정·동의·계정 삭제 |
 | `exercise/` + `db/migration/V2` | 종목 API, 기본 종목 77개 시드(`db/SEED_EXERCISES.md`) |
 | `session/`, `body/`, `sync/` | 세션·세트 기록, 체중, 오프라인 push/pull |
+| `engine/` | v0.2 계산 엔진(순수 Kotlin): 증량·디로드·반올림·일정·replay |
+| `program/schema`, `program/catalog`, `program/instance`, `records/` | 프로그램 검증·템플릿 5종·진행 인스턴스·PR/1RM |
+| `importing/`, `mcp/`, `oauth/`, `export/`, `deletion/`, `aiconnection/` | v0.3 AI 가져오기·원격 MCP·OAuth·내보내기·삭제 승인·연결 관리 |
 
 ## 동기화 구현 규칙
 - 동기화 대상 테이블 쓰기 전 `lockUser(userId)` → 같은 사용자의 `server_seq` 가 커밋 순서대로 매겨져 pull 이 변경을 놓치지 않는다
