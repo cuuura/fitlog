@@ -1,0 +1,239 @@
+openapi: 3.1.0
+info:
+  title: Fitlog API (v0.3 추가분)
+  version: 0.3.0
+  description: |
+    v0.1·v0.2에 더해지는 REST 경로. MCP(/mcp)와 OAuth(/oauth/*, /.well-known/*)는 mcp.md에 정의.
+    변경 사항(기존 응답): Session·Program·Exercise·BodyMeasurement 응답에 `importBatchId`(없으면 생략)와 `source` 추가.
+    에러 코드 추가: CONFLICT_UNRESOLVED(409, 가져오기), GONE(410, 만료된 삭제 요청 결정 시도).
+servers:
+  - url: https://api.example.invalid
+security:
+  - bearer: []
+paths:
+  /v1/public/schema/import.json:
+    get:
+      tags: [public]
+      security: []
+      summary: import.schema.json 원문 (AI-2, 인증 없음, 캐시 1일)
+      responses:
+        '200': { description: OK, content: { application/schema+json: {} } }
+  /v1/public/schema/program.json:
+    get:
+      tags: [public]
+      security: []
+      summary: v0.2 program.schema.json 원문
+      responses:
+        '200': { description: OK, content: { application/schema+json: {} } }
+
+  /v1/imports/preview:
+    post:
+      tags: [import]
+      summary: 저장 없이 검증·이름 해석·충돌 탐지
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ImportRequest' } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ImportPreview' } } } }
+        '400': { description: 'VALIDATION_FAILED (details[].path)' }
+  /v1/imports:
+    get:
+      tags: [import]
+      summary: 가져오기 이력(최신순)
+      parameters:
+        - { name: before, in: query, schema: { type: string, format: date-time } }
+        - { name: limit, in: query, schema: { type: integer, default: 20, maximum: 100 } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ImportBatch' } } } } }
+    post:
+      tags: [import]
+      summary: 가져오기. 충돌이 없거나 모두 해결되면 저장(201), 아니면 409 + 미리보기
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/ImportRequest' } } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/ImportBatch' } } } }
+        '200': { description: 모든 항목이 UNCHANGED(같은 묶음 재전송). 기존 묶음 또는 빈 결과, content: { application/json: { schema: { $ref: '#/components/schemas/ImportBatch' } } } }
+        '400': { description: VALIDATION_FAILED }
+        '409': { description: CONFLICT_UNRESOLVED, content: { application/json: { schema: { $ref: '#/components/schemas/ImportPreview' } } } }
+  /v1/imports/{id}:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [import]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ImportBatchDetail' } } } }
+  /v1/imports/{id}/revert:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    post:
+      tags: [import]
+      summary: 묶음 되돌리기(만든 행 삭제, REPLACE로 지운 행 복원). 이미 되돌렸으면 변화 없이 200
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ImportBatch' } } } }
+
+  /v1/deletion-requests:
+    get:
+      tags: [deletion]
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [PENDING, APPROVED, REJECTED, EXPIRED] } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/DeletionRequest' } } } } }
+  /v1/deletion-requests/count:
+    get:
+      tags: [deletion]
+      summary: PENDING 개수(앱 시작 배너용)
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: object, required: [pending], properties: { pending: { type: integer } } } } } }
+  /v1/deletion-requests/{id}/approve:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    post:
+      tags: [deletion]
+      responses:
+        '200': { description: 실행됨, content: { application/json: { schema: { $ref: '#/components/schemas/DeletionRequest' } } } }
+        '409': { description: 이미 결정됨 }
+        '410': { description: GONE(만료) }
+  /v1/deletion-requests/{id}/reject:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    post:
+      tags: [deletion]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/DeletionRequest' } } } }
+        '409': { description: 이미 결정됨 }
+
+  /v1/me/ai-connections:
+    get:
+      tags: [ai]
+      summary: MCP로 연결된 AI 목록
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/AiConnection' } } } } }
+  /v1/me/ai-connections/{id}:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    delete:
+      tags: [ai]
+      summary: 연결 끊기(그 연결의 토큰 전부 폐기)
+      responses:
+        '204': { description: No Content }
+  /v1/mcp-info:
+    get:
+      tags: [ai]
+      summary: 앱 연결 안내 화면용(MCP 주소, 지원 AI별 안내 링크)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [mcpUrl]
+                properties:
+                  mcpUrl: { type: string, format: uri }
+                  clients: { type: array, items: { type: object, required: [key, name], properties: { key: { type: string, enum: [claude, chatgpt, gemini] }, name: { type: string }, steps: { type: array, items: { type: string } }, docUrl: { type: string } } } }
+
+  /v1/export.json:
+    get:
+      tags: [export]
+      summary: 전체 내보내기(가져오기 묶음 형식, export.md)
+      responses:
+        '200': { description: OK, headers: { Content-Disposition: { schema: { type: string } } }, content: { application/json: {} } }
+  /v1/export.csv:
+    get:
+      tags: [export]
+      parameters:
+        - { name: kind, in: query, required: true, schema: { type: string, enum: [sets, body] } }
+      responses:
+        '200': { description: OK, content: { text/csv: {} } }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    Id: { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+  schemas:
+    ImportRequest:
+      type: object
+      required: [bundle]
+      properties:
+        bundle: { $ref: './import.schema.json' }
+        channel: { type: string, enum: [APP_JSON], default: APP_JSON, description: MCP는 서버가 MCP로 채움 }
+        clientName: { type: string, maxLength: 40, description: 앱 붙여넣기에서 사용자가 고른 AI 이름(Claude, ChatGPT, Gemini, 기타) }
+        tz: { type: string, description: 묶음에 tz가 없을 때 기본 }
+        onConflict: { type: string, enum: [ASK, SKIP_ALL], default: ASK }
+        resolutions:
+          type: object
+          additionalProperties: { $ref: '#/components/schemas/Resolution' }
+    Resolution:
+      type: object
+      required: [action]
+      properties:
+        action: { type: string, enum: [SKIP, KEEP_BOTH, REPLACE, MAP_TO, CREATE, UNLINK, SET] }
+        exerciseId: { type: string, format: uuid, description: MAP_TO }
+        exercise: { type: object, description: CREATE(type·primaryMuscle) }
+        value: { type: object, description: 'SET: { tm?: {키: kg}, working?: {키: kg} }' }
+    Conflict:
+      type: object
+      required: [conflictId, code, path, message, allowed]
+      properties:
+        conflictId: { type: string, example: 'SESSION_OVERLAP:/sessions/3' }
+        code: { type: string, enum: [UNKNOWN_EXERCISE, SESSION_OVERLAP, BODY_SAME_DAY, PROGRAM_NAME_EXISTS, ID_EXISTS, PLAN_MISMATCH, INSTANCE_NEEDS_VALUE] }
+        path: { type: string, description: 묶음 안 JSON 포인터 }
+        message: { type: string }
+        allowed: { type: array, items: { type: string } }
+        existing: { type: object, description: 겹치는 기존 데이터 요약(세션 날짜·종목 등) }
+        candidates: { type: array, items: { type: object, properties: { exerciseId: { type: string, format: uuid }, nameKo: { type: string }, nameEn: { type: string } } } }
+        suggested: { type: object, description: INSTANCE_NEEDS_VALUE의 제안값 }
+    ImportPreview:
+      type: object
+      required: [valid, counts, conflicts]
+      properties:
+        valid: { type: boolean }
+        counts:
+          type: object
+          description: 종류별 NEW/UNCHANGED/REPLACE/SKIP 개수(현재 resolutions 기준)
+          additionalProperties: { type: object, additionalProperties: { type: integer } }
+        conflicts: { type: array, items: { $ref: '#/components/schemas/Conflict' } }
+        unresolved: { type: array, items: { type: string }, description: 아직 해결 안 된 conflictId }
+    ImportBatch:
+      type: object
+      required: [id, createdAt, channel, summary]
+      properties:
+        id: { type: string, format: uuid }
+        createdAt: { type: string, format: date-time }
+        channel: { type: string, enum: [APP_JSON, MCP] }
+        clientName: { type: string }
+        note: { type: string }
+        summary: { type: object, additionalProperties: { type: integer }, description: '예: { sessions: 3, programs: 1, replaced: 1 }' }
+        revertedAt: { type: string, format: date-time }
+    ImportBatchDetail:
+      allOf:
+        - $ref: '#/components/schemas/ImportBatch'
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: object
+                required: [entity, entityId, action]
+                properties:
+                  entity: { type: string, enum: [exercise, program, program_instance, workout_session, body_measurement] }
+                  entityId: { type: string, format: uuid }
+                  action: { type: string, enum: [CREATED, REPLACED_OLD] }
+                  label: { type: string, description: 화면 표시용(세션 날짜, 프로그램 이름 등) }
+    DeletionRequest:
+      type: object
+      required: [id, entity, entityId, status, createdAt, expiresAt]
+      properties:
+        id: { type: string, format: uuid }
+        entity: { type: string, enum: [workout_session, program, program_instance, exercise, body_measurement] }
+        entityId: { type: string, format: uuid }
+        label: { type: string, description: 대상 요약 }
+        reason: { type: string }
+        clientName: { type: string }
+        status: { type: string, enum: [PENDING, APPROVED, REJECTED, EXPIRED] }
+        note: { type: string }
+        createdAt: { type: string, format: date-time }
+        expiresAt: { type: string, format: date-time }
+        decidedAt: { type: string, format: date-time }
+    AiConnection:
+      type: object
+      required: [id, clientName, scopes, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        clientName: { type: string }
+        scopes: { type: array, items: { type: string, enum: [fitlog.read, fitlog.write] } }
+        createdAt: { type: string, format: date-time }
+        lastUsedAt: { type: string, format: date-time }
