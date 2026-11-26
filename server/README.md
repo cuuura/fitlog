@@ -33,6 +33,22 @@ Claude·ChatGPT·Gemini 가 붙으려면 **https 공개 주소**가 필요하다
 | `GOOGLE_WEB_CLIENT_ID` / `GOOGLE_WEB_CLIENT_SECRET` | MCP 로그인 페이지용 Google 웹 OAuth 클라이언트 |
 | `GOOGLE_CLIENT_IDS` | 앱 로그인 ID 토큰 audience(쉼표 구분) |
 
+### 호출 제한·무결성
+
+| 환경 변수 | 기본 | 뜻 |
+| --- | --- | --- |
+| `RATE_LIMIT_ENABLED` | `true` | `false` 면 호출 제한을 설치하지 않는다 |
+| `RATE_LIMIT_AUTH_PER_MIN` | 20 | `/v1/auth/*`·`/oauth/*` 분당 한도(IP별) |
+| `RATE_LIMIT_API_PER_MIN` | 300 | 인증된 `/v1/*` 분당 한도(사용자별) |
+| `RATE_LIMIT_EXPORT_PER_10MIN` | 5 | 내보내기 10분당 한도(사용자별) |
+| `RATE_LIMIT_MCP_PER_MIN` | 120 | `/mcp` 분당 한도(Authorization 해시별, 없으면 IP) |
+| `TRUST_PROXY` | `false` | `true` 일 때만 `X-Forwarded-For` 로 클라이언트 IP를 판단(리버스 프록시 뒤) |
+| `INTEGRITY_MODE` | `off` | Play Integrity: `off` 무시 / `report` 검증·로그만 / `enforce` 실패 시 403 `INTEGRITY_FAILED` |
+| `INTEGRITY_PACKAGE_NAMES` | `com.fitlog.fitlog` | 허용 패키지 이름(쉼표 구분). 첫 값으로 `decodeIntegrityToken` 호출 |
+| `PLAY_INTEGRITY_CREDENTIALS` | - | 서비스 계정 JSON 파일 경로. Google 호출 실패(3초 초과 포함)는 fail-open(경고 로그) |
+
+초과 시 `429` + `Retry-After`(초) + `{"error":{"code":"RATE_LIMITED",...}}`.
+
 ## 테스트
 로컬 PostgreSQL 이 필요하다 (`fitlog_test` DB, 사용자/암호 `fitlog`). 다른 DB 는 `FITLOG_TEST_DB_URL` 로 지정.
 ```bash

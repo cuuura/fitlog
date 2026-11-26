@@ -10,6 +10,7 @@ import com.fitlog.core.RefreshTokens
 import com.fitlog.core.Times
 import com.fitlog.core.dbQuery
 import com.fitlog.core.unauthenticated
+import com.fitlog.security.checkIntegrity
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
@@ -90,6 +91,7 @@ fun Route.authRoutes(config: AppConfig) {
     route("/auth") {
         post("/google") {
             val req = call.receive<GoogleLoginRequest>()
+            checkIntegrity(call, config, req.idToken)
             val identity = verifier.verify(req.idToken) ?: unauthenticated("invalid google id token")
             val (uid, refresh, isNew) = dbQuery {
                 val now = Times.now()
@@ -125,6 +127,7 @@ fun Route.authRoutes(config: AppConfig) {
 
         post("/refresh") {
             val req = call.receive<RefreshRequest>()
+            checkIntegrity(call, config, req.refreshToken)
             val result: RotateResult = dbQuery {
                 val now = Times.now()
                 val row = RefreshTokens.selectAll()
