@@ -21,6 +21,10 @@ class FakeNotifier implements RestTimerNotifier {
   @override
   set actionHandler(void Function(RestTimerAction)? h) => handler = h;
   @override
+  bool get supportsExactAlarm => false;
+  @override
+  Future<bool> requestExactAlarmPermission() async => false;
+  @override
   Future<void> cancel() async => calls.add('cancel');
   @override
   Future<void> requestPermission() async => calls.add('permission');

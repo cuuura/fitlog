@@ -9,6 +9,8 @@ import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../rest_timer/rest_timer_notifier.dart';
+import '../sync_status/sync_status_indicator.dart';
 
 /// ACC-3 설정 + 계정(ACC-5, ACC-6 철회).
 class SettingsPage extends ConsumerWidget {
@@ -159,6 +161,15 @@ class SettingsPage extends ConsumerWidget {
             value: s.rpeInputEnabled,
             onChanged: (v) => _update(context, ref, s.copyWith(rpeInputEnabled: v)),
           ),
+          if (ref.watch(restTimerNotifierProvider).supportsExactAlarm)
+            ListTile(
+              key: const Key('exactAlarm'),
+              title: Text(l.settingsExactAlarm),
+              subtitle: Text(l.settingsExactAlarmDesc),
+              onTap: () => _guard(context, () async {
+                await ref.read(restTimerNotifierProvider).requestExactAlarmPermission();
+              }),
+            ),
           header(l.settingsSectionBody),
           ListTile(
             title: Text(l.settingsProfile),
@@ -172,6 +183,11 @@ class SettingsPage extends ConsumerWidget {
           ),
           header(l.settingsSectionAccount),
           if (me != null) ListTile(title: Text(me.email), subtitle: me.displayName == null ? null : Text(me.displayName!)),
+          ListTile(
+            key: const Key('syncTile'),
+            title: Text(l.syncSheetTitle),
+            onTap: () => showSyncStatusSheet(context),
+          ),
           ListTile(
             key: const Key('withdrawHealth'),
             title: Text(l.settingsWithdrawHealth),
