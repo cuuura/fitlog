@@ -5,5 +5,124 @@
   "commonCancel": "Cancel",
   "commonDelete": "Delete",
   "commonRetry": "Retry",
-  "commonError": "Something went wrong"
+  "commonError": "Something went wrong",
+  "authLoginSubtitle": "Keep your workout log safe and pick it up anywhere.",
+  "authSignInGoogle": "Continue with Google",
+  "authErrorNetwork": "Cannot reach the network. Check your connection and try again.",
+  "authErrorServer": "Sign-in failed. Please try again in a moment.",
+  "authErrorNoToken": "Could not get your Google account info. Please try again.",
+  "authErrorOther": "Something went wrong while signing in. Please try again.",
+  "authConsentTitle": "Consent",
+  "authConsentIntro": "You need to agree to all of the items below to use fitlog.",
+  "authConsentTerms": "Terms of Service (required)",
+  "authConsentPrivacy": "Privacy Policy (required)",
+  "authConsentHealth": "Health data collection and use (required)",
+  "authConsentView": "Read in full",
+  "authConsentAgreeAll": "Agree to all",
+  "authConsentContinue": "Agree and continue",
+  "authConsentDecline": "Decline and sign out",
+  "authConsentDocPending": "The full text is not available yet.",
+  "authConsentError": "Could not save your consent. Please try again.",
+  "settingsTitle": "Settings",
+  "settingsSectionTraining": "Training",
+  "settingsWeightUnit": "Weight unit",
+  "settingsUnitKg": "kg",
+  "settingsUnitLb": "lb",
+  "settingsRestTime": "Default rest time",
+  "settingsRestSeconds": "{sec} s",
+  "@settingsRestSeconds": {
+    "placeholders": {
+      "sec": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsKeepScreenOn": "Keep screen on",
+  "settingsKeepScreenOnDesc": "Prevents the screen from turning off during a workout.",
+  "settingsRpe": "Use RPE/RIR input",
+  "settingsRpeDesc": "Record effort for each set.",
+  "settingsSectionBody": "Body",
+  "settingsProfile": "Profile",
+  "settingsBodyWeight": "Body weight",
+  "settingsSectionAccount": "Account",
+  "settingsSignOut": "Sign out",
+  "settingsSignOutPendingTitle": "Some changes are not synced yet",
+  "settingsSignOutPendingBody": "{count} changes have not reached the server. Signing out now will discard them.",
+  "@settingsSignOutPendingBody": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "settingsSignOutAnyway": "Sign out anyway",
+  "settingsSignOutConfirmTitle": "Sign out?",
+  "settingsSignOutConfirmBody": "Data on this device will be removed and restored from the server when you sign in again.",
+  "settingsDeleteAccount": "Delete account",
+  "settingsDeleteConfirmTitle": "Delete your account?",
+  "settingsDeleteConfirmBody": "Your account and all workout and body-weight records will be deleted immediately. This cannot be undone.",
+  "settingsDeleteConfirmAction": "Delete permanently",
+  "settingsWithdrawHealth": "Withdraw health data consent",
+  "settingsWithdrawHealthBody": "After withdrawing, you must consent again before you can keep using the app.",
+  "settingsWithdrawAction": "Withdraw",
+  "settingsSaveFailed": "Could not save. Reverted to the previous value.",
+  "settingsActionFailed": "Could not complete that. Please try again.",
+  "profileTitle": "Profile",
+  "profileHeight": "Height (cm)",
+  "profileSex": "Sex",
+  "profileSexUnset": "Not set",
+  "profileSexMale": "Male",
+  "profileSexFemale": "Female",
+  "profileSexOther": "Other",
+  "profileBirthYear": "Birth year",
+  "profileHeightInvalid": "Enter a value between {min} and {max} cm.",
+  "@profileHeightInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "profileBirthInvalid": "Enter a year between {min} and {max}.",
+  "@profileBirthInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "profileSaved": "Saved.",
+  "bodyTitle": "Body weight",
+  "bodyEmpty": "No entries yet. Add your weight below.",
+  "bodyWeightLabel": "Weight ({unit})",
+  "@bodyWeightLabel": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "bodyAdd": "Add",
+  "bodyInvalid": "Enter a value between {min} and {max} {unit}.",
+  "@bodyInvalid": {
+    "placeholders": {
+      "min": {
+        "type": "String"
+      },
+      "max": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "bodyDeleteConfirm": "Delete this entry?",
+  "bodyDeleteTooltip": "Delete entry"
 }
