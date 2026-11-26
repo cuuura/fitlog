@@ -71,7 +71,7 @@ private fun requireWeekdays(def: ProgramDefinition, field: String = "skipPolicy"
 private fun ProgramState.toView() = InstanceState(tm, working, stage, failStreak, week, cycle, seq)
 
 /** 계획 + 인스턴스 보조운동 + (FIXED_DATE) 예정일. 호출자는 state 가 최신이라고 보장한다 */
-private fun Transaction.plannedWorkouts(
+internal fun Transaction.plannedWorkouts(
     engine: ProgramCalculator, ctx: InstanceCtx, state: ProgramState, count: Int, anchor: LocalDate?,
 ): List<PlannedWorkout> {
     val settings = engineSettings(ctx.userId, ctx.definition)
@@ -113,7 +113,7 @@ private fun Transaction.plannedWorkouts(
  * 인스턴스 응답. FIXED_DATE 는 조회 때마다 replay(지난 예정일 자동 건너뛰기 포함)로 최신 상태를 만들고,
  * SHIFT 는 저장된 state 캐시를 쓴다. 호출자는 lockUser 를 먼저 호출한다.
  */
-private fun Transaction.instanceView(engine: ProgramCalculator, row: ResultRow, withNext: Boolean = true): Instance {
+internal fun Transaction.instanceView(engine: ProgramCalculator, row: ResultRow, withNext: Boolean = true): Instance {
     var r = row
     var state: ProgramState
     var anchor: LocalDate? = null
@@ -200,7 +200,7 @@ private fun Transaction.startInstance(engine: ProgramCalculator, uid: UUID, body
     return instanceView(engine, loadInstanceRow(uid, body.id)!!)
 }
 
-private fun Transaction.patchInstance(engine: ProgramCalculator, uid: UUID, id: UUID, body: PatchInstance): Instance {
+internal fun Transaction.patchInstance(engine: ProgramCalculator, uid: UUID, id: UUID, body: PatchInstance): Instance {
     lockUser(uid)
     var row = ownInstance(uid, id)
     val status = body.status?.also { if (it !in STATUSES) validation("status must be ACTIVE, PAUSED or FINISHED", "status") }
@@ -266,7 +266,7 @@ private fun Transaction.skipInstance(engine: ProgramCalculator, uid: UUID, id: U
     return instanceView(engine, loadInstanceRow(uid, id)!!)
 }
 
-private fun Transaction.deleteInstance(uid: UUID, id: UUID) {
+internal fun Transaction.deleteInstance(uid: UUID, id: UUID) {
     lockUser(uid)
     val row = ProgramInstances.selectAll().where { ProgramInstances.id eq id }.singleOrNull() ?: return
     if (row[ProgramInstances.userId] != uid) notFound("program instance not found")

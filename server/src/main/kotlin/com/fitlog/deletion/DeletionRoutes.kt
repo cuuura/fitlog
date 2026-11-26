@@ -1,5 +1,6 @@
 package com.fitlog.deletion
 
+import com.fitlog.program.instance.deleteInstance
 import com.fitlog.core.AppConfig
 import com.fitlog.core.BodyMeasurements
 import com.fitlog.core.ChangeSeq
@@ -85,7 +86,7 @@ private fun Transaction.expirePending(uid: UUID) {
     }) { it[status] = "EXPIRED" }
 }
 
-/** ErrorCode 에 GONE 이 없어서 v0.1 에러 형식으로 직접 410 을 보낸다 */
+/** v0.1 에러 형식의 410 GONE (ErrorCode.GONE 과 같은 본문) */
 private suspend fun io.ktor.server.application.ApplicationCall.respondGone(message: String) =
     respond(HttpStatusCode.Gone, ErrorResponse(ErrorBody("GONE", message)))
 
@@ -117,12 +118,8 @@ private fun Transaction.execute(uid: UUID, entity: String, id: UUID, config: App
         val row = ProgramInstances.selectAll().where { ProgramInstances.id eq id }.singleOrNull()
         if (row == null || row[ProgramInstances.userId] != uid) false
         else {
-            // v0.2 DELETE 와 같다: 하드 삭제, 연결된 세션은 남기고 연결만 끊는다
-            WorkoutSessions.update({ WorkoutSessions.programInstanceId eq id }) {
-                it[programInstanceId] = null
-                it[serverSeq] = ChangeSeq.next
-            }
-            ProgramInstances.deleteWhere { ProgramInstances.id eq id }
+            // v0.2 DELETE 경로 그대로: 하드 삭제, 연결된 세션은 남기고 연결만 끊는다
+            deleteInstance(uid, id)
             true
         }
     }

@@ -22,6 +22,11 @@ import com.fitlog.engine.ProgramCalculator
 import com.fitlog.engine.ProgramEngine
 import com.fitlog.engine.ProgramState
 import com.fitlog.engine.SkipPolicy
+import com.fitlog.program.instance.AdjustInput
+import com.fitlog.program.instance.PatchInstance
+import com.fitlog.program.instance.instanceView
+import com.fitlog.program.instance.patchInstance
+import com.fitlog.program.instance.plannedWorkouts
 import com.fitlog.program.instance.Instance
 import com.fitlog.program.instance.InstanceCtx
 import com.fitlog.program.instance.InstanceState
@@ -86,66 +91,14 @@ internal fun Transaction.userFormula(uid: UUID): E1rmFormula =
 
 // ---------------------------------------------------------------- 인스턴스 (program.instance 의 private 함수와 같은 규칙)
 
-private fun ProgramState.toView() = InstanceState(tm, working, stage, failStreak, week, cycle, seq)
 
 internal fun Transaction.mcpPlannedWorkouts(
     engine: ProgramCalculator, ctx: InstanceCtx, state: ProgramState, count: Int, anchor: LocalDate?,
-): List<PlannedWorkout> {
-    val settings = engineSettings(ctx.userId, ctx.definition)
-    val plan = engine.plan(ctx.definition, state, count, settings)
-    if (plan.isEmpty()) return emptyList()
-    val accessories = ProgramAccessories.selectAll()
-        .where { (ProgramAccessories.instanceId eq ctx.id) and ProgramAccessories.deletedAt.isNull() }
-        .orderBy(ProgramAccessories.position to SortOrder.ASC, ProgramAccessories.id to SortOrder.ASC)
-        .toList().groupBy { it[ProgramAccessories.dayKey] }
-    var prev: LocalDate? = null
-    return plan.mapIndexed { i, p ->
-        val scheduled = if (ctx.policy == SkipPolicy.FIXED_DATE) {
-            weekdayOf(ctx.definition.days.getOrNull(p.dayIndex)?.weekday)?.let { wd ->
-                val from = if (i == 0) (anchor?.plusDays(1) ?: ctx.startDate) else prev!!.plusDays(1)
-                nextOnOrAfter(from, wd).also { prev = it }
-            }
-        } else null
-        val acc = accessories[p.dayKey].orEmpty().map { a ->
-            val aid = a[ProgramAccessories.id]
-            val w = a[ProgramAccessories.weightKg]?.toDouble()
-            PlannedExercise(
-                key = "acc:$aid",
-                exerciseId = a[ProgramAccessories.exerciseId].toString(),
-                accessory = true,
-                sets = (0 until a[ProgramAccessories.sets]).map { j ->
-                    PlannedSet("acc:$aid.$j", a[ProgramAccessories.reps], w, isAmrap = false, isWarmup = false)
-                },
-            )
-        }
-        PlannedWorkout(
-            instanceId = ctx.id, planSeq = p.planSeq, dayIndex = p.dayIndex, dayKey = p.dayKey, dayName = p.dayName,
-            week = p.week, cycle = p.cycle, scheduledDate = scheduled?.toString(), confirmed = p.confirmed,
-            exercises = p.exercises + acc,
-        )
-    }
-}
+): List<PlannedWorkout> = plannedWorkouts(engine, ctx, state, count, anchor)
 
 /** 호출자는 lockUser 를 먼저 호출한다(FIXED_DATE 는 조회 중 replay 가 쓴다) */
-internal fun Transaction.mcpInstanceView(engine: ProgramCalculator, row: ResultRow, withNext: Boolean = true): Instance {
-    var r = row
-    val state: ProgramState
-    var anchor: LocalDate? = null
-    if (r[ProgramInstances.skipPolicy] == "FIXED_DATE") {
-        val res = replayInstance(engine, r)
-        state = res.state
-        anchor = res.lastEventDate
-        r = loadInstanceRow(r[ProgramInstances.userId], r[ProgramInstances.id])!!
-    } else {
-        state = AppJson.decodeFromString(r[ProgramInstances.state])
-    }
-    val ctx = InstanceCtx(r)
-    val next = if (withNext) mcpPlannedWorkouts(engine, ctx, state, 1, anchor).firstOrNull() else null
-    return Instance(
-        id = ctx.id, programId = r[ProgramInstances.programId], name = ctx.definition.name, status = ctx.status,
-        skipPolicy = ctx.policy.name, startDate = ctx.startDate.toString(), state = state.toView(), next = next,
-    )
-}
+internal fun Transaction.mcpInstanceView(engine: ProgramCalculator, row: ResultRow, withNext: Boolean = true): Instance =
+    instanceView(engine, row, withNext)
 
 internal fun Transaction.mcpPlan(engine: ProgramCalculator, uid: UUID, id: UUID, count: Int): List<PlannedWorkout> {
     lockUser(uid)
@@ -163,45 +116,14 @@ internal fun Transaction.mcpPlan(engine: ProgramCalculator, uid: UUID, id: UUID,
     return mcpPlannedWorkouts(engine, InstanceCtx(row), state, count, anchor)
 }
 
-/** v0.2 PATCH /program-instances/{id} 와 같은 규칙: status(ACTIVE|PAUSED)·tm/working 조정 */
+/** v0.2 PATCH /program-instances/{id} 를 그대로 쓴다. MCP 는 status ACTIVE|PAUSED 만(호출자가 검사) */
 internal fun Transaction.mcpAdjustInstance(
     engine: ProgramCalculator, uid: UUID, id: UUID,
     status: String?, tm: Map<String, Double>, working: Map<String, Double>,
 ): Instance {
-    lockUser(uid)
-    val row = loadInstanceRow(uid, id) ?: notFound("program instance not found")
-    val ctx = InstanceCtx(row)
-    if (status != null && ctx.status == "FINISHED") validation("instance is FINISHED and cannot be changed", "status")
-    tm.forEach { (k, v) ->
-        if (k !in ctx.state.tm) validation("unknown tm key", "tm.$k")
-        if (!v.isFinite() || v < 0 || v > 9999.99) validation("weight must be between 0 and 9999.99", "tm.$k")
-    }
-    working.forEach { (k, v) ->
-        if (k !in ctx.state.working) validation("unknown working key", "working.$k")
-        if (!v.isFinite() || v < 0 || v > 9999.99) validation("weight must be between 0 and 9999.99", "working.$k")
-    }
-    var needsReplay = false
-    if (status != null) {
-        ProgramInstances.update({ ProgramInstances.id eq id }) {
-            it[ProgramInstances.status] = status
-            it[updatedAt] = Times.now()
-        }
-        needsReplay = true
-    }
-    if (tm.isNotEmpty() || working.isNotEmpty()) {
-        val seq = replayInstance(engine, loadInstanceRow(uid, id)!!).state.seq
-        ProgramAdjustments.insert {
-            it[ProgramAdjustments.id] = Ids.newId()
-            it[instanceId] = id
-            it[afterSeq] = seq
-            it[ProgramAdjustments.tm] = AppJson.encodeToString(tm)
-            it[ProgramAdjustments.working] = AppJson.encodeToString(working)
-            it[createdAt] = Times.now()
-        }
-        needsReplay = true
-    }
-    if (needsReplay) replayInstance(engine, loadInstanceRow(uid, id)!!)
-    return mcpInstanceView(engine, loadInstanceRow(uid, id)!!)
+    if (status != null && status != "ACTIVE" && status != "PAUSED") validation("status must be ACTIVE or PAUSED", "status")
+    val adjust = if (tm.isEmpty() && working.isEmpty()) null else AdjustInput(tm, working)
+    return patchInstance(engine, uid, id, PatchInstance(status = status, adjust = adjust))
 }
 
 // ---------------------------------------------------------------- 기록(records) — RecordsRoutes 와 같은 판정
