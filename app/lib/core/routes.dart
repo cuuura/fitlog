@@ -20,4 +20,13 @@ abstract final class Routes {
   static String sessionEdit(String id) => '/sessions/$id/edit'; // B3 지난 세션 수정
   static String sessionSummary(String id) => '/sessions/$id/summary'; // B2 세션 끝난 뒤 요약(다음 회차 무게)
   static String exerciseRecords(String exerciseId) => '/exercises/$exerciseId/records'; // B3 PR·1RM
+
+  // v0.3
+  static const ai = '/ai'; // B3 AI 연동 허브(연결 안내·연결 목록·가져오기·이력·삭제 요청·내보내기 진입)
+  static const importJson = '/ai/import'; // B1 붙여넣기·파일 → 미리보기 → 충돌 해결 → 결과
+  static const aiHistory = '/ai/history'; // B2 가져오기 이력
+  static String aiHistoryDetail(String batchId) => '/ai/history/$batchId'; // B2 묶음 상세·되돌리기
+  static const deletionRequests = '/ai/deletions'; // B2 삭제 요청 승인·거절
+  static const aiConnect = '/ai/connect'; // B3 MCP 연결 안내·연결된 AI
+  static const export = '/export'; // B3 내보내기
 }

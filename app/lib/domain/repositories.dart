@@ -4,6 +4,7 @@
 // 모든 쓰기는 로컬에 먼저 저장되고, 동기화는 구현이 알아서 예약한다(sync.md).
 // 반환하는 시각은 모두 UTC.
 
+import '../core/api/ai_dto.dart';
 import '../core/api/dto.dart';
 import '../core/api/program_dto.dart';
 
@@ -131,6 +132,43 @@ abstract interface class PlanCache {
 
   /// 이 인스턴스로 지금 세션을 시작할 때 쓸 계획. 온라인이면 확정 계획, 오프라인이면 아직 안 쓴 가장 앞 planSeq.
   Future<PlannedWorkout?> nextPlan(String instanceId);
+}
+
+/// v0.3 가져오기(AI-1, AI-6). REST 전용. 저장·되돌리기가 성공하면 구현이 동기화(pull)와 계획 캐시 갱신을 건다.
+abstract interface class ImportRepository {
+  Future<ImportPreview> preview(ImportRequest request);
+
+  /// 충돌이 없거나 모두 해결됐으면 saved, 아니면 needsResolution(새 충돌 목록).
+  Future<ImportOutcome> submit(ImportRequest request);
+  Future<List<ImportBatch>> history({DateTime? before, int limit = 20});
+  Future<ImportBatchDetail> detail(String batchId);
+  Future<ImportBatch> revert(String batchId);
+
+  /// 프롬프트 복사용 공개 스키마 주소.
+  String get importSchemaUrl;
+  String get programSchemaUrl;
+}
+
+/// v0.3 AI 삭제 요청 승인(AI-5).
+abstract interface class DeletionRequestRepository {
+  Future<List<DeletionRequest>> list({DeletionStatus? status});
+  Future<int> pendingCount();
+
+  /// 승인하면 서버가 삭제하고, 구현이 동기화를 건다. 409(이미 결정)·410(만료)은 ApiException.
+  Future<DeletionRequest> approve(String id);
+  Future<DeletionRequest> reject(String id);
+}
+
+/// v0.3 AI 연결(AI-3)과 내보내기(DAT-1, DAT-2).
+abstract interface class AiConnectionRepository {
+  Future<McpInfo> mcpInfo();
+  Future<List<AiConnection>> connections();
+  Future<void> disconnect(String connectionId);
+}
+
+abstract interface class ExportRepository {
+  Future<String> exportJson();
+  Future<String> exportCsv(CsvKind kind);
 }
 
 /// BDY-1 체중.

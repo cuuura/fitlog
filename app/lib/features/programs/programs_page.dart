@@ -7,6 +7,7 @@ import '../../core/api/program_dto.dart';
 import '../../core/routes.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../source_badge/source_badge.dart';
 import 'program_common.dart';
 import 'programs_providers.dart';
 
@@ -104,7 +105,15 @@ class _ProgramsTab extends ConsumerWidget {
         final templates = [for (final p in list) if (p.builtIn) p];
         final mine = [for (final p in list) if (!p.builtIn) p];
         Widget tile(ProgramSummary p) => ListTile(
-          title: Text(p.name),
+          title: Row(
+            children: [
+              Flexible(child: Text(p.name)),
+              if (p.source == ProgramSource.AI_JSON || p.source == ProgramSource.AI_MCP) ...[
+                const SizedBox(width: 8),
+                SourceBadge(key: Key('source-${p.id}'), source: p.source, importBatchId: p.importBatchId),
+              ],
+            ],
+          ),
           subtitle: Text([l.programDayCount(p.dayCount), if (p.description != null) p.description!].join(' · '), maxLines: 2, overflow: TextOverflow.ellipsis),
           trailing: p.builtIn
               ? const Icon(Icons.chevron_right)

@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/api/program_dto.dart';
 import '../../core/routes.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../source_badge/source_badge.dart';
 import 'program_common.dart';
 import 'programs_providers.dart';
 
@@ -27,6 +29,18 @@ class ProgramDetailPage extends ConsumerWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
             children: [
+              if (v.program.source == ProgramSource.AI_JSON || v.program.source == ProgramSource.AI_MCP)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: SourceBadge(
+                      key: const Key('program-source-badge'),
+                      source: v.program.source,
+                      importBatchId: v.program.importBatchId,
+                    ),
+                  ),
+                ),
               Text(v.program.description ?? l.programNoDescription, style: theme.textTheme.bodyMedium),
               const SizedBox(height: 16),
               Text(l.programDaysHeader, style: theme.textTheme.titleMedium),

@@ -1,6 +1,7 @@
 // 메모리 구현. 위젯 테스트와, 로컬 DB가 붙기 전 화면 개발용. 트랙 리드 소유.
 import 'dart:async';
 
+import '../../core/api/ai_dto.dart';
 import '../../core/api/dto.dart';
 import '../../core/api/program_dto.dart';
 import '../../core/ids.dart';
@@ -571,4 +572,139 @@ class MemoryPlanCache implements PlanCache {
 
   @override
   Future<PlannedWorkout?> nextPlan(String instanceId) async => (await programs.plan(instanceId, count: 1)).firstOrNull;
+}
+
+/// 테스트용 가져오기 저장소. nextPreview/nextOutcome을 채워 서버 응답을 흉내 낸다.
+class MemoryImportRepository implements ImportRepository {
+  ImportPreview nextPreview = const ImportPreview(valid: true);
+
+  /// null이면 저장 성공(새 묶음)으로 응답한다.
+  ImportOutcome? nextOutcome;
+  final List<ImportRequest> submitted = [];
+  final List<ImportBatch> batches = [];
+  final Map<String, List<ImportItem>> items = {};
+  final DateTime Function() now;
+  MemoryImportRepository({DateTime Function()? now}) : now = now ?? (() => DateTime.now().toUtc());
+
+  @override
+  String get importSchemaUrl => 'https://api.test/v1/public/schema/import.json';
+  @override
+  String get programSchemaUrl => 'https://api.test/v1/public/schema/program.json';
+
+  @override
+  Future<ImportPreview> preview(ImportRequest request) async => nextPreview;
+
+  @override
+  Future<ImportOutcome> submit(ImportRequest request) async {
+    submitted.add(request);
+    final o = nextOutcome;
+    if (o != null) return o;
+    final b = ImportBatch(
+      id: newId(),
+      createdAt: now(),
+      channel: ImportChannel.APP_JSON,
+      clientName: request.clientName,
+      summary: {'sessions': (request.bundle['sessions'] as List?)?.length ?? 0},
+    );
+    batches.insert(0, b);
+    return ImportOutcome.saved(b);
+  }
+
+  @override
+  Future<List<ImportBatch>> history({DateTime? before, int limit = 20}) async =>
+      batches.where((b) => before == null || b.createdAt.isBefore(before)).take(limit).toList();
+
+  @override
+  Future<ImportBatchDetail> detail(String batchId) async {
+    final b = batches.firstWhere((b) => b.id == batchId);
+    return ImportBatchDetail(
+      id: b.id,
+      createdAt: b.createdAt,
+      channel: b.channel,
+      clientName: b.clientName,
+      note: b.note,
+      summary: b.summary,
+      revertedAt: b.revertedAt,
+      items: items[batchId] ?? const [],
+    );
+  }
+
+  @override
+  Future<ImportBatch> revert(String batchId) async {
+    final i = batches.indexWhere((b) => b.id == batchId);
+    final b = batches[i];
+    if (b.isReverted) return b;
+    final r = ImportBatch(
+      id: b.id,
+      createdAt: b.createdAt,
+      channel: b.channel,
+      clientName: b.clientName,
+      note: b.note,
+      summary: b.summary,
+      revertedAt: now(),
+    );
+    batches[i] = r;
+    return r;
+  }
+}
+
+class MemoryDeletionRequestRepository implements DeletionRequestRepository {
+  final List<DeletionRequest> requests = [];
+  final DateTime Function() now;
+  MemoryDeletionRequestRepository({DateTime Function()? now}) : now = now ?? (() => DateTime.now().toUtc());
+
+  @override
+  Future<List<DeletionRequest>> list({DeletionStatus? status}) async =>
+      [for (final r in requests) if (status == null || r.status == status) r];
+
+  @override
+  Future<int> pendingCount() async => requests.where((r) => r.status == DeletionStatus.PENDING).length;
+
+  Future<DeletionRequest> _decide(String id, DeletionStatus to) async {
+    final i = requests.indexWhere((r) => r.id == id);
+    final r = requests[i];
+    final d = DeletionRequest(
+      id: r.id,
+      entity: r.entity,
+      entityId: r.entityId,
+      label: r.label,
+      reason: r.reason,
+      clientName: r.clientName,
+      status: to,
+      note: r.note,
+      createdAt: r.createdAt,
+      expiresAt: r.expiresAt,
+      decidedAt: now(),
+    );
+    requests[i] = d;
+    return d;
+  }
+
+  @override
+  Future<DeletionRequest> approve(String id) => _decide(id, DeletionStatus.APPROVED);
+  @override
+  Future<DeletionRequest> reject(String id) => _decide(id, DeletionStatus.REJECTED);
+}
+
+class MemoryAiConnectionRepository implements AiConnectionRepository {
+  McpInfo info = const McpInfo(mcpUrl: 'https://api.test/mcp');
+  final List<AiConnection> list = [];
+
+  @override
+  Future<McpInfo> mcpInfo() async => info;
+  @override
+  Future<List<AiConnection>> connections() async => List.of(list);
+  @override
+  Future<void> disconnect(String connectionId) async => list.removeWhere((c) => c.id == connectionId);
+}
+
+class MemoryExportRepository implements ExportRepository {
+  String json = '{"schemaVersion":1}';
+  String setsCsv = '\uFEFFdate,session_id\n';
+  String bodyCsv = '\uFEFFdate,weight_kg,source\n';
+
+  @override
+  Future<String> exportJson() async => json;
+  @override
+  Future<String> exportCsv(CsvKind kind) async => kind == CsvKind.sets ? setsCsv : bodyCsv;
 }

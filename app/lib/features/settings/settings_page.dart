@@ -209,6 +209,12 @@ class SettingsPage extends ConsumerWidget {
           header(l.settingsSectionAccount),
           if (me != null) ListTile(title: Text(me.email), subtitle: me.displayName == null ? null : Text(me.displayName!)),
           ListTile(
+            key: const Key('aiTile'),
+            title: Text(l.settingsAi),
+            subtitle: Text(l.settingsAiSubtitle),
+            onTap: () => context.push(Routes.ai),
+          ),
+          ListTile(
             key: const Key('syncTile'),
             title: Text(l.syncSheetTitle),
             onTap: () => showSyncStatusSheet(context),

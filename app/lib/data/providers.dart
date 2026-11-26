@@ -22,3 +22,22 @@ final recordsRepositoryProvider = Provider<RecordsRepository>(
   (ref) => RemoteRecordsRepository(ref.watch(apiClientProvider)),
 );
 final planCacheProvider = Provider<PlanCache>((ref) => ref.watch(planCacheImplProvider));
+
+// v0.3
+Future<void> _afterServerChange(Ref ref) async {
+  await ref.read(syncServiceProvider).syncNow();
+  await ref.read(planCacheProvider).refresh();
+}
+
+final importRepositoryProvider = Provider<ImportRepository>(
+  (ref) => RemoteImportRepository(ref.watch(apiClientProvider), afterChange: () => _afterServerChange(ref)),
+);
+final deletionRequestRepositoryProvider = Provider<DeletionRequestRepository>(
+  (ref) => RemoteDeletionRequestRepository(ref.watch(apiClientProvider), afterChange: () => _afterServerChange(ref)),
+);
+final aiConnectionRepositoryProvider = Provider<AiConnectionRepository>(
+  (ref) => RemoteAiConnectionRepository(ref.watch(apiClientProvider)),
+);
+final exportRepositoryProvider = Provider<ExportRepository>(
+  (ref) => RemoteExportRepository(ref.watch(apiClientProvider)),
+);

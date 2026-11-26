@@ -41,7 +41,8 @@ enum UserRole { MEMBER, TRAINER }
 
 enum SessionSource { APP, AI_JSON, AI_MCP, IMPORT }
 
-enum MeasurementSource { MANUAL, HEALTH_CONNECT, HEALTHKIT, OCR }
+/// v0.3: AI_JSON·AI_MCP·IMPORT 추가(가져오기로 만든 체중).
+enum MeasurementSource { MANUAL, HEALTH_CONNECT, HEALTHKIT, OCR, AI_JSON, AI_MCP, IMPORT }
 
 enum SyncEntity { exercise, workout_session, session_exercise, workout_set, body_measurement }
 
@@ -202,6 +203,10 @@ class ExerciseInput {
 class Exercise extends ExerciseInput {
   final bool builtIn;
   final DateTime updatedAt;
+
+  /// v0.3 출처(내 종목만 의미 있음). null = APP.
+  final SessionSource? source;
+  final String? importBatchId;
   const Exercise({
     required super.id,
     required super.nameKo,
@@ -211,6 +216,8 @@ class Exercise extends ExerciseInput {
     super.secondaryMuscles,
     required this.builtIn,
     required this.updatedAt,
+    this.source,
+    this.importBatchId,
   });
 
   factory Exercise.fromJson(Map<String, Object?> j) => Exercise(
@@ -222,6 +229,8 @@ class Exercise extends ExerciseInput {
         secondaryMuscles: [for (final m in (j['secondaryMuscles'] as List? ?? const [])) _enumByName(Muscle.values, m)],
         builtIn: j['builtIn'] as bool,
         updatedAt: _dt(j['updatedAt'])!,
+        source: j['source'] == null ? null : _enumByName(SessionSource.values, j['source']),
+        importBatchId: j['importBatchId'] as String?,
       );
 
   @override
@@ -411,6 +420,9 @@ class Session {
   final String? programInstanceId;
   final int? planSeq;
   final String? planDayKey;
+
+  /// v0.3: 가져오기 묶음으로 만든 세션이면 그 묶음 id(readOnly). 출처 배지·되돌리기용.
+  final String? importBatchId;
   const Session({
     required this.id,
     required this.startedAt,
@@ -423,7 +435,11 @@ class Session {
     this.programInstanceId,
     this.planSeq,
     this.planDayKey,
+    this.importBatchId,
   });
+
+  /// AI가 넣은 데이터(출처 배지 대상).
+  bool get isFromAi => source == SessionSource.AI_JSON || source == SessionSource.AI_MCP;
 
   bool get isProgram => programInstanceId != null;
 
@@ -441,9 +457,10 @@ class Session {
         programInstanceId: j['programInstanceId'] as String?,
         planSeq: j['planSeq'] as int?,
         planDayKey: j['planDayKey'] as String?,
+        importBatchId: j['importBatchId'] as String?,
       );
 
-  /// source, updatedAt은 readOnly라 보내지 않는다.
+  /// source, updatedAt, importBatchId는 readOnly라 보내지 않는다.
   Map<String, Object?> toJson() => _compact({
         'id': id,
         'startedAt': _iso(startedAt),
@@ -505,13 +522,23 @@ class BodyMeasurement {
   final DateTime measuredAt;
   final double weightKg;
   final MeasurementSource source;
-  const BodyMeasurement({required this.id, required this.measuredAt, required this.weightKg, this.source = MeasurementSource.MANUAL});
+
+  /// v0.3 readOnly.
+  final String? importBatchId;
+  const BodyMeasurement({
+    required this.id,
+    required this.measuredAt,
+    required this.weightKg,
+    this.source = MeasurementSource.MANUAL,
+    this.importBatchId,
+  });
 
   factory BodyMeasurement.fromJson(Map<String, Object?> j) => BodyMeasurement(
         id: j['id'] as String,
         measuredAt: _dt(j['measuredAt'])!,
         weightKg: _num(j['weightKg'])!,
         source: j['source'] == null ? MeasurementSource.MANUAL : _enumByName(MeasurementSource.values, j['source']),
+        importBatchId: j['importBatchId'] as String?,
       );
   Map<String, Object?> toJson() => {'id': id, 'measuredAt': _iso(measuredAt), 'weightKg': weightKg, 'source': source.name};
 }

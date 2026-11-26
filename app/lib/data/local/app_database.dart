@@ -23,6 +23,10 @@ class Exercises extends Table {
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
 
+  // v3: 출처
+  TextColumn get source => text().nullable()();
+  TextColumn get importBatchId => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -44,6 +48,9 @@ class Sessions extends Table {
   TextColumn get programInstanceId => text().nullable()();
   IntColumn get planSeq => integer().nullable()();
   TextColumn get planDayKey => text().nullable()();
+
+  // v3
+  TextColumn get importBatchId => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -110,6 +117,9 @@ class BodyMeasurements extends Table {
   DateTimeColumn get updatedAt => dateTime()();
   DateTimeColumn get deletedAt => dateTime().nullable()();
 
+  // v3
+  TextColumn get importBatchId => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -150,7 +160,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -169,6 +179,12 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(workoutSets, workoutSets.targetReps);
         await m.addColumn(workoutSets, workoutSets.targetWeightKg);
         await m.addColumn(workoutSets, workoutSets.isAmrap);
+      }
+      if (from < 3) {
+        await m.addColumn(exercises, exercises.source);
+        await m.addColumn(exercises, exercises.importBatchId);
+        await m.addColumn(sessions, sessions.importBatchId);
+        await m.addColumn(bodyMeasurements, bodyMeasurements.importBatchId);
       }
     },
   );

@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 
+import 'ai_dto.dart';
 import 'dto.dart';
 import 'program_dto.dart';
 
@@ -196,4 +197,79 @@ class ApiClient {
   Future<OneRmMeasurement> postOneRm(String exerciseId, OneRmMeasurement m) => _call(() async =>
       OneRmMeasurement.fromJson(_map(await dio.post('/v1/exercises/$exerciseId/one-rm', data: m.toJson()))));
   Future<void> deleteOneRm(String id) => _call(() async => dio.delete('/v1/one-rm/$id'));
+
+  // ---------- v0.3: 가져오기 ----------
+
+  /// 공개 스키마 주소(프롬프트 복사용, 인증 없음).
+  String get importSchemaUrl => '${dio.options.baseUrl}/v1/public/schema/import.json';
+  String get programSchemaUrl => '${dio.options.baseUrl}/v1/public/schema/program.json';
+
+  /// 저장 없이 검증·충돌 탐지. 스키마 위반이면 ApiException(VALIDATION_FAILED, details).
+  Future<ImportPreview> previewImport(ImportRequest r) =>
+      _call(() async => ImportPreview.fromJson(_map(await dio.post('/v1/imports/preview', data: r.toJson()))));
+
+  /// 저장 시도. 201/200이면 saved, 409(CONFLICT_UNRESOLVED)면 needsResolution.
+  Future<ImportOutcome> submitImport(ImportRequest r) => _call(() async {
+        try {
+          return ImportOutcome.saved(ImportBatch.fromJson(_map(await dio.post('/v1/imports', data: r.toJson()))));
+        } on DioException catch (e) {
+          final res = e.response;
+          if (res?.statusCode == 409 && res!.data is Map && (res.data as Map).containsKey('conflicts')) {
+            return ImportOutcome.needsResolution(ImportPreview.fromJson((res.data as Map).cast()));
+          }
+          rethrow;
+        }
+      });
+  Future<List<ImportBatch>> getImports({DateTime? before, int limit = 20}) => _call(() async => [
+        for (final j in _list(await dio.get('/v1/imports', queryParameters: {
+          'before': ?before?.toUtc().toIso8601String(),
+          'limit': limit,
+        })))
+          ImportBatch.fromJson(j)
+      ]);
+  Future<ImportBatchDetail> getImport(String id) =>
+      _call(() async => ImportBatchDetail.fromJson(_map(await dio.get('/v1/imports/$id'))));
+  Future<ImportBatch> revertImport(String id) =>
+      _call(() async => ImportBatch.fromJson(_map(await dio.post('/v1/imports/$id/revert'))));
+
+  // ---------- v0.3: 삭제 요청 ----------
+
+  Future<List<DeletionRequest>> getDeletionRequests({DeletionStatus? status}) => _call(() async => [
+        for (final j in _list(await dio.get('/v1/deletion-requests', queryParameters: {'status': ?status?.name})))
+          DeletionRequest.fromJson(j)
+      ]);
+  Future<int> getPendingDeletionCount() =>
+      _call(() async => (_map(await dio.get('/v1/deletion-requests/count'))['pending'] as num).toInt());
+
+  /// 409 이미 결정됨, 410 GONE(만료)은 ApiException.
+  Future<DeletionRequest> approveDeletion(String id) =>
+      _call(() async => DeletionRequest.fromJson(_map(await dio.post('/v1/deletion-requests/$id/approve'))));
+  Future<DeletionRequest> rejectDeletion(String id) =>
+      _call(() async => DeletionRequest.fromJson(_map(await dio.post('/v1/deletion-requests/$id/reject'))));
+
+  // ---------- v0.3: AI 연결 ----------
+
+  Future<List<AiConnection>> getAiConnections() =>
+      _call(() async => [for (final j in _list(await dio.get('/v1/me/ai-connections'))) AiConnection.fromJson(j)]);
+  Future<void> deleteAiConnection(String id) => _call(() async => dio.delete('/v1/me/ai-connections/$id'));
+  Future<McpInfo> getMcpInfo() => _call(() async => McpInfo.fromJson(_map(await dio.get('/v1/mcp-info'))));
+
+  // ---------- v0.3: 내보내기 ----------
+
+  /// 가져오기 묶음 형식 JSON 원문.
+  Future<String> exportJson() => _call(() async {
+        final r = await dio.get<String>('/v1/export.json', options: Options(responseType: ResponseType.plain));
+        return r.data ?? '';
+      });
+
+  /// CSV 원문. 디코딩 과정에서 BOM이 빠지므로 다시 붙인다(엑셀 한글 깨짐 방지).
+  Future<String> exportCsv(CsvKind kind) => _call(() async {
+    final r = await dio.get<String>(
+      '/v1/export.csv',
+      queryParameters: {'kind': kind.name},
+      options: Options(responseType: ResponseType.plain),
+    );
+    final text = r.data ?? '';
+    return text.startsWith('\uFEFF') ? text : '\uFEFF$text';
+  });
 }

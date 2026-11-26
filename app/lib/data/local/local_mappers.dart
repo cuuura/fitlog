@@ -20,6 +20,8 @@ Exercise exerciseOf(ExerciseRow r) => Exercise(
   secondaryMuscles: parseMuscles(r.secondaryMuscles),
   builtIn: r.builtIn,
   updatedAt: r.updatedAt.toUtc(),
+  source: r.source == null ? null : SessionSource.values.byName(r.source!),
+  importBatchId: r.importBatchId,
 );
 
 WorkoutSet setOf(WorkoutSetRow r) => WorkoutSet(
@@ -65,6 +67,7 @@ Session sessionOf(SessionRow r, List<SessionExercise> exercises) => Session(
   programInstanceId: r.programInstanceId,
   planSeq: r.planSeq,
   planDayKey: r.planDayKey,
+  importBatchId: r.importBatchId,
 );
 
 BodyMeasurement measurementOf(BodyMeasurementRow r) => BodyMeasurement(
@@ -72,6 +75,7 @@ BodyMeasurement measurementOf(BodyMeasurementRow r) => BodyMeasurement(
   measuredAt: r.measuredAt.toUtc(),
   weightKg: r.weightKg,
   source: MeasurementSource.values.byName(r.source),
+  importBatchId: r.importBatchId,
 );
 
 // ---------- 행 -> sync payload (중첩 없음) ----------
@@ -110,6 +114,7 @@ SessionsCompanion sessionCompanion(Session s, {required DateTime updatedAt}) => 
   programInstanceId: Value(s.programInstanceId),
   planSeq: Value(s.planSeq),
   planDayKey: Value(s.planDayKey),
+  importBatchId: Value(s.importBatchId),
 );
 
 WorkoutSetsCompanion setCompanion(WorkoutSet w, {required String sessionExerciseId, required DateTime updatedAt}) =>
@@ -147,6 +152,8 @@ ExercisesCompanion exerciseCompanion(Exercise e, {DateTime? updatedAt}) => Exerc
   builtIn: Value(e.builtIn),
   updatedAt: Value((updatedAt ?? e.updatedAt).toUtc()),
   deletedAt: const Value(null),
+  source: Value(e.source?.name),
+  importBatchId: Value(e.importBatchId),
 );
 
 // ---------- 서버 Change를 로컬에 덮어쓰기 ----------
@@ -200,6 +207,7 @@ extension ApplyServerChange on AppDatabase {
               source: Value(m.source.name),
               updatedAt: Value(at),
               deletedAt: const Value(null),
+              importBatchId: Value(m.importBatchId),
             ),
           );
       }

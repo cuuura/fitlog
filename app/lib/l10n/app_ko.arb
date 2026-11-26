@@ -791,5 +791,531 @@
   "settingsE1rmBrzyckiDesc": "무게 × 36 / (37 − 횟수). 낮은 횟수에서 잘 맞아요.",
   "settingsE1rmLombardiDesc": "무게 × 횟수^0.10. 횟수가 늘어도 완만하게 올라가요.",
   "settingsE1rmNote": "1~10회 세트만 추정에 쓰고, 워밍업은 뺍니다.",
-  "profileClear": "지우기"
+  "profileClear": "지우기",
+  "settingsAi": "AI 연동",
+  "settingsAiSubtitle": "AI 연결, JSON 가져오기, 삭제 요청, 내보내기",
+  "importTitle": "JSON 가져오기",
+  "importInputIntro": "AI가 만든 JSON을 붙여넣거나 파일로 불러오세요.",
+  "importPasteHint": "여기에 JSON을 붙여넣으세요",
+  "importPasteClipboard": "클립보드에서 붙여넣기",
+  "importPickFile": "파일 선택",
+  "importClipboardEmpty": "클립보드가 비어 있어요.",
+  "importFileReadError": "파일을 읽지 못했어요. UTF-8 JSON 파일인지 확인해 주세요.",
+  "importClientLabel": "어느 AI가 만들었나요?",
+  "importClientClaude": "Claude",
+  "importClientChatGpt": "ChatGPT",
+  "importClientGemini": "Gemini",
+  "importClientOther": "기타",
+  "importCopyPrompt": "AI에게 줄 프롬프트 복사",
+  "importPromptCopied": "프롬프트를 복사했어요. AI에게 붙여넣고 요청을 이어서 적으세요.",
+  "importPreviewButton": "미리보기",
+  "importParseError": "JSON 오류: {line}줄 {column}열 근처를 확인해 주세요.",
+  "@importParseError": {
+    "placeholders": {
+      "line": {
+        "type": "int"
+      },
+      "column": {
+        "type": "int"
+      }
+    }
+  },
+  "importParseNotObject": "JSON 객체(중괄호로 감싼 형태)여야 해요.",
+  "importParseEmpty": "붙여넣은 내용이 없어요.",
+  "importValidationTitle": "형식이 맞지 않아 저장할 수 없어요",
+  "importValidationHint": "AI에게 아래 오류를 알려 주고 다시 만들어 달라고 하세요.",
+  "importBackToInput": "입력으로 돌아가기",
+  "importErrorGeneric": "처리하지 못했어요: {message}",
+  "@importErrorGeneric": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "importErrorNetwork": "서버에 연결하지 못했어요. 네트워크를 확인해 주세요.",
+  "importPreviewTitle": "가져올 내용",
+  "importChunkProgress": "{index}/{total} 묶음",
+  "@importChunkProgress": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "importChunkInfo": "기록이 많아 {total}개 묶음으로 나눠 저장해요.",
+  "@importChunkInfo": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "importCountKindExercises": "종목",
+  "importCountKindPrograms": "프로그램",
+  "importCountKindStartPrograms": "프로그램 시작",
+  "importCountKindSessions": "세션",
+  "importCountKindBodyMeasurements": "체중",
+  "importCountNew": "새로 {n}",
+  "@importCountNew": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importCountUnchanged": "변경 없음 {n}",
+  "@importCountUnchanged": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importCountReplace": "덮어쓰기 {n}",
+  "@importCountReplace": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importCountSkip": "건너뜀 {n}",
+  "@importCountSkip": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importNoConflicts": "충돌이 없어요. 바로 저장할 수 있어요.",
+  "importConflictsTitle": "충돌 {n}건",
+  "@importConflictsTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSkipAll": "모두 건너뛰기",
+  "importResolveAllHint": "모든 충돌을 해결해야 저장할 수 있어요.",
+  "importSave": "저장",
+  "importSaving": "저장하는 중…",
+  "importPreviewing": "확인하는 중…",
+  "importExisting": "기존 데이터",
+  "importConflictSessionOverlap": "세션이 겹쳐요",
+  "importConflictUnknownExercise": "없는 종목이에요",
+  "importConflictBodySameDay": "같은 날 체중 기록이 있어요",
+  "importConflictProgramNameExists": "같은 이름의 프로그램이 있어요",
+  "importConflictIdExists": "이미 있는 id인데 내용이 달라요",
+  "importConflictPlanMismatch": "프로그램 회차가 맞지 않아요",
+  "importConflictInstanceNeedsValue": "시작에 필요한 무게 값이 없어요",
+  "importActionSkip": "건너뛰기",
+  "importActionKeepBoth": "둘 다 두기",
+  "importActionReplace": "기존 것 덮어쓰기",
+  "importActionMapTo": "기존 종목으로 연결",
+  "importActionCreate": "새 종목으로 만들기",
+  "importActionUnlink": "프로그램 연결 없이 저장",
+  "importActionSet": "값 입력",
+  "importReplaceWarning": "기존 데이터가 지워져요. 이력에서 되돌리기로 복원할 수 있어요.",
+  "importCandidates": "비슷한 종목",
+  "importPickOtherExercise": "다른 종목 선택",
+  "importCreateSheetTitle": "새 종목 정보",
+  "importCreateType": "유형",
+  "importCreateMuscle": "주 부위",
+  "importCreateConfirm": "확인",
+  "importCreatedSummary": "{type} · {muscle}",
+  "@importCreatedSummary": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "muscle": {
+        "type": "String"
+      }
+    }
+  },
+  "importSetSheetTitle": "시작 무게 입력",
+  "importSetTm": "TM(트레이닝 맥스) {unit}",
+  "@importSetTm": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "importSetWorking": "작업 무게 {unit}",
+  "@importSetWorking": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "importSetNoKeys": "입력할 항목을 알 수 없어요. 건너뛰기를 고르세요.",
+  "importSetSummary": "값 {n}개 입력됨",
+  "@importSetSummary": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSetInvalid": "0보다 큰 숫자를 입력해 주세요.",
+  "importResultTitle": "가져오기 완료",
+  "importResultNothing": "새로 저장된 항목이 없어요.",
+  "importSummaryExercises": "종목 {n}",
+  "@importSummaryExercises": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryPrograms": "프로그램 {n}",
+  "@importSummaryPrograms": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryInstances": "진행 중 프로그램 {n}",
+  "@importSummaryInstances": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummarySessions": "세션 {n}",
+  "@importSummarySessions": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryBody": "체중 {n}",
+  "@importSummaryBody": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryReplaced": "덮어씀 {n}",
+  "@importSummaryReplaced": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importViewHistory": "이력에서 보기",
+  "importNextChunk": "다음 묶음 확인",
+  "importDone": "완료",
+  "importFileLoaded": "파일을 불러왔어요 ({kb}KB)",
+  "@importFileLoaded": {
+    "placeholders": {
+      "kb": {
+        "type": "int"
+      }
+    }
+  },
+  "importClear": "지우기",
+  "sourceAiJson": "AI·JSON",
+  "sourceAiMcp": "AI·MCP",
+  "sourceImport": "가져옴",
+  "aiHistoryTitle": "가져오기 이력",
+  "aiHistoryEmpty": "아직 AI로 만든 묶음이 없어요",
+  "aiHistoryLoadMore": "더 보기",
+  "aiHistoryChannelApp": "앱 JSON",
+  "aiHistoryChannelMcp": "MCP",
+  "aiHistoryReverted": "되돌림",
+  "aiHistorySummarySessions": "세션 {n}",
+  "@aiHistorySummarySessions": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistorySummaryPrograms": "프로그램 {n}",
+  "@aiHistorySummaryPrograms": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistorySummaryReplaced": "교체 {n}",
+  "@aiHistorySummaryReplaced": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistorySummaryOther": "{key} {n}",
+  "@aiHistorySummaryOther": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistoryDetailTitle": "묶음 상세",
+  "aiHistoryActionCreated": "생성",
+  "aiHistoryActionReplacedOld": "교체됨(이전 것)",
+  "aiHistoryRevert": "되돌리기",
+  "aiHistoryRevertTitle": "이 묶음을 되돌릴까요?",
+  "aiHistoryRevertCreated": "이 묶음으로 만든 {list}가 지워집니다.",
+  "@aiHistoryRevertCreated": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "aiHistoryRevertNothingCreated": "지워지는 항목은 없습니다.",
+  "aiHistoryRevertRestored": "교체된 {n}개가 복원됩니다.",
+  "@aiHistoryRevertRestored": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistoryRevertDone": "되돌렸어요",
+  "aiHistoryRevertFailed": "되돌리지 못했어요",
+  "aiHistoryRevertedAt": "{time}에 되돌림",
+  "@aiHistoryRevertedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "aiHistoryNoItems": "항목이 없어요",
+  "aiEntityExercise": "종목",
+  "aiEntityProgram": "프로그램",
+  "aiEntityProgramInstance": "진행 중 프로그램",
+  "aiEntitySession": "세션",
+  "aiEntityBody": "체중 기록",
+  "aiCountExercise": "종목 {n}개",
+  "@aiCountExercise": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountProgram": "프로그램 {n}개",
+  "@aiCountProgram": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountProgramInstance": "진행 중 프로그램 {n}개",
+  "@aiCountProgramInstance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountSession": "세션 {n}개",
+  "@aiCountSession": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountBody": "체중 기록 {n}개",
+  "@aiCountBody": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "deletionTitle": "AI 삭제 요청",
+  "deletionTabPending": "대기",
+  "deletionTabDone": "처리됨",
+  "deletionEmptyPending": "대기 중인 요청이 없어요",
+  "deletionEmptyDone": "처리된 요청이 없어요",
+  "deletionRequestedBy": "요청한 AI: {name}",
+  "@deletionRequestedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionReason": "사유: {reason}",
+  "@deletionReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionRequestedAt": "요청 {time}",
+  "@deletionRequestedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionExpiresIn": "만료까지 {time}",
+  "@deletionExpiresIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionExpired": "만료됨",
+  "deletionDurationHm": "{h}시간 {m}분",
+  "@deletionDurationHm": {
+    "placeholders": {
+      "h": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "deletionDurationM": "{m}분",
+  "@deletionDurationM": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "deletionApprove": "승인",
+  "deletionReject": "거절",
+  "deletionApproveTitle": "삭제합니다, 되돌릴 수 없습니다",
+  "deletionApproveBody": "{label}을(를) 삭제할까요?",
+  "@deletionApproveBody": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionRejectTitle": "이 요청을 거절할까요?",
+  "deletionApproved": "삭제했어요",
+  "deletionRejected": "거절했어요",
+  "deletionAlreadyDecided": "이미 처리된 요청이에요",
+  "deletionGone": "만료된 요청이에요",
+  "deletionFailed": "처리하지 못했어요",
+  "deletionStatusApproved": "승인됨",
+  "deletionStatusRejected": "거절됨",
+  "deletionStatusExpired": "만료됨",
+  "deletionBanner": "AI가 삭제를 요청했어요 ({n}건)",
+  "@deletionBanner": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHubTitle": "AI 연동",
+  "aiHubConnect": "AI 연결(MCP)",
+  "aiHubConnectDesc": "Claude·ChatGPT·Gemini 같은 AI가 내 운동 기록을 읽고 쓰도록 연결해요.",
+  "aiHubConnectedCount": "연결된 AI {count}개",
+  "@aiHubConnectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHubImport": "JSON 붙여넣기로 가져오기",
+  "aiHubImportDesc": "AI가 만들어 준 운동 기록·프로그램 JSON을 붙여 넣어 가져와요.",
+  "aiHubHistory": "가져오기 이력",
+  "aiHubHistoryDesc": "AI로 들어온 기록을 확인하고 되돌려요.",
+  "aiHubDeletions": "삭제 요청",
+  "aiHubDeletionsDesc": "AI가 요청한 삭제를 승인하거나 거절해요.",
+  "aiHubPending": "대기 {count}건",
+  "@aiHubPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHubExport": "내보내기",
+  "aiHubExportDesc": "전체 백업(JSON)과 엑셀용 CSV로 내 데이터를 저장해요.",
+  "aiConnectTitle": "AI 연결",
+  "aiConnectUrlLabel": "MCP 주소",
+  "aiConnectCopyUrl": "주소 복사",
+  "aiConnectCopied": "복사했어요.",
+  "aiConnectPermission": "AI는 읽기·쓰기만 하고, 삭제는 앱에서 승인해야 실행돼요.",
+  "aiConnectGuides": "AI별 연결 방법",
+  "aiConnectDocUrl": "안내 주소",
+  "aiConnectCopyDoc": "안내 주소 복사",
+  "aiConnectDefaultName": "내 AI 앱",
+  "aiConnectDefaultStep1": "AI 앱의 설정 → 커넥터로 가요.",
+  "aiConnectDefaultStep2": "사용자 지정 커넥터 추가를 눌러요.",
+  "aiConnectDefaultStep3": "위의 MCP 주소를 붙여 넣어요.",
+  "aiConnectDefaultStep4": "fitlog 계정으로 로그인하고 권한을 허용해요.",
+  "aiConnectConnected": "연결된 AI",
+  "aiConnectNone": "아직 연결된 AI가 없어요.",
+  "aiConnectRead": "읽기",
+  "aiConnectWrite": "쓰기",
+  "aiConnectCreated": "연결 {date}",
+  "@aiConnectCreated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "aiConnectLastUsed": "마지막 사용 {date}",
+  "@aiConnectLastUsed": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "aiConnectNeverUsed": "아직 사용 안 함",
+  "aiConnectDisconnect": "연결 끊기",
+  "aiConnectDisconnectTitle": "{name} 연결을 끊을까요?",
+  "@aiConnectDisconnectTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiConnectDisconnectBody": "이 AI는 더 이상 내 기록에 접근할 수 없어요. 이미 가져온 기록은 그대로 남아요.",
+  "aiConnectCancel": "취소",
+  "aiConnectLoadFailed": "불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요. AI 연결은 온라인에서만 쓸 수 있어요.",
+  "aiConnectActionFailed": "처리하지 못했어요. 다시 시도해 주세요.",
+  "aiConnectRetry": "다시 시도",
+  "exportTitle": "내보내기",
+  "exportJson": "전체 백업(JSON)",
+  "exportJsonDesc": "모든 기록을 한 파일로 저장해요. 다른 계정·기기로 옮길 수 있어요. 새 계정에서 AI 연동 → JSON 가져오기로 복원해요.",
+  "exportSets": "세트 기록 CSV(엑셀)",
+  "exportSetsDesc": "세트마다 한 줄씩, 엑셀에서 열 수 있는 표로 저장해요.",
+  "exportBody": "체중 CSV",
+  "exportBodyDesc": "체중 기록을 엑셀에서 열 수 있는 표로 저장해요.",
+  "exportDone": "파일을 만들었어요. 공유 화면에서 저장할 곳을 골라 주세요.",
+  "exportFailed": "내보내지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요."
 }

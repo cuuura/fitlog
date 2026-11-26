@@ -7,6 +7,7 @@ import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
+import '../source_badge/source_badge.dart';
 import 'active_session_page.dart' show confirmDialog;
 import 'session_controller.dart';
 import 'session_format.dart';
@@ -64,6 +65,14 @@ class SessionDetailPage extends ConsumerWidget {
             ' · ${l.sessionVolume(formatVolume(sessionVolumeKg(s), unit))}',
             key: const Key('detail-header'),
           ),
+          if (s.source != null && s.source != SessionSource.APP)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: SourceBadge(key: const Key('detail-source-badge'), source: s.source, importBatchId: s.importBatchId),
+              ),
+            ),
           if (s.note != null) Padding(padding: const EdgeInsets.only(top: 8), child: Text(s.note!)),
           const SizedBox(height: 12),
           for (final se in s.exercises)

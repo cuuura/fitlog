@@ -719,5 +719,531 @@
   "settingsE1rmBrzyckiDesc": "Weight × 36 / (37 − reps). Fits low reps well.",
   "settingsE1rmLombardiDesc": "Weight × reps^0.10. Rises gently as reps grow.",
   "settingsE1rmNote": "Only sets of 1–10 reps count; warm-ups are excluded.",
-  "profileClear": "Clear"
+  "profileClear": "Clear",
+  "settingsAi": "AI integration",
+  "settingsAiSubtitle": "Connect AI, import JSON, deletion requests, export",
+  "importTitle": "Import JSON",
+  "importInputIntro": "Paste the JSON an AI made, or load it from a file.",
+  "importPasteHint": "Paste the JSON here",
+  "importPasteClipboard": "Paste from clipboard",
+  "importPickFile": "Choose file",
+  "importClipboardEmpty": "The clipboard is empty.",
+  "importFileReadError": "Couldn't read the file. Check that it is a UTF-8 JSON file.",
+  "importClientLabel": "Which AI made it?",
+  "importClientClaude": "Claude",
+  "importClientChatGpt": "ChatGPT",
+  "importClientGemini": "Gemini",
+  "importClientOther": "Other",
+  "importCopyPrompt": "Copy prompt for the AI",
+  "importPromptCopied": "Prompt copied. Paste it to the AI and add your request.",
+  "importPreviewButton": "Preview",
+  "importParseError": "JSON error near line {line}, column {column}.",
+  "@importParseError": {
+    "placeholders": {
+      "line": {
+        "type": "int"
+      },
+      "column": {
+        "type": "int"
+      }
+    }
+  },
+  "importParseNotObject": "The JSON must be a single object wrapped in curly braces.",
+  "importParseEmpty": "Nothing to import.",
+  "importValidationTitle": "The format is invalid, so it can't be saved",
+  "importValidationHint": "Tell the AI about the errors below and ask it to try again.",
+  "importBackToInput": "Back to input",
+  "importErrorGeneric": "Something went wrong: {message}",
+  "@importErrorGeneric": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "importErrorNetwork": "Couldn't reach the server. Check your connection.",
+  "importPreviewTitle": "What will be imported",
+  "importChunkProgress": "Batch {index}/{total}",
+  "@importChunkProgress": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "importChunkInfo": "There is a lot of data, so it is saved in {total} batches.",
+  "@importChunkInfo": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "importCountKindExercises": "Exercises",
+  "importCountKindPrograms": "Programs",
+  "importCountKindStartPrograms": "Program starts",
+  "importCountKindSessions": "Sessions",
+  "importCountKindBodyMeasurements": "Body weight",
+  "importCountNew": "{n} new",
+  "@importCountNew": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importCountUnchanged": "{n} unchanged",
+  "@importCountUnchanged": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importCountReplace": "{n} replaced",
+  "@importCountReplace": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importCountSkip": "{n} skipped",
+  "@importCountSkip": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importNoConflicts": "No conflicts. Ready to save.",
+  "importConflictsTitle": "{n} conflicts",
+  "@importConflictsTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSkipAll": "Skip all",
+  "importResolveAllHint": "Resolve every conflict to save.",
+  "importSave": "Save",
+  "importSaving": "Saving…",
+  "importPreviewing": "Checking…",
+  "importExisting": "Existing data",
+  "importConflictSessionOverlap": "Session overlaps",
+  "importConflictUnknownExercise": "Unknown exercise",
+  "importConflictBodySameDay": "Body weight already logged that day",
+  "importConflictProgramNameExists": "A program with this name exists",
+  "importConflictIdExists": "Id exists with different content",
+  "importConflictPlanMismatch": "Program plan number doesn't match",
+  "importConflictInstanceNeedsValue": "Starting weights are missing",
+  "importActionSkip": "Skip",
+  "importActionKeepBoth": "Keep both",
+  "importActionReplace": "Replace existing",
+  "importActionMapTo": "Use an existing exercise",
+  "importActionCreate": "Create as new exercise",
+  "importActionUnlink": "Save without program link",
+  "importActionSet": "Enter values",
+  "importReplaceWarning": "The existing data is deleted. You can restore it by reverting from history.",
+  "importCandidates": "Similar exercises",
+  "importPickOtherExercise": "Choose another exercise",
+  "importCreateSheetTitle": "New exercise",
+  "importCreateType": "Type",
+  "importCreateMuscle": "Primary muscle",
+  "importCreateConfirm": "Confirm",
+  "importCreatedSummary": "{type} · {muscle}",
+  "@importCreatedSummary": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "muscle": {
+        "type": "String"
+      }
+    }
+  },
+  "importSetSheetTitle": "Starting weights",
+  "importSetTm": "Training max ({unit})",
+  "@importSetTm": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "importSetWorking": "Working weight ({unit})",
+  "@importSetWorking": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "importSetNoKeys": "Nothing to fill in. Choose skip.",
+  "importSetSummary": "{n} values entered",
+  "@importSetSummary": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSetInvalid": "Enter a number greater than 0.",
+  "importResultTitle": "Import complete",
+  "importResultNothing": "Nothing new was saved.",
+  "importSummaryExercises": "Exercises {n}",
+  "@importSummaryExercises": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryPrograms": "Programs {n}",
+  "@importSummaryPrograms": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryInstances": "Program starts {n}",
+  "@importSummaryInstances": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummarySessions": "Sessions {n}",
+  "@importSummarySessions": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryBody": "Body weight {n}",
+  "@importSummaryBody": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryReplaced": "Replaced {n}",
+  "@importSummaryReplaced": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importViewHistory": "View in history",
+  "importNextChunk": "Next batch",
+  "importDone": "Done",
+  "importFileLoaded": "File loaded ({kb} KB)",
+  "@importFileLoaded": {
+    "placeholders": {
+      "kb": {
+        "type": "int"
+      }
+    }
+  },
+  "importClear": "Clear",
+  "sourceAiJson": "AI·JSON",
+  "sourceAiMcp": "AI·MCP",
+  "sourceImport": "Imported",
+  "aiHistoryTitle": "Import history",
+  "aiHistoryEmpty": "Nothing created by AI yet",
+  "aiHistoryLoadMore": "Load more",
+  "aiHistoryChannelApp": "App JSON",
+  "aiHistoryChannelMcp": "MCP",
+  "aiHistoryReverted": "Reverted",
+  "aiHistorySummarySessions": "Sessions {n}",
+  "@aiHistorySummarySessions": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistorySummaryPrograms": "Programs {n}",
+  "@aiHistorySummaryPrograms": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistorySummaryReplaced": "Replaced {n}",
+  "@aiHistorySummaryReplaced": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistorySummaryOther": "{key} {n}",
+  "@aiHistorySummaryOther": {
+    "placeholders": {
+      "key": {
+        "type": "String"
+      },
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistoryDetailTitle": "Batch details",
+  "aiHistoryActionCreated": "Created",
+  "aiHistoryActionReplacedOld": "Replaced (old one)",
+  "aiHistoryRevert": "Revert",
+  "aiHistoryRevertTitle": "Revert this batch?",
+  "aiHistoryRevertCreated": "{list} created by this batch will be deleted.",
+  "@aiHistoryRevertCreated": {
+    "placeholders": {
+      "list": {
+        "type": "String"
+      }
+    }
+  },
+  "aiHistoryRevertNothingCreated": "Nothing will be deleted.",
+  "aiHistoryRevertRestored": "{n} replaced item(s) will be restored.",
+  "@aiHistoryRevertRestored": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHistoryRevertDone": "Reverted",
+  "aiHistoryRevertFailed": "Could not revert",
+  "aiHistoryRevertedAt": "Reverted at {time}",
+  "@aiHistoryRevertedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "aiHistoryNoItems": "No items",
+  "aiEntityExercise": "Exercise",
+  "aiEntityProgram": "Program",
+  "aiEntityProgramInstance": "Active program",
+  "aiEntitySession": "Session",
+  "aiEntityBody": "Body weight entry",
+  "aiCountExercise": "{n} exercise(s)",
+  "@aiCountExercise": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountProgram": "{n} program(s)",
+  "@aiCountProgram": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountProgramInstance": "{n} active program(s)",
+  "@aiCountProgramInstance": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountSession": "{n} session(s)",
+  "@aiCountSession": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiCountBody": "{n} body weight entry(ies)",
+  "@aiCountBody": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "deletionTitle": "AI deletion requests",
+  "deletionTabPending": "Pending",
+  "deletionTabDone": "Decided",
+  "deletionEmptyPending": "No pending requests",
+  "deletionEmptyDone": "No decided requests",
+  "deletionRequestedBy": "Requested by: {name}",
+  "@deletionRequestedBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionReason": "Reason: {reason}",
+  "@deletionReason": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionRequestedAt": "Requested {time}",
+  "@deletionRequestedAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionExpiresIn": "Expires in {time}",
+  "@deletionExpiresIn": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionExpired": "Expired",
+  "deletionDurationHm": "{h}h {m}m",
+  "@deletionDurationHm": {
+    "placeholders": {
+      "h": {
+        "type": "int"
+      },
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "deletionDurationM": "{m}m",
+  "@deletionDurationM": {
+    "placeholders": {
+      "m": {
+        "type": "int"
+      }
+    }
+  },
+  "deletionApprove": "Approve",
+  "deletionReject": "Reject",
+  "deletionApproveTitle": "This will delete it and cannot be undone",
+  "deletionApproveBody": "Delete {label}?",
+  "@deletionApproveBody": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "deletionRejectTitle": "Reject this request?",
+  "deletionApproved": "Deleted",
+  "deletionRejected": "Rejected",
+  "deletionAlreadyDecided": "This request was already decided",
+  "deletionGone": "This request has expired",
+  "deletionFailed": "Could not process the request",
+  "deletionStatusApproved": "Approved",
+  "deletionStatusRejected": "Rejected",
+  "deletionStatusExpired": "Expired",
+  "deletionBanner": "AI requested deletion ({n})",
+  "@deletionBanner": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiHubTitle": "AI",
+  "aiHubConnect": "Connect AI (MCP)",
+  "aiHubConnectDesc": "Let AI apps like Claude, ChatGPT and Gemini read and write your workout log.",
+  "aiHubConnectedCount": "{count} connected",
+  "aiHubImport": "Import by pasting JSON",
+  "aiHubImportDesc": "Paste workout or program JSON made by an AI.",
+  "aiHubHistory": "Import history",
+  "aiHubHistoryDesc": "Review what AI added and undo it.",
+  "aiHubDeletions": "Deletion requests",
+  "aiHubDeletionsDesc": "Approve or reject deletions requested by AI.",
+  "aiHubPending": "{count} pending",
+  "aiHubExport": "Export",
+  "aiHubExportDesc": "Save your data as a full backup (JSON) or CSV for spreadsheets.",
+  "aiConnectTitle": "Connect AI",
+  "aiConnectUrlLabel": "MCP address",
+  "aiConnectCopyUrl": "Copy address",
+  "aiConnectCopied": "Copied.",
+  "aiConnectPermission": "AI can only read and write. Deletions run only after you approve them in the app.",
+  "aiConnectGuides": "How to connect",
+  "aiConnectDocUrl": "Guide address",
+  "aiConnectCopyDoc": "Copy guide address",
+  "aiConnectDefaultName": "Your AI app",
+  "aiConnectDefaultStep1": "Open Settings → Connectors in the AI app.",
+  "aiConnectDefaultStep2": "Choose Add custom connector.",
+  "aiConnectDefaultStep3": "Paste the MCP address above.",
+  "aiConnectDefaultStep4": "Sign in with your fitlog account and allow access.",
+  "aiConnectConnected": "Connected AI",
+  "aiConnectNone": "No AI connected yet.",
+  "aiConnectRead": "Read",
+  "aiConnectWrite": "Write",
+  "aiConnectCreated": "Connected {date}",
+  "aiConnectLastUsed": "Last used {date}",
+  "aiConnectNeverUsed": "Not used yet",
+  "aiConnectDisconnect": "Disconnect",
+  "aiConnectDisconnectTitle": "Disconnect {name}?",
+  "aiConnectDisconnectBody": "This AI can no longer access your data. Records already imported stay.",
+  "aiConnectCancel": "Cancel",
+  "aiConnectLoadFailed": "Could not load. Check your connection and try again. AI connections need internet.",
+  "aiConnectActionFailed": "Something went wrong. Try again.",
+  "aiConnectRetry": "Retry",
+  "exportTitle": "Export",
+  "exportJson": "Full backup (JSON)",
+  "exportJsonDesc": "Saves everything in one file to move to another account or device. Restore it in the new account via AI → Import JSON.",
+  "exportSets": "Set log CSV (Excel)",
+  "exportSetsDesc": "One row per set, as a table you can open in Excel.",
+  "exportBody": "Body weight CSV",
+  "exportBodyDesc": "Your body weight entries as a table you can open in Excel.",
+  "exportDone": "File ready. Pick where to save it in the share sheet.",
+  "exportFailed": "Could not export. Check your connection and try again.",
+  "@aiHubConnectedCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@aiHubPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "@aiConnectCreated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@aiConnectLastUsed": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "@aiConnectDisconnectTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  }
 }

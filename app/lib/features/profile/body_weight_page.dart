@@ -10,6 +10,7 @@ import '../../core/settings/settings_controller.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../source_badge/source_badge.dart';
 
 /// BDY-1 체중 기록(최신순, 설정 단위로 표시). 저장은 항상 kg.
 class BodyWeightPage extends ConsumerStatefulWidget {
@@ -104,7 +105,17 @@ class _BodyWeightPageState extends ConsumerState<BodyWeightPage> {
                         final m = list[i];
                         return ListTile(
                           key: Key('body_${m.id}'),
-                          title: Text(Units.format(m.weightKg, unit)),
+                          title: Row(
+                            children: [
+                              Text(Units.format(m.weightKg, unit)),
+                              if (m.source == MeasurementSource.AI_JSON ||
+                                  m.source == MeasurementSource.AI_MCP ||
+                                  m.source == MeasurementSource.IMPORT) ...[
+                                const SizedBox(width: 8),
+                                SourceBadge(key: Key('source-${m.id}'), source: m.source, importBatchId: m.importBatchId),
+                              ],
+                            ],
+                          ),
                           subtitle: Text(fmt.format(m.measuredAt.toLocal())),
                           trailing: IconButton(
                             tooltip: l.bodyDeleteTooltip,

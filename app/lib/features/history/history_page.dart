@@ -10,6 +10,7 @@ import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../session/session_controller.dart' show sessionByIdProvider;
 import '../session/session_format.dart';
+import '../source_badge/source_badge.dart';
 
 const historyPageSize = 20;
 
@@ -180,6 +181,10 @@ class _SessionTile extends ConsumerWidget {
       title: Row(
         children: [
           Text('${formatDate(local)} ${formatClock(local)}'),
+          if (full != null && full.isFromAi) ...[
+            const SizedBox(width: 8),
+            SourceBadge(key: Key('source-${s.id}'), source: full.source, importBatchId: full.importBatchId),
+          ],
           if (badge != null) ...[
             const SizedBox(width: 8),
             Flexible(

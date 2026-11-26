@@ -94,6 +94,7 @@ class Harness {
     sessionRepositoryProvider.overrideWithValue(sessions),
     programRepositoryProvider.overrideWithValue(programs),
     planCacheProvider.overrideWithValue(planCache),
+    deletionRequestRepositoryProvider.overrideWithValue(MemoryDeletionRequestRepository()),
     syncServiceProvider.overrideWithValue(NoopSyncService()),
     clockProvider.overrideWithValue(() => now),
     deviceTimezoneProvider.overrideWithValue(() async => 'Asia/Seoul'),
