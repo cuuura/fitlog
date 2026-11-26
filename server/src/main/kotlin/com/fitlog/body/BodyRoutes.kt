@@ -44,6 +44,8 @@ data class BodyMeasurement(
     val measuredAt: Instant,
     val weightKg: Double,
     val source: String? = null,
+    /** readOnly (v0.3) */
+    val importBatchId: UUID? = null,
 )
 
 private val SOURCES = setOf("MANUAL", "HEALTH_CONNECT", "HEALTHKIT", "OCR")
@@ -86,6 +88,7 @@ internal fun org.jetbrains.exposed.sql.ResultRow.toMeasurement() = BodyMeasureme
     measuredAt = this[BodyMeasurements.measuredAt],
     weightKg = this[BodyMeasurements.weightKg].toDouble(),
     source = this[BodyMeasurements.sourceCol],
+    importBatchId = this[BodyMeasurements.importBatchId],
 )
 
 fun Route.bodyRoutes(config: AppConfig) {

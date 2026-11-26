@@ -160,6 +160,8 @@ internal fun Transaction.listSummaries(userId: UUID, before: Instant?, limit: In
             exerciseCount = exerciseCount[sid] ?: 0,
             setCount = setCount[sid] ?: 0,
             totalVolumeKg = (volume[sid] ?: BigDecimal.ZERO).setScale(2, java.math.RoundingMode.HALF_UP).toDouble(),
+            source = it[WorkoutSessions.sourceCol],
+            importBatchId = it[WorkoutSessions.importBatchId],
         )
     }
 }

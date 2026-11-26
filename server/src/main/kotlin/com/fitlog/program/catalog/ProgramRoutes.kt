@@ -49,6 +49,7 @@ data class ProgramSummary(
     val builtIn: Boolean,
     val dayCount: Int,
     val source: String,
+    @Serializable(with = UUIDSerializer::class) val importBatchId: UUID? = null,
 )
 
 /** openapi Program. 저장 전 미리보기(validate)에서는 id 가 없다 */
@@ -62,6 +63,7 @@ data class Program(
     val dayCount: Int,
     val source: String,
     val definition: ProgramDefinition,
+    @Serializable(with = UUIDSerializer::class) val importBatchId: UUID? = null,
 )
 
 private fun decode(text: String): ProgramDefinition = AppJson.decodeFromString(ProgramDefinition.serializer(), text)
@@ -71,7 +73,7 @@ private fun summary(r: ResultRow): ProgramSummary {
     return ProgramSummary(
         id = r[Programs.id], templateKey = r[Programs.templateKey], name = r[Programs.name],
         description = def.description, builtIn = r[Programs.ownerId] == null,
-        dayCount = def.days.size, source = r[Programs.sourceCol],
+        dayCount = def.days.size, source = r[Programs.sourceCol], importBatchId = r[Programs.importBatchId],
     )
 }
 
@@ -81,6 +83,7 @@ private fun program(r: ResultRow): Program {
         id = r[Programs.id], templateKey = r[Programs.templateKey], name = r[Programs.name],
         description = def.description, builtIn = r[Programs.ownerId] == null,
         dayCount = def.days.size, source = r[Programs.sourceCol], definition = def,
+        importBatchId = r[Programs.importBatchId],
     )
 }
 
