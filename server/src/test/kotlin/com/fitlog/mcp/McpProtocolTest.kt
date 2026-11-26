@@ -37,7 +37,7 @@ import kotlin.test.assertTrue
 class McpProtocolTest {
     private val readTools = listOf(
         "get_profile", "search_exercises", "list_programs", "get_program", "validate_program", "list_program_instances",
-        "get_plan", "list_sessions", "get_session", "get_exercise_records", "get_training_summary", "get_body_measurements",
+        "get_plan", "list_sessions", "get_session", "get_exercise_records", "get_exercise_progress", "get_training_summary", "get_body_measurements",
         "list_deletion_requests",
     )
     private val writeTools = listOf(
@@ -143,12 +143,12 @@ class McpProtocolTest {
     }
 
     @Test
-    fun tools_list_has_21_tools_with_schemas_and_annotations() = a2Test {
+    fun tools_list_has_22_tools_with_schemas_and_annotations() = a2Test {
         val c = plainClient()
         val conn = c.connect()
         val sid = c.mcpInit(conn.access)
         val tools = c.mcpPost(conn.access, sid, """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""").json().result()["tools"]!!.jsonArray
-        assertEquals(21, tools.size)
+        assertEquals(22, tools.size)
         assertEquals((readTools + writeTools).toSet(), tools.map { it.jsonObject["name"]!!.jsonPrimitive.content }.toSet())
         for (t in tools.map { it.jsonObject }) {
             val name = t["name"]!!.jsonPrimitive.content
@@ -167,7 +167,7 @@ class McpProtocolTest {
         val ro = c.connect(write = false)
         val roSid = c.mcpInit(ro.access)
         val roTools = c.mcpPost(ro.access, roSid, """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""").json().result()["tools"]!!.jsonArray
-        assertEquals(21, roTools.size)
+        assertEquals(22, roTools.size)
     }
 
     @Test

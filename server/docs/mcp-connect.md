@@ -78,7 +78,7 @@ npx @modelcontextprotocol/inspector
 
 1. Transport Type: **Streamable HTTP**, URL: `<PUBLIC_BASE_URL>/mcp`
 2. **Open Auth Settings** → **Quick OAuth Flow** (또는 Connect 시 자동 안내). 브라우저에서 Google 로그인 → 동의 화면에서 **허용**
-3. **Connect** 후 **Tools → List Tools**에 도구 21개(조회 13, 쓰기 8)가 보이는지 확인
+3. **Connect** 후 **Tools → List Tools**에 도구 22개(조회 14, 쓰기 8)가 보이는지 확인
 4. `get_profile`, `list_programs`를 실행해 결과(요약 한 줄 + structuredContent)를 확인
 
 쓰기 도구는 동의 화면에서 "기록 추가·수정 허용"을 켠 연결에서만 동작한다. 읽기만 허용했으면 쓰기 도구는 "권한 없음" 오류를 돌려준다.
@@ -119,7 +119,7 @@ Gemini CLI의 `settings.json`(사용자 전체는 `~/.gemini/settings.json`, 프
 
 1. 위처럼 `httpUrl`(Streamable HTTP)에 `<PUBLIC_BASE_URL>/mcp`를 넣고 Gemini CLI를 다시 시작
 2. CLI 안에서 `/mcp auth fitlog`를 실행하면 브라우저가 열린다 → Google 로그인 → **허용**(OAuth는 동적 등록으로 자동)
-3. `/mcp`로 서버가 `CONNECTED`이고 도구 21개가 보이는지 확인한 뒤 "내 운동 프로그램 목록 알려줘"처럼 요청한다
+3. `/mcp`로 서버가 `CONNECTED`이고 도구 22개가 보이는지 확인한 뒤 "내 운동 프로그램 목록 알려줘"처럼 요청한다
 
 Gemini CLI의 인증 명령과 설정 키는 버전에 따라 다를 수 있으니 `/help`와 공식 문서를 함께 본다.
 

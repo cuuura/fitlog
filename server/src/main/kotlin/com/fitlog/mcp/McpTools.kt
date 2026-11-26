@@ -29,6 +29,7 @@ import com.fitlog.program.schema.ProgramValidator
 import com.fitlog.program.schema.ValidationResult
 import com.fitlog.session.listSummaries
 import com.fitlog.session.loadSession
+import com.fitlog.stats.statsProgress
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -482,6 +483,30 @@ internal val READ_TOOLS: List<Tool> = listOf(
                 "최고 무게 ${r.bestWeight?.let { "${it.weightKg}kg x ${it.reps}" } ?: "기록 없음"}" +
                     (r.bestE1rm?.e1rmKg?.let { ", 최고 추정 1RM ${it}kg (${r.formula})" } ?: ""),
                 JsonObject(mapOf("records" to enc(r))),
+            )
+        },
+    ),
+    Tool(
+        name = "get_exercise_progress", title = "종목 추이(그래프)",
+        description = "종목의 세션별 최고 무게·추정 1RM·볼륨 추이와 PR 여부를 조회합니다(REST /v1/exercises/{id}/progress와 같음). / Get per-session progress points (top weight, e1RM, volume, PR flags) for an exercise.",
+        write = false,
+        input = S.obj(
+            "exerciseId" to idS,
+            "from" to S.str("ISO-8601 시각. 기본 to-180일", format = "date-time"),
+            "to" to S.str("ISO-8601 시각. 기본 지금", format = "date-time"),
+            "limit" to S.int("기본 100, 최대 500. 최근 것부터 자른 뒤 오름차순", min = 1, max = 500),
+            required = listOf("exerciseId"),
+        ),
+        output = S.obj("progress" to S.anyObj("exerciseId, formula, points[], bestWeight, bestE1rm"), required = listOf("progress")),
+        run = { ctx, a ->
+            val id = a.uuid("exerciseId")
+            val from = a.str("from")
+            val to = a.str("to")
+            val limit = a.int("limit", 1, 500)
+            val p = dbQuery { statsProgress(ctx.userId, id, from, to, limit) }
+            ToolOutput(
+                "추이 ${p.points.size}점" + (p.bestWeight?.let { ", 최고 무게 ${it.weightKg}kg x ${it.reps}" } ?: ", 기록 없음"),
+                JsonObject(mapOf("progress" to enc(p))),
             )
         },
     ),

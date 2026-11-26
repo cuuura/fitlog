@@ -24,7 +24,7 @@ Claude·ChatGPT·Gemini 가 붙으려면 **https 공개 주소**가 필요하다
    export JWT_SECRET=<32자 이상>
    ./gradlew run
    ```
-5. 확인: `npx @modelcontextprotocol/inspector` → Streamable HTTP, `<공개 주소>/mcp` → OAuth 로그인 → 도구 21개
+5. 확인: `npx @modelcontextprotocol/inspector` → Streamable HTTP, `<공개 주소>/mcp` → OAuth 로그인 → 도구 22개
 6. AI 연결: Claude(커넥터 추가) · ChatGPT(개발자 모드 커넥터) · Gemini CLI(`settings.json` 의 `mcpServers.<이름>.httpUrl`)에 `<공개 주소>/mcp`
 
 | 환경 변수 | 뜻 |

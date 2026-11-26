@@ -169,6 +169,13 @@ class McpToolsTest {
         assertTrue(rec["byReps"]!!.jsonArray.any { it.jsonObject["reps"]!!.jsonPrimitive.int == 5 })
         assertTrue(ctx.call("get_exercise_records", """{"exerciseId":"${UUID.randomUUID()}"}""").isError())
 
+        // v1.0 종목 추이: REST와 같은 출력
+        val prog = ctx.call("get_exercise_progress", """{"exerciseId":"$ex","from":"2026-01-01T00:00:00Z","to":"2026-12-31T00:00:00Z"}""").sc()["progress"]!!.jsonObject
+        assertEquals(2, prog["points"]!!.jsonArray.size)
+        assertEquals(110.0, prog["bestWeight"]!!.jsonObject["weightKg"]!!.jsonPrimitive.double)
+        assertTrue(ctx.call("get_exercise_progress", """{"exerciseId":"$ex","limit":501}""").isError())
+        assertTrue(ctx.call("get_exercise_progress", """{"exerciseId":"${UUID.randomUUID()}"}""").isError())
+
         val sum = ctx.call("get_training_summary", """{"from":"2026-11-01","to":"2026-11-30"}""").sc()
         assertEquals(2, sum["sessionCount"]!!.jsonPrimitive.int)
         val e = sum["exercises"]!!.jsonArray[0].jsonObject
