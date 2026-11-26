@@ -1245,5 +1245,7 @@
         "type": "String"
       }
     }
-  }
+  },
+  "importReplaceWarningPermanent": "The existing item is overwritten in place. Reverting won't restore the previous content.",
+  "deletionForbidden": "Built-in items can't be deleted"
 }

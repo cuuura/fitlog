@@ -175,6 +175,20 @@ void main() {
     expect(find.text('history-${env.repo.batches.single.id}'), findsOneWidget);
   });
 
+  testWidgets('전부 변경 없음(빈 묶음 200)이면 이력 링크 없이 안내만', (tester) async {
+    final env = _Env();
+    env.repo.nextPreview = const ImportPreview(valid: true, counts: {'sessions': {'UNCHANGED': 2}});
+    env.repo.nextOutcome = ImportOutcome.saved(
+      ImportBatch(id: 'empty', createdAt: DateTime.utc(2026), channel: ImportChannel.APP_JSON),
+    );
+    await env.pump(tester);
+    await env.enter(tester, _bundleJson());
+    await env.preview(tester);
+    await env.save(tester);
+    expect(find.text('새로 저장된 항목이 없어요.'), findsOneWidget);
+    expect(find.byKey(const ValueKey('import-history-0')), findsNothing);
+  });
+
   testWidgets('JSON 문법 오류는 줄·열과 함께 보여주고 서버에 보내지 않는다', (tester) async {
     final env = _Env();
     await env.pump(tester);

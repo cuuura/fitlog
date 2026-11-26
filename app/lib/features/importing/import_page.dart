@@ -220,7 +220,11 @@ class _ImportPageState extends ConsumerState<ImportPage> {
         if (_inputError != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(_inputError!, key: const ValueKey('import-input-error'), style: TextStyle(color: theme.colorScheme.error)),
+            child: Text(
+              _inputError!,
+              key: const ValueKey('import-input-error'),
+              style: TextStyle(color: theme.colorScheme.error),
+            ),
           ),
         if (s.error != null)
           Padding(
@@ -332,10 +336,8 @@ class _PreviewView extends ConsumerWidget {
                     key: ValueKey('count-${e.key}'),
                     padding: const EdgeInsets.symmetric(vertical: 2),
                     child: Text(
-                      '${_kindLabel(l, e.key)}  ${[
-                        for (final s in e.value.entries)
-                          if (s.value > 0) _statusLabel(l, s.key, s.value),
-                      ].join(' · ')}',
+                      '${_kindLabel(l, e.key)}  ${[for (final s in e.value.entries)
+                        if (s.value > 0) _statusLabel(l, s.key, s.value)].join(' · ')}',
                     ),
                   ),
               const SizedBox(height: 12),
@@ -426,7 +428,10 @@ class _ResultView extends StatelessWidget {
       'replaced' => l.importSummaryReplaced(n),
       _ => '$k $n',
     };
-    final lines = [for (final e in total.entries) if (e.value > 0) label(e.key, e.value)];
+    final lines = [
+      for (final e in total.entries)
+        if (e.value > 0) label(e.key, e.value),
+    ];
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -444,19 +449,21 @@ class _ResultView extends StatelessWidget {
             children: [for (final t in lines) Chip(label: Text(t))],
           ),
         const SizedBox(height: 24),
+        // 전부 UNCHANGED면 서버가 저장하지 않은 빈 묶음(200)을 돌려주므로 이력 링크가 없다.
         for (var i = 0; i < state.batches.length; i++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: OutlinedButton(
-              key: ValueKey('import-history-$i'),
-              onPressed: () => context.push(Routes.aiHistoryDetail(state.batches[i].id)),
-              child: Text(
-                state.batches.length > 1
-                    ? '${l.importViewHistory} (${l.importChunkProgress(i + 1, state.batches.length)})'
-                    : l.importViewHistory,
+          if (state.batches[i].summary.values.any((n) => n > 0))
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: OutlinedButton(
+                key: ValueKey('import-history-$i'),
+                onPressed: () => context.push(Routes.aiHistoryDetail(state.batches[i].id)),
+                child: Text(
+                  state.batches.length > 1
+                      ? '${l.importViewHistory} (${l.importChunkProgress(i + 1, state.batches.length)})'
+                      : l.importViewHistory,
+                ),
               ),
             ),
-          ),
         FilledButton(
           key: const ValueKey('import-done'),
           onPressed: () => context.canPop() ? context.pop() : context.go(Routes.home),

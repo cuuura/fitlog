@@ -88,6 +88,7 @@ class _DeletionRequestsPageState extends ConsumerState<DeletionRequestsPage> {
       message = switch (e.statusCode) {
         409 => l.deletionAlreadyDecided,
         410 => l.deletionGone,
+        403 => l.deletionForbidden,
         _ => l.deletionFailed,
       };
     } catch (_) {

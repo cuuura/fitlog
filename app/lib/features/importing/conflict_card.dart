@@ -167,7 +167,7 @@ class _ConflictCardState extends ConsumerState<ConflictCard> {
             if (_selected == ResolutionAction.REPLACE)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
-                child: Text(l.importReplaceWarning, style: TextStyle(color: theme.colorScheme.error)),
+                child: Text(c.code == ConflictCode.ID_EXISTS ? l.importReplaceWarningPermanent : l.importReplaceWarning, style: TextStyle(color: theme.colorScheme.error)),
               ),
             if (_selected == ResolutionAction.MAP_TO) _mapTo(l),
           ],
