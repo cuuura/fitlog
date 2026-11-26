@@ -269,5 +269,184 @@
   "syncLastErrorLabel": "Last error",
   "syncNowAction": "Sync now",
   "settingsExactAlarm": "Get rest-end alerts on time",
-  "settingsExactAlarmDesc": "Ask for the exact alarm permission so the alert fires right when rest ends"
+  "settingsExactAlarmDesc": "Ask for the exact alarm permission so the alert fires right when rest ends",
+  "programsTitle": "Programs",
+  "programsTabActive": "In progress",
+  "programsTabPrograms": "Programs",
+  "programsActiveEmpty": "No program in progress. Start one from the Programs tab.",
+  "programsOffline": "Can't reach the server. Programs are available online only.",
+  "programsLoadError": "Could not load",
+  "programTemplates": "Templates",
+  "programMine": "My programs",
+  "programDayCount": "{count} days",
+  "@programDayCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programDeleteAction": "Delete program",
+  "programDeleteConfirmTitle": "Delete this program?",
+  "programDeleteConfirmBody": "{name} will be deleted. Programs already in progress are not affected.",
+  "@programDeleteConfirmBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "programDeleteFailed": "Could not delete",
+  "programBuiltIn": "Template",
+  "programDaysHeader": "Days",
+  "programStartAction": "Start",
+  "programNoDescription": "No description",
+  "programWeekdayMon": "Mon",
+  "programWeekdayTue": "Tue",
+  "programWeekdayWed": "Wed",
+  "programWeekdayThu": "Thu",
+  "programWeekdayFri": "Fri",
+  "programWeekdaySat": "Sat",
+  "programWeekdaySun": "Sun",
+  "programStartTitle": "Start program",
+  "programStartWeightsHeader": "Starting weights",
+  "programStartWeightsHelp": "Required. Suggestions come from your recent 1RM.",
+  "programStartTm": "TM (training max)",
+  "programStartWorking": "Working weight",
+  "programStartFieldLabel": "{name} ({unit})",
+  "@programStartFieldLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartRequired": "Enter a weight",
+  "programStartMeasured": "Based on measured 1RM {value}",
+  "@programStartMeasured": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartEstimated": "Based on estimated 1RM {value}",
+  "@programStartEstimated": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartNoBasis": "No data, enter it yourself",
+  "programStartDate": "Start date",
+  "programStartPolicy": "When a day is skipped",
+  "programSkipShift": "Shift",
+  "programSkipShiftDesc": "A skipped day is treated as not happening; you do the same day next. Weights stay the same.",
+  "programSkipFixed": "Fixed days",
+  "programSkipFixedDesc": "Follows fixed weekdays. A skipped day isn't counted as a failure; the program moves on to the next day.",
+  "programSkipFixedUnavailable": "Not available: this program has no weekdays",
+  "programStartSubmit": "Start",
+  "programStartFailed": "Could not start",
+  "programStartValidation": "Please check the values",
+  "instanceTitle": "Program in progress",
+  "instanceStatusActive": "Active",
+  "instanceStatusPaused": "Paused",
+  "instanceStatusFinished": "Finished",
+  "instanceProgress": "Week {week} · Cycle {cycle}",
+  "@instanceProgress": {
+    "placeholders": {
+      "week": {
+        "type": "int"
+      },
+      "cycle": {
+        "type": "int"
+      }
+    }
+  },
+  "instanceNextLabel": "Next: {day}",
+  "@instanceNextLabel": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "instanceNextSection": "Upcoming",
+  "instanceNoNext": "Nothing scheduled",
+  "instanceSkipNext": "Skip next workout",
+  "instanceSkipConfirmTitle": "Skip the next workout?",
+  "instanceSkipConfirmShift": "{day} is skipped and you do the same day next.",
+  "@instanceSkipConfirmShift": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "instanceSkipConfirmFixed": "{day} is skipped and the program moves to the next day. It is not counted as a failure.",
+  "@instanceSkipConfirmFixed": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "instancePause": "Pause",
+  "instanceResume": "Resume",
+  "instanceFinish": "Finish",
+  "instanceFinishConfirmTitle": "Finish this program?",
+  "instanceFinishConfirmBody": "No more workouts will be generated. Your logs are kept.",
+  "instanceSkipPolicy": "Skip policy",
+  "instanceWeights": "Current weights",
+  "instanceTmLabel": "TM {value}",
+  "@instanceTmLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "instanceWorkingLabel": "Working {value}",
+  "@instanceWorkingLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "instanceAdjust": "Adjust TM / working weight",
+  "instanceAdjustHelp": "Changes apply to upcoming workouts.",
+  "instanceAccessories": "Accessories",
+  "instanceAccessoryAdd": "Add accessory",
+  "instanceAccessoryEmpty": "None",
+  "instanceAccessorySets": "Sets",
+  "instanceAccessoryReps": "Reps",
+  "instanceAccessoryWeight": "Weight ({unit}, optional)",
+  "@instanceAccessoryWeight": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "instanceAccessorySummary": "{sets}×{reps}",
+  "@instanceAccessorySummary": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "instanceAccessoryRemove": "Remove accessory",
+  "instanceDelete": "Delete from my programs",
+  "instanceDeleteConfirmTitle": "Delete this program in progress?",
+  "instanceDeleteConfirmBody": "Your logs stay; only the link to the program is removed.",
+  "instanceActionFailed": "Action failed"
 }

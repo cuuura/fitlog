@@ -341,5 +341,184 @@
   "syncLastErrorLabel": "최근 오류",
   "syncNowAction": "지금 동기화",
   "settingsExactAlarm": "휴식 종료 알림 정확하게 받기",
-  "settingsExactAlarmDesc": "휴식이 끝나는 시각에 맞춰 알림이 울리도록 정확한 알람 권한을 요청해요"
+  "settingsExactAlarmDesc": "휴식이 끝나는 시각에 맞춰 알림이 울리도록 정확한 알람 권한을 요청해요",
+  "programsTitle": "프로그램",
+  "programsTabActive": "진행 중",
+  "programsTabPrograms": "프로그램",
+  "programsActiveEmpty": "진행 중인 프로그램이 없어요. 프로그램 탭에서 시작해 보세요.",
+  "programsOffline": "서버에 연결할 수 없어요. 프로그램은 온라인에서만 볼 수 있어요.",
+  "programsLoadError": "불러오지 못했어요",
+  "programTemplates": "템플릿",
+  "programMine": "내 프로그램",
+  "programDayCount": "{count}일 구성",
+  "@programDayCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programDeleteAction": "프로그램 삭제",
+  "programDeleteConfirmTitle": "프로그램을 삭제할까요?",
+  "programDeleteConfirmBody": "{name}을(를) 삭제해요. 이미 시작한 진행 중 프로그램은 영향받지 않아요.",
+  "@programDeleteConfirmBody": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "programDeleteFailed": "삭제하지 못했어요",
+  "programBuiltIn": "템플릿",
+  "programDaysHeader": "구성",
+  "programStartAction": "시작",
+  "programNoDescription": "설명이 없어요",
+  "programWeekdayMon": "월",
+  "programWeekdayTue": "화",
+  "programWeekdayWed": "수",
+  "programWeekdayThu": "목",
+  "programWeekdayFri": "금",
+  "programWeekdaySat": "토",
+  "programWeekdaySun": "일",
+  "programStartTitle": "프로그램 시작",
+  "programStartWeightsHeader": "시작 무게",
+  "programStartWeightsHelp": "비워 둘 수 없어요. 제안값은 최근 1RM에서 계산했어요.",
+  "programStartTm": "TM (트레이닝 맥스)",
+  "programStartWorking": "작업 무게",
+  "programStartFieldLabel": "{name} ({unit})",
+  "@programStartFieldLabel": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartRequired": "무게를 입력해 주세요",
+  "programStartMeasured": "측정한 1RM {value} 기준",
+  "@programStartMeasured": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartEstimated": "기록으로 추정한 1RM {value} 기준",
+  "@programStartEstimated": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartNoBasis": "기록이 없어서 직접 입력해야 해요",
+  "programStartDate": "시작일",
+  "programStartPolicy": "건너뛰기 방식",
+  "programSkipShift": "미루기",
+  "programSkipShiftDesc": "건너뛴 날은 없던 것으로 치고, 다음에 같은 날 운동을 해요. 무게는 그대로예요.",
+  "programSkipFixed": "요일 고정",
+  "programSkipFixedDesc": "정해진 요일에 맞춰 진행해요. 건너뛴 날은 실패로 세지 않고 다음 날로 넘어가요.",
+  "programSkipFixedUnavailable": "이 프로그램은 요일이 정해져 있지 않아 쓸 수 없어요",
+  "programStartSubmit": "시작하기",
+  "programStartFailed": "시작하지 못했어요",
+  "programStartValidation": "입력값을 확인해 주세요",
+  "instanceTitle": "진행 중 프로그램",
+  "instanceStatusActive": "진행 중",
+  "instanceStatusPaused": "일시정지",
+  "instanceStatusFinished": "종료",
+  "instanceProgress": "{week}주차 · {cycle}사이클",
+  "@instanceProgress": {
+    "placeholders": {
+      "week": {
+        "type": "int"
+      },
+      "cycle": {
+        "type": "int"
+      }
+    }
+  },
+  "instanceNextLabel": "다음: {day}",
+  "@instanceNextLabel": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "instanceNextSection": "다음 회차",
+  "instanceNoNext": "예정된 회차가 없어요",
+  "instanceSkipNext": "다음 회차 건너뛰기",
+  "instanceSkipConfirmTitle": "다음 회차를 건너뛸까요?",
+  "instanceSkipConfirmShift": "{day}을(를) 건너뛰고 다음에 같은 날 운동을 해요.",
+  "@instanceSkipConfirmShift": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "instanceSkipConfirmFixed": "{day}을(를) 건너뛰고 다음 날로 넘어가요. 실패로 세지 않아요.",
+  "@instanceSkipConfirmFixed": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "instancePause": "일시정지",
+  "instanceResume": "재개",
+  "instanceFinish": "종료",
+  "instanceFinishConfirmTitle": "프로그램을 종료할까요?",
+  "instanceFinishConfirmBody": "종료하면 더 이상 회차가 만들어지지 않아요. 기록은 그대로 남아요.",
+  "instanceSkipPolicy": "건너뛰기 방식",
+  "instanceWeights": "현재 무게",
+  "instanceTmLabel": "TM {value}",
+  "@instanceTmLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "instanceWorkingLabel": "작업 {value}",
+  "@instanceWorkingLabel": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "instanceAdjust": "TM·작업 무게 조정",
+  "instanceAdjustHelp": "값을 바꾸면 이후 계획부터 반영돼요.",
+  "instanceAccessories": "보조운동",
+  "instanceAccessoryAdd": "보조운동 추가",
+  "instanceAccessoryEmpty": "보조운동 없음",
+  "instanceAccessorySets": "세트",
+  "instanceAccessoryReps": "횟수",
+  "instanceAccessoryWeight": "무게 ({unit}, 선택)",
+  "@instanceAccessoryWeight": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "instanceAccessorySummary": "{sets}×{reps}",
+  "@instanceAccessorySummary": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
+  "instanceAccessoryRemove": "보조운동 삭제",
+  "instanceDelete": "프로그램 연결 삭제",
+  "instanceDeleteConfirmTitle": "진행 중 프로그램을 삭제할까요?",
+  "instanceDeleteConfirmBody": "기록은 남고 연결만 끊깁니다.",
+  "instanceActionFailed": "처리하지 못했어요"
 }
