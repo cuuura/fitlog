@@ -7,6 +7,7 @@ import '../../core/settings/settings_controller.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../session/session_controller.dart';
 import '../session/session_format.dart';
+import '../sync_status/sync_status_indicator.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -35,6 +36,7 @@ class HomePage extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l.appTitle),
         actions: [
+          const SyncStatusIndicator(),
           IconButton(
             key: const Key('home-body'),
             icon: const Icon(Icons.monitor_weight_outlined),

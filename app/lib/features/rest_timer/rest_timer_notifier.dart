@@ -20,6 +20,12 @@ abstract interface class RestTimerNotifier {
   /// 진행 중 알림을 띄우거나 갱신하고, 종료 알림을 [endsAt]에 예약한다(이미 있으면 교체).
   Future<void> showRunning({required DateTime endsAt, required int totalSec, String? label, required DateTime now});
 
+  /// 정확한 알람 권한 요청을 지원하는 플랫폼인가(Android만). 아니면 설정 항목을 숨긴다.
+  bool get supportsExactAlarm;
+
+  /// 정확한 알람 권한(SCHEDULE_EXACT_ALARM)을 요청한다. 요청을 했으면 true, 지원 안 하면 false.
+  Future<bool> requestExactAlarmPermission();
+
   /// 진행 중 알림과 예약된 종료 알림을 모두 지운다.
   Future<void> cancel();
 
@@ -145,11 +151,16 @@ class LocalRestTimerNotifier implements RestTimerNotifier {
     return canExact ? AndroidScheduleMode.exactAllowWhileIdle : AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
-  /// 설정 화면의 "정확한 알림" 버튼 같은 곳에서 부를 수 있다(선택).
-  Future<void> requestExactAlarmPermission() async {
-    if (!_supported) return;
+  @override
+  bool get supportsExactAlarm => _supported;
+
+  /// 설정 화면의 "정확한 알림" 항목에서 부른다.
+  @override
+  Future<bool> requestExactAlarmPermission() async {
+    if (!_supported) return false;
     await _init();
     await _android?.requestExactAlarmsPermission();
+    return true;
   }
 
   @override
@@ -165,6 +176,10 @@ class LocalRestTimerNotifier implements RestTimerNotifier {
 class NoopRestTimerNotifier implements RestTimerNotifier {
   @override
   set actionHandler(void Function(RestTimerAction)? handler) {}
+  @override
+  bool get supportsExactAlarm => false;
+  @override
+  Future<bool> requestExactAlarmPermission() async => false;
   @override
   Future<void> cancel() async {}
   @override

@@ -260,5 +260,14 @@
         "type": "int"
       }
     }
-  }
+  },
+  "syncSheetTitle": "Sync",
+  "syncStatusLabel": "Status",
+  "syncPendingLabel": "Pending changes",
+  "syncLastSyncedLabel": "Last synced",
+  "syncNever": "Never",
+  "syncLastErrorLabel": "Last error",
+  "syncNowAction": "Sync now",
+  "settingsExactAlarm": "Get rest-end alerts on time",
+  "settingsExactAlarmDesc": "Ask for the exact alarm permission so the alert fires right when rest ends"
 }

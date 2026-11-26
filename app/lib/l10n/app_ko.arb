@@ -332,5 +332,14 @@
         "type": "int"
       }
     }
-  }
+  },
+  "syncSheetTitle": "동기화",
+  "syncStatusLabel": "상태",
+  "syncPendingLabel": "대기 중인 변경",
+  "syncLastSyncedLabel": "마지막 동기화",
+  "syncNever": "아직 없음",
+  "syncLastErrorLabel": "최근 오류",
+  "syncNowAction": "지금 동기화",
+  "settingsExactAlarm": "휴식 종료 알림 정확하게 받기",
+  "settingsExactAlarmDesc": "휴식이 끝나는 시각에 맞춰 알림이 울리도록 정확한 알람 권한을 요청해요"
 }
