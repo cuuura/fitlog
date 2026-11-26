@@ -791,5 +791,7 @@
   "settingsE1rmBrzyckiDesc": "무게 × 36 / (37 − 횟수). 낮은 횟수에서 잘 맞아요.",
   "settingsE1rmLombardiDesc": "무게 × 횟수^0.10. 횟수가 늘어도 완만하게 올라가요.",
   "settingsE1rmNote": "1~10회 세트만 추정에 쓰고, 워밍업은 뺍니다.",
-  "profileClear": "지우기"
+  "profileClear": "지우기",
+  "settingsAi": "AI 연동",
+  "settingsAiSubtitle": "AI 연결, JSON 가져오기, 삭제 요청, 내보내기"
 }

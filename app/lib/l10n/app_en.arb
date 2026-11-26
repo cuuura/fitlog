@@ -719,5 +719,7 @@
   "settingsE1rmBrzyckiDesc": "Weight × 36 / (37 − reps). Fits low reps well.",
   "settingsE1rmLombardiDesc": "Weight × reps^0.10. Rises gently as reps grow.",
   "settingsE1rmNote": "Only sets of 1–10 reps count; warm-ups are excluded.",
-  "profileClear": "Clear"
+  "profileClear": "Clear",
+  "settingsAi": "AI integration",
+  "settingsAiSubtitle": "Connect AI, import JSON, deletion requests, export"
 }

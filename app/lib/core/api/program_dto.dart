@@ -39,6 +39,9 @@ class ProgramSummary {
   final bool builtIn;
   final int dayCount;
   final ProgramSource? source;
+
+  /// v0.3: 가져오기로 만든 프로그램이면 묶음 id.
+  final String? importBatchId;
   const ProgramSummary({
     required this.id,
     this.templateKey,
@@ -47,6 +50,7 @@ class ProgramSummary {
     required this.builtIn,
     required this.dayCount,
     this.source,
+    this.importBatchId,
   });
 
   factory ProgramSummary.fromJson(Map<String, Object?> j) => ProgramSummary(
@@ -57,6 +61,7 @@ class ProgramSummary {
     builtIn: j['builtIn'] as bool,
     dayCount: j['dayCount'] as int,
     source: j['source'] == null ? null : _enumByName(ProgramSource.values, j['source']),
+    importBatchId: j['importBatchId'] as String?,
   );
 }
 
@@ -71,6 +76,7 @@ class Program extends ProgramSummary {
     required super.builtIn,
     required super.dayCount,
     super.source,
+    super.importBatchId,
     required this.definition,
   });
 
@@ -84,6 +90,7 @@ class Program extends ProgramSummary {
       builtIn: s.builtIn,
       dayCount: s.dayCount,
       source: s.source,
+      importBatchId: s.importBatchId,
       definition: (j['definition'] as Map).cast<String, Object?>(),
     );
   }

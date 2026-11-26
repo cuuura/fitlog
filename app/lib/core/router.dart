@@ -6,7 +6,14 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/consent_page.dart';
 import '../features/auth/login_page.dart';
 import '../features/auth/splash_page.dart';
+import '../features/ai_connect/ai_connect_page.dart';
+import '../features/ai_connect/ai_hub_page.dart';
+import '../features/ai_history/ai_history_detail_page.dart';
+import '../features/ai_history/ai_history_page.dart';
+import '../features/deletion_requests/deletion_requests_page.dart';
 import '../features/exercise_picker/exercise_picker_page.dart';
+import '../features/export/export_page.dart';
+import '../features/importing/import_page.dart';
 import '../features/history/history_page.dart';
 import '../features/history/session_edit_page.dart';
 import '../features/programs/instance_detail_page.dart';
@@ -68,6 +75,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/sessions/:id/summary', builder: (_, s) => SessionSummaryPage(sessionId: s.pathParameters['id']!)),
       GoRoute(
           path: '/exercises/:id/records', builder: (_, s) => ExerciseRecordsPage(exerciseId: s.pathParameters['id']!)),
+      // v0.3
+      GoRoute(path: Routes.ai, builder: (_, _) => const AiHubPage()),
+      GoRoute(path: Routes.importJson, builder: (_, _) => const ImportPage()),
+      GoRoute(path: Routes.aiHistory, builder: (_, _) => const AiHistoryPage()),
+      GoRoute(path: '/ai/history/:id', builder: (_, s) => AiHistoryDetailPage(batchId: s.pathParameters['id']!)),
+      GoRoute(path: Routes.deletionRequests, builder: (_, _) => const DeletionRequestsPage()),
+      GoRoute(path: Routes.aiConnect, builder: (_, _) => const AiConnectPage()),
+      GoRoute(path: Routes.export, builder: (_, _) => const ExportPage()),
     ],
   );
 });
