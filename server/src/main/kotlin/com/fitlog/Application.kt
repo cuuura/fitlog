@@ -19,6 +19,12 @@ import com.fitlog.program.instance.instanceRoutes
 import com.fitlog.records.recordsRoutes
 import com.fitlog.session.sessionRoutes
 import com.fitlog.sync.syncRoutes
+import com.fitlog.ops.installOps
+import com.fitlog.ops.opsRoutes
+import com.fitlog.security.Bucket
+import com.fitlog.security.installRateLimits
+import com.fitlog.security.withRateLimit
+import com.fitlog.stats.statsRoutes
 import io.ktor.server.application.Application
 import io.ktor.server.auth.authenticate
 import io.ktor.server.engine.embeddedServer
@@ -41,29 +47,37 @@ fun main() {
 fun Application.module(config: AppConfig) {
     Database.init(config.db)
     installCore(config)
+    // v1.0
+    installOps(config)
+    installRateLimits(config)
     routing {
         get("/health") { call.respondText("ok") }
+        opsRoutes(config)
         // v0.3 원격 MCP·OAuth (자체 인증)
-        oauthRoutes(config)
-        mcpRoutes(config)
+        withRateLimit(config, Bucket.AUTH) { oauthRoutes(config) }
+        withRateLimit(config, Bucket.MCP) { mcpRoutes(config) }
         route("/v1") {
-            authRoutes(config)
+            withRateLimit(config, Bucket.AUTH) { authRoutes(config) }
             publicSchemaRoutes(config)
             authenticate(com.fitlog.core.AUTH_BEARER) {
-                accountRoutes(config)
-                exerciseRoutes(config)
-                sessionRoutes(config)
-                bodyRoutes(config)
-                syncRoutes(config)
-                // v0.2
-                programRoutes(config)
-                instanceRoutes(config)
-                recordsRoutes(config)
-                // v0.3
-                importRoutes(config)
-                exportRoutes(config)
-                deletionRoutes(config)
-                aiConnectionRoutes(config)
+                withRateLimit(config, Bucket.API) {
+                    accountRoutes(config)
+                    exerciseRoutes(config)
+                    sessionRoutes(config)
+                    bodyRoutes(config)
+                    syncRoutes(config)
+                    // v0.2
+                    programRoutes(config)
+                    instanceRoutes(config)
+                    recordsRoutes(config)
+                    // v0.3
+                    importRoutes(config)
+                    withRateLimit(config, Bucket.EXPORT) { exportRoutes(config) }
+                    deletionRoutes(config)
+                    aiConnectionRoutes(config)
+                    // v1.0
+                    statsRoutes(config)
+                }
             }
         }
     }

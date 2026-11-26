@@ -15,6 +15,8 @@ enum class ErrorCode(val status: HttpStatusCode) {
     CONFLICT_UNRESOLVED(HttpStatusCode.Conflict),
     /** v0.3 만료된 삭제 요청 결정 시도 */
     GONE(HttpStatusCode.Gone),
+    /** v1.0 Play Integrity 실패(contracts/v1.0/security.md) */
+    INTEGRITY_FAILED(HttpStatusCode.Forbidden),
 }
 
 /** 핸들러에서 던지면 StatusPages가 계약의 에러 형식으로 바꾼다 */

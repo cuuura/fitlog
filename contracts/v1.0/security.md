@@ -31,3 +31,10 @@
 - 일반 요청: `RATE_LIMITED`면 "잠시 후 다시 시도" 안내(재시도 버튼). 자동 재시도는 하지 않는다
 - 동기화: 429면 `Retry-After`(없으면 30초)만큼 미루고 다시 시도. 그동안 기록은 로컬에 쌓인다
 - 토큰 갱신이 429면 로그아웃하지 않고 다음 요청 때 다시 시도
+
+## 서버 보완 (서버 트랙, 앱 동작에는 영향 없음)
+- 검증 항목 추가: `requestDetails.requestPackageName`·`appIntegrity.packageName`이 허용 목록(`INTEGRITY_PACKAGE_NAMES`, 기본 `com.fitlog.fitlog`)에 있음, `requestDetails.timestampMillis`가 10분 이내
+- Google 호출 자체가 실패하면(네트워크·5xx·시간 초과 3초) `enforce`에서도 막지 않고 경고 로그만 남긴다(fail-open). 판정이 나쁜 경우와 헤더가 없는 경우만 403
+- 호출 제한 `/v1/auth/*`·`/oauth/*` 버킷은 `/.well-known/*`도 포함한다. IP는 `TRUST_PROXY=true`일 때만 `X-Forwarded-For`를 쓴다
+- 호출 제한 끄기: `RATE_LIMIT_ENABLED=false`. 한도: `RATE_LIMIT_AUTH_PER_MIN`, `RATE_LIMIT_API_PER_MIN`, `RATE_LIMIT_EXPORT_PER_10MIN`, `RATE_LIMIT_MCP_PER_MIN`
+- 기존 MCP 도구 호출 제한(토큰당 분당 60, 쓰기 20, JSON-RPC 오류 응답)은 그대로 남는다
