@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "name": "StrongLifts 5x5",
+  "description": "A/B를 번갈아 주 3회. 모든 세트 성공 시 +2.5kg(데드리프트 +5kg), 3회 연속 실패 시 10% 디로드.",
+  "workingPercent": 0.8,
+  "roundingKg": 2.5,
+  "lifts": {
+    "squat":    { "exercise": { "id": "019b76da-4000-7000-8000-000000000001" } },
+    "bench":    { "exercise": { "id": "019b76da-4000-7000-8000-000000000003" } },
+    "row":      { "exercise": { "id": "019b76da-4000-7000-8000-00000000000a" } },
+    "ohp":      { "exercise": { "id": "019b76da-4000-7000-8000-000000000009" } },
+    "deadlift": { "exercise": { "id": "019b76da-4000-7000-8000-000000000006" } }
+  },
+  "progression": {
+    "squat":    { "type": "LINEAR", "incrementKg": 2.5, "failuresBeforeDeload": 3, "deloadPercent": 0.1 },
+    "bench":    { "type": "LINEAR", "incrementKg": 2.5, "failuresBeforeDeload": 3, "deloadPercent": 0.1 },
+    "row":      { "type": "LINEAR", "incrementKg": 2.5, "failuresBeforeDeload": 3, "deloadPercent": 0.1 },
+    "ohp":      { "type": "LINEAR", "incrementKg": 2.5, "failuresBeforeDeload": 3, "deloadPercent": 0.1 },
+    "deadlift": { "type": "LINEAR", "incrementKg": 5,   "failuresBeforeDeload": 3, "deloadPercent": 0.1 }
+  },
+  "days": [
+    { "key": "A", "name": "Workout A", "exercises": [
+      { "lift": "squat", "sets": [ { "count": 5, "reps": 5, "load": { "type": "WORKING" } } ] },
+      { "lift": "bench", "sets": [ { "count": 5, "reps": 5, "load": { "type": "WORKING" } } ] },
+      { "lift": "row",   "sets": [ { "count": 5, "reps": 5, "load": { "type": "WORKING" } } ] }
+    ] },
+    { "key": "B", "name": "Workout B", "exercises": [
+      { "lift": "squat",    "sets": [ { "count": 5, "reps": 5, "load": { "type": "WORKING" } } ] },
+      { "lift": "ohp",      "sets": [ { "count": 5, "reps": 5, "load": { "type": "WORKING" } } ] },
+      { "lift": "deadlift", "sets": [ { "count": 1, "reps": 5, "load": { "type": "WORKING" } } ] }
+    ] }
+  ]
+}

@@ -1,0 +1,339 @@
+openapi: 3.1.0
+info:
+  title: Fitlog API (v0.2 추가분)
+  version: 0.2.0
+  description: |
+    v0.1 openapi.yaml에 더해지는 경로와 스키마만 적는다. 여기서 v0.1 스키마를 참조할 때는 `v0.1#/components/schemas/...` 로 쓴다.
+    변경 사항(v0.1 경로):
+    - PUT /v1/me/settings = JSON merge-patch. 키가 없으면 그대로, 값이 null이면 비움(heightCm, sex, birthYear). 필수 값(weightUnit 등)에 null은 400
+    - Settings에 `e1rmFormula: EPLEY|BRZYCKI|LOMBARDI` 추가
+    - POST /v1/exercises: 같은 id 재전송은 갱신 후 201, 남의 종목·기본 종목 id는 409 CONFLICT
+    - 에러 코드에 SERVER_ERROR 추가(sync push 변경별 결과에서만, 그 외는 500)
+    - Session에 programInstanceId·planSeq·planDayKey, SessionExercise에 liftKey·accessory, WorkoutSet에 plannedSetKey·targetReps·targetWeightKg·isAmrap 추가(모두 선택)
+servers:
+  - url: https://api.example.invalid
+security:
+  - bearer: []
+paths:
+  /v1/programs:
+    get:
+      tags: [program]
+      summary: 기본 템플릿 + 내 프로그램 목록 (PRG-1)
+      parameters:
+        - { name: source, in: query, schema: { type: string, enum: [TEMPLATE, MINE] } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/ProgramSummary' } } } } }
+    post:
+      tags: [program]
+      summary: 내 프로그램 등록 (PRG-2, JSON). 이름 종목 참조는 id로 풀어서 저장
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id, definition]
+              properties:
+                id: { type: string, format: uuid }
+                definition: { $ref: './program.schema.json' }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Program' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+  /v1/programs/validate:
+    post:
+      tags: [program]
+      summary: 저장 없이 검증만 (AI 입력 미리보기에도 사용)
+      requestBody: { required: true, content: { application/json: { schema: { $ref: './program.schema.json' } } } }
+      responses:
+        '200': { description: 유효, content: { application/json: { schema: { $ref: '#/components/schemas/Program' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+  /v1/programs/{id}:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [program]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Program' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [program]
+      summary: 내 프로그램 삭제(템플릿은 403). 진행 중 인스턴스는 스냅샷이 있어 영향 없음
+      responses:
+        '204': { description: No Content }
+        '403': { $ref: '#/components/responses/Error' }
+  /v1/programs/{id}/suggest:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [program]
+      summary: 초기 TM·작업 무게 제안 (PRG-14). 측정 1RM 우선, 없으면 90일 최고 추정 1RM
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [key, exerciseId, needs]
+                  properties:
+                    key: { type: string }
+                    exerciseId: { type: string, format: uuid }
+                    needs: { type: string, enum: [TM, WORKING], description: 이 키가 필요한 값 }
+                    oneRmKg: { type: number }
+                    oneRmSource: { type: string, enum: [MEASURED, ESTIMATED] }
+                    suggestedKg: { type: number, description: 없으면 사용자가 입력해야 함 }
+
+  /v1/program-instances:
+    get:
+      tags: [instance]
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [ACTIVE, PAUSED, FINISHED] } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Instance' } } } } }
+    post:
+      tags: [instance]
+      summary: 프로그램 시작 (PRG-13, PRG-14). 여러 개 동시에 가능
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/StartInstance' } } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/Instance' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+  /v1/program-instances/{id}:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [instance]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Instance' } } } }
+    patch:
+      tags: [instance]
+      summary: 일시정지·재개·종료, 건너뛰기 방식 변경, TM·작업 무게 직접 조정(조정도 이벤트로 남아 replay에 포함)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status: { type: string, enum: [ACTIVE, PAUSED, FINISHED] }
+                skipPolicy: { type: string, enum: [SHIFT, FIXED_DATE] }
+                adjust: { type: object, properties: { tm: { type: object, additionalProperties: { type: number } }, working: { type: object, additionalProperties: { type: number } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Instance' } } } }
+        '400': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [instance]
+      summary: 인스턴스 삭제. 연결된 세션은 남고 연결만 끊김
+      responses:
+        '204': { description: No Content }
+  /v1/program-instances/{id}/plan:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [instance]
+      summary: 다음 N회차 계획. 첫 회차만 확정, 나머지는 모두 성공 가정 예상치(오프라인 캐시용)
+      parameters:
+        - { name: count, in: query, schema: { type: integer, minimum: 1, maximum: 8, default: 3 } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/PlannedWorkout' } } } } }
+  /v1/program-instances/{id}/skip:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    post:
+      tags: [instance]
+      summary: 다음 회차 건너뛰기 (PRG-6). SHIFT는 상태 변화 없음, FIXED_DATE는 다음 날로 넘어감
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, required: [planSeq], properties: { planSeq: { type: integer } } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Instance' } } } }
+        '409': { $ref: '#/components/responses/Error' }
+  /v1/program-instances/{id}/accessories:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [instance]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Accessory' } } } } }
+    put:
+      tags: [instance]
+      summary: 보조운동 목록 전체 교체 (PRG-8)
+      requestBody: { required: true, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Accessory' } } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/Accessory' } } } } }
+
+  /v1/exercises/{id}/records:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [records]
+      summary: PR·1RM (STA-2, STA-3). 워밍업 제외, 추정은 1~10회 세트만
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ExerciseRecords' } } } }
+  /v1/exercises/{id}/one-rm:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [records]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { type: array, items: { $ref: '#/components/schemas/OneRmMeasurement' } } } } }
+    post:
+      tags: [records]
+      summary: 직접 측정 1RM 입력
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/OneRmMeasurement' } } } }
+      responses:
+        '201': { description: Created, content: { application/json: { schema: { $ref: '#/components/schemas/OneRmMeasurement' } } } }
+  /v1/one-rm/{id}:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    delete:
+      tags: [records]
+      responses:
+        '204': { description: No Content }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    Id: { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+  responses:
+    Error:
+      description: v0.1 에러 형식
+      content: { application/json: { schema: { type: object } } }
+    ValidationError:
+      description: 400 VALIDATION_FAILED. 프로그램 검증이면 details에 JSON 포인터 경로별 메시지
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: object
+                properties:
+                  code: { const: VALIDATION_FAILED }
+                  message: { type: string }
+                  details: { type: array, items: { type: object, required: [path, message], properties: { path: { type: string, example: /days/0/exercises/1/lift }, message: { type: string } } } }
+  schemas:
+    ProgramSummary:
+      type: object
+      required: [id, name, builtIn, dayCount]
+      properties:
+        id: { type: string, format: uuid }
+        templateKey: { type: string }
+        name: { type: string }
+        description: { type: string }
+        builtIn: { type: boolean }
+        dayCount: { type: integer }
+        source: { type: string, enum: [TEMPLATE, USER, AI_JSON, AI_MCP] }
+    Program:
+      allOf:
+        - $ref: '#/components/schemas/ProgramSummary'
+        - type: object
+          required: [definition]
+          properties:
+            definition: { $ref: './program.schema.json' }
+    StartInstance:
+      type: object
+      required: [id, programId, startDate, tz]
+      properties:
+        id: { type: string, format: uuid }
+        programId: { type: string, format: uuid }
+        startDate: { type: string, format: date }
+        tz: { type: string }
+        skipPolicy: { type: string, enum: [SHIFT, FIXED_DATE], default: SHIFT }
+        tm: { type: object, additionalProperties: { type: number }, description: 키 → kg. suggest의 needs=TM 키 }
+        working: { type: object, additionalProperties: { type: number }, description: 키 → kg. needs=WORKING 키 }
+    Instance:
+      type: object
+      required: [id, programId, name, status, skipPolicy, startDate, state]
+      properties:
+        id: { type: string, format: uuid }
+        programId: { type: string, format: uuid }
+        name: { type: string }
+        status: { type: string, enum: [ACTIVE, PAUSED, FINISHED] }
+        skipPolicy: { type: string, enum: [SHIFT, FIXED_DATE] }
+        startDate: { type: string, format: date }
+        state:
+          type: object
+          description: engine.md State 중 화면에 필요한 것
+          properties:
+            tm: { type: object, additionalProperties: { type: number } }
+            working: { type: object, additionalProperties: { type: number } }
+            stage: { type: object, additionalProperties: { type: integer } }
+            failStreak: { type: object, additionalProperties: { type: integer } }
+            week: { type: integer }
+            cycle: { type: integer }
+            seq: { type: integer }
+        next: { $ref: '#/components/schemas/PlannedWorkout' }
+    PlannedSet:
+      type: object
+      required: [plannedSetKey, targetReps, isAmrap, isWarmup]
+      properties:
+        plannedSetKey: { type: string, example: D2.0.2 }
+        targetReps: { type: integer }
+        targetWeightKg: { type: number, description: 없으면 무게 없음(NONE)·맨몸 }
+        isAmrap: { type: boolean }
+        isWarmup: { type: boolean }
+    PlannedWorkout:
+      type: object
+      required: [instanceId, planSeq, dayIndex, dayKey, dayName, week, cycle, exercises]
+      properties:
+        instanceId: { type: string, format: uuid }
+        planSeq: { type: integer }
+        dayIndex: { type: integer }
+        dayKey: { type: string }
+        dayName: { type: string }
+        week: { type: integer }
+        cycle: { type: integer }
+        scheduledDate: { type: string, format: date, description: FIXED_DATE일 때만 }
+        confirmed: { type: boolean, description: true = 첫 회차(확정) }
+        exercises:
+          type: array
+          items:
+            type: object
+            required: [key, exerciseId, accessory, sets]
+            properties:
+              key: { type: string, description: lifts 키. 인스턴스 보조운동은 'acc:<accessoryId>' }
+              exerciseId: { type: string, format: uuid }
+              accessory: { type: boolean }
+              sets: { type: array, items: { $ref: '#/components/schemas/PlannedSet' } }
+    Accessory:
+      type: object
+      required: [id, dayKey, exerciseId, position, sets, reps]
+      properties:
+        id: { type: string, format: uuid }
+        dayKey: { type: string }
+        exerciseId: { type: string, format: uuid }
+        position: { type: integer }
+        sets: { type: integer, minimum: 1, maximum: 20 }
+        reps: { type: integer, minimum: 0, maximum: 100 }
+        weightKg: { type: number }
+    OneRmMeasurement:
+      type: object
+      required: [id, weightKg, measuredAt]
+      properties:
+        id: { type: string, format: uuid }
+        exerciseId: { type: string, format: uuid, readOnly: true }
+        weightKg: { type: number, exclusiveMinimum: 0 }
+        measuredAt: { type: string, format: date-time }
+        note: { type: string }
+    ExerciseRecords:
+      type: object
+      required: [exerciseId, formula, byReps]
+      properties:
+        exerciseId: { type: string, format: uuid }
+        formula: { type: string, enum: [EPLEY, BRZYCKI, LOMBARDI] }
+        bestWeight: { $ref: '#/components/schemas/RecordPoint' }
+        bestE1rm: { $ref: '#/components/schemas/RecordPoint' }
+        latestMeasured: { $ref: '#/components/schemas/OneRmMeasurement' }
+        byReps:
+          type: array
+          description: 횟수(1~10)별 최고 무게
+          items:
+            type: object
+            required: [reps, point]
+            properties:
+              reps: { type: integer }
+              point: { $ref: '#/components/schemas/RecordPoint' }
+    RecordPoint:
+      type: object
+      required: [weightKg, reps, sessionId, setId, achievedAt]
+      properties:
+        weightKg: { type: number }
+        reps: { type: integer }
+        e1rmKg: { type: number }
+        sessionId: { type: string, format: uuid }
+        setId: { type: string, format: uuid }
+        achievedAt: { type: string, format: date-time }
