@@ -19,6 +19,7 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
+import kotlinx.serialization.json.JsonObject
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -73,6 +74,7 @@ private fun validateSettings(s: Settings) {
     s.sex?.let { if (it !in setOf("MALE", "FEMALE", "OTHER")) validation("sex must be MALE, FEMALE or OTHER", "sex") }
     s.defaultRestSec?.let { if (it !in 0..3600) validation("defaultRestSec must be 0..3600", "defaultRestSec") }
     s.birthYear?.let { if (it !in 1900..2100) validation("birthYear must be 1900..2100", "birthYear") }
+    s.e1rmFormula?.let { if (it !in setOf("EPLEY", "BRZYCKI", "LOMBARDI")) validation("e1rmFormula must be EPLEY, BRZYCKI or LOMBARDI", "e1rmFormula") }
     s.heightCm?.let { if (!it.isFinite() || it < 50.0 || it > 300.0) validation("heightCm must be 50..300", "heightCm") }
 }
 
@@ -117,9 +119,10 @@ fun Route.accountRoutes(config: AppConfig) {
             get { call.respond(dbQuery { loadSettings(call.userId) }) }
             put {
                 val uid = call.userId
-                val body = call.receive<Settings>()
-                validateSettings(body)
-                call.respond(dbQuery { patchSettings(uid, body); loadSettings(uid) })
+                // JSON merge-patch: 키 없음 = 유지, null = 비움(heightCm·sex·birthYear 만)
+                val patch = parseSettingsPatch(call.receive<JsonObject>())
+                validateSettings(patch.asSettings())
+                call.respond(dbQuery { patchSettings(uid, patch); loadSettings(uid) })
             }
         }
 

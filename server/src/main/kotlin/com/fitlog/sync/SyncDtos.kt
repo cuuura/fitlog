@@ -48,6 +48,9 @@ internal data class SessionPayload(
     val endedAt: Instant? = null,
     val tz: String,
     val note: String? = null,
+    val programInstanceId: UUID? = null,
+    val planSeq: Int? = null,
+    val planDayKey: String? = null,
 )
 
 @Serializable
@@ -55,6 +58,8 @@ internal data class SessionExercisePayload(
     val exerciseId: UUID,
     val position: Int,
     val note: String? = null,
+    val liftKey: String? = null,
+    val accessory: Boolean = false,
 )
 
 @Serializable

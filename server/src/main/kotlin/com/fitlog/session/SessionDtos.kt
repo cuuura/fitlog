@@ -25,6 +25,11 @@ data class WorkoutSet(
     val restSec: Int? = null,
     val note: String? = null,
     val completedAt: Instant? = null,
+    // v0.2 계획 연결(모두 선택)
+    val plannedSetKey: String? = null,
+    val targetReps: Int? = null,
+    val targetWeightKg: Double? = null,
+    val isAmrap: Boolean = false,
 )
 
 @Serializable
@@ -34,6 +39,8 @@ data class SessionExercise(
     val position: Int,
     val note: String? = null,
     val sets: List<WorkoutSet> = emptyList(),
+    val liftKey: String? = null,
+    val accessory: Boolean = false,
 )
 
 @Serializable
@@ -48,6 +55,9 @@ data class Session(
     val exercises: List<SessionExercise> = emptyList(),
     /** readOnly */
     val updatedAt: Instant? = null,
+    val programInstanceId: UUID? = null,
+    val planSeq: Int? = null,
+    val planDayKey: String? = null,
 )
 
 @Serializable

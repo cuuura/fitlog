@@ -16,7 +16,7 @@ fun Route.syncRoutes(config: AppConfig) {
         val uid = call.userId
         val req = call.receive<PushRequest>()
         if (req.changes.size > MAX_PUSH) validation("changes must have at most $MAX_PUSH items", "changes")
-        val results = dbQuery { push(uid, req.changes) }
+        val results = dbQuery { push(uid, req.changes, config.engine) }
         call.respond(PushResponse(results))
     }
 
