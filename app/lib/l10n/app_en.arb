@@ -721,5 +721,238 @@
   "settingsE1rmNote": "Only sets of 1–10 reps count; warm-ups are excluded.",
   "profileClear": "Clear",
   "settingsAi": "AI integration",
-  "settingsAiSubtitle": "Connect AI, import JSON, deletion requests, export"
+  "settingsAiSubtitle": "Connect AI, import JSON, deletion requests, export",
+  "importTitle": "Import JSON",
+  "importInputIntro": "Paste the JSON an AI made, or load it from a file.",
+  "importPasteHint": "Paste the JSON here",
+  "importPasteClipboard": "Paste from clipboard",
+  "importPickFile": "Choose file",
+  "importClipboardEmpty": "The clipboard is empty.",
+  "importFileReadError": "Couldn't read the file. Check that it is a UTF-8 JSON file.",
+  "importClientLabel": "Which AI made it?",
+  "importClientClaude": "Claude",
+  "importClientChatGpt": "ChatGPT",
+  "importClientGemini": "Gemini",
+  "importClientOther": "Other",
+  "importCopyPrompt": "Copy prompt for the AI",
+  "importPromptCopied": "Prompt copied. Paste it to the AI and add your request.",
+  "importPreviewButton": "Preview",
+  "importParseError": "JSON error near line {line}, column {column}.",
+  "@importParseError": {
+    "placeholders": {
+      "line": {
+        "type": "int"
+      },
+      "column": {
+        "type": "int"
+      }
+    }
+  },
+  "importParseNotObject": "The JSON must be a single object wrapped in curly braces.",
+  "importParseEmpty": "Nothing to import.",
+  "importValidationTitle": "The format is invalid, so it can't be saved",
+  "importValidationHint": "Tell the AI about the errors below and ask it to try again.",
+  "importBackToInput": "Back to input",
+  "importErrorGeneric": "Something went wrong: {message}",
+  "@importErrorGeneric": {
+    "placeholders": {
+      "message": {
+        "type": "String"
+      }
+    }
+  },
+  "importErrorNetwork": "Couldn't reach the server. Check your connection.",
+  "importPreviewTitle": "What will be imported",
+  "importChunkProgress": "Batch {index}/{total}",
+  "@importChunkProgress": {
+    "placeholders": {
+      "index": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "importChunkInfo": "There is a lot of data, so it is saved in {total} batches.",
+  "@importChunkInfo": {
+    "placeholders": {
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "importCountKindExercises": "Exercises",
+  "importCountKindPrograms": "Programs",
+  "importCountKindStartPrograms": "Program starts",
+  "importCountKindSessions": "Sessions",
+  "importCountKindBodyMeasurements": "Body weight",
+  "importCountNew": "{n} new",
+  "@importCountNew": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importCountUnchanged": "{n} unchanged",
+  "@importCountUnchanged": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importCountReplace": "{n} replaced",
+  "@importCountReplace": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importCountSkip": "{n} skipped",
+  "@importCountSkip": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importNoConflicts": "No conflicts. Ready to save.",
+  "importConflictsTitle": "{n} conflicts",
+  "@importConflictsTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSkipAll": "Skip all",
+  "importResolveAllHint": "Resolve every conflict to save.",
+  "importSave": "Save",
+  "importSaving": "Saving…",
+  "importPreviewing": "Checking…",
+  "importExisting": "Existing data",
+  "importConflictSessionOverlap": "Session overlaps",
+  "importConflictUnknownExercise": "Unknown exercise",
+  "importConflictBodySameDay": "Body weight already logged that day",
+  "importConflictProgramNameExists": "A program with this name exists",
+  "importConflictIdExists": "Id exists with different content",
+  "importConflictPlanMismatch": "Program plan number doesn't match",
+  "importConflictInstanceNeedsValue": "Starting weights are missing",
+  "importActionSkip": "Skip",
+  "importActionKeepBoth": "Keep both",
+  "importActionReplace": "Replace existing",
+  "importActionMapTo": "Use an existing exercise",
+  "importActionCreate": "Create as new exercise",
+  "importActionUnlink": "Save without program link",
+  "importActionSet": "Enter values",
+  "importReplaceWarning": "The existing data is deleted. You can restore it by reverting from history.",
+  "importCandidates": "Similar exercises",
+  "importPickOtherExercise": "Choose another exercise",
+  "importCreateSheetTitle": "New exercise",
+  "importCreateType": "Type",
+  "importCreateMuscle": "Primary muscle",
+  "importCreateConfirm": "Confirm",
+  "importCreatedSummary": "{type} · {muscle}",
+  "@importCreatedSummary": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      },
+      "muscle": {
+        "type": "String"
+      }
+    }
+  },
+  "importSetSheetTitle": "Starting weights",
+  "importSetTm": "Training max ({unit})",
+  "@importSetTm": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "importSetWorking": "Working weight ({unit})",
+  "@importSetWorking": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
+  "importSetNoKeys": "Nothing to fill in. Choose skip.",
+  "importSetSummary": "{n} values entered",
+  "@importSetSummary": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSetInvalid": "Enter a number greater than 0.",
+  "importResultTitle": "Import complete",
+  "importResultNothing": "Nothing new was saved.",
+  "importSummaryExercises": "Exercises {n}",
+  "@importSummaryExercises": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryPrograms": "Programs {n}",
+  "@importSummaryPrograms": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryInstances": "Program starts {n}",
+  "@importSummaryInstances": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummarySessions": "Sessions {n}",
+  "@importSummarySessions": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryBody": "Body weight {n}",
+  "@importSummaryBody": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importSummaryReplaced": "Replaced {n}",
+  "@importSummaryReplaced": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "importViewHistory": "View in history",
+  "importNextChunk": "Next batch",
+  "importDone": "Done",
+  "importFileLoaded": "File loaded ({kb} KB)",
+  "@importFileLoaded": {
+    "placeholders": {
+      "kb": {
+        "type": "int"
+      }
+    }
+  },
+  "importClear": "Clear"
 }
