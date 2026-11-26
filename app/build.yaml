@@ -1,0 +1,7 @@
+# drift: DateTime을 ISO-8601 텍스트(UTC)로 저장해 밀리초 정밀도를 지킨다(outbox clientUpdatedAt 비교용).
+targets:
+  $default:
+    builders:
+      drift_dev:
+        options:
+          store_date_time_values_as_text: true
