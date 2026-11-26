@@ -69,9 +69,9 @@ private sealed interface ExRes {
 private enum class Out { NEW, UNCHANGED, SKIP, UNRESOLVED }
 
 /** id 충돌 판정 결과. inPlace = ID_EXISTS REPLACE(같은 id 에 덮어씀), keepBoth = ID_EXISTS KEEP_BOTH(새 id) */
-private class Cls(val id: UUID, val out: Out, val inPlace: Boolean = false, val keepBoth: Boolean = false)
+private class Cls(val id: UUID, val out: Out, val inPlace: Boolean = false, val keepBoth: Boolean = false, val remapped: Boolean = false)
 
-private class Ex(val mine: Boolean, val deleted: Boolean, val same: () -> Boolean)
+private class Ex(val mine: Boolean, val deleted: Boolean, val shared: Boolean = false, val same: () -> Boolean)
 
 private class Cand(
     val s: PSession, val ws: WSession, val cls: Cls, val replaces: List<Old>,
@@ -99,6 +99,9 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
     private val bundleExIds = mutableMapOf<UUID, ExRow>()
     private val skippedBundleExIds = mutableSetOf<UUID>()
     private val unknownMemo = mutableMapOf<String, ExRes>()
+
+    /** 다른 사용자 행과 겹쳐 바꾼 id (원래 id 문자열 -> 새 id 문자열) */
+    private val remap = mutableMapOf<String, String>()
 
     private class PEff(val id: UUID, val def: ProgramDefinition)
 
@@ -155,10 +158,18 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
 
     private fun invalid() = ApiException(ErrorCode.VALIDATION_FAILED, "bundle is invalid", details = errors.toList())
 
+    private fun rewriteIds(el: JsonElement): JsonElement = when {
+        remap.isEmpty() -> el
+        el is JsonObject -> JsonObject(el.mapValues { rewriteIds(it.value) })
+        el is JsonArray -> JsonArray(el.map { rewriteIds(it) })
+        el is JsonPrimitive && el.isString -> remap[el.content.lowercase()]?.let { JsonPrimitive(it) } ?: el
+        else -> el
+    }
+
     private fun validatePrograms(resolver: ExerciseResolver): Map<Int, ProgramDefinition> {
         val out = mutableMapOf<Int, ProgramDefinition>()
         for (p in bundle.programs) {
-            when (val v = ProgramValidator.validate(p.definition, resolver)) {
+            when (val v = ProgramValidator.validate(rewriteIds(p.definition), resolver)) {
                 is ValidationResult.Valid -> out[p.index] = v.definition
                 is ValidationResult.Invalid -> v.errors.forEach { errors += ErrorDetail("${p.ptr}/definition${it.path}", it.message) }
             }
@@ -202,15 +213,24 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
         ptr: String, explicit: UUID?, allowReplace: Boolean, lookup: (UUID) -> Ex?, summary: (UUID) -> JsonObject?,
     ): Cls {
         var id = eid(ptr, explicit)
-        val ex = lookup(id)
-        if (ex != null && ex.mine && !ex.deleted && ex.same()) return Cls(id, Out.UNCHANGED)
+        var ex = lookup(id)
+        var remapped = false
+        if (ex != null && !ex.mine && !ex.shared) {
+            // 다른 사용자의 행과 id 가 겹침: 알리지 않고 결정적 새 id 로 바꾼다(묶음 안 참조도 같이 바뀐다)
+            val old = id
+            id = detId(uid, hash, "$ptr#remap")
+            ex = lookup(id)
+            remapped = true
+            remap[old.toString()] = id.toString()
+        }
+        if (ex != null && ex.mine && !ex.deleted && ex.same()) return Cls(id, Out.UNCHANGED, remapped = remapped)
         if (ex != null && !(ex.mine && ex.deleted)) {
             val allowed = if (ex.mine && allowReplace) listOf("SKIP", "REPLACE", "KEEP_BOTH") else listOf("SKIP", "KEEP_BOTH")
             val r = decide("ID_EXISTS", ptr, "an item with this id already exists with different content", allowed, if (ex.mine) summary(id) else null)
             return when (r?.action) {
                 null -> Cls(id, Out.UNRESOLVED)
                 "SKIP" -> Cls(id, Out.SKIP)
-                "REPLACE" -> Cls(id, Out.NEW, inPlace = true)
+                "REPLACE" -> Cls(id, Out.NEW, inPlace = true, remapped = remapped)
                 else -> {
                     id = detId(uid, hash, "$ptr#2")
                     val again = lookup(id)
@@ -219,7 +239,7 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
                 }
             }
         }
-        return Cls(id, Out.NEW)
+        return Cls(id, Out.NEW, remapped = remapped)
     }
 
     private fun kindWhat(c: Cls) = if (c.inPlace) "REPLACE" else "NEW"
@@ -256,7 +276,7 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
                 e.ptr, e.id, true,
                 lookup = { id ->
                     Exercises.selectAll().where { Exercises.id eq id }.singleOrNull()?.let { r ->
-                        Ex(r[Exercises.ownerId] == uid, r[Exercises.deletedAt] != null) {
+                        Ex(r[Exercises.ownerId] == uid, r[Exercises.deletedAt] != null, r[Exercises.ownerId] == null) {
                             r[Exercises.nameKo] == e.nameKo && r[Exercises.nameEn] == e.nameEn && r[Exercises.type] == e.type &&
                                 r[Exercises.primaryMuscle] == e.primaryMuscle && r[Exercises.secondaryMuscles].toSet() == e.secondary.toSet()
                         }
@@ -308,10 +328,11 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
 
     private fun resolveEx(ref: PExRef, exPtr: String): ExRes = when (ref) {
         is PExRef.ById -> {
-            val row = bundleExIds[ref.id] ?: visible.firstOrNull { it.id == ref.id }
+            val rid = remap[ref.id.toString()]?.let { UUID.fromString(it) } ?: ref.id
+            val row = bundleExIds[rid] ?: visible.firstOrNull { it.id == rid }
             when {
                 row != null -> ExRes.Found(row)
-                ref.id in skippedBundleExIds -> ExRes.Skipped
+                rid in skippedBundleExIds -> ExRes.Skipped
                 else -> { err("$exPtr/exercise/id", "unknown exercise"); ExRes.Pending }
             }
         }
@@ -387,7 +408,7 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
                 p.ptr, p.id, true,
                 lookup = { id ->
                     Programs.selectAll().where { Programs.id eq id }.singleOrNull()?.let { r ->
-                        Ex(r[Programs.ownerId] == uid, r[Programs.deletedAt] != null) {
+                        Ex(r[Programs.ownerId] == uid, r[Programs.deletedAt] != null, r[Programs.ownerId] == null) {
                             runCatching { AppJson.decodeFromString<ProgramDefinition>(r[Programs.definition]) }.getOrNull() == def
                         }
                     }
@@ -736,20 +757,22 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
                 Out.UNRESOLVED -> continue
                 Out.NEW -> {}
             }
-            val ws = (if (c.keepBoth) build("#2", c.id) else firstWs).let {
+            val ws = (if (c.keepBoth) build("#2", c.id) else if (c.remapped) build("#remap", c.id) else firstWs).let {
                 WSession(c.id, it.startedAt, it.endedAt, it.tz, it.note, null, it.planSeq, it.exercises, it.label, c.inPlace)
             }
 
             // 지원 검사: 명시한 세트 id 가 다른 세션 것이면 거절
             val setIds = ws.exercises.flatMap { e -> e.sets.map { it.id } }
-            if (setIds.isNotEmpty() && !c.keepBoth) {
+            var ws2 = ws
+            if (setIds.isNotEmpty() && !c.keepBoth && !c.remapped) {
                 val clash = WorkoutSets
                     .join(SessionExercises, org.jetbrains.exposed.sql.JoinType.INNER, WorkoutSets.sessionExerciseId, SessionExercises.id)
                     .select(WorkoutSets.id, SessionExercises.sessionId).where { WorkoutSets.id inList setIds }
                     .firstOrNull { it[SessionExercises.sessionId] != ws.id }
                 if (clash != null) {
-                    s.exercises.forEach { ex -> ex.sets.forEach { if (it.id == clash[WorkoutSets.id]) err("${it.ptr}/id", "id is used by another session") } }
-                    continue
+                    ws2 = build("#remap", ws.id).let {
+                        WSession(ws.id, it.startedAt, it.endedAt, it.tz, it.note, null, it.planSeq, it.exercises, it.label, ws.replace)
+                    }
                 }
             }
 
@@ -783,7 +806,7 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
                 }
             }
             if (skip) continue
-            cands += Cand(s, ws, c, replaces)
+            cands += Cand(s, ws2, c, replaces)
         }
 
         // PLAN_MISMATCH: 인스턴스마다 planSeq 순으로 다음 회차부터 이어지는지 본다

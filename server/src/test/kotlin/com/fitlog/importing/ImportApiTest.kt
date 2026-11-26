@@ -523,4 +523,43 @@ class ImportApiTest {
         assertEquals(HttpStatusCode.NotFound, c.revert(uid, newId()).status)
         assertEquals(JsonPrimitive(id), c.get("/v1/imports?limit=5") { auth(uid) }.arr()[0].jsonObject["id"])
     }
+
+    @Test
+    fun export_of_one_user_imports_into_another_account_with_same_records() = fitlogTest {
+        startApplication()
+        val c = jsonClient()
+        val a = createUser()
+        val b = createUser()
+        val iid = newId()
+        fun ex(id: String, w: Int) = """{"exercise":{"id":"$id"},"sets":[${sets(5, w, 5)}]}"""
+        val custom = newId()
+        val src = bundle(
+            """"exercises":[{"id":"$custom","nameKo":"내보낼운동","type":"MACHINE","primaryMuscle":"BACK"}]""",
+            """"startPrograms":[{"id":"$iid","program":{"templateKey":"stronglifts-5x5"},"startDate":"2026-11-02","working":{"squat":100,"bench":60,"row":50,"ohp":40,"deadlift":120}}]""",
+            sessions(
+                """{"id":"${newId()}","startedAt":"2026-11-02T10:00:00+09:00","tz":"Asia/Seoul","program":{"instanceId":"$iid","planSeq":1},
+                   "exercises":[${ex(SQUAT, 100)},${ex(BENCH, 60)},${ex(ROW, 50)},{"exercise":{"id":"$custom"},"sets":[{"id":"${newId()}","weightKg":30,"reps":10}]}]}""",
+            ),
+            bodies("""{"id":"${newId()}","measuredAt":"2026-11-02T08:00:00+09:00","weightKg":72.5}"""),
+        )
+        assertEquals(HttpStatusCode.Created, c.imp(a, src).status)
+        val exported = c.get("/v1/export.json") { auth(a) }.bodyAsText()
+        val r = c.post("/v1/imports") { auth(b); jsonBody(); setBody("""{"bundle":$exported}""") }
+        assertEquals(HttpStatusCode.Created, r.status, r.bodyAsText())
+        assertEquals(runBlockingList(c, a), runBlockingList(c, b))
+        val ia = c.get("/v1/program-instances") { auth(a) }.arr().single().jsonObject
+        val ib = c.get("/v1/program-instances") { auth(b) }.arr().single().jsonObject
+        assertEquals(ia["state"], ib["state"])
+        assertNotEquals(ia.str("id"), ib.str("id"))
+        assertEquals(1, ib["state"]!!.jsonObject["seq"]!!.jsonPrimitive.int)
+        // 같은 요청 재전송은 멱등
+        val again = c.post("/v1/imports") { auth(b); jsonBody(); setBody("""{"bundle":$exported}""") }
+        assertEquals(HttpStatusCode.OK, again.status)
+        assertEquals(r.obj().str("id"), again.obj().str("id"))
+        // A 의 데이터는 그대로
+        assertEquals(1, c.get("/v1/program-instances") { auth(a) }.arr().size)
+    }
+
+    private suspend fun runBlockingList(c: HttpClient, u: UUID): List<String> =
+        c.get("/v1/sessions") { auth(u) }.arr().map { it.jsonObject["totalVolumeKg"]!!.jsonPrimitive.content }
 }
