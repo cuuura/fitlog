@@ -5,5 +5,50 @@
   "commonCancel": "Cancel",
   "commonDelete": "Delete",
   "commonRetry": "Retry",
-  "commonError": "Something went wrong"
+  "commonError": "Something went wrong",
+  "timerRestTitle": "Resting",
+  "timerRestTitleWithLabel": "Rest · {label}",
+  "@timerRestTitleWithLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "timerRunningBody": "We'll let you know when it's over",
+  "timerDoneTitle": "Rest over",
+  "timerDoneBody": "Time for your next set",
+  "timerAddSeconds": "+{seconds}s",
+  "@timerAddSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timerSubSeconds": "−{seconds}s",
+  "@timerSubSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timerSkip": "Skip",
+  "timerChannelRunning": "Rest timer",
+  "timerChannelRunningDesc": "Shows the remaining rest time while the timer runs",
+  "timerChannelDone": "Rest finished",
+  "timerChannelDoneDesc": "Sound and vibration when rest is over",
+  "syncStatusSyncing": "Syncing",
+  "syncStatusOffline": "Offline",
+  "syncStatusError": "Sync error",
+  "syncStatusDone": "Synced",
+  "syncPendingCount": "{count} pending",
+  "@syncPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

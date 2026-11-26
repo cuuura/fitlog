@@ -5,5 +5,50 @@
   "commonCancel": "취소",
   "commonDelete": "삭제",
   "commonRetry": "다시 시도",
-  "commonError": "문제가 생겼어요"
+  "commonError": "문제가 생겼어요",
+  "timerRestTitle": "휴식 중",
+  "timerRestTitleWithLabel": "휴식 · {label}",
+  "@timerRestTitleWithLabel": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "timerRunningBody": "끝나면 알려드려요",
+  "timerDoneTitle": "휴식 끝",
+  "timerDoneBody": "다음 세트를 시작하세요",
+  "timerAddSeconds": "+{seconds}초",
+  "@timerAddSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timerSubSeconds": "−{seconds}초",
+  "@timerSubSeconds": {
+    "placeholders": {
+      "seconds": {
+        "type": "int"
+      }
+    }
+  },
+  "timerSkip": "건너뛰기",
+  "timerChannelRunning": "휴식 타이머",
+  "timerChannelRunningDesc": "휴식 시간이 흐르는 동안 상단에 남은 시간을 보여줘요",
+  "timerChannelDone": "휴식 종료 알림",
+  "timerChannelDoneDesc": "휴식이 끝나면 소리와 진동으로 알려줘요",
+  "syncStatusSyncing": "동기화 중",
+  "syncStatusOffline": "오프라인",
+  "syncStatusError": "동기화 오류",
+  "syncStatusDone": "동기화됨",
+  "syncPendingCount": "{count}개 대기 중",
+  "@syncPendingCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  }
 }

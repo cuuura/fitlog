@@ -1,11 +1,20 @@
-// B3 소유. 세션 화면 하단에 붙이는 휴식 타이머 막대. 골격은 최소 표시만 한다.
+// B3 소유. 세션 화면 하단에 붙이는 휴식 타이머 막대: 남은 시간 큰 글씨, 진행 막대, -15/+15초, 건너뛰기.
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/clock.dart';
+import '../../l10n/gen/app_localizations.dart';
 import 'rest_timer_controller.dart';
+
+String formatRestRemaining(Duration d) {
+  // 올림해서 "00:00"이 남은 시간 0.4초 동안 보이지 않게 한다.
+  final secs = (d.inMilliseconds / 1000).ceil();
+  final mm = (secs ~/ 60).toString().padLeft(2, '0');
+  final ss = (secs % 60).toString().padLeft(2, '0');
+  return '$mm:$ss';
+}
 
 class RestTimerBar extends ConsumerStatefulWidget {
   const RestTimerBar({super.key});
@@ -19,7 +28,9 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
   @override
   void initState() {
     super.initState();
-    _tick = Timer.periodic(const Duration(milliseconds: 500), (_) => setState(() {}));
+    _tick = Timer.periodic(const Duration(milliseconds: 250), (_) {
+      if (mounted && ref.read(restTimerProvider).running) setState(() {});
+    });
   }
 
   @override
@@ -32,14 +43,65 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
   Widget build(BuildContext context) {
     final s = ref.watch(restTimerProvider);
     if (!s.running) return const SizedBox.shrink();
-    final left = s.remaining(ref.read(clockProvider)());
-    final mm = left.inMinutes.toString().padLeft(2, '0');
-    final ss = (left.inSeconds % 60).toString().padLeft(2, '0');
+    final l10n = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final now = ref.read(clockProvider)();
+    final left = s.remaining(now);
+    final ctrl = ref.read(restTimerProvider.notifier);
+
     return Material(
-      color: Theme.of(context).colorScheme.secondaryContainer,
-      child: ListTile(
-        title: Text('$mm:$ss'),
-        trailing: IconButton(icon: const Icon(Icons.close), onPressed: () => ref.read(restTimerProvider.notifier).stop()),
+      color: scheme.secondaryContainer,
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (s.label != null && s.label!.isNotEmpty)
+                Text(s.label!, style: Theme.of(context).textTheme.labelMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
+              Row(
+                children: [
+                  Text(
+                    formatRestRemaining(left),
+                    key: const Key('restTimerRemaining'),
+                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                      fontFeatures: const [FontFeature.tabularFigures()],
+                      color: scheme.onSecondaryContainer,
+                    ),
+                  ),
+                  const Spacer(),
+                  TextButton(
+                    key: const Key('restTimerMinus'),
+                    onPressed: () => ctrl.addSeconds(-15),
+                    child: Text(l10n.timerSubSeconds(15)),
+                  ),
+                  TextButton(
+                    key: const Key('restTimerPlus'),
+                    onPressed: () => ctrl.addSeconds(15),
+                    child: Text(l10n.timerAddSeconds(15)),
+                  ),
+                  FilledButton.tonal(
+                    key: const Key('restTimerSkip'),
+                    onPressed: ctrl.stop,
+                    child: Text(l10n.timerSkip),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: LinearProgressIndicator(
+                  key: const Key('restTimerProgress'),
+                  value: s.progress(now),
+                  minHeight: 6,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
