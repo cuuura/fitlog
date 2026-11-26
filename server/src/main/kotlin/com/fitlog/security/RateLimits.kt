@@ -42,10 +42,10 @@ private fun mcpKey(call: ApplicationCall): String {
 
 /** config.rateLimits.enabled 일 때 RateLimit 플러그인 설치(429 + Retry-After + RATE_LIMITED 본문) */
 fun Application.installRateLimits(config: AppConfig) {
+    // 프록시 뒤라면 호출 제한과 무관하게 실제 클라이언트 IP 를 쓴다
+    if (config.trustProxy) install(XForwardedHeaders)
     val rl = config.rateLimits
     if (!rl.enabled) return
-
-    if (config.trustProxy) install(XForwardedHeaders)
 
     install(RateLimit) {
         register(Bucket.AUTH.limitName()) {

@@ -48,6 +48,7 @@ class IntegrityTest {
             "wrongpkg" -> good(bodyToken).copy(packageName = "evil.app")
             "stale" -> good(bodyToken).copy(timestampMillis = System.currentTimeMillis() - 3_600_000)
             "boom" -> throw java.io.IOException("network down")
+            "garbage" -> throw InvalidIntegrityTokenException("decodeIntegrityToken HTTP 400")
             else -> error("unexpected $header")
         }
     }
@@ -125,6 +126,13 @@ class IntegrityTest {
     @Test
     fun verifierExceptionIsFailOpenEvenInEnforce() = run(IntegrityMode.ENFORCE) {
         assertEquals(HttpStatusCode.OK, client.google(fixed, "boom").status)
+    }
+
+    @Test
+    fun tokenRejectedByGoogleIsBlockedInEnforce() = run(IntegrityMode.ENFORCE) {
+        val r = client.google(fixed, "garbage")
+        assertEquals(HttpStatusCode.Forbidden, r.status)
+        assertEquals("INTEGRITY_FAILED", r.code())
     }
 
     @Test

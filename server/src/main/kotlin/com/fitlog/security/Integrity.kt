@@ -95,10 +95,15 @@ class GoogleIntegrityVerifier(private val cfg: IntegrityConfig) : IntegrityVerif
             .POST(HttpRequest.BodyPublishers.ofString(reqBody))
             .build()
         val res = http.send(req, HttpResponse.BodyHandlers.ofString())
+        // 400 = 토큰 자체가 잘못됨(위조·손상) → 판정 실패. 그 밖의 오류(인증 설정·5xx)는 호출 실패로 보고 fail-open
+        if (res.statusCode() == 400) throw InvalidIntegrityTokenException("decodeIntegrityToken HTTP 400")
         check(res.statusCode() == 200) { "decodeIntegrityToken HTTP ${res.statusCode()}" }
         parseIntegrityResponse(res.body())
     }
 }
+
+/** 검증기가 토큰 자체를 거부했을 때(Google 400). fail-open 대상이 아니다 */
+class InvalidIntegrityTokenException(message: String) : RuntimeException(message)
 
 private val realVerifiers = ConcurrentHashMap<IntegrityConfig, IntegrityVerifier>()
 
@@ -140,6 +145,8 @@ suspend fun checkIntegrity(call: ApplicationCall, config: AppConfig, bodyToken: 
     val verifier = config.integrityVerifierOverride ?: realVerifiers.getOrPut(cfg) { GoogleIntegrityVerifier(cfg) }
     val verdict = try {
         withTimeout(VERIFY_TIMEOUT_MS) { verifier.decode(header) }
+    } catch (e: InvalidIntegrityTokenException) {
+        return fail("invalid token")
     } catch (e: TimeoutCancellationException) {
         log.warn("integrity verifier timed out; allowing (fail-open) path={}", path)
         return
