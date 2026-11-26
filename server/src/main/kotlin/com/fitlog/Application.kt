@@ -7,6 +7,9 @@ import com.fitlog.core.AppConfig
 import com.fitlog.core.Database
 import com.fitlog.core.installCore
 import com.fitlog.exercise.exerciseRoutes
+import com.fitlog.program.catalog.programRoutes
+import com.fitlog.program.instance.instanceRoutes
+import com.fitlog.records.recordsRoutes
 import com.fitlog.session.sessionRoutes
 import com.fitlog.sync.syncRoutes
 import io.ktor.server.application.Application
@@ -41,6 +44,10 @@ fun Application.module(config: AppConfig) {
                 sessionRoutes(config)
                 bodyRoutes(config)
                 syncRoutes(config)
+                // v0.2
+                programRoutes(config)
+                instanceRoutes(config)
+                recordsRoutes(config)
             }
         }
     }

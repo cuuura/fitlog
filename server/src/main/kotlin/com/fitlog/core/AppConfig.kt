@@ -18,7 +18,11 @@ data class AppConfig(
     val googleClientIds: List<String>,
     /** null 이면 auth 패키지가 googleClientIds 로 실제 검증기를 만든다. 테스트에서 가짜 주입용 */
     val googleVerifier: GoogleIdTokenVerifier? = null,
+    /** null 이면 com.fitlog.engine.ProgramEngine. 테스트에서 가짜 엔진 주입용 */
+    val calculator: com.fitlog.engine.ProgramCalculator? = null,
 ) {
+    val engine: com.fitlog.engine.ProgramCalculator get() = calculator ?: com.fitlog.engine.ProgramEngine
+
     companion object {
         fun fromEnv(env: Map<String, String> = System.getenv()): AppConfig = AppConfig(
             port = env["PORT"]?.toInt() ?: 8080,

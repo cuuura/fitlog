@@ -35,12 +35,12 @@ fun Application.installCore(config: AppConfig) {
 
     install(StatusPages) {
         exception<ApiException> { call, e ->
-            call.respond(e.code.status, ErrorResponse(ErrorBody(e.code.name, e.message, e.field)))
+            call.respond(e.code.status, ErrorResponse(ErrorBody(e.code.name, e.message, e.field, e.details)))
         }
         exception<BadRequestException> { call, e ->
             val root = generateSequence<Throwable>(e) { it.cause }.firstOrNull { it is ApiException } as ApiException?
             if (root != null) {
-                call.respond(root.code.status, ErrorResponse(ErrorBody(root.code.name, root.message, root.field)))
+                call.respond(root.code.status, ErrorResponse(ErrorBody(root.code.name, root.message, root.field, root.details)))
             } else {
                 val msg = generateSequence<Throwable>(e) { it.cause }
                     .firstOrNull { it is SerializationException }?.message ?: (e.message ?: "bad request")
