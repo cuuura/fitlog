@@ -4,6 +4,7 @@ import 'dart:async';
 import '../../core/api/ai_dto.dart';
 import '../../core/api/dto.dart';
 import '../../core/api/program_dto.dart';
+import '../../core/api/stats_dto.dart';
 import '../../core/ids.dart';
 import '../../domain/repositories.dart';
 
@@ -550,6 +551,36 @@ class MemoryRecordsRepository implements RecordsRepository {
   }
 }
 
+/// 테스트용 그래프 저장소: 넣어 둔 값을 돌려준다. [failure]를 넣으면 그 예외를 던진다(오프라인 흉내).
+class MemoryStatsRepository implements StatsRepository {
+  final Map<String, ExerciseProgress> progressByExercise = {};
+  final Map<String, SessionComparison> comparisonBySession = {};
+  Object? failure;
+
+  @override
+  Future<ExerciseProgress> progress(String exerciseId, {DateTime? from, DateTime? to, int? limit}) async {
+    if (failure != null) throw failure!;
+    final p = progressByExercise[exerciseId] ?? ExerciseProgress(exerciseId: exerciseId, formula: 'EPLEY');
+    final pts = p.points
+        .where((e) => (from == null || !e.startedAt.isBefore(from)) && (to == null || !e.startedAt.isAfter(to)))
+        .toList();
+    final cut = limit != null && pts.length > limit ? pts.sublist(pts.length - limit) : pts;
+    return ExerciseProgress(
+      exerciseId: p.exerciseId,
+      formula: p.formula,
+      points: cut,
+      bestWeight: p.bestWeight,
+      bestE1rm: p.bestE1rm,
+    );
+  }
+
+  @override
+  Future<SessionComparison> comparison(String sessionId) async {
+    if (failure != null) throw failure!;
+    return comparisonBySession[sessionId] ?? SessionComparison(sessionId: sessionId, formula: 'EPLEY');
+  }
+}
+
 /// 테스트용 계획 캐시: 프로그램 저장소의 ACTIVE 인스턴스와 첫 계획을 그대로 보여준다.
 class MemoryPlanCache implements PlanCache {
   final ProgramRepository programs;
@@ -654,8 +685,10 @@ class MemoryDeletionRequestRepository implements DeletionRequestRepository {
   MemoryDeletionRequestRepository({DateTime Function()? now}) : now = now ?? (() => DateTime.now().toUtc());
 
   @override
-  Future<List<DeletionRequest>> list({DeletionStatus? status}) async =>
-      [for (final r in requests) if (status == null || r.status == status) r];
+  Future<List<DeletionRequest>> list({DeletionStatus? status}) async => [
+    for (final r in requests)
+      if (status == null || r.status == status) r,
+  ];
 
   @override
   Future<int> pendingCount() async => requests.where((r) => r.status == DeletionStatus.PENDING).length;
