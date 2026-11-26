@@ -31,3 +31,23 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080 \
 - ID는 `newId()`(UUIDv7). 시각은 UTC로 다루고 표시할 때만 로컬로.
 - 화면 문구는 `lib/l10n/app_ko.arb`(기본)와 `app_en.arb`에 넣는다. 키 앞에 기능 이름을 붙인다(`session…`, `settings…`).
 - 다른 WP 소유 파일이나 계약을 바꿔야 하면 바꾸지 말고 보고한다.
+
+## 실기기 확인 절차 (클라우드에 Android SDK가 없어 사람이 폰에서 확인)
+
+준비: Android Studio(또는 Android SDK + Flutter 3.50), USB 디버깅 켠 Android 폰, 서버 실행(`../server/README.md`), Google Cloud 콘솔의 OAuth 클라이언트 2개(Android: 패키지 `com.fitlog.fitlog` + 디버그 SHA-1, 웹: 서버 검증용 ID).
+
+```bash
+cd app
+flutter run --dart-define=API_BASE_URL=http://<PC의 LAN IP>:8080 \
+            --dart-define=GOOGLE_SERVER_CLIENT_ID=<웹 클라이언트 ID>
+```
+
+| # | 확인할 것 | 기대 결과 |
+| --- | --- | --- |
+| 1 | Google 로그인 → 동의 3개 체크 | 홈으로 이동. 재실행해도 로그인 유지 |
+| 2 | 자유 세션 시작 → 종목 추가 → 세트 완료 | 휴식 타이머가 화면 하단과 **상단 알림·잠금화면**에 카운트다운 |
+| 3 | 타이머 도는 중 홈 버튼으로 나가기 | 끝나는 시각에 소리·진동 알림 (늦으면 설정 → "휴식 종료 알림 정확하게 받기") |
+| 4 | 비행기 모드로 세트 몇 개 기록 → 세션 종료 → 비행기 모드 해제 | 홈의 동기화 아이콘이 "대기" → 완료. 서버 DB에 세션이 남음 |
+| 5 | 앱 강제 종료 후 다시 열기(세션 진행 중) | 홈에 "이어서 기록" |
+| 6 | (v0.2) 프로그램 → 5x5 → 시작(TM 입력) → 홈 "오늘 할 운동" 시작 | 계획 무게로 세트가 미리 채워짐. 종료 후 요약에 다음 회차 무게 |
+| 7 | 릴리스 빌드 `flutter build apk --obfuscate --split-debug-info=build/symbols` | 빌드 성공, 설치 후 1번 동작 |
