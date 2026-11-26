@@ -1,0 +1,137 @@
+openapi: 3.1.0
+info:
+  title: Fitlog API (v1.0 추가분)
+  version: 1.0.0
+  description: |
+    v0.1~v0.3에 더해지는 REST 경로.
+    에러 코드 추가: INTEGRITY_FAILED(403, security.md), RATE_LIMITED(429, Retry-After 헤더).
+    무결성 헤더 X-Integrity-Token은 /v1/auth/google, /v1/auth/refresh에 선택적으로 붙는다(security.md).
+servers:
+  - url: https://api.example.invalid
+security:
+  - bearer: []
+paths:
+  /v1/exercises/{id}/progress:
+    parameters:
+      - { $ref: '#/components/parameters/Id' }
+      - { name: from, in: query, schema: { type: string, format: date-time }, description: '기본 to-180일' }
+      - { name: to, in: query, schema: { type: string, format: date-time }, description: '기본 지금' }
+      - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 100 }, description: '최근 것부터 자른 뒤 오름차순으로 응답' }
+    get:
+      tags: [stats]
+      summary: STA-4 종목 추이(세션당 1점)
+      description: |
+        끝낸(completedAt 있음) 작업 세트만. 워밍업·삭제·무게 또는 횟수 없는 세트 제외.
+        bestE1rmKg는 1~10회 세트만, 사용자 설정 추정식. 그 세션에 해당 세트가 없으면 null.
+        isWeightPr/isE1rmPr: 그 세션 이전 모든 기록(기간 밖 포함)의 누적 최대보다 엄격히 클 때 true.
+        bestWeight/bestE1rm은 기간과 무관한 전체 최고(v0.2 ExerciseRecords와 같은 값).
+        세션이 없으면 points는 빈 배열. 남의 종목·없는 종목은 404.
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ExerciseProgress' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+  /v1/sessions/{id}/comparison:
+    parameters: [ { $ref: '#/components/parameters/Id' } ]
+    get:
+      tags: [stats]
+      summary: STA-4 오늘 vs 지난 같은 세션·PR
+      description: |
+        세션의 종목 순서대로. 세트 필터는 progress와 같다(current.sets가 비어도 종목은 포함).
+        previous: 같은 programInstanceId·같은 dayKey이면서 그 종목이 들어 있는 이 세션 이전의 가장 최근 세션.
+        없으면 그 종목이 들어 있는 이 세션 이전의 가장 최근 세션. 없으면 null.
+        bestWeight/bestE1rm은 이 세션 이전까지의 최고(이 세션 제외). 이 세션이 PR을 넘었는지 앱이 비교할 수 있게.
+        남의 세션·없는 세션은 404.
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SessionComparison' } } } }
+        '404': { $ref: '#/components/responses/Error' }
+  /privacy:
+    get:
+      tags: [public]
+      security: []
+      summary: 개인정보 처리방침 HTML(privacy-policy.md 렌더링)
+      responses:
+        '200': { description: OK, content: { text/html: { schema: { type: string } } } }
+  /account-deletion:
+    get:
+      tags: [public]
+      security: []
+      summary: Play 스토어용 계정·데이터 삭제 안내 HTML
+      responses:
+        '200': { description: OK, content: { text/html: { schema: { type: string } } } }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    Id: { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+  responses:
+    Error:
+      description: v0.1 에러 형식
+      content: { application/json: { schema: { type: object } } }
+  schemas:
+    RecordPoint:
+      description: v0.2 RecordPoint와 같다
+      type: object
+      required: [weightKg, reps, sessionId, setId, achievedAt]
+      properties:
+        weightKg: { type: number }
+        reps: { type: integer }
+        e1rmKg: { type: number }
+        sessionId: { type: string, format: uuid }
+        setId: { type: string, format: uuid }
+        achievedAt: { type: string, format: date-time }
+    ProgressPoint:
+      type: object
+      required: [sessionId, startedAt, topWeightKg, topReps, volumeKg, workSetCount, isWeightPr, isE1rmPr]
+      properties:
+        sessionId: { type: string, format: uuid }
+        startedAt: { type: string, format: date-time }
+        topWeightKg: { type: number, description: '그 세션 최고 무게' }
+        topReps: { type: integer, description: 'topWeightKg 세트들 중 최대 횟수' }
+        bestE1rmKg: { type: [number, 'null'] }
+        volumeKg: { type: number, description: 'Σ weightKg×reps (필터된 세트)' }
+        workSetCount: { type: integer }
+        isWeightPr: { type: boolean }
+        isE1rmPr: { type: boolean }
+    ExerciseProgress:
+      type: object
+      required: [exerciseId, formula, points]
+      properties:
+        exerciseId: { type: string, format: uuid }
+        formula: { type: string, enum: [EPLEY, BRZYCKI, LOMBARDI] }
+        points: { type: array, items: { $ref: '#/components/schemas/ProgressPoint' }, description: 'startedAt 오름차순' }
+        bestWeight: { oneOf: [ { $ref: '#/components/schemas/RecordPoint' }, { type: 'null' } ] }
+        bestE1rm: { oneOf: [ { $ref: '#/components/schemas/RecordPoint' }, { type: 'null' } ] }
+    SnapSet:
+      type: object
+      required: [weightKg, reps]
+      properties:
+        weightKg: { type: number }
+        reps: { type: integer }
+    Snap:
+      type: object
+      required: [sessionId, startedAt, sets, setCount, volumeKg]
+      properties:
+        sessionId: { type: string, format: uuid }
+        startedAt: { type: string, format: date-time }
+        sets: { type: array, items: { $ref: '#/components/schemas/SnapSet' }, description: '세트 순서대로' }
+        setCount: { type: integer }
+        topWeightKg: { type: [number, 'null'], description: 'sets가 비면 null' }
+        bestE1rmKg: { type: [number, 'null'] }
+        volumeKg: { type: number }
+    SessionComparison:
+      type: object
+      required: [sessionId, formula, exercises]
+      properties:
+        sessionId: { type: string, format: uuid }
+        formula: { type: string, enum: [EPLEY, BRZYCKI, LOMBARDI] }
+        exercises:
+          type: array
+          items:
+            type: object
+            required: [exerciseId, current]
+            properties:
+              exerciseId: { type: string, format: uuid }
+              current: { $ref: '#/components/schemas/Snap' }
+              previous: { oneOf: [ { $ref: '#/components/schemas/Snap' }, { type: 'null' } ] }
+              bestWeight: { oneOf: [ { $ref: '#/components/schemas/RecordPoint' }, { type: 'null' } ], description: '이 세션 이전까지' }
+              bestE1rm: { oneOf: [ { $ref: '#/components/schemas/RecordPoint' }, { type: 'null' } ], description: '이 세션 이전까지' }
