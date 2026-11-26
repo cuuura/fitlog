@@ -6,7 +6,6 @@ import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.ZoneId
 
-internal val EXERCISE_TYPES = setOf("BARBELL", "DUMBBELL", "MACHINE", "BODYWEIGHT", "BAND", "CARDIO")
 
 internal fun checkTz(tz: String, field: String = "tz") {
     if (tz !in ZoneId.getAvailableZoneIds()) validation("tz must be a valid IANA time zone", field)

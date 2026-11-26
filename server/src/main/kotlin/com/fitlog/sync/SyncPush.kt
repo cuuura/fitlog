@@ -16,6 +16,8 @@ import com.fitlog.core.WorkoutSets
 import com.fitlog.core.forbidden
 import com.fitlog.core.lockUser
 import com.fitlog.core.validation
+import com.fitlog.exercise.ExerciseInput
+import com.fitlog.exercise.validated
 import com.fitlog.session.WorkoutSet
 import com.fitlog.session.checkSet
 import com.fitlog.session.checkTz
@@ -43,12 +45,6 @@ import java.util.UUID
 private val log = LoggerFactory.getLogger("com.fitlog.sync")
 
 internal const val MAX_PUSH = 200
-
-private val MUSCLES = setOf(
-    "CHEST", "BACK", "LATS", "TRAPS", "SHOULDERS", "REAR_DELTS", "BICEPS", "TRICEPS", "FOREARMS", "QUADS", "HAMSTRINGS",
-    "GLUTES", "CALVES", "ADDUCTORS", "ABS", "OBLIQUES", "LOWER_BACK", "FULL_BODY", "CARDIO",
-)
-private val TYPES = setOf("BARBELL", "DUMBBELL", "MACHINE", "BODYWEIGHT", "BAND", "CARDIO")
 
 private fun parentMissing(msg: String): Nothing = throw ApiException(ErrorCode.PARENT_MISSING, msg)
 
@@ -203,12 +199,9 @@ private fun Transaction.applyExercise(userId: UUID, c: Change, at: Instant): Cha
         }
         return applied(c)
     }
-    val p = decodePayload<ExercisePayload>(c)
-    if (p.nameKo.isBlank() || p.nameKo.length > 60) validation("nameKo must be 1..60 chars", "payload.nameKo")
-    if ((p.nameEn?.length ?: 0) > 60) validation("nameEn must be <= 60 chars", "payload.nameEn")
-    if (p.type !in TYPES) validation("invalid type", "payload.type")
-    if (p.primaryMuscle !in MUSCLES) validation("invalid primaryMuscle", "payload.primaryMuscle")
-    p.secondaryMuscles.forEachIndexed { i, m -> if (m !in MUSCLES) validation("invalid muscle", "payload.secondaryMuscles[$i]") }
+    val raw = decodePayload<ExercisePayload>(c)
+    val p = ExerciseInput(c.id, raw.nameKo, raw.nameEn, raw.type, raw.primaryMuscle, raw.secondaryMuscles)
+        .validated("payload.")
     val n = Exercises.update({ Exercises.id eq c.id }) {
         it[nameKo] = p.nameKo
         it[nameEn] = p.nameEn
