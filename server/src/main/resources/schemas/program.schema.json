@@ -24,6 +24,17 @@
       "type": "string",
       "maxLength": 2000
     },
+    "category": {
+      "type": "string",
+      "enum": [
+        "BODYBUILDING",
+        "POWERBUILDING",
+        "POWERLIFTING",
+        "GENERAL_STRENGTH",
+        "BODYWEIGHT"
+      ],
+      "description": "프로그램 타입(목록 필터용). 계산에는 쓰지 않음"
+    },
     "tmPercent": {
       "type": "number",
       "exclusiveMinimum": 0,

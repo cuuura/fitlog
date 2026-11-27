@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "name": "AMRAP 볼륨 웨이브 6일",
   "description": "주 6회. 5일 구성에 토요일 스쿼트·스모 볼륨일(스쿼트 8x3, 스모 6x3)을 더한 스쿼트 중심 변형이며, 스쿼트 증량 판정은 화요일 1+ 세트로만 한다. 볼륨일 세트는 AMRAP 없이 정해진 횟수만 수행한다. 흔히 'nSuns 5/3/1 LP 6일'로 알려진 구성을 참고했습니다.",
+  "category": "POWERBUILDING",
   "tmPercent": 0.9,
   "roundingKg": 2.5,
   "lifts": {

@@ -1828,6 +1828,16 @@
   "progSegTemplates": "템플릿",
   "progSegMine": "내 프로그램",
   "progImportAi": "AI로 프로그램 가져오기",
+  "progSearchHint": "이름으로 검색",
+  "progSearchClear": "검색어 지우기",
+  "progTypeAll": "전체",
+  "progTypeBodybuilding": "보디빌딩",
+  "progTypePowerbuilding": "파워빌딩",
+  "progTypePowerlifting": "파워리프팅",
+  "progTypeGeneralStrength": "기초 근력",
+  "progTypeBodyweight": "맨몸·홈트",
+  "progEmptyType": "이 타입의 프로그램은 아직 없어요.",
+  "progEmptySearch": "찾는 프로그램이 없어요.",
   "progWeekDays": "주 {n}일",
   "@progWeekDays": {
     "placeholders": {

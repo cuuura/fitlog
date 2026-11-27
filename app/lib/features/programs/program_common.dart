@@ -9,6 +9,16 @@ import '../../domain/repositories.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
 
+/// 프로그램 category(서버 문자열) → 표시 이름. 모르는 값/null이면 null.
+String? programCategoryLabel(AppLocalizations l, String? category) => switch (category) {
+  'BODYBUILDING' => l.progTypeBodybuilding,
+  'POWERBUILDING' => l.progTypePowerbuilding,
+  'POWERLIFTING' => l.progTypePowerlifting,
+  'GENERAL_STRENGTH' => l.progTypeGeneralStrength,
+  'BODYWEIGHT' => l.progTypeBodyweight,
+  _ => null,
+};
+
 List<Map<String, Object?>> programDays(Map<String, Object?> def) => [
   for (final d in (def['days'] as List? ?? const [])) (d as Map).cast<String, Object?>(),
 ];

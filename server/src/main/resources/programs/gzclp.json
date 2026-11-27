@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "name": "3티어 선형(T1·T2·T3)",
   "description": "T1(5x3+ → 6x2+ → 10x1+), T2(3x10 → 3x8 → 3x6), T3(3x15+, 25회 이상이면 +2.5kg). 실패하면 다음 단계로 가고 마지막 단계에서 실패하면 무게를 낮춰 처음부터. T2 시작 무게는 T1보다 가볍게 직접 입력. T3는 TM 자리에 시작 무게를 입력. 흔히 'GZCLP'로 알려진 구성을 참고했습니다.",
+  "category": "POWERBUILDING",
   "workingPercent": 0.8,
   "tmPercent": 0.8,
   "roundingKg": 2.5,

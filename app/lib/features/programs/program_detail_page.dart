@@ -46,6 +46,18 @@ class ProgramDetailPage extends ConsumerWidget {
                     ),
                   ),
                 ),
+              if (programCategoryLabel(l, v.program.category) case final cat?)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Chip(
+                      key: const Key('program-category'),
+                      label: Text(cat),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                ),
               Text(v.program.description ?? l.programNoDescription, style: theme.textTheme.bodyMedium),
               const SizedBox(height: 20),
               Text(l.progWeekStructure, style: theme.textTheme.titleMedium),

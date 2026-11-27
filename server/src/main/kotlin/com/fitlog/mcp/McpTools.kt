@@ -178,7 +178,7 @@ private fun ResultRow.programSummary(): ProgramSummary {
     val def = decodeDef(this[Programs.definition])
     return ProgramSummary(
         id = this[Programs.id], templateKey = this[Programs.templateKey], name = this[Programs.name],
-        description = def.description, builtIn = this[Programs.ownerId] == null,
+        description = def.description, category = def.category, builtIn = this[Programs.ownerId] == null,
         dayCount = def.days.size, source = this[Programs.sourceCol],
     )
 }
@@ -187,7 +187,7 @@ private fun ResultRow.programFull(): Program {
     val def = decodeDef(this[Programs.definition])
     return Program(
         id = this[Programs.id], templateKey = this[Programs.templateKey], name = this[Programs.name],
-        description = def.description, builtIn = this[Programs.ownerId] == null,
+        description = def.description, category = def.category, builtIn = this[Programs.ownerId] == null,
         dayCount = def.days.size, source = this[Programs.sourceCol], definition = def,
     )
 }
@@ -204,6 +204,7 @@ private val exerciseOut = S.obj(
 )
 private val programSummaryOut = S.obj(
     "id" to idS, "templateKey" to S.str(), "name" to S.str(), "description" to S.str(),
+    "category" to S.str("프로그램 타입(목록 필터용)", enum = listOf("BODYBUILDING", "POWERBUILDING", "POWERLIFTING", "GENERAL_STRENGTH", "BODYWEIGHT")),
     "builtIn" to S.bool(), "dayCount" to S.int(), "source" to S.str(),
     required = listOf("id", "name", "builtIn", "dayCount", "source"),
 )

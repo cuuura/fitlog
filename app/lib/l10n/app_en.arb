@@ -1756,6 +1756,16 @@
   "progSegTemplates": "Templates",
   "progSegMine": "My programs",
   "progImportAi": "Import a program with AI",
+  "progSearchHint": "Search by name",
+  "progSearchClear": "Clear search",
+  "progTypeAll": "All",
+  "progTypeBodybuilding": "Bodybuilding",
+  "progTypePowerbuilding": "Powerbuilding",
+  "progTypePowerlifting": "Powerlifting",
+  "progTypeGeneralStrength": "General strength",
+  "progTypeBodyweight": "Bodyweight & home",
+  "progEmptyType": "No programs of this type yet.",
+  "progEmptySearch": "No matching programs.",
   "progWeekDays": "{n} days/week",
   "@progWeekDays": {
     "placeholders": {

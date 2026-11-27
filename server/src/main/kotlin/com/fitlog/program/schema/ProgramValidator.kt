@@ -61,6 +61,7 @@ object ProgramValidator {
 private val KEY_RE = Regex("^[a-z][a-z0-9_]{0,31}$")
 private val DAY_KEY_RE = Regex("^[A-Za-z0-9_]{1,16}$")
 private val UUID_RE = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+private val PROGRAM_CATEGORIES = listOf("BODYBUILDING", "POWERBUILDING", "POWERLIFTING", "GENERAL_STRENGTH", "BODYWEIGHT")
 private val ROUNDING = listOf(0.5, 1.0, 1.25, 2.5, 5.0)
 private val WEEKDAYS = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
 
@@ -164,12 +165,13 @@ private class Run(val resolver: ExerciseResolver) {
         val o = obj(json, "") ?: return null
         checkKeys(
             o, "",
-            setOf("schemaVersion", "name", "description", "tmPercent", "workingPercent", "roundingKg", "barKg", "cycleWeeks", "lifts", "progression", "days"),
+            setOf("schemaVersion", "name", "description", "category", "tmPercent", "workingPercent", "roundingKg", "barKg", "cycleWeeks", "lifts", "progression", "days"),
             setOf("schemaVersion", "name", "lifts", "days"),
         )
         if ("schemaVersion" in o && numberOrNull(o["schemaVersion"]) != 1.0) err("/schemaVersion", "must be 1")
         val name = str(o, "name", "", 1, 80)
         val description = str(o, "description", "", 0, 2000)
+        val category = enum(o, "category", "", PROGRAM_CATEGORIES)
         val tmPercent = num(o, "tmPercent", "", exclMin = 0.0, max = 1.0)
         val workingPercent = num(o, "workingPercent", "", exclMin = 0.0, max = 1.0)
         val roundingKg = if ("roundingKg" in o) {
@@ -192,6 +194,7 @@ private class Run(val resolver: ExerciseResolver) {
             schemaVersion = 1,
             name = name,
             description = description,
+            category = category,
             tmPercent = tmPercent ?: 0.9,
             workingPercent = workingPercent ?: 0.8,
             roundingKg = roundingKg ?: 2.5,

@@ -62,6 +62,22 @@ class ProgramValidatorTest {
     }
 
     @Test
+    fun category_is_optional_and_accepts_known_values() {
+        assertEquals(null, valid(base).category)
+        for (c in listOf("BODYBUILDING", "POWERBUILDING", "POWERLIFTING", "GENERAL_STRENGTH", "BODYWEIGHT")) {
+            assertEquals(c, valid(base.replaceFirst("\"name\":\"P\",", "\"name\":\"P\",\"category\":\"$c\",")).category)
+        }
+    }
+
+    @Test
+    fun unknown_category_is_rejected_at_its_path() {
+        val bad = base.replaceFirst("\"name\":\"P\",", "\"name\":\"P\",\"category\":\"CARDIO\",")
+        assertTrue("/category" in errors(bad).paths())
+        val lower = base.replaceFirst("\"name\":\"P\",", "\"name\":\"P\",\"category\":\"powerlifting\",")
+        assertTrue("/category" in errors(lower).paths())
+    }
+
+    @Test
     fun name_resolution_failure_is_reported_at_the_name_path() {
         val e = errors(base.replace("Bench Press", "Nope"))
         assertEquals(listOf("/lifts/bench/exercise/name"), e.paths())

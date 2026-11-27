@@ -37,6 +37,15 @@ class TemplatesValidTest {
     }
 
     @Test
+    fun every_template_has_a_known_category() {
+        val allowed = setOf("BODYBUILDING", "POWERBUILDING", "POWERLIFTING", "GENERAL_STRENGTH", "BODYWEIGHT")
+        for (t in ProgramTemplates.all) {
+            val d = (validate(t.key) as ValidationResult.Valid).definition
+            assertTrue(d.category != null && d.category in allowed, "${t.key}: category=${d.category}")
+        }
+    }
+
+    @Test
     fun template_ids_are_fixed() {
         val ids = ProgramTemplates.all.map { it.id.toString() }
         assertEquals(

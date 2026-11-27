@@ -214,6 +214,7 @@ components:
         templateKey: { type: string }
         name: { type: string }
         description: { type: string }
+        category: { type: string, enum: [BODYBUILDING, POWERBUILDING, POWERLIFTING, GENERAL_STRENGTH, BODYWEIGHT], description: 프로그램 타입(목록 필터용). 정의에 없으면 생략/null }
         builtIn: { type: boolean }
         dayCount: { type: integer }
         source: { type: string, enum: [TEMPLATE, USER, AI_JSON, AI_MCP] }

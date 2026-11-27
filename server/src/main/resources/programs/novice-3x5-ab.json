@@ -2,6 +2,7 @@
   "schemaVersion": 1,
   "name": "초보 3x5 A/B",
   "description": "A/B를 번갈아 주 3회, 스쿼트는 매 회차 3x5입니다. 성공하면 매 회차 증량(스쿼트·벤치 +2.5kg, 오버헤드 프레스 +1.25kg, 데드리프트 +5kg)하고 3회 연속 실패하면 10% 낮춥니다. 파워 클린은 기본 종목에 없어 데드리프트 1x5로 구성했습니다. 흔히 '스타팅 스트렝스'로 알려진 구성을 참고했습니다.",
+  "category": "GENERAL_STRENGTH",
   "workingPercent": 0.8,
   "roundingKg": 1.25,
   "lifts": {

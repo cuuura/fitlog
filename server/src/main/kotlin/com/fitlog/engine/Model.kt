@@ -14,6 +14,8 @@ data class ProgramDefinition(
     val schemaVersion: Int,
     val name: String,
     val description: String? = null,
+    /** 목록 필터용 타입(BODYBUILDING 등). 계산에는 쓰지 않음 */
+    val category: String? = null,
     val tmPercent: Double = 0.9,
     val workingPercent: Double = 0.8,
     val roundingKg: Double = 2.5,

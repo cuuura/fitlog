@@ -95,6 +95,26 @@ class ProgramApiTest {
     }
 
     @Test
+    fun list_and_detail_expose_category_for_templates_and_null_for_plain_user_program() = fitlogTest {
+        val uid = user()
+        val mineId = Ids.newId()
+        save(uid, mineId, def("Mine"))
+        val arr = Json.parseToJsonElement(jsonClient().get("/v1/programs") { auth(uid) }.bodyAsText()).jsonArray.map { it.jsonObject }
+        val sl = arr.first { it["templateKey"]?.jsonPrimitive?.content == "stronglifts-5x5" }
+        assertEquals("GENERAL_STRENGTH", sl["category"]!!.jsonPrimitive.content)
+        val mine = arr.first { it["id"]!!.jsonPrimitive.content == mineId.toString() }
+        assertTrue(mine["category"] == null || mine["category"] is kotlinx.serialization.json.JsonNull)
+        val detail = jsonClient().get("/v1/programs/${sl["id"]!!.jsonPrimitive.content}") { auth(uid) }.obj()
+        assertEquals("GENERAL_STRENGTH", detail["category"]!!.jsonPrimitive.content)
+        assertEquals("GENERAL_STRENGTH", detail["definition"]!!.jsonObject["category"]!!.jsonPrimitive.content)
+        val withCat = Ids.newId()
+        val d = def("Cat").replaceFirst("\"description\":\"d\",", "\"description\":\"d\",\"category\":\"BODYBUILDING\",")
+        assertEquals(HttpStatusCode.Created, save(uid, withCat, d).status)
+        val got = jsonClient().get("/v1/programs/$withCat") { auth(uid) }.obj()
+        assertEquals("BODYBUILDING", got["category"]!!.jsonPrimitive.content)
+    }
+
+    @Test
     fun seeding_is_idempotent() = fitlogTest {
         val uid = user()
         seedProgramTemplates()

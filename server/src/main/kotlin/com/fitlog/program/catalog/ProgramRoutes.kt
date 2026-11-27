@@ -46,6 +46,7 @@ data class ProgramSummary(
     val templateKey: String? = null,
     val name: String,
     val description: String? = null,
+    val category: String? = null,
     val builtIn: Boolean,
     val dayCount: Int,
     val source: String,
@@ -59,6 +60,7 @@ data class Program(
     val templateKey: String? = null,
     val name: String,
     val description: String? = null,
+    val category: String? = null,
     val builtIn: Boolean,
     val dayCount: Int,
     val source: String,
@@ -72,7 +74,7 @@ private fun summary(r: ResultRow): ProgramSummary {
     val def = decode(r[Programs.definition])
     return ProgramSummary(
         id = r[Programs.id], templateKey = r[Programs.templateKey], name = r[Programs.name],
-        description = def.description, builtIn = r[Programs.ownerId] == null,
+        description = def.description, category = def.category, builtIn = r[Programs.ownerId] == null,
         dayCount = def.days.size, source = r[Programs.sourceCol], importBatchId = r[Programs.importBatchId],
     )
 }
@@ -81,7 +83,7 @@ private fun program(r: ResultRow): Program {
     val def = decode(r[Programs.definition])
     return Program(
         id = r[Programs.id], templateKey = r[Programs.templateKey], name = r[Programs.name],
-        description = def.description, builtIn = r[Programs.ownerId] == null,
+        description = def.description, category = def.category, builtIn = r[Programs.ownerId] == null,
         dayCount = def.days.size, source = r[Programs.sourceCol], definition = def,
         importBatchId = r[Programs.importBatchId],
     )
@@ -116,7 +118,7 @@ fun Route.programRoutes(config: AppConfig) {
         val def = ProgramValidator.validate(body, index.resolver).orThrow()
         call.respond(
             Program(
-                id = null, name = def.name, description = def.description, builtIn = false,
+                id = null, name = def.name, description = def.description, category = def.category, builtIn = false,
                 dayCount = def.days.size, source = "USER", definition = def,
             ),
         )

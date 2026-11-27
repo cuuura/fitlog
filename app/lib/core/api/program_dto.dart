@@ -42,6 +42,10 @@ class ProgramSummary {
 
   /// v0.3: 가져오기로 만든 프로그램이면 묶음 id.
   final String? importBatchId;
+
+  /// BODYBUILDING | POWERBUILDING | POWERLIFTING | GENERAL_STRENGTH | BODYWEIGHT.
+  /// 옛 서버는 보내지 않고, 미래 값이 올 수 있어 enum이 아닌 문자열로 둔다.
+  final String? category;
   const ProgramSummary({
     required this.id,
     this.templateKey,
@@ -51,6 +55,7 @@ class ProgramSummary {
     required this.dayCount,
     this.source,
     this.importBatchId,
+    this.category,
   });
 
   factory ProgramSummary.fromJson(Map<String, Object?> j) => ProgramSummary(
@@ -62,6 +67,7 @@ class ProgramSummary {
     dayCount: j['dayCount'] as int,
     source: j['source'] == null ? null : _enumByName(ProgramSource.values, j['source']),
     importBatchId: j['importBatchId'] as String?,
+    category: j['category'] is String ? j['category'] as String : null,
   );
 }
 
@@ -77,6 +83,7 @@ class Program extends ProgramSummary {
     required super.dayCount,
     super.source,
     super.importBatchId,
+    super.category,
     required this.definition,
   });
 
@@ -91,6 +98,7 @@ class Program extends ProgramSummary {
       dayCount: s.dayCount,
       source: s.source,
       importBatchId: s.importBatchId,
+      category: s.category,
       definition: (j['definition'] as Map).cast<String, Object?>(),
     );
   }
