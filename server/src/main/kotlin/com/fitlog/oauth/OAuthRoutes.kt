@@ -39,6 +39,8 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonArray
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.insertIgnore
@@ -97,6 +99,12 @@ private fun validRedirectUri(s: String): Boolean {
     }
 }
 
+/** RFC 8707 resource: MCP URL 이 정확하지만, 서버 루트 주소를 보낸 클라이언트도 막지 않는다 */
+private fun validResource(resource: String, config: AppConfig): Boolean {
+    val r = resource.trimEnd('/')
+    return r == config.mcpUrl() || r == config.publicBaseUrl
+}
+
 private sealed interface TokenResult {
     class Ok(val pair: TokenPair, val scopes: List<String>) : TokenResult
     class Err(val error: String, val description: String) : TokenResult
@@ -139,7 +147,11 @@ fun Route.oauthRoutes(config: AppConfig) {
     for (p in listOf("/.well-known/oauth-protected-resource", "/.well-known/oauth-protected-resource/{path...}")) {
         get(p) { call.json(HttpStatusCode.OK, protectedResource) }
     }
-    for (p in listOf("/.well-known/oauth-authorization-server", "/.well-known/oauth-authorization-server/{path...}")) {
+    // 일부 클라이언트는 OIDC 디스커버리 경로도 먼저 찾아본다(같은 문서로 답한다)
+    for (p in listOf(
+        "/.well-known/oauth-authorization-server", "/.well-known/oauth-authorization-server/{path...}",
+        "/.well-known/openid-configuration", "/.well-known/openid-configuration/{path...}", "/mcp/.well-known/openid-configuration",
+    )) {
         get(p) { call.json(HttpStatusCode.OK, authServer) }
     }
 
@@ -213,7 +225,7 @@ fun Route.oauthRoutes(config: AppConfig) {
             return@get fail("invalid_request", "PKCE with code_challenge_method=S256 is required")
         }
         val resource = q["resource"]
-        if (resource != null && resource.trimEnd('/') != config.mcpUrl()) return@get fail("invalid_target", "resource must be ${config.mcpUrl()}")
+        if (resource != null && !validResource(resource, config)) return@get fail("invalid_target", "resource must be ${config.mcpUrl()}")
         val scopes = parseScopes(q["scope"]) ?: return@get fail("invalid_scope", "supported scopes: ${SUPPORTED_SCOPES.joinToString(" ")}")
         val webClientId = config.googleWebClientId?.takeIf { it.isNotEmpty() }
         if (webClientId == null && !config.passwordLogin.enabled) {
@@ -411,7 +423,7 @@ fun Route.oauthRoutes(config: AppConfig) {
             return@post call.oauthError(HttpStatusCode.BadRequest, "invalid_request", "application/x-www-form-urlencoded body required")
         }
         val resource = p["resource"]
-        if (resource != null && resource.trimEnd('/') != config.mcpUrl()) {
+        if (resource != null && !validResource(resource, config)) {
             return@post call.oauthError(HttpStatusCode.BadRequest, "invalid_target", "resource must be ${config.mcpUrl()}")
         }
         val clientIdParam = p["client_id"]
@@ -456,7 +468,15 @@ fun Route.oauthRoutes(config: AppConfig) {
                         .where { (OAuthTokens.tokenHash eq sha256Hex(refresh)) and (OAuthTokens.kind eq "REFRESH") }
                         .forUpdate().singleOrNull() ?: return@dbQuery TokenResult.Err("invalid_grant", "unknown refresh token")
                     val connId = row[OAuthTokens.connectionId]
-                    if (row[OAuthTokens.revokedAt] != null) {
+                    val rotatedAt = row[OAuthTokens.revokedAt]
+                    // 회전 직후(네트워크 재시도: 응답이 유실돼 클라이언트가 옛 토큰으로 다시 요청)는 탈취가 아니다.
+                    // 회전으로 만들어진 살아 있는 후속 토큰이 있고 유예 시간 안이면 연결을 끊지 않고 새 쌍을 준다
+                    val retry = rotatedAt != null && !rotatedAt.plusSeconds(REFRESH_REUSE_GRACE_SEC).isBefore(now) &&
+                        OAuthTokens.selectAll().where {
+                            (OAuthTokens.familyId eq row[OAuthTokens.familyId]) and (OAuthTokens.kind eq "REFRESH") and
+                                OAuthTokens.revokedAt.isNull() and (OAuthTokens.expiresAt greater now)
+                        }.any()
+                    if (rotatedAt != null && !retry) {
                         // 이미 회전된 토큰의 재사용 = 탈취 의심. 계열(그 연결의 토큰) 전부 폐기
                         revokeConnectionTokens(connId)
                         return@dbQuery TokenResult.Err("invalid_grant", "refresh token reuse detected; connection tokens revoked")
@@ -468,7 +488,7 @@ fun Route.oauthRoutes(config: AppConfig) {
                     if (clientIdParam != null && clientIdParam != conn[OAuthClients.clientId]) {
                         return@dbQuery TokenResult.Err("invalid_grant", "client_id mismatch")
                     }
-                    OAuthTokens.update({ OAuthTokens.id eq row[OAuthTokens.id] }) { it[revokedAt] = now }
+                    if (!retry) OAuthTokens.update({ OAuthTokens.id eq row[OAuthTokens.id] }) { it[revokedAt] = now }
                     TokenResult.Ok(issueTokenPair(connId, row[OAuthTokens.familyId]), conn[AiConnections.scopes])
                 }
             }

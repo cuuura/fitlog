@@ -16,6 +16,12 @@ internal fun parseDatabaseUrl(raw: String): ParsedDatabaseUrl? {
     return ParsedDatabaseUrl(jdbc, user.takeIf { it.isNotEmpty() }?.let(::dec), pass.takeIf { it.isNotEmpty() }?.let(::dec))
 }
 
+/** 외부 주소 정규화: 공백·끝 슬래시 제거, 스킴이 없으면 https 를 붙인다(대시보드에 호스트만 적은 경우) */
+internal fun normalizeBaseUrl(raw: String): String {
+    val t = raw.trim().trimEnd('/')
+    return if (Regex("^[a-zA-Z][a-zA-Z0-9+.-]*://").containsMatchIn(t)) t else "https://$t"
+}
+
 data class DbConfig(val url: String, val user: String, val password: String, val maxPool: Int = 10)
 
 data class JwtConfig(
@@ -75,6 +81,7 @@ data class AppConfig(
                 url = env.v("DB_URL") ?: parsed?.jdbcUrl ?: "jdbc:postgresql://localhost:5432/fitlog",
                 user = env.v("DB_USER") ?: parsed?.user ?: "fitlog",
                 password = env.v("DB_PASSWORD") ?: parsed?.password ?: "fitlog",
+                maxPool = env.v("DB_MAX_POOL")?.toInt() ?: 10,
             )
         }
 
@@ -85,7 +92,7 @@ data class AppConfig(
             jwt = JwtConfig(secret = env.v("JWT_SECRET") ?: error("JWT_SECRET is required")),
             googleClientIds = env.v("GOOGLE_CLIENT_IDS")?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
                 ?: emptyList(),
-            publicBaseUrl = (env.v("PUBLIC_BASE_URL") ?: env.v("RENDER_EXTERNAL_URL") ?: "http://localhost:8080").trimEnd('/'),
+            publicBaseUrl = normalizeBaseUrl(env.v("PUBLIC_BASE_URL") ?: env.v("RENDER_EXTERNAL_URL") ?: "http://localhost:8080"),
             googleWebClientId = env.v("GOOGLE_WEB_CLIENT_ID"),
             googleWebClientSecret = env.v("GOOGLE_WEB_CLIENT_SECRET"),
             rateLimits = RateLimitConfig.fromEnv(env),

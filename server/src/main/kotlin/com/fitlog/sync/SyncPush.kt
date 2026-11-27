@@ -10,7 +10,14 @@ import com.fitlog.core.BodyMeasurements
 import com.fitlog.core.ChangeSeq
 import com.fitlog.core.ErrorCode
 import com.fitlog.core.Exercises
+import com.fitlog.core.ScheduledWorkouts
 import com.fitlog.core.SessionExercises
+import com.fitlog.scheduled.ScheduledWorkout
+import com.fitlog.scheduled.softDeleteScheduledRow
+import com.fitlog.scheduled.upsertScheduledRow
+import com.fitlog.scheduled.checkScheduledWorkout
+import com.fitlog.session.scheduledExists
+import com.fitlog.session.scheduledLinkTaken
 import com.fitlog.core.WorkoutSessions
 import com.fitlog.core.WorkoutSets
 import com.fitlog.core.forbidden
@@ -134,6 +141,7 @@ private fun Transaction.applyChange(userId: UUID, c: Change): ChangeResult {
         "session_exercise" -> applySessionExercise(userId, c, at)
         "workout_set" -> applySet(userId, c, at)
         "body_measurement" -> applyBody(userId, c, at)
+        "scheduled_workout" -> applyScheduled(userId, c, at)
         else -> applyExercise(userId, c, at)
     }
 }
@@ -159,7 +167,13 @@ private fun Transaction.applySession(userId: UUID, c: Change, at: Instant): Chan
         if (e.code != ErrorCode.CONFLICT) throw e
         link = Triple(null, null, null)
     }
-    upsertSessionRow(userId, c.id, p.startedAt, p.endedAt, p.tz, p.note, at, link.first, link.second, link.third)
+    // 예정 운동 연결: 없는 예정이면 PARENT_MISSING, 이미 다른 살아있는 세션이 연결돼 있으면 연결만 끊고 저장
+    var scheduledId = p.scheduledWorkoutId
+    if (scheduledId != null) {
+        if (!scheduledExists(userId, scheduledId)) parentMissing("scheduled workout not found")
+        if (scheduledLinkTaken(c.id, scheduledId)) scheduledId = null
+    }
+    upsertSessionRow(userId, c.id, p.startedAt, p.endedAt, p.tz, p.note, at, link.first, link.second, link.third, scheduledId)
     return applied(c)
 }
 
@@ -226,6 +240,23 @@ private fun Transaction.applyBody(userId: UUID, c: Change, at: Instant): ChangeR
     val p = decodePayload<BodyPayload>(c)
     val m = checkMeasurement(BodyMeasurement(c.id, p.measuredAt, p.weightKg, p.source))
     upsertMeasurementRow(userId, m, at)
+    return applied(c)
+}
+
+private fun Transaction.applyScheduled(userId: UUID, c: Change, at: Instant): ChangeResult {
+    val row = ScheduledWorkouts.selectAll().where { ScheduledWorkouts.id eq c.id }.singleOrNull()
+    if (row != null) {
+        if (row[ScheduledWorkouts.userId] != userId) forbidden()
+        if (row[ScheduledWorkouts.updatedAt] > at) return conflict(c)
+    }
+    if (c.op == "DELETE") {
+        if (row != null) softDeleteScheduledRow(userId, c.id, at)
+        return applied(c)
+    }
+    val w = decodePayload<ScheduledWorkout>(c, mapOf("id" to JsonPrimitive(c.id.toString())))
+        .copy(status = null, sessionId = null)
+    checkScheduledWorkout(userId, w, "payload")
+    upsertScheduledRow(userId, w, at, source = row?.get(ScheduledWorkouts.sourceCol) ?: "APP", importBatchId = row?.get(ScheduledWorkouts.importBatchId))
     return applied(c)
 }
 

@@ -27,7 +27,7 @@ services:
       - key: TRUST_PROXY
         value: "true"
       - key: JAVA_OPTS
-        value: "-XX:MaxRAMPercentage=60 -XX:+UseSerialGC -Xss512k -XX:+ExitOnOutOfMemoryError"
+        value: "-XX:MaxRAMPercentage=60 -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Xss512k -XX:+ExitOnOutOfMemoryError"
 
 databases:
   - name: fitlog-db

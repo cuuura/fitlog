@@ -38,11 +38,11 @@ class McpProtocolTest {
     private val readTools = listOf(
         "get_profile", "search_exercises", "list_programs", "get_program", "validate_program", "list_program_instances",
         "get_plan", "list_sessions", "get_session", "get_exercise_records", "get_exercise_progress", "get_training_summary", "get_body_measurements",
-        "list_deletion_requests",
+        "list_deletion_requests", "list_scheduled_workouts",
     )
     private val writeTools = listOf(
         "import_bundle", "create_program", "start_program", "log_session", "log_body_weight", "create_exercise",
-        "adjust_program_instance", "request_deletion",
+        "adjust_program_instance", "request_deletion", "schedule_workout", "skip_scheduled_workout",
     )
 
     @Test
@@ -54,7 +54,8 @@ class McpProtocolTest {
         assertEquals(expected, none.headers[HttpHeaders.WWWAuthenticate])
         val bad = c.mcpPost("fla_not-a-token", null, """{"jsonrpc":"2.0","id":1,"method":"ping"}""")
         assertEquals(HttpStatusCode.Unauthorized, bad.status)
-        assertEquals(expected, bad.headers[HttpHeaders.WWWAuthenticate])
+        // 토큰을 보냈는데 거절되면 error="invalid_token" 이 붙는다(RFC 6750)
+        assertEquals(expected.replace("Bearer ", "Bearer error=\"invalid_token\", "), bad.headers[HttpHeaders.WWWAuthenticate])
         val wrongScheme = c.mcpPost(null, null, "{}") // 헤더 없이
         assertEquals(HttpStatusCode.Unauthorized, wrongScheme.status)
     }
@@ -143,12 +144,12 @@ class McpProtocolTest {
     }
 
     @Test
-    fun tools_list_has_22_tools_with_schemas_and_annotations() = a2Test {
+    fun tools_list_has_25_tools_with_schemas_and_annotations() = a2Test {
         val c = plainClient()
         val conn = c.connect()
         val sid = c.mcpInit(conn.access)
         val tools = c.mcpPost(conn.access, sid, """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""").json().result()["tools"]!!.jsonArray
-        assertEquals(22, tools.size)
+        assertEquals(25, tools.size)
         assertEquals((readTools + writeTools).toSet(), tools.map { it.jsonObject["name"]!!.jsonPrimitive.content }.toSet())
         for (t in tools.map { it.jsonObject }) {
             val name = t["name"]!!.jsonPrimitive.content
@@ -167,7 +168,7 @@ class McpProtocolTest {
         val ro = c.connect(write = false)
         val roSid = c.mcpInit(ro.access)
         val roTools = c.mcpPost(ro.access, roSid, """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""").json().result()["tools"]!!.jsonArray
-        assertEquals(22, roTools.size)
+        assertEquals(25, roTools.size)
     }
 
     @Test

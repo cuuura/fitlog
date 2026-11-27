@@ -78,4 +78,27 @@ class AppConfigTest {
             AppConfig.fromEnv(base + mapOf("PUBLIC_BASE_URL" to "https://mine.example", "RENDER_EXTERNAL_URL" to "https://r.onrender.com")).publicBaseUrl,
         )
     }
+
+    @Test
+    fun publicBaseUrlIsNormalizedAndRenderFallbackWorks() {
+        assertEquals("https://fitlog.onrender.com", AppConfig.fromEnv(base + ("PUBLIC_BASE_URL" to "fitlog.onrender.com/")).publicBaseUrl)
+        assertEquals("https://a.test", AppConfig.fromEnv(base + ("PUBLIC_BASE_URL" to " https://a.test/ ")).publicBaseUrl)
+        assertEquals("https://r.onrender.com", AppConfig.fromEnv(base + ("RENDER_EXTERNAL_URL" to "https://r.onrender.com")).publicBaseUrl)
+        // PUBLIC_BASE_URL 이 RENDER_EXTERNAL_URL 보다 우선
+        assertEquals(
+            "https://mine.test",
+            AppConfig.fromEnv(base + mapOf("PUBLIC_BASE_URL" to "https://mine.test", "RENDER_EXTERNAL_URL" to "https://r.onrender.com")).publicBaseUrl,
+        )
+    }
+
+    @Test
+    fun dbPoolSizeIsConfigurableAndPoolWaitsForSlowDatabase() {
+        assertEquals(5, AppConfig.fromEnv(base + ("DB_MAX_POOL" to "5")).db.maxPool)
+        assertEquals(10, AppConfig.fromEnv(base).db.maxPool)
+        val hc = hikariConfig(DbConfig("jdbc:postgresql://h/db", "u", "p", maxPool = 5))
+        // 부팅 때 DB 가 아직 안 깨어났어도 바로 죽지 않는다
+        assertEquals(60_000, hc.initializationFailTimeout)
+        assertEquals(2, hc.minimumIdle)
+        assertEquals(120_000, hc.keepaliveTime)
+    }
 }

@@ -12,6 +12,7 @@ import com.fitlog.core.ImportBatches
 import com.fitlog.core.ImportItems
 import com.fitlog.core.ProgramInstances
 import com.fitlog.core.Programs
+import com.fitlog.core.ScheduledWorkouts
 import com.fitlog.core.Times
 import com.fitlog.core.WorkoutSessions
 import com.fitlog.core.dbQuery
@@ -25,6 +26,8 @@ import com.fitlog.program.instance.replayInstances
 import com.fitlog.session.Session
 import com.fitlog.session.SessionExercise
 import com.fitlog.session.WorkoutSet
+import com.fitlog.scheduled.softDeleteScheduledRow
+import com.fitlog.scheduled.upsertScheduledRow
 import com.fitlog.session.putSession
 import com.fitlog.session.sessionInstanceId
 import com.fitlog.session.softDeleteSession
@@ -42,7 +45,7 @@ import java.util.UUID
 
 /** import.md 파이프라인: 검증 → 이름 해석 → 충돌 탐지 → (해결됨) 한 트랜잭션 저장 */
 object ImportPipeline : Importer {
-    /** 테스트용: 저장 단계("exercises", "programs", "instances", "sessions", "bodies")가 끝날 때마다 불린다. 던지면 전체가 롤백된다 */
+    /** 테스트용: 저장 단계("exercises", "programs", "instances", "sessions", "bodies", "scheduled")가 끝날 때마다 불린다. 던지면 전체가 롤백된다 */
     @Volatile
     internal var afterPhase: ((String) -> Unit)? = null
 
@@ -196,6 +199,18 @@ private fun Transaction.persist(ctx: ImportContext, a: Analyzer): ImportOutcome.
     }
     hook?.invoke("instances")
 
+    // ---- 예정 운동
+    for (o in p.replacedScheduled) {
+        softDeleteScheduledRow(uid, o.id, now)
+        items += Item("scheduled_workout", o.id, "REPLACED_OLD", o.label)
+    }
+    for (w in p.scheduled) {
+        upsertScheduledRow(uid, w.workout, now, src, batchId)
+        ScheduledWorkouts.update({ (ScheduledWorkouts.id eq w.id) and (ScheduledWorkouts.userId eq uid) }) { it[importBatchId] = batchId }
+        items += Item("scheduled_workout", w.id, "CREATED", w.label)
+    }
+    hook?.invoke("scheduled")
+
     // ---- 세션
     for (o in p.replacedSessions) {
         sessionInstanceId(o.id)?.let { affected += it }
@@ -246,6 +261,7 @@ private fun Transaction.persist(ctx: ImportContext, a: Analyzer): ImportOutcome.
             it[sourceCol] = src
             it[importBatchId] = batchId
             it[serverSeq] = ChangeSeq.next
+            it[scheduledWorkoutId] = ws.scheduledId
         }
         ws.link?.id?.let { affected += it }
         items += Item("workout_session", ws.id, "CREATED", ws.label)
@@ -281,10 +297,12 @@ private fun Transaction.persist(ctx: ImportContext, a: Analyzer): ImportOutcome.
     put("programInstances", p.instances.size)
     put("sessions", p.sessions.size)
     put("bodyMeasurements", p.bodies.size)
+    put("scheduledWorkouts", p.scheduled.size)
     put(
         "replaced",
-        p.replacedPrograms.size + p.replacedSessions.size + p.replacedBodies.size +
-            p.exercises.count { it.replace } + p.programs.count { it.replace } + p.sessions.count { it.replace } + p.bodies.count { it.replace },
+        p.replacedPrograms.size + p.replacedSessions.size + p.replacedBodies.size + p.replacedScheduled.size +
+            p.exercises.count { it.replace } + p.programs.count { it.replace } + p.sessions.count { it.replace } + p.bodies.count { it.replace } +
+            p.scheduled.count { it.replace },
     )
     ImportBatches.update({ ImportBatches.id eq batchId }) { it[ImportBatches.summary] = AppJson.encodeToString(summary) }
     val row = ImportBatches.selectAll().where { ImportBatches.id eq batchId }.single()

@@ -21,6 +21,10 @@ import com.fitlog.importing.ImportContext
 import com.fitlog.importing.ImportOutcome
 import com.fitlog.importing.ImportRequest
 import com.fitlog.importing.Resolution
+import com.fitlog.scheduled.findScheduled
+import com.fitlog.scheduled.setScheduledSkipped
+import com.fitlog.core.ImportItems
+import com.fitlog.core.lockUser
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
@@ -31,6 +35,8 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.put
 import org.jetbrains.exposed.exceptions.ExposedSQLException
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -135,6 +141,7 @@ private val DELETE_ENTITIES = mapOf(
     "program_instance" to "program_instance",
     "exercise" to "exercise",
     "body_measurement" to "body_measurement",
+    "scheduled_workout" to "scheduled_workout",
 )
 
 /** 내 것이고 삭제되지 않은 대상이면 요약(label), 아니면 404 */
@@ -165,6 +172,10 @@ private fun org.jetbrains.exposed.sql.Transaction.deletionLabel(userId: UUID, ta
             val r = Exercises.selectAll().where { (Exercises.id eq id) and (Exercises.ownerId eq userId) and Exercises.deletedAt.isNull() }
                 .singleOrNull() ?: notFound(missing)
             "종목 ${r[Exercises.nameKo]}"
+        }
+        "scheduled_workout" -> {
+            val w = findScheduled(userId, id) ?: notFound(missing)
+            "${w.plannedDate} 예정 운동 ${w.title} (종목 ${w.items.size}개)"
         }
         else -> {
             val r = BodyMeasurements.selectAll().where {
@@ -277,7 +288,7 @@ internal val WRITE_TOOLS: List<Tool> = listOf(
     ),
     Tool(
         name = "log_session", title = "운동 기록 추가",
-        description = "운동 세션 한 건(종목·세트)을 기록합니다. 종목은 id 또는 이름으로 지정합니다. / Log one workout session; exercises are referenced by id or name.",
+        description = "이미 한 운동 세션 한 건(종목·세트)을 기록합니다. 종목은 id 또는 이름으로 지정합니다. 앞으로 할 하루짜리 운동 계획은 schedule_workout, 여러 주 반복 규칙은 create_program 을 쓰세요. / Log one workout session that was already done; exercises by id or name. For a future one-day plan use schedule_workout; for a multi-week program use create_program.",
         write = true,
         input = S.obj(
             "session" to S.anyObj("import.schema.json 의 session: startedAt, exercises[{exercise:{id|name}, sets[{weightKg, reps,...}]}] ..."),
@@ -288,6 +299,96 @@ internal val WRITE_TOOLS: List<Tool> = listOf(
         run = { ctx, a ->
             val s = a.obj("session", required = true)!!
             importBundle(ctx, a, bundleOf(a, "sessions" to JsonArray(listOf(s))))
+        },
+    ),
+    Tool(
+        name = "schedule_workout", title = "예정 운동 추가",
+        description = "앞으로 할 하루짜리 운동 계획(날짜·제목·종목별 세트 목표)을 예정 운동으로 저장합니다. 사용자가 그날 앱에서 눌러 시작하면 목표가 채워진 세션이 열립니다. 이미 한 운동 기록은 log_session, 여러 주 반복 규칙은 create_program 을 쓰세요. 같은 날 같은 제목이 있으면 SCHEDULED_DUPLICATE 충돌(SKIP/KEEP_BOTH/REPLACE)로 알려줍니다. 예: 벨트 스쿼트 80kg×12 → {targetWeightKg:80,targetReps:12}, 12~15회 → targetReps 12 + targetRepsMax 15. / Save a future one-day workout plan (date, title, per-exercise set targets) as a scheduled workout the user can start in the app. Use log_session for workouts already done and create_program for multi-week programs.",
+        write = true,
+        input = S.obj(
+            "workout" to S.obj(
+                "plannedDate" to S.str("할 날짜 YYYY-MM-DD(사용자 현지)", format = "date"),
+                "title" to S.str("제목 1~100자. 예: B-2 하체 2"),
+                "note" to S.str("메모(최대 1000자). 예: RIR 3~4"),
+                "items" to S.arr(
+                    S.obj(
+                        "exercise" to S.obj("id" to idS, "name" to S.str("종목 이름(한글·영문)"), desc = "id 또는 name 중 하나"),
+                        "note" to S.str("종목 메모"),
+                        "restSec" to S.int("세트 사이 목표 휴식(초) 0~3600", 0, 3600),
+                        "sets" to S.arr(
+                            S.obj(
+                                "isWarmup" to S.bool("웜업 세트면 true. 기본 false"),
+                                "targetWeightKg" to S.num("목표 무게(kg). 덤벨은 한쪽 무게", 0.0),
+                                "targetReps" to S.int("목표 횟수(범위면 하한)", 0),
+                                "targetRepsMax" to S.int("범위 상한. targetReps 이상이어야 하고 targetReps 도 함께 필요", 0),
+                                "targetRir" to S.int("목표 RIR 0~10", 0, 10),
+                                "targetRpe" to S.num("목표 RPE 1~10(0.5 단위)", 1.0, 10.0),
+                                "targetDurationSec" to S.int("목표 시간(초)", 0),
+                            ),
+                            "1~50개. 모든 필드 선택",
+                        ),
+                        required = listOf("exercise", "sets"),
+                    ),
+                    "1~30개, 순서 = 운동 순서",
+                ),
+                required = listOf("plannedDate", "title", "items"),
+                desc = "예정 운동 하나(import.schema.json 의 scheduledWorkout). id?, tz? 도 가능",
+            ),
+            "onConflict" to onConflictS, "resolutions" to resolutionsS, "note" to noteS,
+            required = listOf("workout"),
+        ),
+        output = S.obj(
+            *writeOut["properties"]!!.jsonObject.map { it.key to it.value }.toTypedArray(),
+            "scheduledWorkouts" to S.arr(
+                S.obj(
+                    "id" to idS, "plannedDate" to S.str(format = "date"), "title" to S.str(), "itemCount" to S.int(),
+                    required = listOf("id", "plannedDate", "title", "itemCount"),
+                ),
+                "이번 호출로 저장된 예정 운동",
+            ),
+            required = listOf("status"),
+        ),
+        run = { ctx, a ->
+            val w = a.obj("workout", required = true)!!
+            val out = importBundle(ctx, a, bundleOf(a, "scheduledWorkouts" to JsonArray(listOf(w))))
+            if (out.data["status"]?.jsonPrimitive?.content != "SAVED") out else {
+                val batchId = UUID.fromString(out.data["importBatchId"]!!.jsonPrimitive.content)
+                val saved = dbQuery {
+                    val ids = ImportItems.selectAll().where {
+                        (ImportItems.batchId eq batchId) and (ImportItems.entity eq "scheduled_workout") and (ImportItems.action eq "CREATED")
+                    }.map { it[ImportItems.entityId] }
+                    ids.mapNotNull { findScheduled(ctx.userId, it) }
+                }
+                val arr = buildJsonArray {
+                    saved.forEach {
+                        add(buildJsonObject {
+                            put("id", it.id.toString()); put("plannedDate", it.plannedDate); put("title", it.title); put("itemCount", it.items.size)
+                        })
+                    }
+                }
+                val text = if (saved.isEmpty()) out.text else out.text + saved.joinToString("") { " [${it.plannedDate} ${it.title}, 종목 ${it.items.size}개, id ${it.id}]" }
+                ToolOutput(text, JsonObject(out.data + ("scheduledWorkouts" to arr)), out.code)
+            }
+        },
+    ),
+    Tool(
+        name = "skip_scheduled_workout", title = "예정 운동 건너뛰기",
+        description = "예정 운동을 건너뜀(SKIPPED)으로 표시하거나 skipped=false 로 되돌립니다. 삭제는 request_deletion 을 쓰세요. 이미 세션이 있으면 상태는 계속 DONE/IN_PROGRESS 입니다. / Mark a scheduled workout as skipped (or unskip with skipped=false); to delete use request_deletion.",
+        write = true,
+        input = S.obj("id" to idS, "skipped" to S.bool("기본 true. false 면 건너뜀 해제"), required = listOf("id")),
+        output = S.obj("scheduledWorkout" to S.anyObj("예정 운동(status 포함)"), "message" to S.str(), required = listOf("scheduledWorkout")),
+        run = { ctx, a ->
+            val id = a.uuid("id")
+            val skipped = a.bool("skipped") ?: true
+            val w = dbQuery {
+                lockUser(ctx.userId)
+                val r = setScheduledSkipped(ctx.userId, id, skipped, Times.now()) ?: notFound("scheduled workout not found")
+                scheduledJson(listOf(r)).single()
+            }
+            ToolOutput(
+                "예정 운동 '${(w["title"] as JsonPrimitive).content}'을(를) " + (if (skipped) "건너뜀으로 표시했습니다" else "건너뜀을 해제했습니다") + " (상태 ${(w["status"] as JsonPrimitive).content}).",
+                buildJsonObject { put("scheduledWorkout", w); put("message", if (skipped) "건너뜀으로 표시했습니다." else "건너뜀을 해제했습니다.") },
+            )
         },
     ),
     Tool(

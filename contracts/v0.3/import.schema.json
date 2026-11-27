@@ -13,7 +13,8 @@
     "programs": { "type": "array", "maxItems": 10, "items": { "$ref": "#/$defs/program" } },
     "startPrograms": { "type": "array", "maxItems": 5, "items": { "$ref": "#/$defs/startProgram" } },
     "sessions": { "type": "array", "maxItems": 200, "items": { "$ref": "#/$defs/session" } },
-    "bodyMeasurements": { "type": "array", "maxItems": 1000, "items": { "$ref": "#/$defs/body" } }
+    "bodyMeasurements": { "type": "array", "maxItems": 1000, "items": { "$ref": "#/$defs/body" } },
+    "scheduledWorkouts": { "type": "array", "maxItems": 30, "items": { "$ref": "#/$defs/scheduledWorkout" }, "description": "앞으로 할 하루짜리 운동 계획(v1.0 scheduled-workout.md). 이미 한 운동은 sessions" }
   },
   "$defs": {
     "uuid": { "type": "string", "format": "uuid" },
@@ -94,6 +95,7 @@
         "endedAt": { "type": "string", "format": "date-time", "description": "없으면 startedAt + 세트 수×3분으로 채워 끝난 세션으로 저장" },
         "tz": { "type": "string" },
         "note": { "type": "string" },
+        "scheduledWorkoutId": { "$ref": "#/$defs/uuid", "description": "이 세션이 수행한 예정 운동(묶음 안 또는 기존). 없는 id면 연결 없이 저장" },
         "program": {
           "type": "object",
           "required": ["instanceId", "planSeq"],
@@ -111,6 +113,45 @@
               "exercise": { "$ref": "#/$defs/exerciseRef" },
               "note": { "type": "string" },
               "sets": { "type": "array", "minItems": 1, "maxItems": 50, "items": { "$ref": "#/$defs/set" } }
+            }
+          }
+        }
+      }
+    },
+    "scheduledSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "isWarmup": { "type": "boolean", "default": false },
+        "targetWeightKg": { "type": "number", "minimum": 0, "description": "DUMBBELL은 한쪽 무게" },
+        "targetReps": { "type": "integer", "minimum": 0 },
+        "targetRepsMax": { "type": "integer", "minimum": 0, "description": "범위 상한(12~15면 targetReps 12, targetRepsMax 15). targetReps 필요, targetReps 이상" },
+        "targetRir": { "type": "integer", "minimum": 0, "maximum": 10 },
+        "targetRpe": { "type": "number", "minimum": 1, "maximum": 10, "multipleOf": 0.5 },
+        "targetDurationSec": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "scheduledWorkout": {
+      "type": "object",
+      "required": ["plannedDate", "title", "items"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "plannedDate": { "type": "string", "format": "date", "description": "할 날짜(사용자 현지)" },
+        "title": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "note": { "type": "string", "maxLength": 1000 },
+        "tz": { "type": "string" },
+        "items": {
+          "type": "array", "minItems": 1, "maxItems": 30,
+          "items": {
+            "type": "object",
+            "required": ["exercise", "sets"],
+            "additionalProperties": false,
+            "properties": {
+              "exercise": { "$ref": "#/$defs/exerciseRef" },
+              "note": { "type": "string" },
+              "restSec": { "type": "integer", "minimum": 0, "maximum": 3600, "description": "이 종목 세트 사이 목표 휴식" },
+              "sets": { "type": "array", "minItems": 1, "maxItems": 50, "items": { "$ref": "#/$defs/scheduledSet" } }
             }
           }
         }

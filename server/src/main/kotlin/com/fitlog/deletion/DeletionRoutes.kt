@@ -14,6 +14,8 @@ import com.fitlog.core.InstantSerializer
 import com.fitlog.core.ApiException
 import com.fitlog.core.ProgramInstances
 import com.fitlog.core.Programs
+import com.fitlog.core.ScheduledWorkouts
+import com.fitlog.scheduled.softDeleteScheduledRow
 import com.fitlog.core.Times
 import com.fitlog.core.UUIDSerializer
 import com.fitlog.core.WorkoutSessions
@@ -145,6 +147,11 @@ private fun Transaction.execute(uid: UUID, entity: String, id: UUID, config: App
             softDeleteMeasurementRow(id, Times.now())
             true
         }
+    }
+    "scheduled_workout" -> {
+        val row = ScheduledWorkouts.selectAll().where { ScheduledWorkouts.id eq id }.singleOrNull()
+        if (row == null || row[ScheduledWorkouts.userId] != uid || row[ScheduledWorkouts.deletedAt] != null) false
+        else softDeleteScheduledRow(uid, id, Times.now())
     }
     else -> validation("unknown entity '$entity'", "entity")
 }

@@ -3,7 +3,9 @@ package com.fitlog.sync
 import com.fitlog.core.AppJson
 import com.fitlog.core.BodyMeasurements
 import com.fitlog.core.Exercises
+import com.fitlog.core.ScheduledWorkouts
 import com.fitlog.core.SessionExercises
+import com.fitlog.scheduled.toScheduled
 import com.fitlog.core.WorkoutSessions
 import com.fitlog.core.WorkoutSets
 import com.fitlog.body.BodyMeasurement
@@ -19,7 +21,7 @@ import java.util.UUID
 
 internal const val PULL_LIMIT = 500
 
-internal val ENTITIES = setOf("exercise", "workout_session", "session_exercise", "workout_set", "body_measurement")
+internal val ENTITIES = setOf("exercise", "workout_session", "session_exercise", "workout_set", "body_measurement", "scheduled_workout")
 
 private inline fun <reified T> payloadOf(v: T): JsonObject = AppJson.encodeToJsonElement(v).jsonObject
 
@@ -48,6 +50,7 @@ internal fun Transaction.buildChanges(entity: String, ids: Collection<UUID>): Li
                     SessionPayload(
                         it[WorkoutSessions.startedAt], it[WorkoutSessions.endedAt], it[WorkoutSessions.tz], it[WorkoutSessions.note],
                         it[WorkoutSessions.programInstanceId], it[WorkoutSessions.planSeq], it[WorkoutSessions.planDayKey],
+                        it[WorkoutSessions.scheduledWorkoutId],
                     ),
                 ),
                 it[WorkoutSessions.updatedAt], it[WorkoutSessions.serverSeq],
@@ -84,6 +87,14 @@ internal fun Transaction.buildChanges(entity: String, ids: Collection<UUID>): Li
                 it[BodyMeasurements.updatedAt], it[BodyMeasurements.serverSeq],
             )
         }
+        "scheduled_workout" -> ScheduledWorkouts.selectAll().where { ScheduledWorkouts.id inList ids }.map {
+            val del = it[ScheduledWorkouts.deletedAt] != null
+            Change(
+                entity, it[ScheduledWorkouts.id], if (del) "DELETE" else "UPSERT", null,
+                if (del) null else payloadOf(it.toScheduled().copy(source = null, importBatchId = null, updatedAt = null, deletedAt = null)),
+                it[ScheduledWorkouts.updatedAt], it[ScheduledWorkouts.serverSeq],
+            )
+        }
         else -> emptyList()
     }
 }
@@ -105,6 +116,8 @@ internal fun Transaction.pull(userId: UUID, since: Long): PullResponse {
                 JOIN workout_session s ON s.id = se.session_id WHERE s.user_id = '$u' AND ws.server_seq > $since
             UNION ALL
             SELECT 'body_measurement', id, server_seq FROM body_measurement WHERE user_id = '$u' AND server_seq > $since
+            UNION ALL
+            SELECT 'scheduled_workout', id, server_seq FROM scheduled_workout WHERE user_id = '$u' AND server_seq > $since
         ) t ORDER BY server_seq LIMIT ${PULL_LIMIT + 1}
     """.trimIndent()
     val heads = exec(sql) { rs ->

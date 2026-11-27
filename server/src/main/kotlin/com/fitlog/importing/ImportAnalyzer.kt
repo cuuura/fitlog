@@ -10,6 +10,7 @@ import com.fitlog.core.Kg
 import com.fitlog.core.OneRmMeasurements
 import com.fitlog.core.ProgramInstances
 import com.fitlog.core.Programs
+import com.fitlog.core.ScheduledWorkouts
 import com.fitlog.core.SessionExercises
 import com.fitlog.core.Times
 import com.fitlog.core.UserSettingsTable
@@ -25,6 +26,10 @@ import com.fitlog.program.schema.ExerciseResolver
 import com.fitlog.program.schema.ProgramValidator
 import com.fitlog.program.schema.ResolveResult
 import com.fitlog.program.schema.ValidationResult
+import com.fitlog.scheduled.ScheduledItem
+import com.fitlog.scheduled.ScheduledWorkout
+import com.fitlog.scheduled.findScheduled
+import com.fitlog.scheduled.toScheduled
 import com.fitlog.session.WorkoutSet
 import com.fitlog.session.checkSet
 import com.fitlog.session.loadSession
@@ -44,6 +49,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.lessEq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.neq
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.or
 import org.jetbrains.exposed.sql.transactions.TransactionManager
@@ -150,6 +156,7 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
         exercises()
         programs()
         startPrograms()
+        scheduledWorkouts()
         sessions()
         bodies()
         if (errors.isNotEmpty()) throw invalid()
@@ -633,6 +640,95 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
         }
     }
 
+    // ================================================================ 예정 운동
+
+    /** 묶음 안 예정 id(원래 id) -> 최종 id. 저장·UNCHANGED 로 확정된 것만 들어간다 */
+    private val schedMap = mutableMapOf<UUID, UUID>()
+
+    private fun schedKey(s: String) = s.filterNot { it.isWhitespace() }.lowercase()
+
+    private fun scheduledSummary(r: ResultRow) = buildJsonObject {
+        put("id", r[ScheduledWorkouts.id].toString())
+        put("plannedDate", r[ScheduledWorkouts.plannedDate].toString())
+        put("title", r[ScheduledWorkouts.title])
+        put("itemCount", runCatching { com.fitlog.scheduled.decodeItems(r[ScheduledWorkouts.items]).size }.getOrDefault(0))
+    }
+
+    private fun scheduledWorkouts() {
+        if (bundle.scheduled.isEmpty()) return
+        bundle.scheduled.filter { it.id != null }.groupBy { it.id }.filter { it.value.size > 1 }.values
+            .forEach { l -> l.forEach { err("${it.ptr}/id", "duplicate id in bundle") } }
+        for (w in bundle.scheduled) {
+            if (w.tz != null && !validTz(w.tz)) { err("${w.ptr}/tz", "must be a valid IANA time zone"); continue }
+            val resolved = mutableListOf<Pair<PSchedItem, ExRow>>()
+            var skippedAny = false
+            for (it in w.items) when (val r = resolveEx(it.ref, it.ptr)) {
+                is ExRes.Found -> resolved += it to r.row
+                ExRes.Skipped -> skippedAny = true
+                ExRes.Pending -> {}
+            }
+            if (resolved.isEmpty()) {
+                if (skippedAny) count("scheduledWorkouts", "SKIP")
+                continue
+            }
+            val items = resolved.map { (it, row) -> ScheduledItem(row.id, it.note, it.restSec, it.sets) }
+            val label = "${w.plannedDate} ${w.title}"
+            val c = classify(
+                w.ptr, w.id, true,
+                lookup = { id ->
+                    ScheduledWorkouts.selectAll().where { ScheduledWorkouts.id eq id }.singleOrNull()?.let { r ->
+                        Ex(r[ScheduledWorkouts.userId] == uid, r[ScheduledWorkouts.deletedAt] != null) {
+                            val old = r.toScheduled()
+                            old.plannedDate == w.plannedDate.toString() && old.title == w.title && blankNull(old.note) == blankNull(w.note) &&
+                                old.items == items
+                        }
+                    }
+                },
+                summary = { id -> ScheduledWorkouts.selectAll().where { ScheduledWorkouts.id eq id }.singleOrNull()?.let(::scheduledSummary) },
+            )
+            when (c.out) {
+                Out.UNCHANGED -> { count("scheduledWorkouts", "UNCHANGED"); w.id?.let { schedMap[it] = c.id }; continue }
+                Out.SKIP -> { count("scheduledWorkouts", "SKIP"); continue }
+                Out.UNRESOLVED -> continue
+                Out.NEW -> {}
+            }
+            val replaces = mutableListOf<Old>()
+            if (!c.inPlace) {
+                val key = schedKey(w.title)
+                val same = ScheduledWorkouts.selectAll().where {
+                    (ScheduledWorkouts.userId eq uid) and ScheduledWorkouts.deletedAt.isNull() and
+                        (ScheduledWorkouts.plannedDate eq w.plannedDate) and (ScheduledWorkouts.id neq c.id)
+                }.filter { schedKey(it[ScheduledWorkouts.title]) == key }
+                if (same.isNotEmpty()) {
+                    val r = decide(
+                        "SCHEDULED_DUPLICATE", w.ptr, "a scheduled workout titled '${w.title}' already exists on ${w.plannedDate}",
+                        listOf("SKIP", "KEEP_BOTH", "REPLACE"),
+                        scheduledSummary(same.first()).let { j -> JsonObject(j + ("matches" to JsonPrimitive(same.size))) },
+                    )
+                    when (r?.action) {
+                        null -> continue
+                        "SKIP" -> { count("scheduledWorkouts", "SKIP"); continue }
+                        "REPLACE" -> same.forEach { replaces += Old(it[ScheduledWorkouts.id], "${it[ScheduledWorkouts.plannedDate]} ${it[ScheduledWorkouts.title]}") }
+                        else -> {}
+                    }
+                }
+            }
+            replaces.forEach { o -> if (plan.replacedScheduled.none { it.id == o.id }) plan.replacedScheduled += o }
+            val saved = ScheduledWorkout(c.id, w.plannedDate.toString(), w.title, w.note, items)
+            plan.scheduled += WScheduled(c.id, saved, label, c.inPlace)
+            w.id?.let { schedMap[it] = c.id }
+            count("scheduledWorkouts", if (c.inPlace || replaces.isNotEmpty()) "REPLACE" else "NEW")
+        }
+    }
+
+    /** 세션이 가리킬 예정: 묶음 안 id(바뀐 id 포함) 또는 내 살아 있는 예정. 없으면 null(연결 없이 저장) */
+    private fun scheduledTarget(raw: UUID?): UUID? {
+        if (raw == null) return null
+        val id = remap[raw.toString()]?.let { UUID.fromString(it) } ?: raw
+        return schedMap[raw] ?: schedMap[id]
+            ?: tx().findScheduled(uid, id)?.id?.takeIf { _ -> plan.replacedScheduled.none { it.id == id } }
+    }
+
     // ================================================================ 세션
 
     private class ExistingSession(val id: UUID, val startedAt: Instant, val endedAt: Instant?, val tz: String)
@@ -848,6 +944,14 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
                     "SKIP" -> { count("sessions", "SKIP"); continue }
                     else -> {} // UNLINK: 연결 없이 저장
                 }
+            }
+            c.ws.scheduledId = scheduledTarget(c.s.scheduledWorkoutId)?.takeIf { sid ->
+                // 한 예정에는 살아 있는 세션이 하나. 이미 다른 살아 있는 세션이 쓰고 있으면(이번에 지우는 것 제외) 연결하지 않는다
+                val replacedIds = (plan.replacedSessions.map { it.id } + c.replaces.map { it.id }).toSet()
+                val takenInDb = WorkoutSessions.selectAll().where {
+                    (WorkoutSessions.scheduledWorkoutId eq sid) and WorkoutSessions.deletedAt.isNull() and (WorkoutSessions.id neq c.ws.id)
+                }.any { it[WorkoutSessions.id] !in replacedIds }
+                !takenInDb && plan.sessions.none { it.scheduledId == sid }
             }
             plan.sessions += c.ws
             count("sessions", if (c.cls.inPlace || c.replaces.isNotEmpty()) "REPLACE" else "NEW")

@@ -2,6 +2,7 @@ package com.fitlog.importing
 
 import com.fitlog.engine.ProgramDefinition
 import com.fitlog.engine.ProgramState
+import com.fitlog.scheduled.ScheduledWorkout
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -42,7 +43,11 @@ internal class WSessionEx(val id: UUID, val exerciseId: UUID, val position: Int,
 internal class WSession(
     val id: UUID, val startedAt: Instant, val endedAt: Instant, val tz: String, val note: String?,
     var link: InstInfo?, val planSeq: Int?, val exercises: List<WSessionEx>, val label: String, val replace: Boolean,
+    /** 이 세션이 수행한 예정 운동(최종 확정된 id). 분석 마지막에 정한다 */
+    var scheduledId: UUID? = null,
 )
+
+internal class WScheduled(val id: UUID, val workout: ScheduledWorkout, val label: String, val replace: Boolean)
 
 internal class WBody(val id: UUID, val measuredAt: Instant, val weightKg: Double, val label: String, val replace: Boolean)
 
@@ -57,9 +62,12 @@ internal class WritePlan {
     val replacedSessions = mutableListOf<Old>()
     val bodies = mutableListOf<WBody>()
     val replacedBodies = mutableListOf<Old>()
+    val scheduled = mutableListOf<WScheduled>()
+    val replacedScheduled = mutableListOf<Old>()
 
     fun isEmpty() = exercises.isEmpty() && programs.isEmpty() && replacedPrograms.isEmpty() && instances.isEmpty() &&
-        sessions.isEmpty() && replacedSessions.isEmpty() && bodies.isEmpty() && replacedBodies.isEmpty()
+        sessions.isEmpty() && replacedSessions.isEmpty() && bodies.isEmpty() && replacedBodies.isEmpty() &&
+        scheduled.isEmpty() && replacedScheduled.isEmpty()
 }
 
 // ---------------------------------------------------------------- 해시·결정적 id
