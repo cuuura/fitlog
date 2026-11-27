@@ -114,7 +114,8 @@ void main() {
     final cur = await h.sessions.watchActiveSession().first;
     expect(cur!.id, s.id);
     expect(cur.exercises.single.exerciseId, created.id);
-    expect(find.text('케이블 크런치'), findsOneWidget);
+    // 플레이리스트 행과 종목 카드에 한 번씩 보인다.
+    expect(find.text('케이블 크런치'), findsNWidgets(2));
   });
 
   testWidgets('내 종목 길게 눌러 삭제(기본 종목은 길게 누르기 없음)', (t) async {

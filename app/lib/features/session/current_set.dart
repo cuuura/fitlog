@@ -10,10 +10,10 @@ class CurrentSet {
   final WorkoutSet set;
 }
 
-CurrentSet? currentSetOf(Session session) {
+CurrentSet? currentSetOf(Session session, {String? excluding}) {
   for (final e in session.exercises) {
     for (final w in e.sets) {
-      if (!w.isCompleted) return CurrentSet(e, w);
+      if (!w.isCompleted && w.id != excluding) return CurrentSet(e, w);
     }
   }
   return null;

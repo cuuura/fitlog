@@ -205,22 +205,30 @@ void main() {
     s = await active(h);
     expect(s.exercises.single.sets.single.reps, 0);
 
-    // RPE 범위 밖이면 저장하지 않고 오류 표시
-    await t.tap(find.byKey(Key('more-$id')));
+    // RPE 칩 선택/해제, RIR 전환
+    await t.ensureVisible(find.byKey(Key('rpe-$id-9')));
+    await t.tap(find.byKey(Key('rpe-$id-9')));
     await settle(t);
-    await t.enterText(find.byKey(Key('rpe-$id')), '11');
+    s = await active(h);
+    expect(s.exercises.single.sets.single.rpe, 9);
+    await t.tap(find.byKey(Key('rpe-$id-9')));
     await settle(t);
-    expect(find.text('1~10, 0.5 단위'), findsOneWidget);
     s = await active(h);
     expect(s.exercises.single.sets.single.rpe, isNull);
-    await t.enterText(find.byKey(Key('rpe-$id')), '8.5');
-    await t.enterText(find.byKey(Key('rir-$id')), '2');
+    await t.tap(find.byKey(Key('rpe-$id-8.5')));
+    await settle(t);
+    await t.tap(find.byKey(Key('rpe-toggle-$id')));
+    await settle(t);
+    expect(find.byKey(Key('rir-$id')), findsOneWidget);
+    await t.tap(find.byKey(Key('rir-$id-2')));
     await settle(t);
     s = await active(h);
     expect(s.exercises.single.sets.single.rpe, 8.5);
     expect(s.exercises.single.sets.single.rir, 2);
 
     // 워밍업 토글, 삭제
+    await t.tap(find.byKey(Key('more-$id')));
+    await settle(t);
     await t.tap(find.byKey(Key('warmup-$id')));
     await settle(t);
     s = await active(h);

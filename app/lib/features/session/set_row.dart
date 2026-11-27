@@ -8,6 +8,7 @@ import '../../core/api/dto.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/units.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../exercise_picker/exercise_labels.dart';
 import 'current_set.dart';
 import 'plan_logic.dart';
 import 'session_controller.dart';
@@ -61,10 +62,9 @@ class _SetRowState extends ConsumerState<SetRow> {
   final _weight = TextEditingController();
   final _reps = TextEditingController();
   final _added = TextEditingController();
-  final _rpe = TextEditingController();
-  final _rir = TextEditingController();
   final _note = TextEditingController();
   bool _details = false;
+  bool? _showRir;
 
   final _errors = <String, String?>{};
 
@@ -85,7 +85,7 @@ class _SetRowState extends ConsumerState<SetRow> {
 
   @override
   void dispose() {
-    for (final c in [_weight, _reps, _added, _rpe, _rir, _note]) {
+    for (final c in [_weight, _reps, _added, _note]) {
       c.dispose();
     }
     super.dispose();
@@ -123,10 +123,6 @@ class _SetRowState extends ConsumerState<SetRow> {
       _setText(_reps, _numText(s.reps));
     if (stale('added', _parseKg(_added.text) != s.addedWeightKg))
       _setText(_added, _kgText(s.addedWeightKg));
-    if (stale('rpe', _parseNum(_rpe.text) != s.rpe))
-      _setText(_rpe, _numText(s.rpe));
-    if (stale('rir', int.tryParse(_rir.text.trim()) != s.rir))
-      _setText(_rir, _numText(s.rir));
     if (force || (_note.text.isEmpty ? null : _note.text) != s.note)
       _setText(_note, s.note ?? '');
   }
@@ -153,18 +149,6 @@ class _SetRowState extends ConsumerState<SetRow> {
       added = _parseKg(_added.text);
       if (added == null) errs['added'] = l.sessionInvalidAdded;
     }
-    double? rpe;
-    if (_rpe.text.trim().isNotEmpty) {
-      rpe = _parseNum(_rpe.text);
-      if (rpe == null || !SetLimits.validRpe(rpe))
-        errs['rpe'] = l.sessionInvalidRpe;
-    }
-    int? rir;
-    if (_rir.text.trim().isNotEmpty) {
-      rir = int.tryParse(_rir.text.trim());
-      if (rir == null || !SetLimits.validRir(rir))
-        errs['rir'] = l.sessionInvalidRir;
-    }
     setState(() {
       _errors
         ..clear()
@@ -178,8 +162,6 @@ class _SetRowState extends ConsumerState<SetRow> {
       weightKg: _isBodyweight ? null : () => weight,
       addedWeightKg: _isBodyweight ? () => added : null,
       reps: () => reps,
-      rpe: () => rpe,
-      rir: () => rir,
       note: () => note,
     );
     ref.read(sessionControllerProvider).updateSet(next);
@@ -330,6 +312,63 @@ class _SetRowState extends ConsumerState<SetRow> {
           ),
         ),
       ),
+    );
+  }
+
+  static const _rpeValues = <double>[7, 7.5, 8, 8.5, 9, 9.5, 10];
+  static const _rirValues = <int>[0, 1, 2, 3, 4, 5];
+
+  /// RPE 칩 한 줄(7~10) 또는 RIR 칩(0~5). 선택한 칩을 다시 누르면 해제.
+  Widget _rpeSection(AppLocalizations l, ColorScheme scheme) {
+    final s = widget.set;
+    final rir = _showRir ?? (s.rpe == null && s.rir != null);
+    final labelId = rir ? 'rir' : 'rpe';
+    Widget chip(String text, String keySuffix, bool selected, VoidCallback onTap) =>
+        ChoiceChip(
+          key: Key('$labelId-${s.id}-$keySuffix'),
+          label: Text(text),
+          selected: selected,
+          onSelected: (_) => onTap(),
+        );
+    final ctrl = ref.read(sessionControllerProvider);
+    final chips = rir
+        ? [
+            for (final v in _rirValues)
+              chip('$v', '$v', s.rir == v, () {
+                ctrl.updateSet(s.copyWith(rir: () => s.rir == v ? null : v));
+              }),
+          ]
+        : [
+            for (final v in _rpeValues)
+              chip(_numText(v), _numText(v), s.rpe == v, () {
+                ctrl.updateSet(s.copyWith(rpe: () => s.rpe == v ? null : v));
+              }),
+          ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              rir ? l.sessionCurRirLabel : l.sessionCurRpeLabel,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            TextButton(
+              key: Key('rpe-toggle-${s.id}'),
+              onPressed: () => setState(() => _showRir = !rir),
+              child: Text(rir ? l.sessionCurShowRpe : l.sessionCurShowRir),
+            ),
+          ],
+        ),
+        Wrap(
+          key: Key('$labelId-${s.id}'),
+          spacing: 6,
+          runSpacing: 4,
+          children: chips,
+        ),
+      ],
     );
   }
 
@@ -571,6 +610,7 @@ class _SetRowState extends ConsumerState<SetRow> {
                     _isBodyweight ? addedField : weightField,
                     const SizedBox(height: 8),
                     repsField,
+                    if (settings.rpeInputEnabled) _rpeSection(l, scheme),
                     const SizedBox(height: 6),
                     Row(
                       children: [
@@ -611,28 +651,6 @@ class _SetRowState extends ConsumerState<SetRow> {
                             .read(sessionControllerProvider)
                             .updateSet(s.copyWith(isWarmup: v)),
                       ),
-                      if (settings.rpeInputEnabled)
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _field(
-                                'rpe',
-                                _rpe,
-                                l.sessionRpe,
-                                decimal: true,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: _field(
-                                'rir',
-                                _rir,
-                                l.sessionRir,
-                                decimal: false,
-                              ),
-                            ),
-                          ],
-                        ),
                       const SizedBox(height: 8),
                       TextField(
                         key: Key('note-${s.id}'),
@@ -743,11 +761,29 @@ Future<bool> completeSetChecked(
       return false;
     case SetCheck.ok:
   }
+  final unit = ref.read(settingsProvider).weightUnit;
+  String? nextText;
+  final next = currentSetOf(session, excluding: set.id);
+  if (next != null) {
+    final ex = next.se.id == se.id
+        ? null
+        : ref.read(exerciseMapProvider).value?[next.se.exerciseId];
+    final nextName = next.se.id == se.id
+        ? exerciseName
+        : (ex == null ? null : exerciseDisplayName(context, ex));
+    if (nextName != null) {
+      nextText = l.sessionCurNextNotif(
+        nextName,
+        formatSetBrief(next.set, ex?.type ?? type, unit),
+      );
+    }
+  }
   await ctrl.setCompleted(
     session,
     set,
     true,
     timerLabel: l.sessionRestLabel(exerciseName, n),
+    nextText: nextText,
   );
   return true;
 }
