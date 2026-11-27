@@ -20,6 +20,7 @@ import io.ktor.server.request.receiveText
 import io.ktor.server.response.header
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.Route
+import io.ktor.server.routing.application
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
@@ -131,7 +132,7 @@ fun Route.mcpRoutes(config: AppConfig) {
         val v = Signer.verify(sessionSecret, "mcpsid", sid) ?: return false
         return v["cid"] == connectionId.toString()
     }
-    val trace = McpTraceBuffer(100)
+    val trace = application.mcpTraceBuffer()
     val clients = ClientNames()
     val traceEnabled = config.mcpTraceEnabled
 

@@ -13,6 +13,10 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.createApplicationPlugin
 import io.ktor.server.application.install
+import com.fitlog.mcp.mcpTraceBuffer
+import io.ktor.server.application.hooks.ResponseSent
+import io.ktor.server.request.httpMethod
+import io.ktor.server.request.path
 import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.calllogging.CallLogging
@@ -99,6 +103,35 @@ private val McpCors = createApplicationPlugin("McpCors") {
     }
 }
 
+/**
+ * OAuth·디스커버리 요청 추적(/health/mcp-trace 에 /mcp 요청과 함께 보인다). ChatGPT 등이 연결 과정 어디서 멈추는지 보려는 용도.
+ * 비밀 값(code, code_verifier, client_secret, token, state, 비밀번호)은 남기지 않는다
+ */
+private val OAuthTrace = createApplicationPlugin("OAuthTrace") {
+    on(ResponseSent) { call ->
+        val p = call.request.path()
+        if (!(p.startsWith("/oauth/") || p.startsWith("/.well-known/") || p.startsWith("/mcp/"))) return@on
+        val tr = com.fitlog.mcp.McpTraceRow(call.request.httpMethod.value)
+        tr.path = p
+        tr.status = call.response.status()?.value
+        tr.userAgent = com.fitlog.mcp.truncateUa(call.request.header(HttpHeaders.UserAgent))
+        tr.accept = com.fitlog.mcp.truncateUa(call.request.header(HttpHeaders.Accept))
+        tr.authPresent = call.request.header(HttpHeaders.Authorization) != null
+        val q = call.request.queryParameters
+        val parts = mutableListOf<String>()
+        if (!q.isEmpty()) parts += "params=" + q.names().sorted().joinToString(",")
+        q["redirect_uri"]?.let { parts += "redirect_host=" + runCatching { java.net.URI(it).host }.getOrNull() }
+        q["scope"]?.let { parts += "scope=" + it.take(80) }
+        q["resource"]?.let { parts += "resource=" + it.take(120) }
+        q["code_challenge_method"]?.let { parts += "ccm=$it" }
+        q["response_type"]?.let { parts += "rt=$it" }
+        q["error"]?.let { parts += "error=" + it.take(60) }
+        call.request.header(HttpHeaders.ContentType)?.let { parts += "ct=" + it.take(60) }
+        if (parts.isNotEmpty()) tr.detail = parts.joinToString(" ")
+        call.application.mcpTraceBuffer().add(tr)
+    }
+}
+
 /** A3 소유. CallId(X-Request-Id)·로그, 본문 크기 제한. DB 풀 종료는 main() 의 ApplicationStopped 에서 한다 */
 fun Application.installOps(config: AppConfig) {
     install(CallId) {
@@ -114,5 +147,6 @@ fun Application.installOps(config: AppConfig) {
         filter { call -> !call.request.local.uri.startsWith("/health") }
     }
     install(McpCors)
+    if (config.mcpTraceEnabled) install(OAuthTrace)
     install(BodyLimit) { maxBytes = config.maxBodyBytes }
 }

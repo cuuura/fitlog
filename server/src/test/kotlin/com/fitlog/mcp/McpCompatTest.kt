@@ -168,7 +168,12 @@ class McpCompatTest {
             val res = c.get("/health/mcp-trace")
             assertEquals(HttpStatusCode.OK, res.status)
             val body = res.bodyAsText()
-            val entries = Json.parseToJsonElement(body).jsonObject["entries"]!!.jsonArray.map { it.jsonObject }.reversed() // 오래된 것부터
+            val all = Json.parseToJsonElement(body).jsonObject["entries"]!!.jsonArray.map { it.jsonObject }.reversed() // 오래된 것부터
+            // OAuth·메타데이터 요청도 남는다(경로 포함, 비밀 값 없음)
+            assertTrue(all.any { it["path"]?.jsonPrimitive?.content == "/oauth/token" }, body)
+            assertTrue(all.any { it["path"]?.jsonPrimitive?.content == "/oauth/authorize" && it["detail"]!!.jsonPrimitive.content.contains("ccm=S256") }, body)
+            assertFalse(body.contains("code_verifier=") || body.contains("client_secret="), body)
+            val entries = all.filter { it["path"] == null }
             assertTrue(entries.size >= 6, body)
             assertEquals(false, entries[0]["authenticated"]!!.jsonPrimitive.boolean)
             assertEquals("401", entries[0]["status"]!!.jsonPrimitive.content)
