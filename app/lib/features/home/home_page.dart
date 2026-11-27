@@ -66,7 +66,7 @@ class HomePage extends ConsumerWidget {
               l.homeDateLabel(
                 now.month,
                 now.day,
-                l.homeWeekdayLong(_weekdayKey(now.weekday)),
+                l.homeWeekdayLong(HomePage.weekdayKey(now.weekday)),
               ),
               style: text.titleMedium,
             ),
@@ -167,7 +167,7 @@ class HomePage extends ConsumerWidget {
     );
   }
 
-  static String _weekdayKey(int w) =>
+  static String weekdayKey(int w) =>
       const ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][w - 1];
 
   Future<void> _skip(
@@ -511,7 +511,7 @@ class _RecentTile extends StatelessWidget {
         ? l.homeRecentToday
         : diff == 1
         ? l.homeRecentYesterday
-        : formatDate(local);
+        : l.homeDateLabel(local.month, local.day, l.homeWeekdayLong(HomePage.weekdayKey(local.weekday)));
     return Material(
       color: c.surface2,
       borderRadius: BorderRadius.circular(AppRadius.md),

@@ -1,4 +1,6 @@
 // B2 소유. 세션 표시용 순수 함수.
+import 'package:intl/intl.dart';
+
 import '../../core/api/dto.dart';
 import '../../core/units.dart';
 
@@ -22,7 +24,7 @@ String formatElapsed(Duration d) {
 /// 볼륨(kg 기준)을 사용자 단위로.
 String formatVolume(double kg, WeightUnit unit) {
   final v = Units.toDisplay(kg, unit);
-  final s = v.round().toString();
+  final s = NumberFormat.decimalPattern('en').format(v.round());
   return '$s ${unit == WeightUnit.KG ? 'kg' : 'lb'}';
 }
 

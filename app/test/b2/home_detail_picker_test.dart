@@ -37,12 +37,12 @@ void main() {
     await h.pump(t);
 
     expect(find.byKey(const Key('home-start')), findsOneWidget);
-    expect(find.text('종목 1개 · 2세트 · 1000 kg'), findsOneWidget);
+    expect(find.text('종목 1개 · 2세트 · 1,000 kg'), findsOneWidget);
 
     await t.tap(find.byKey(Key('home-session-${s.id}')));
     await settle(t);
     expect(find.text('스쿼트 · 바벨'), findsOneWidget);
-    expect(find.textContaining('볼륨 1000 kg'), findsOneWidget);
+    expect(find.textContaining('볼륨 1,000 kg'), findsOneWidget);
     expect(find.text('40 kg×10'), findsOneWidget);
 
     await t.tap(find.byKey(const Key('detail-delete')));
