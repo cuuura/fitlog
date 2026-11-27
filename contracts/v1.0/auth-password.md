@@ -40,5 +40,5 @@
 
 ## 알아둘 점
 - 비밀번호 계정의 `/v1/me` `email`은 `<username>@password.local`로 보인다. 앱은 비밀번호 계정이면 이메일 대신 아이디를 보여줘도 된다(`email`이 `@password.local`로 끝남)
-- AI 연동(MCP) 동의 화면은 Google 로그인만 지원한다. 비밀번호 계정은 AI 연결을 쓸 수 없다
+- AI 연동(MCP) 동의 화면은 Google 로그인과 아이디·비밀번호 로그인을 모두 지원한다(PASSWORD_LOGIN_ENABLED 일 때). e2e/run.py 가 비밀번호 계정으로 전체 OAuth 흐름을 점검한다
 - 운영(스토어 출시) 전에는 `PASSWORD_LOGIN_ENABLED=false`로 끈다

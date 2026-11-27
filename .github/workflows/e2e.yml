@@ -4,7 +4,7 @@ name: e2e
 on:
   push:
     branches: [main]
-    paths: ["server/**", "contracts/**", "e2e/**", ".github/workflows/e2e.yml"]
+    paths: ["server/**", "contracts/**", "e2e/**", "app/**", ".github/workflows/e2e.yml"]
   pull_request:
   workflow_dispatch:
   schedule:
@@ -49,6 +49,52 @@ jobs:
           name: e2e-server-log
           path: e2e/.server.log
 
+  app-live:
+    # 앱의 진짜 API 계층(ApiClient·DTO·drift·SyncEngine)을 실제 서버 프로세스에 붙여 가입→동의→프로그램→기록→동기화→그래프를 돌린다
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: fitlog
+          POSTGRES_PASSWORD: fitlog
+          POSTGRES_DB: fitlog_it
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fitlog"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.50.1"
+          channel: stable
+          cache: true
+      - name: 서버 빌드·시작
+        run: |
+          cd server && ./gradlew installDist --no-daemon -q
+          DATABASE_URL=postgres://fitlog:fitlog@localhost:5432/fitlog_it \
+          JWT_SECRET=ci-secret-ci-secret-ci-secret-ci-secret-12 \
+          PASSWORD_LOGIN_ENABLED=true PASSWORD_SIGNUP_CODE=e2e-code \
+          RATE_LIMIT_ENABLED=false PORT=8091 \
+          nohup build/install/fitlog-server/bin/fitlog-server > "$RUNNER_TEMP/server.log" 2>&1 &
+          for i in $(seq 90); do curl -sf localhost:8091/health/ready >/dev/null && exit 0; sleep 1; done
+          cat "$RUNNER_TEMP/server.log"; exit 1
+      - name: 앱 실서버 통합 테스트
+        working-directory: app
+        run: |
+          flutter pub get
+          FITLOG_LIVE_BASE_URL=http://localhost:8091 FITLOG_LIVE_SIGNUP_CODE=e2e-code flutter test test_live
+      - if: failure()
+        run: tail -200 "$RUNNER_TEMP/server.log"
+
   live:
     # 배포된 테스트 서버. 임시 계정으로만 점검하고 끝나면 계정을 지운다. 재시작 단계는 없다
     if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
@@ -70,3 +116,15 @@ jobs:
       - name: 라이브 E2E (재시작 없음)
         if: steps.guard.outputs.skip != 'true'
         run: python3 e2e/run.py --base-url "$E2E_BASE_URL" --phase all --cleanup --wait 120
+      - if: steps.guard.outputs.skip != 'true'
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.50.1"
+          channel: stable
+          cache: true
+      - name: 앱 통합 테스트(배포 서버, 임시 계정은 끝에 삭제)
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: app
+        run: |
+          flutter pub get
+          FITLOG_LIVE_BASE_URL="$E2E_BASE_URL" FITLOG_LIVE_SIGNUP_CODE="$E2E_SIGNUP_CODE" flutter test test_live
