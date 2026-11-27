@@ -4,14 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/api/dto.dart';
-import '../../core/api/program_dto.dart';
 import '../../core/clock.dart';
 import '../../core/routes.dart';
 import '../../core/theme.dart';
 import '../../l10n/gen/app_localizations.dart';
-import '../scheduled/scheduled_logic.dart' show parsePlannedDate;
-import '../scheduled/scheduled_providers.dart';
-import '../session/session_controller.dart' show planItemsProvider;
+import 'calendar_cells.dart';
 import 'calendar_logic.dart';
 import 'calendar_providers.dart';
 
@@ -26,24 +23,11 @@ class WeekStrip extends ConsumerWidget {
     final today = dateOnly(now);
     final days = weekDays(today);
     final byDay =
-        ref.watch(calendarRangeProvider((first: days.first, last: days.last))).value ?? const <DateTime, List<SessionSummary>>{};
-    // FIXED_DATE 프로그램의 다음 회차 예정일(SHIFT는 날짜가 없어 제외).
-    final planned = <DateTime>{};
-    for (final p in ref.watch(planItemsProvider).value ?? const []) {
-      final sd = p.next?.scheduledDate;
-      if (p.instance.skipPolicy != SkipPolicy.FIXED_DATE || sd == null) continue;
-      planned.add(dateOnly(sd));
-    }
-    // 하루짜리 예정 운동이 있는 날도 같은 "예정" 윤곽 점으로 보인다(건너뜀·완료 제외).
-    final scheduledViews = ref.watch(
-      scheduledViewsProvider((from: dayKey(days.first), to: dayKey(days.last))),
-    );
-    for (final v in scheduledViews) {
-      if (v.status == ScheduledStatus.PLANNED || v.status == ScheduledStatus.IN_PROGRESS) {
-        final d = parsePlannedDate(v.workout.plannedDate);
-        if (d != null) planned.add(d);
-      }
-    }
+        ref
+            .watch(calendarRangeProvider((first: days.first, last: days.last)))
+            .value ??
+        const <DateTime, List<SessionSummary>>{};
+    final planned = plannedDays(ref, days.first, days.last);
     final count = workedDayCount(byDay, days);
     final names = l.calendarWeekdays.split(',');
 
@@ -67,13 +51,23 @@ class WeekStrip extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        count == 0 ? l.calendarWeekNone : l.calendarWeekSummary(count),
+                        count == 0
+                            ? l.calendarWeekNone
+                            : l.calendarWeekSummary(count),
                         key: const Key('week-summary'),
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    Icon(Icons.chevron_right, size: 20, color: c.fg2, semanticLabel: l.calendarOpenHint),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 20,
+                      color: c.fg2,
+                      semanticLabel: l.calendarOpenHint,
+                    ),
                   ],
                 ),
               ),
@@ -82,13 +76,15 @@ class WeekStrip extends ConsumerWidget {
                 children: [
                   for (var i = 0; i < 7; i++)
                     Expanded(
-                      child: _DayCell(
+                      child: WeekDayCell(
                         label: names[i % names.length],
                         day: days[i],
                         isToday: days[i] == today,
                         isFuture: days[i].isAfter(today),
                         worked: byDay.containsKey(days[i]),
-                        planned: planned.contains(days[i]) && !byDay.containsKey(days[i]),
+                        planned:
+                            planned.contains(days[i]) &&
+                            !byDay.containsKey(days[i]),
                       ),
                     ),
                 ],
@@ -96,80 +92,6 @@ class WeekStrip extends ConsumerWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DayCell extends StatelessWidget {
-  const _DayCell({
-    required this.label,
-    required this.day,
-    required this.isToday,
-    required this.isFuture,
-    required this.worked,
-    required this.planned,
-  });
-  final String label;
-  final DateTime day;
-  final bool isToday, isFuture, worked, planned;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final c = AppColors.of(context);
-    final key = dayKey(day);
-    final muted = isFuture && !isToday;
-    final fg = muted ? c.fg2.withValues(alpha: 0.6) : (isToday ? c.accentStrong : c.fg2);
-    return Semantics(
-      label: '${day.month}/${day.day}${worked ? ' ${l.calendarWorkedDay}' : ''}${planned ? ' ${l.calendarPlanned}' : ''}',
-      excludeSemantics: true,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          FittedBox(fit: BoxFit.scaleDown, child: Text(label, style: TextStyle(fontSize: 12, color: fg))),
-          const SizedBox(height: 4),
-          Container(
-            key: Key('week-day-$key'),
-            width: 36,
-            height: 36,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isToday ? c.accentSoft : null,
-              border: isToday ? Border.all(color: c.accent, width: 2) : null,
-            ),
-            child: FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Padding(
-                padding: const EdgeInsets.all(2),
-                child: Text(
-                  '${day.day}',
-                  style: AppNum.style(context, 16, color: muted ? fg : (isToday ? c.accentStrong : null)),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          SizedBox(
-            height: 8,
-            child: worked
-                ? Container(
-                    key: Key('week-dot-$key'),
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(color: c.accent, shape: BoxShape.circle),
-                  )
-                : planned
-                    ? Container(
-                        key: Key('week-planned-$key'),
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: c.accent, width: 1.5)),
-                      )
-                    : null,
-          ),
-        ],
       ),
     );
   }

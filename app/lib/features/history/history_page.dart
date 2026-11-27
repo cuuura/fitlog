@@ -11,13 +11,18 @@ import '../../core/theme.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
-import '../session/session_controller.dart' show exerciseMapProvider, sessionByIdProvider;
+import '../session/session_controller.dart'
+    show exerciseMapProvider, sessionByIdProvider;
 import '../session/session_format.dart';
 import '../exercise_picker/exercise_labels.dart';
 import '../source_badge/source_badge.dart';
 import '../sync_status/sync_status_indicator.dart';
 import '../calendar/calendar_providers.dart';
-import '../calendar/month_calendar.dart';
+import '../../core/clock.dart';
+import '../calendar/calendar_cells.dart';
+import '../calendar/calendar_logic.dart';
+import '../calendar/history_calendar_header.dart';
+import '../scheduled/scheduled_providers.dart';
 
 const historyPageSize = 20;
 
@@ -28,18 +33,28 @@ class HistoryLimit extends Notifier<int> {
   void more() => state += historyPageSize;
 }
 
-final historyLimitProvider = NotifierProvider.autoDispose<HistoryLimit, int>(HistoryLimit.new);
+final historyLimitProvider = NotifierProvider.autoDispose<HistoryLimit, int>(
+  HistoryLimit.new,
+);
 
-final historySessionsProvider = StreamProvider.autoDispose<List<SessionSummary>>((ref) {
-  final limit = ref.watch(historyLimitProvider);
-  return ref.watch(sessionRepositoryProvider).watchRecentSessions(limit: limit);
-});
+final historySessionsProvider =
+    StreamProvider.autoDispose<List<SessionSummary>>((ref) {
+      final limit = ref.watch(historyLimitProvider);
+      return ref
+          .watch(sessionRepositoryProvider)
+          .watchRecentSessions(limit: limit);
+    });
 
 /// 월 머리글과 세션을 한 줄로 늘어놓은 목록 항목.
 sealed class HistoryItem {}
 
 class HistoryMonthHeader extends HistoryItem {
-  HistoryMonthHeader(this.year, this.month, {this.count = 0, this.volumeKg = 0});
+  HistoryMonthHeader(
+    this.year,
+    this.month, {
+    this.count = 0,
+    this.volumeKg = 0,
+  });
   final int year;
   final int month;
 
@@ -84,12 +99,47 @@ class HistoryPage extends ConsumerStatefulWidget {
 
 class _HistoryPageState extends ConsumerState<HistoryPage> {
   final _scroll = ScrollController();
-  bool _calendar = false;
+  bool _expanded = false;
+  DateTime? _anchor; // 주: 보는 주의 아무 날 / 월: 그 달 1일. null이면 오늘 기준.
+  DateTime? _selected; // 고른 날(목록을 이 날로 거른다)
+
+  DateTime get _today => dateOnly(ref.read(clockProvider)().toLocal());
+
+  void _toggleCalendar() => setState(() {
+    final a = _anchor ?? _today;
+    if (_expanded) {
+      // 접을 때: 고른 날이 그 달이면 그 주, 아니면 오늘(그 달이면)/1일 주.
+      final sel = _selected;
+      final t = _today;
+      _anchor = (sel != null && sel.year == a.year && sel.month == a.month)
+          ? sel
+          : (t.year == a.year && t.month == a.month
+                ? t
+                : DateTime(a.year, a.month));
+    } else {
+      _anchor = DateTime(a.year, a.month);
+    }
+    _expanded = !_expanded;
+  });
+
+  void _shift(int delta) => setState(() {
+    final a = _anchor ?? _today;
+    _anchor = _expanded
+        ? DateTime(a.year, a.month + delta)
+        : DateTime(a.year, a.month, a.day + 7 * delta);
+  });
+
+  void _select(DateTime d) => setState(() {
+    _selected = _selected == d ? null : d;
+    if (_expanded && d.month != (_anchor ?? _today).month) {
+      _anchor = DateTime(d.year, d.month);
+    }
+  });
 
   /// 홈의 주간 띠를 눌러 들어오면 달력으로 연다.
   void _consumeCalendarRequest() {
     if (!ref.read(historyCalendarRequestProvider)) return;
-    _calendar = true;
+    _expanded = true;
     Future.microtask(() {
       if (mounted) ref.read(historyCalendarRequestProvider.notifier).clear();
     });
@@ -118,7 +168,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
   void _loadMore() {
     final list = ref.read(historySessionsProvider).value;
     final limit = ref.read(historyLimitProvider);
-    if (list != null && list.length >= limit) ref.read(historyLimitProvider.notifier).more();
+    if (list != null && list.length >= limit) {
+      ref.read(historyLimitProvider.notifier).more();
+    }
   }
 
   Future<void> _openRecords() async {
@@ -136,80 +188,194 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
     final unit = ref.watch(settingsProvider).weightUnit;
     final list = async.value;
 
-    Widget body;
-    if (list == null) {
-      body = async.hasError
-          ? Center(child: Text(l.historyLoadFailed))
-          : const Center(child: CircularProgressIndicator());
+    final l10n = l;
+    final sel = _selected;
+    final header = HistoryCalendarHeader(
+      expanded: _expanded,
+      anchor:
+          _anchor ?? (_expanded ? DateTime(_today.year, _today.month) : _today),
+      selected: sel,
+      onToggle: _toggleCalendar,
+      onShift: _shift,
+      onSelect: _select,
+    );
+
+    Widget monthHeader(HistoryMonthHeader h) => Padding(
+      key: Key('month-${h.year}-${h.month}'),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.baseline,
+        textBaseline: TextBaseline.alphabetic,
+        children: [
+          Flexible(
+            child: Text(
+              l10n.historyMonth(h.year, h.month),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              l10n.histMonthStats(h.count, _volumeText(h.volumeKg, unit)),
+              key: Key('month-stats-${h.year}-${h.month}'),
+              style: TextStyle(fontSize: 13, color: AppColors.of(context).fg2),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+
+    final slivers = <Widget>[SliverToBoxAdapter(child: header)];
+    if (sel != null) {
+      // 고른 날: 칩 + 그날의 예정 운동 + 그날의 세션(불러온 범위와 무관하게 날짜로 조회).
+      final byDay =
+          ref.watch(calendarRangeProvider((first: sel, last: sel))).value ??
+          const <DateTime, List<SessionSummary>>{};
+      final daySessions = byDay[sel] ?? const <SessionSummary>[];
+      final daySched = ref
+          .watch(scheduledViewsProvider((from: dayKey(sel), to: dayKey(sel))))
+          .where((v) => v.workout.plannedDate == dayKey(sel))
+          .toList();
+      final c = AppColors.of(context);
+      slivers.add(
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: InputChip(
+                key: const Key('history-day-chip'),
+                label: Text(l10n.calendarFilterChip(sel.month, sel.day)),
+                deleteButtonTooltipMessage: l10n.calendarFilterClear,
+                onDeleted: () => setState(() => _selected = null),
+                onPressed: () => setState(() => _selected = null),
+              ),
+            ),
+          ),
+        ),
+      );
+      if (daySched.isNotEmpty) {
+        slivers.add(
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+              child: Text(
+                l10n.calendarScheduledHeading,
+                key: const Key('cal-sched-heading'),
+                style: TextStyle(fontSize: 12, color: c.fg2),
+              ),
+            ),
+          ),
+        );
+        slivers.add(
+          SliverList.list(
+            children: [
+              for (final v in daySched)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: DayScheduledTile(view: v, todayKey: dayKey(_today)),
+                ),
+            ],
+          ),
+        );
+      }
+      if (daySessions.isEmpty && daySched.isEmpty) {
+        slivers.add(
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Center(
+                child: Text(
+                  l10n.calendarEmptyDay,
+                  key: const Key('cal-empty'),
+                  style: TextStyle(color: c.fg2),
+                ),
+              ),
+            ),
+          ),
+        );
+      } else {
+        slivers.add(
+          SliverList.builder(
+            itemCount: daySessions.length,
+            itemBuilder: (context, i) =>
+                _SessionTile(summary: daySessions[i], unit: unit),
+          ),
+        );
+      }
+    } else if (list == null) {
+      slivers.add(
+        SliverFillRemaining(
+          hasScrollBody: false,
+          child: async.hasError
+              ? Center(child: Text(l10n.historyLoadFailed))
+              : const Center(child: CircularProgressIndicator()),
+        ),
+      );
     } else {
       final items = groupByMonth(list);
       if (items.isEmpty && list.length < ref.watch(historyLimitProvider)) {
-        body = Center(child: Text(l.historyEmpty, key: const Key('history-empty')));
-      } else {
-        body = ListView.builder(
-          key: const Key('history-list'),
-          controller: _scroll,
-          itemCount: items.length,
-          itemBuilder: (context, i) => switch (items[i]) {
-            HistoryMonthHeader h => Padding(
-              key: Key('month-${h.year}-${h.month}'),
-              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    l.historyMonth(h.year, h.month),
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      l.histMonthStats(h.count, _volumeText(h.volumeKg, unit)),
-                      key: Key('month-stats-${h.year}-${h.month}'),
-                      style: TextStyle(fontSize: 13, color: AppColors.of(context).fg2),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
+        slivers.add(
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Center(
+              child: Text(l10n.historyEmpty, key: const Key('history-empty')),
             ),
-            HistorySessionItem s => _SessionTile(summary: s.summary, unit: unit),
-          },
+          ),
+        );
+      } else {
+        slivers.add(
+          SliverList.builder(
+            itemCount: items.length,
+            itemBuilder: (context, i) => switch (items[i]) {
+              HistoryMonthHeader h => monthHeader(h),
+              HistorySessionItem s => _SessionTile(
+                summary: s.summary,
+                unit: unit,
+              ),
+            },
+          ),
         );
         // 첫 화면이 짧아 스크롤이 안 생기는 경우에도 더 불러온다.
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted && _scroll.hasClients && _scroll.position.maxScrollExtent <= 0) _loadMore();
+          if (mounted &&
+              _scroll.hasClients &&
+              _scroll.position.maxScrollExtent <= 0) {
+            _loadMore();
+          }
         });
       }
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(l.historyTitle), actions: const [SyncStatusIndicator(), SizedBox(width: 8)]),
+      appBar: AppBar(
+        title: Text(l.historyTitle),
+        actions: const [SyncStatusIndicator(), SizedBox(width: 8)],
+      ),
       body: Column(
         children: [
           ListTile(
             key: const Key('history-records'),
             minTileHeight: 56,
-            leading: Icon(Icons.emoji_events_outlined, color: AppColors.of(context).pr),
+            leading: Icon(
+              Icons.emoji_events_outlined,
+              color: AppColors.of(context).pr,
+            ),
             title: Text(l.historyExerciseRecords),
             trailing: const Icon(Icons.chevron_right),
             onTap: _openRecords,
           ),
           Divider(height: 1, color: AppColors.of(context).line),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-            child: SegmentedButton<bool>(
-              showSelectedIcon: false,
-              segments: [
-                ButtonSegment(value: false, label: Text(l.calendarViewList, key: const Key('history-view-list'))),
-                ButtonSegment(value: true, label: Text(l.calendarViewCalendar, key: const Key('history-view-calendar'))),
-              ],
-              selected: {_calendar},
-              onSelectionChanged: (v) => setState(() => _calendar = v.first),
+          Expanded(
+            child: CustomScrollView(
+              key: const Key('history-list'),
+              controller: _scroll,
+              slivers: slivers,
             ),
           ),
-          Expanded(child: _calendar ? const MonthCalendar() : body),
         ],
       ),
     );
@@ -221,7 +387,9 @@ String _volumeText(double kg, WeightUnit unit) =>
     '${NumberFormat('#,###').format(Units.toDisplay(kg, unit).round())}${unit == WeightUnit.KG ? 'kg' : 'lb'}';
 
 /// 활성 프로그램 인스턴스 id → 이름. 계획 캐시가 없거나 실패해도 빈 맵.
-final _instanceNamesProvider = StreamProvider.autoDispose<Map<String, String>>((ref) {
+final _instanceNamesProvider = StreamProvider.autoDispose<Map<String, String>>((
+  ref,
+) {
   try {
     return ref
         .watch(planCacheProvider)
@@ -246,8 +414,10 @@ class _SessionTile extends ConsumerWidget {
     final local = sessionLocalTime(s.startedAt, s.tz);
     // 요약에는 프로그램 정보가 없어 세션 상세를 읽어 회차·종목을 확인한다.
     final full = ref.watch(sessionByIdProvider(s.id)).value;
-    final exMap = ref.watch(exerciseMapProvider).value ?? const <String, Exercise>{};
-    final names = ref.watch(_instanceNamesProvider).value ?? const <String, String>{};
+    final exMap =
+        ref.watch(exerciseMapProvider).value ?? const <String, Exercise>{};
+    final names =
+        ref.watch(_instanceNamesProvider).value ?? const <String, String>{};
 
     String? badge;
     if (full != null && full.isProgram) {
@@ -255,7 +425,9 @@ class _SessionTile extends ConsumerWidget {
       badge = full.planDayKey == null
           ? (name ?? l.historyProgram)
           : (full.planSeq == null
-                ? (name == null ? full.planDayKey! : '$name · ${full.planDayKey}')
+                ? (name == null
+                      ? full.planDayKey!
+                      : '$name · ${full.planDayKey}')
                 : (name == null
                       ? l.historyPlanBadge(full.planDayKey!, full.planSeq!)
                       : l.histPlanLine(name, full.planDayKey!, full.planSeq!)));
@@ -263,16 +435,22 @@ class _SessionTile extends ConsumerWidget {
     final exNames = <String>[
       if (full != null)
         for (final se in full.exercises)
-          if (exMap[se.exerciseId] != null) exerciseDisplayName(context, exMap[se.exerciseId]!),
+          if (exMap[se.exerciseId] != null)
+            exerciseDisplayName(context, exMap[se.exerciseId]!),
     ];
     final exLine = exNames.isEmpty
-        ? l.historySummary(s.exerciseCount, s.setCount, formatVolume(s.totalVolumeKg, unit))
+        ? l.historySummary(
+            s.exerciseCount,
+            s.setCount,
+            formatVolume(s.totalVolumeKg, unit),
+          )
         : exNames.length <= 2
-              ? exNames.join(' · ')
-              : '${exNames.take(2).join(' · ')} ${l.histMore(exNames.length - 2)}';
+        ? exNames.join(' · ')
+        : '${exNames.take(2).join(' · ')} ${l.histMore(exNames.length - 2)}';
     final days = l.histWeekdays.split(',');
     final weekday = days[(local.weekday - 1) % days.length];
-    final vol = NumberFormat('#,###').format(Units.toDisplay(s.totalVolumeKg, unit).round());
+    final vol = NumberFormat('#,###')
+        .format(Units.toDisplay(s.totalVolumeKg, unit).round());
     final unitText = unit == WeightUnit.KG ? 'kg' : 'lb';
     void edit() => context.push(Routes.sessionEdit(s.id));
 
@@ -291,7 +469,11 @@ class _SessionTile extends ConsumerWidget {
                 constraints: const BoxConstraints(minWidth: 44),
                 child: Column(
                   children: [
-                    Text('${local.day}', key: Key('history-day-${s.id}'), style: AppNum.style(context, 28, weight: FontWeight.w700)),
+                    Text(
+                      '${local.day}',
+                      key: Key('history-day-${s.id}'),
+                      style: AppNum.style(context, 28, weight: FontWeight.w700),
+                    ),
                     Text(weekday, style: TextStyle(fontSize: 12, color: c.fg2)),
                   ],
                 ),
@@ -306,20 +488,37 @@ class _SessionTile extends ConsumerWidget {
                       Text(
                         badge,
                         key: Key('badge-${s.id}'),
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       )
                     else
-                      Text(l.histFreeWorkout, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
+                      Text(
+                        l.histFreeWorkout,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     const SizedBox(height: 2),
-                    Text(exLine, style: TextStyle(fontSize: 13, color: c.fg2), overflow: TextOverflow.ellipsis),
+                    Text(
+                      exLine,
+                      style: TextStyle(fontSize: 13, color: c.fg2),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     if (full != null && full.isFromAi)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           alignment: Alignment.centerLeft,
-                          child: SourceBadge(key: Key('source-${s.id}'), source: full.source, importBatchId: full.importBatchId),
+                          child: SourceBadge(
+                            key: Key('source-${s.id}'),
+                            source: full.source,
+                            importBatchId: full.importBatchId,
+                          ),
                         ),
                       ),
                   ],
@@ -334,8 +533,15 @@ class _SessionTile extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(vol, key: Key('history-volume-${s.id}'), style: AppNum.medium(context)),
-                      Text(unitText, style: TextStyle(fontSize: 12, color: c.fg2)),
+                      Text(
+                        vol,
+                        key: Key('history-volume-${s.id}'),
+                        style: AppNum.medium(context),
+                      ),
+                      Text(
+                        unitText,
+                        style: TextStyle(fontSize: 12, color: c.fg2),
+                      ),
                     ],
                   ),
                 ),
@@ -346,7 +552,13 @@ class _SessionTile extends ConsumerWidget {
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 40, minHeight: 48),
                 onSelected: (_) => edit(),
-                itemBuilder: (_) => [PopupMenuItem(value: 'edit', key: Key('menu-edit-${s.id}'), child: Text(l.historyEdit))],
+                itemBuilder: (_) => [
+                  PopupMenuItem(
+                    value: 'edit',
+                    key: Key('menu-edit-${s.id}'),
+                    child: Text(l.historyEdit),
+                  ),
+                ],
               ),
             ],
           ),

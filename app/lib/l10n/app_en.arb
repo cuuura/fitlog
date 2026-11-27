@@ -1445,45 +1445,114 @@
   "homeStartProgramHint": "Start a program and sets and weights fill in automatically",
   "homeStartProgramAction": "Start a program",
   "instanceStartToday": "Start today's workout",
-"shellNavToday": "Today",
+  "shellNavToday": "Today",
   "shellNavHistory": "History",
   "shellNavPrograms": "Programs",
   "shellNavMe": "Me",
   "shellMiniActive": "In progress · {name} {done}/{total} sets",
-  "@shellMiniActive": {"placeholders": {"name": {"type": "String"}, "done": {"type": "int"}, "total": {"type": "int"}}},
+  "@shellMiniActive": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "shellMiniRest": "Rest {time}",
-  "@shellMiniRest": {"placeholders": {"time": {"type": "String"}}},
+  "@shellMiniRest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shellMiniOpen": "Open the session in progress",
   "syncChipOfflinePending": "Offline · {count} pending",
-  "@syncChipOfflinePending": {"placeholders": {"count": {"type": "int"}}},
+  "@syncChipOfflinePending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "meTitle": "Me",
   "meGuestName": "FitLog user",
   "meSectionBody": "Body",
   "meBodyLatest": "Latest weight {weight}",
-  "@meBodyLatest": {"placeholders": {"weight": {"type": "String"}}},
+  "@meBodyLatest": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
   "meBodyEmpty": "No entries yet",
   "meSectionProfile": "Profile",
   "meProfileEmpty": "Add height, sex and birth year",
   "meSectionAi": "AI connection",
   "meAiSubtitle": "Connect, import, deletion requests",
   "meAiPending": "{count} deletion requests",
-  "@meAiPending": {"placeholders": {"count": {"type": "int"}}},
+  "@meAiPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "meSectionExport": "Export",
   "meExportSubtitle": "Save your data as a file",
   "meSectionSettings": "Settings",
   "meSettingsSubtitle": "Units, rest timer, account",
   "meHeight": "Height {value}cm",
-  "@meHeight": {"placeholders": {"value": {"type": "String"}}},
+  "@meHeight": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "meBirthYear": "Born {year}",
-  "@meBirthYear": {"placeholders": {"year": {"type": "int"}}},
+  "@meBirthYear": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
   "bodyDeltaDown": "vs last week −{value}",
-  "@bodyDeltaDown": {"placeholders": {"value": {"type": "String"}}},
+  "@bodyDeltaDown": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "bodyDeltaUp": "vs last week +{value}",
-  "@bodyDeltaUp": {"placeholders": {"value": {"type": "String"}}},
+  "@bodyDeltaUp": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "bodyDeltaSame": "Same as last week",
   "bodyChartTitle": "12-week weight",
   "bodyChartDesc": "Over 12 weeks it went from {from} to {to}.",
-  "@bodyChartDesc": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
+  "@bodyChartDesc": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
   "bodyMetricHeight": "Height",
   "bodyMetricBmi": "BMI",
   "bodyMetricFat": "Body fat",
@@ -1496,26 +1565,101 @@
   "bodyHistoryTitle": "History",
   "homeTodayTitle": "Today",
   "homeDateLabel": "{weekday}, {month}/{day}",
-  "@homeDateLabel": {"placeholders": {"month": {"type": "int"}, "day": {"type": "int"}, "weekday": {"type": "String"}}},
+  "@homeDateLabel": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
   "homeWeekdayLong": "{day, select, mon{Monday} tue{Tuesday} wed{Wednesday} thu{Thursday} fri{Friday} sat{Saturday} other{Sunday}}",
-  "@homeWeekdayLong": {"placeholders": {"day": {"type": "String"}}},
+  "@homeWeekdayLong": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "homePlanSubToday": "Week {week} · {day} · due today",
-  "@homePlanSubToday": {"placeholders": {"week": {"type": "int"}, "day": {"type": "String"}}},
+  "@homePlanSubToday": {
+    "placeholders": {
+      "week": {
+        "type": "int"
+      },
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "homePlanSubLate": "Week {week} · {day}",
-  "@homePlanSubLate": {"placeholders": {"week": {"type": "int"}, "day": {"type": "String"}}},
+  "@homePlanSubLate": {
+    "placeholders": {
+      "week": {
+        "type": "int"
+      },
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "homeChipDue": "Due",
   "homeChipLate": "{days, plural, =1{1 day behind} other{{days} days behind}}",
-  "@homeChipLate": {"placeholders": {"days": {"type": "int"}}},
+  "@homeChipLate": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "homeMainMeta": "Main · {sets} sets",
-  "@homeMainMeta": {"placeholders": {"sets": {"type": "int"}}},
+  "@homeMainMeta": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
   "homeAuxName": "Accessory · {name}",
-  "@homeAuxName": {"placeholders": {"name": {"type": "String"}}},
+  "@homeAuxName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "homeAuxSets": "{sets} sets",
-  "@homeAuxSets": {"placeholders": {"sets": {"type": "int"}}},
+  "@homeAuxSets": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
   "homeAuxSetsWeight": "{sets} sets · {weight}",
-  "@homeAuxSetsWeight": {"placeholders": {"sets": {"type": "int"}, "weight": {"type": "String"}}},
+  "@homeAuxSetsWeight": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      },
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
   "homeAuxMore": "{n} more accessories",
-  "@homeAuxMore": {"placeholders": {"n": {"type": "int"}}},
+  "@homeAuxMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "homeStartWorkout": "Start workout",
   "homeStartShort": "Start",
   "homeSkip": "Skip",
@@ -1524,33 +1668,102 @@
   "homeRecentYesterday": "Yesterday",
   "summaryHeading": "Workout complete",
   "summaryVolumeUnit": "Volume ({unit})",
-  "@summaryVolumeUnit": {"placeholders": {"unit": {"type": "String"}}},
+  "@summaryVolumeUnit": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
   "summarySetsShort": "Sets",
   "summaryPrTitle": "{name} {weight} × {reps}",
-  "@summaryPrTitle": {"placeholders": {"name": {"type": "String"}, "weight": {"type": "String"}, "reps": {"type": "int"}}},
+  "@summaryPrTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "weight": {
+        "type": "String"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
   "summaryPrE1rm": "Estimated 1RM {value} · new record",
-  "@summaryPrE1rm": {"placeholders": {"value": {"type": "String"}}},
+  "@summaryPrE1rm": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "summaryPrWeight": "Heaviest weight · new record",
   "summaryMissTitle": "{n} below target",
-  "@summaryMissTitle": {"placeholders": {"n": {"type": "int"}}},
+  "@summaryMissTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "summaryMissItem": "{name} {sets} sets {reps}/{target}",
-  "@summaryMissItem": {"placeholders": {"name": {"type": "String"}, "sets": {"type": "int"}, "reps": {"type": "int"}, "target": {"type": "int"}}},
+  "@summaryMissItem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "sets": {
+        "type": "int"
+      },
+      "reps": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "summaryNextHeading": "Next session weights",
   "summaryTmName": "{name} TM",
-  "@summaryTmName": {"placeholders": {"name": {"type": "String"}}},
+  "@summaryTmName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "summaryTmNoChange": "No change",
   "summaryOffline": "Next weights are calculated once you are online",
   "summaryOfflineCount": "Next weights are calculated once you are online · {count} waiting",
-  "@summaryOfflineCount": {"placeholders": {"count": {"type": "int"}}},
+  "@summaryOfflineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "summaryCompare": "Compare in graph",
   "summaryClose": "Close",
   "progSegActive": "In progress {n}",
-  "@progSegActive": {"placeholders": {"n": {"type": "int"}}},
+  "@progSegActive": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "progSegTemplates": "Templates",
   "progSegMine": "My programs",
   "progImportAi": "Import a program with AI",
   "progWeekDays": "{n} days/week",
-  "@progWeekDays": {"placeholders": {"n": {"type": "int"}}},
+  "@progWeekDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "progWeekStructure": "Weekly structure",
   "progRules": "Rules",
   "progRuleProgression": "Progression",
@@ -1560,35 +1773,119 @@
   "progRuleSkip": "Skipping",
   "progRuleAmrap": "Raise the TM by your AMRAP set reps",
   "progRuleLinear": "Add {inc} after every successful session",
-  "@progRuleLinear": {"placeholders": {"inc": {"type": "String"}}},
+  "@progRuleLinear": {
+    "placeholders": {
+      "inc": {
+        "type": "String"
+      }
+    }
+  },
   "progRuleCycle": "Add {inc} at the end of each cycle",
-  "@progRuleCycle": {"placeholders": {"inc": {"type": "String"}}},
+  "@progRuleCycle": {
+    "placeholders": {
+      "inc": {
+        "type": "String"
+      }
+    }
+  },
   "progRuleStages": "Add {inc} on success; move to the next stage on failure",
-  "@progRuleStages": {"placeholders": {"inc": {"type": "String"}}},
+  "@progRuleStages": {
+    "placeholders": {
+      "inc": {
+        "type": "String"
+      }
+    }
+  },
   "progRuleFailDefault": "A set below its target reps counts as a failure",
   "progRuleFailStreak": "Deload after {n} failures in a row",
-  "@progRuleFailStreak": {"placeholders": {"n": {"type": "int"}}},
+  "@progRuleFailStreak": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "progRuleDeloadPct": "−{pct}%",
-  "@progRuleDeloadPct": {"placeholders": {"pct": {"type": "int"}}},
+  "@progRuleDeloadPct": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
   "progRuleRoundKg": "Round to {value}",
-  "@progRuleRoundKg": {"placeholders": {"value": {"type": "String"}}},
+  "@progRuleRoundKg": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "progRuleSkipHint": "Choose how at start",
   "progRuleHold": "hold",
   "progRuleReps": "{range} reps",
-  "@progRuleReps": {"placeholders": {"range": {"type": "String"}}},
+  "@progRuleReps": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
   "progSkipShiftSeg": "Shift to next day",
   "progSkipFixedSeg": "Fixed dates",
   "progStartTmHeader": "Starting TM",
   "progStartSourceMeasured": "Measured",
   "progStartSourceEstimated": "Estimated",
   "progStartBasisMeasured": "Latest measured 1RM {rm} → TM {tm} ({pct}%)",
-  "@progStartBasisMeasured": {"placeholders": {"rm": {"type": "String"}, "tm": {"type": "String"}, "pct": {"type": "int"}}},
+  "@progStartBasisMeasured": {
+    "placeholders": {
+      "rm": {
+        "type": "String"
+      },
+      "tm": {
+        "type": "String"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
   "progStartBasisEstimated": "Estimated 1RM {rm} → TM {tm} ({pct}%)",
-  "@progStartBasisEstimated": {"placeholders": {"rm": {"type": "String"}, "tm": {"type": "String"}, "pct": {"type": "int"}}},
+  "@progStartBasisEstimated": {
+    "placeholders": {
+      "rm": {
+        "type": "String"
+      },
+      "tm": {
+        "type": "String"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
   "progStartBasisWorkingMeasured": "Latest measured 1RM {rm} → working {tm}",
-  "@progStartBasisWorkingMeasured": {"placeholders": {"rm": {"type": "String"}, "tm": {"type": "String"}}},
+  "@progStartBasisWorkingMeasured": {
+    "placeholders": {
+      "rm": {
+        "type": "String"
+      },
+      "tm": {
+        "type": "String"
+      }
+    }
+  },
   "progStartBasisWorkingEstimated": "Estimated 1RM {rm} → working {tm}",
-  "@progStartBasisWorkingEstimated": {"placeholders": {"rm": {"type": "String"}, "tm": {"type": "String"}}},
+  "@progStartBasisWorkingEstimated": {
+    "placeholders": {
+      "rm": {
+        "type": "String"
+      },
+      "tm": {
+        "type": "String"
+      }
+    }
+  },
   "progStartCta": "Start this program",
   "progStartTmField": "TM",
   "progStartWorkingField": "Work",
@@ -1770,15 +2067,19 @@
   },
   "aiDelNoSilent": "AI cannot delete anything without your approval.",
   "aiDelApproveBtn": "Approve deletion",
-"sessionCurRpeLabel": "RPE (optional)",
+  "sessionCurRpeLabel": "RPE (optional)",
   "sessionCurRirLabel": "RIR (optional)",
   "sessionCurShowRir": "View as RIR",
   "sessionCurShowRpe": "View as RPE",
   "sessionCurNextNotif": "Next {exercise} {summary}",
   "@sessionCurNextNotif": {
     "placeholders": {
-      "exercise": {"type": "String"},
-      "summary": {"type": "String"}
+      "exercise": {
+        "type": "String"
+      },
+      "summary": {
+        "type": "String"
+      }
     }
   },
   "sessionCurWarnTitle": "10s of rest left",
@@ -1786,45 +2087,148 @@
   "sessionCurChannelWarn": "Rest ending soon",
   "sessionCurChannelWarnDesc": "Heads-up 10 seconds before rest ends",
   "sessionCurPlaylistTitle": "Today · {done}/{total} exercises",
-  "@sessionCurPlaylistTitle": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "@sessionCurPlaylistTitle": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "sessionCurDockStatus": "Working out · {elapsed} elapsed · {done}/{total} sets",
-  "@sessionCurDockStatus": {"placeholders": {"elapsed": {"type": "String"}, "done": {"type": "int"}, "total": {"type": "int"}}},
+  "@sessionCurDockStatus": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "calendarWeekdays": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
   "calendarWeekSummary": "{count, plural, =0{No workouts this week} =1{1 workout this week} other{{count} workouts this week}}",
-  "@calendarWeekSummary": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarWeekSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarWeekNone": "No workouts yet this week",
   "calendarPlanned": "Planned",
   "calendarWorkedDay": "Worked out",
   "calendarMonthTitle": "{month}/{year} · {days, plural, =1{1 day} other{{days} days}} trained",
-  "@calendarMonthTitle": {"placeholders": {"year": {"type": "int"}, "month": {"type": "int"}, "days": {"type": "int"}}},
+  "@calendarMonthTitle": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "calendarPrevMonth": "Previous month",
   "calendarNextMonth": "Next month",
   "calendarEmptyDay": "No workout logged this day",
   "calendarDayHeading": "{month}/{day} ({weekday})",
-  "@calendarDayHeading": {"placeholders": {"month": {"type": "int"}, "day": {"type": "int"}, "weekday": {"type": "String"}}},
-  "calendarViewList": "List",
-  "calendarViewCalendar": "Calendar",
+  "@calendarDayHeading": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
   "calendarOpenHint": "Open calendar",
   "calendarSessionSummary": "{exercises} exercises · {sets} sets · {volume}",
-  "@calendarSessionSummary": {"placeholders": {"exercises": {"type": "int"}, "sets": {"type": "int"}, "volume": {"type": "String"}}},
+  "@calendarSessionSummary": {
+    "placeholders": {
+      "exercises": {
+        "type": "int"
+      },
+      "sets": {
+        "type": "int"
+      },
+      "volume": {
+        "type": "String"
+      }
+    }
+  },
   "importConflictScheduledDuplicate": "A scheduled workout with the same title already exists on that day",
   "importCountKindScheduledWorkouts": "Scheduled workouts",
   "importSummaryScheduled": "Scheduled workouts {n}",
-  "@importSummaryScheduled": {"placeholders": {"n": {"type": "int"}}},
+  "@importSummaryScheduled": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "impCountScheduled": "Scheduled",
   "aiEntityScheduledWorkout": "Scheduled workout",
   "aiCountScheduledWorkout": "Scheduled workouts {n}",
-  "@aiCountScheduledWorkout": {"placeholders": {"n": {"type": "int"}}},
+  "@aiCountScheduledWorkout": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "aiHistorySummaryScheduled": "Scheduled {n}",
-  "@aiHistorySummaryScheduled": {"placeholders": {"n": {"type": "int"}}},
+  "@aiHistorySummaryScheduled": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "schedTodayTitle": "Planned for today",
   "schedLateTitle": "Missed plan",
   "schedLateChip": "Planned {month}/{day}",
-  "@schedLateChip": {"placeholders": {"month": {"type": "int"}, "day": {"type": "int"}}},
+  "@schedLateChip": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "schedCounts": "{exercises} exercises · {sets} sets",
-  "@schedCounts": {"placeholders": {"exercises": {"type": "int"}, "sets": {"type": "int"}}},
+  "@schedCounts": {
+    "placeholders": {
+      "exercises": {
+        "type": "int"
+      },
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
   "schedMoreExercises": "+{n} more",
-  "@schedMoreExercises": {"placeholders": {"n": {"type": "int"}}},
+  "@schedMoreExercises": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "schedStart": "Start",
   "schedResume": "Continue",
   "schedMenuEdit": "Edit",
@@ -1834,7 +2238,13 @@
   "schedMenuTooltip": "Scheduled workout menu",
   "schedDeleteTitle": "Delete scheduled workout",
   "schedDeleteBody": "Delete the plan '{title}'? Workouts you already logged are kept.",
-  "@schedDeleteBody": {"placeholders": {"title": {"type": "String"}}},
+  "@schedDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "schedActionError": "Couldn't do that. Please try again.",
   "schedStartError": "Could not start the scheduled workout",
   "schedViewAll": "View all",
@@ -1849,7 +2259,19 @@
   "schedListPast": "Past",
   "schedListEmpty": "No scheduled workouts yet. Plan a one-day workout.",
   "schedListDate": "{weekday}, {month}/{day}",
-  "@schedListDate": {"placeholders": {"month": {"type": "int"}, "day": {"type": "int"}, "weekday": {"type": "String"}}},
+  "@schedListDate": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
   "schedEditNewTitle": "Plan a workout",
   "schedEditEditTitle": "Edit scheduled workout",
   "schedFieldDate": "Date",
@@ -1859,7 +2281,13 @@
   "schedAddSet": "Add set",
   "schedRestLabel": "Rest (sec)",
   "schedFieldWeight": "Weight ({unit})",
-  "@schedFieldWeight": {"placeholders": {"unit": {"type": "String"}}},
+  "@schedFieldWeight": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
   "schedFieldReps": "Reps",
   "schedFieldRepsMax": "Max",
   "schedFieldRir": "RIR",
@@ -1878,12 +2306,48 @@
   "schedMoveDown": "Move down",
   "schedPickDate": "Pick a date",
   "schedTargetRir": "RIR {n}",
-  "@schedTargetRir": {"placeholders": {"n": {"type": "int"}}},
+  "@schedTargetRir": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "calendarScheduledHeading": "Scheduled workouts",
   "calendarScheduledDay": "scheduled workout",
   "homePlanLoadError": "Couldn't load your plans",
   "homeRetry": "Try again",
   "sessionErrLoadFailed": "Could not load the session",
   "sessionErrRetry": "Try again",
-  "sessionErrHome": "Go home"
+  "sessionErrHome": "Go home",
+  "calendarWeekTitle": "Week {week} of {month} · {days, plural, =1{1 day} other{{days} days}} trained",
+  "@calendarWeekTitle": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "week": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarPrevWeek": "Previous week",
+  "calendarNextWeek": "Next week",
+  "calendarExpand": "Expand calendar",
+  "calendarCollapse": "Collapse calendar",
+  "calendarFilterChip": "Only {month}/{day}",
+  "@calendarFilterChip": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarFilterClear": "Clear date filter"
 }
