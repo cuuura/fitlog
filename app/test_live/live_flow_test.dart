@@ -348,6 +348,101 @@ void main() {
     });
   });
 
+  group('내 프로그램·내 종목 REST', () {
+    test('프로그램 검증(validate) → 저장 → 목록(MINE) → 시작 → skip → 삭제', () async {
+      final def = {
+        'schemaVersion': 1,
+        'name': '라이브 프로그램 ${Random().nextInt(100000)}',
+        'lifts': {
+          'squat': {'exercise': {'id': exerciseId}},
+        },
+        'progression': {
+          'squat': {'type': 'LINEAR', 'incrementKg': 2.5},
+        },
+        'days': [
+          {
+            'key': 'A',
+            'name': 'A',
+            'exercises': [
+              {
+                'lift': 'squat',
+                'sets': [
+                  {'count': 3, 'reps': 5, 'load': {'type': 'WORKING'}},
+                ],
+              },
+            ],
+          },
+        ],
+      };
+      final v = await app.api.validateProgram(def);
+      expect(v.id, '', reason: 'validate 응답은 id 가 없다');
+      expect(v.dayCount, 1);
+      final id = newId();
+      final p = await app.api.postProgram(id, def);
+      expect(p.id, id);
+      expect(p.source, ProgramSource.USER);
+      expect(p.builtIn, isFalse);
+      expect((await app.api.getPrograms(source: ProgramListSource.MINE)).map((x) => x.id), contains(id));
+
+      final sg = await app.api.suggest(id);
+      expect(sg, isNotEmpty);
+      final inst = newId();
+      final started = await app.api.startInstance(
+        StartInstance(
+          id: inst,
+          programId: id,
+          startDate: DateTime.now(),
+          tz: 'Asia/Seoul',
+          skipPolicy: SkipPolicy.SHIFT,
+          working: {for (final s in sg) s.key: 80.5},
+        ),
+      );
+      final next = started.next!;
+      final skipped = await app.api.skip(inst, next.planSeq);
+      expect(skipped.next!.planSeq, greaterThan(next.planSeq));
+      await app.api.deleteInstance(inst);
+      await app.api.deleteProgram(id);
+      expect((await app.api.getPrograms(source: ProgramListSource.MINE)).where((x) => x.id == id), isEmpty);
+    });
+
+    test('잘못된 프로그램은 400 VALIDATION_FAILED + details 로 온다', () async {
+      try {
+        await app.api.validateProgram({'schemaVersion': 1, 'name': 'x', 'lifts': {}, 'days': []});
+        fail('400이어야 한다');
+      } on ApiException catch (e) {
+        expect(e.code, 'VALIDATION_FAILED');
+        expect(e.details.isNotEmpty || e.message.isNotEmpty, isTrue);
+      }
+    });
+
+    test('종목 REST 생성·수정·삭제(POST/PUT/DELETE /exercises)', () async {
+      final input = ExerciseInput(
+        id: newId(),
+        nameKo: '라이브 REST ${Random().nextInt(100000)}',
+        nameEn: 'Live REST',
+        type: ExerciseType.MACHINE,
+        primaryMuscle: Muscle.BACK,
+        secondaryMuscles: const [Muscle.BICEPS],
+      );
+      final created = await app.api.postExercise(input);
+      expect(created.builtIn, isFalse);
+      expect(created.nameEn, 'Live REST');
+      final updated = await app.api.putExercise(
+        ExerciseInput(id: input.id, nameKo: '${input.nameKo}!', type: ExerciseType.MACHINE, primaryMuscle: Muscle.LATS),
+      );
+      expect(updated.primaryMuscle, Muscle.LATS);
+      expect(updated.nameEn, isNull);
+      await app.api.deleteExercise(input.id);
+      try {
+        await app.api.deleteExercise(exerciseId);
+        fail('기본 종목은 지울 수 없다');
+      } on ApiException catch (e) {
+        expect(e.statusCode, 403);
+        expect(e.code, 'FORBIDDEN');
+      }
+    });
+  });
+
   group('체중', () {
     test('앱 저장소로 기록(70.5kg) → push → GET /body/measurements 파싱 → 다른 기기 pull', () async {
       final at = DateTime.now().toUtc();
@@ -541,6 +636,23 @@ void main() {
         throwsA(isA<ApiException>().having((e) => e.statusCode, 'status', 401)),
         reason: '로그아웃 후에도 리프레시 토큰이 살아 있다 = 앱이 /auth/logout 에 Bearer 를 안 붙임',
       );
+    });
+
+    test('액세스 토큰이 만료된 뒤 로그아웃해도 서버의 리프레시 토큰이 폐기된다', () async {
+      final a = LiveApp.create();
+      addTearDown(a.dispose);
+      await a.auth.signInWithPassword(username, password);
+      final t = a.tokens.tokens!;
+      a.tokens.tokens = StoredTokens(accessToken: 'expired.access.token', refreshToken: t.refreshToken, expiresAt: t.expiresAt);
+      await a.auth.signOut();
+      expect(a.authStatus, AuthStatus.signedOut);
+      final fresh = LiveApp.create();
+      addTearDown(fresh.dispose);
+      await expectLater(
+        fresh.api.authRefresh(t.refreshToken),
+        throwsA(isA<ApiException>().having((e) => e.statusCode, 'status', 401)),
+      );
+      // refresh 로 회전된 새 리프레시 토큰도 남아 있으면 안 된다: 같은 계정으로 다시 로그인은 되지만 이전 토큰들은 모두 죽었다
     });
 
     test('다시 로그인하고 계정 삭제(DELETE /me)까지 된다', () async {

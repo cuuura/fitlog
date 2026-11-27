@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:fitlog/core/api/ai_dto.dart';
 import 'package:fitlog/core/api/api_client.dart';
 import 'package:fitlog/core/api/dto.dart';
+import 'package:fitlog/app.dart' show ServerWakingBanner;
 import 'package:fitlog/core/api/server_wake.dart';
 import 'package:fitlog/core/auth/auth_controller.dart';
 import 'package:fitlog/core/auth/auth_interceptor.dart';
@@ -15,6 +16,7 @@ import 'package:fitlog/features/importing/import_controller.dart';
 import 'package:fitlog/features/session/session_controller.dart' show deviceTimezoneProvider;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../b1/helpers.dart';
 
@@ -200,6 +202,52 @@ void main() {
       expect(a.log[0].headers['Authorization'], 'Bearer acc');
       expect(a.log[1].headers.containsKey('Authorization'), isFalse);
       expect(a.log[2].headers.containsKey('Authorization'), isFalse);
+    });
+  });
+
+  group('로그아웃(액세스 토큰 만료)', () {
+    test('logout 이 401이면 refresh 로 새 토큰을 받아 새 리프레시 토큰으로 다시 로그아웃한다', () async {
+      final a = FakeAdapter((o) {
+        if (o.path == '/v1/auth/logout') {
+          return o.data['refreshToken'] == 'r1' ? ResponseBody.fromString('', 204) : errorBody(401, 'UNAUTHENTICATED');
+        }
+        if (o.path == '/v1/auth/refresh') return json(tokensJson(access: 'a1', refresh: 'r1'));
+        return json({});
+      });
+      final store = MemoryTokenStore(tokens: StoredTokens(accessToken: 'old', refreshToken: 'r0', expiresAt: DateTime.utc(2030)));
+      final c = authContainer(adapter: a, store: store);
+      await c.read(authControllerProvider.notifier).signOut();
+      expect(a.log.map((o) => o.path).where((p) => p.startsWith('/v1/auth/')), ['/v1/auth/logout', '/v1/auth/refresh', '/v1/auth/logout']);
+      expect(a.log.last.data, {'refreshToken': 'r1'});
+      expect(store.tokens, isNull);
+    });
+
+    test('서버가 죽어 있어도 로컬 로그아웃은 끝난다', () async {
+      final a = FakeAdapter((o) => throw DioException.connectionError(requestOptions: o, reason: 'offline'));
+      final store = MemoryTokenStore(tokens: StoredTokens(accessToken: 'old', refreshToken: 'r0', expiresAt: DateTime.utc(2030)));
+      final c = authContainer(adapter: a, store: store);
+      await c.read(authControllerProvider.notifier).signOut();
+      expect(store.tokens, isNull);
+      expect(c.read(authControllerProvider), AuthStatus.signedOut);
+    });
+  });
+
+  group('서버 깨우는 중 배너', () {
+    testWidgets('waking 이 켜지면 안내가 보이고, 아래 화면의 상태는 그대로다', (tester) async {
+      final wake = ServerWake();
+      addTearDown(wake.dispose);
+      await tester.pumpWidget(app(ServerWakingBanner(wake: wake, child: const Scaffold(body: TextField(key: Key('field'))))));
+      await tester.enterText(find.byKey(const Key('field')), '입력 중');
+      expect(find.byKey(const Key('serverWaking')), findsNothing);
+      wake.waking.value = true;
+      await tester.pump();
+      expect(find.byKey(const Key('serverWaking')), findsOneWidget);
+      expect(find.textContaining('서버를 깨우는 중'), findsOneWidget);
+      expect(find.text('입력 중'), findsOneWidget, reason: '배너가 켜져도 화면이 새로 만들어지면 안 된다');
+      wake.waking.value = false;
+      await tester.pump();
+      expect(find.byKey(const Key('serverWaking')), findsNothing);
+      expect(find.text('입력 중'), findsOneWidget);
     });
   });
 

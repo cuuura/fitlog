@@ -209,12 +209,30 @@ class AuthController extends Notifier<AuthStatus> {
   /// 로그아웃. 서버 호출이 실패해도 로컬은 정리한다.
   Future<void> signOut() async {
     final tokens = await _store.read();
-    if (tokens != null) {
-      try {
-        await _api.authLogout(tokens.refreshToken);
-      } catch (_) {}
-    }
+    if (tokens != null) await _revokeOnServer(tokens);
     await _cleanup();
+  }
+
+  /// 서버의 리프레시 토큰을 폐기한다(실패해도 로컬 로그아웃은 계속한다).
+  /// 액세스 토큰은 15분이면 만료돼 로그아웃이 401로 거절되는 일이 흔하다. 그럴 땐 refresh 로 새 토큰을 받아 한 번 더 시도한다
+  /// (refresh 는 이전 리프레시 토큰을 폐기하므로 새 토큰으로 로그아웃해야 서버에 살아 있는 토큰이 남지 않는다).
+  Future<void> _revokeOnServer(StoredTokens tokens) async {
+    try {
+      await _api.authLogout(tokens.refreshToken);
+    } on ApiException catch (e) {
+      if (!e.isUnauthenticated) return;
+      try {
+        final fresh = await _api.authRefresh(tokens.refreshToken);
+        await _store.write(
+          StoredTokens(
+            accessToken: fresh.accessToken,
+            refreshToken: fresh.refreshToken,
+            expiresAt: ref.read(clockProvider)().add(Duration(seconds: fresh.expiresIn)),
+          ),
+        );
+        await _api.authLogout(fresh.refreshToken);
+      } catch (_) {}
+    } catch (_) {}
   }
 
   /// 계정 삭제(ACC-5). 서버 삭제에 실패하면 예외를 던지고 로그인 상태를 유지한다.
