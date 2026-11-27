@@ -6,6 +6,10 @@ on:
       api_base_url:
         description: "서버 주소(비우면 저장소 변수 API_BASE_URL). 예: https://fitlog-server-xxxx.onrender.com"
         required: false
+      publish_test_release:
+        description: "APK를 GitHub 프리릴리스 test-build 로도 올린다(폰에서 바로 받기용)"
+        type: boolean
+        default: true
   push:
     branches: [main]
     paths: ["app/**", ".github/workflows/app.yml"]
@@ -15,6 +19,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     defaults:
       run:
         working-directory: app
@@ -110,3 +116,15 @@ jobs:
           name: app-symbols
           path: app/build/symbols
           if-no-files-found: error
+
+      # 수동 실행 시 테스트용 APK를 프리릴리스(test-build)로 교체해 올린다. 폰 브라우저로 바로 받을 수 있다.
+      - name: Publish test-build prerelease
+        if: github.event_name == 'workflow_dispatch' && inputs.publish_test_release && env.RELEASE_CONFIGURED == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk "$RUNNER_TEMP/fitlog-test.apk"
+          gh release delete test-build --yes --cleanup-tag || true
+          gh release create test-build "$RUNNER_TEMP/fitlog-test.apk" --prerelease --target "$GITHUB_SHA" \
+            --title "테스트 빌드 (${GITHUB_SHA::7})" \
+            --notes "서버: $API_BASE_URL — 디버그 키 서명, 테스트 설치용. 아이디 가입 시 서버의 가입 코드 필요."
