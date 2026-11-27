@@ -43,6 +43,8 @@ Claude·ChatGPT·Gemini 가 붙으려면 **https 공개 주소**가 필요하다
 | `RATE_LIMIT_EXPORT_PER_10MIN` | 5 | 내보내기 10분당 한도(사용자별) |
 | `RATE_LIMIT_MCP_PER_MIN` | 120 | `/mcp` 분당 한도(Authorization 해시별, 없으면 IP) |
 | `TRUST_PROXY` | `false` | `true` 일 때만 `X-Forwarded-For` 로 클라이언트 IP를 판단(리버스 프록시 뒤) |
+| `PASSWORD_LOGIN_ENABLED` | `false` | 테스트용 아이디·비밀번호 로그인(`/v1/auth/password/*`). **테스트 전용, 운영(스토어 출시)에서는 끈다** |
+| `PASSWORD_SIGNUP_CODE` | - | 비밀번호 가입 코드. 비우면 가입은 막히고(403) 로그인만 된다 |
 | `INTEGRITY_MODE` | `off` | Play Integrity: `off` 무시 / `report` 검증·로그만 / `enforce` 실패 시 403 `INTEGRITY_FAILED` |
 | `INTEGRITY_PACKAGE_NAMES` | `com.fitlog.fitlog` | 허용 패키지 이름(쉼표 구분). 첫 값으로 `decodeIntegrityToken` 호출 |
 | `PLAY_INTEGRITY_CREDENTIALS` | - | 서비스 계정 JSON 파일 경로. Google 호출 실패(3초 초과 포함)는 fail-open(경고 로그) |

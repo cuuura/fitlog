@@ -46,6 +46,8 @@ data class AppConfig(
     val site: SiteConfig = SiteConfig(),
     /** 요청 본문 최대 바이트(Content-Length 기준) */
     val maxBodyBytes: Long = 5L * 1024 * 1024,
+    /** 테스트용 아이디·비밀번호 로그인(contracts/v1.0/auth-password.md). 기본 꺼짐 */
+    val passwordLogin: PasswordLoginConfig = PasswordLoginConfig(),
 ) {
     val engine: com.fitlog.engine.ProgramCalculator get() = calculator ?: com.fitlog.engine.ProgramEngine
     val importer: com.fitlog.importing.Importer get() = importerOverride ?: com.fitlog.importing.ImportPipeline
@@ -74,6 +76,10 @@ data class AppConfig(
                 backupRetentionDays = env.v("BACKUP_RETENTION_DAYS")?.toInt() ?: 30,
             ),
             maxBodyBytes = env.v("MAX_BODY_BYTES")?.toLong() ?: (5L * 1024 * 1024),
+            passwordLogin = PasswordLoginConfig(
+                enabled = env.v("PASSWORD_LOGIN_ENABLED")?.toBoolean() ?: false,
+                signupCode = env.v("PASSWORD_SIGNUP_CODE"),
+            ),
         ).also { require(it.jwt.secret.length >= 32) { "JWT_SECRET must be at least 32 characters" } }
     }
 }
@@ -125,4 +131,10 @@ data class SiteConfig(
     val contactEmail: String = "privacy@example.invalid",
     val effectiveDate: String = "2026-12-01",
     val backupRetentionDays: Int = 30,
+)
+
+/** 테스트용 아이디·비밀번호 로그인. signupCode 가 없으면 가입은 막히고 로그인만 된다 */
+data class PasswordLoginConfig(
+    val enabled: Boolean = false,
+    val signupCode: String? = null,
 )
