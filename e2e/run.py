@@ -42,10 +42,12 @@ EXPECTED_READ_TOOLS = [
     "get_profile", "search_exercises", "list_programs", "get_program", "validate_program",
     "list_program_instances", "get_plan", "list_sessions", "get_session", "get_exercise_records",
     "get_exercise_progress", "get_training_summary", "get_body_measurements", "list_deletion_requests",
+    "list_scheduled_workouts",
 ]
 EXPECTED_WRITE_TOOLS = [
     "import_bundle", "create_program", "start_program", "log_session", "log_body_weight",
     "create_exercise", "adjust_program_instance", "request_deletion",
+    "schedule_workout", "skip_scheduled_workout",
 ]
 EXPECTED_TOOLS = EXPECTED_READ_TOOLS + EXPECTED_WRITE_TOOLS
 
@@ -674,8 +676,11 @@ def c_auth(R):
         t = app_register(R, u, pw).json()
         r1 = R.http.post("/v1/auth/refresh", json_body={"refreshToken": t["refreshToken"]})
         expect_status(r1, 200, "재사용 점검: 첫 갱신")
+        # 회전 직후(유예 시간 REFRESH_REUSE_GRACE_SEC) 같은 토큰의 재시도는 네트워크 재시도로 보고 받아 준다.
+        # 유예가 지난 뒤의 재사용 거절은 security.refresh_reuse_detected_after_grace 에서 확인한다
         r2 = R.http.post("/v1/auth/refresh", json_body={"refreshToken": t["refreshToken"]})
-        expect_status(r2, 401, "재사용 점검: 회전된 옛 리프레시 토큰")
+        expect(r2.status in (200, 401), f"재사용 점검: 유예 안 재시도는 200(유예) 또는 401 이어야 함: {r2.status}")
+        R.ctx["reuse_app"] = (t["refreshToken"], u, pw)
         R.ctx.setdefault("throwaway_users", []).append((u, pw))
     R.run("auth.refresh_rotation", refresh)
 
@@ -1038,10 +1043,24 @@ def c_oauth(R):
         expect(j["refresh_token"] != e["refresh"] and j["access_token"] != e["access"], "리프레시 회전(새 토큰) 안 됨")
         expect(mcp_rpc(R, j["access_token"], "initialize", {"protocolVersion": "2025-06-18", "capabilities": {}, "clientInfo": {"name": "t", "version": "1"}}).status == 200,
                "갱신된 액세스 토큰으로 MCP 호출 실패")
-        r2 = token_request(R, {"grant_type": "refresh_token", "refresh_token": e["refresh"]}, "none", e["client_id"])
-        expect(r2.status == 400 and r2.json().get("error") == "invalid_grant", f"회전된 옛 리프레시 토큰은 invalid_grant: {r2.status} {r2.text[:200]}")
+        R.ctx["reuse_oauth"] = (e["refresh"], e["client_id"])
         _ = c_d, r
     R.run("oauth.refresh_rotation_and_reuse_detection", refresh)
+
+
+def c_reuse_after_grace(R):
+    """유예 시간(60초)이 지난 뒤 회전된 옛 리프레시 토큰을 쓰면 거절돼야 한다(탈취 대응)."""
+    def f():
+        old_app, _, _ = R.need("reuse_app")
+        old_oauth, cid = R.need("reuse_oauth")
+        wait = R.args.reuse_grace_wait
+        if wait > 0:
+            time.sleep(wait)
+        r = R.http.post("/v1/auth/refresh", json_body={"refreshToken": old_app})
+        expect(r.status == 401, f"유예 지난 뒤 앱 옛 리프레시 토큰 재사용은 401 기대, 실제 {r.status}")
+        r = token_request(R, {"grant_type": "refresh_token", "refresh_token": old_oauth}, "none", cid)
+        expect(r.status == 400 and r.json().get("error") == "invalid_grant", f"유예 지난 뒤 OAuth 옛 리프레시 토큰 재사용은 invalid_grant 기대: {r.status} {r.text[:200]}")
+    R.run("security.refresh_reuse_detected_after_grace", f)
 
 
 # =============================================================================================
@@ -1174,6 +1193,13 @@ def build_call_cases(R, cc):
     cases["log_body_weight"] = lambda: {"measuredAt": (datetime.now(timezone.utc) - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ"), "weightKg": 79.9}
     cases["create_exercise"] = lambda: {"nameKo": f"E2E 케이블 컬 {suffix}", "nameEn": f"E2E Cable Curl {suffix}", "type": "MACHINE", "primaryMuscle": "BICEPS"}
     cases["adjust_program_instance"] = lambda: {"instanceId": cc.instance_id, "working": {"squat": 105}}
+    tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d")
+    cases["schedule_workout"] = lambda: {"workout": {"plannedDate": tomorrow, "title": "E2E 하체", "items": [
+        {"exercise": {"name": "스쿼트"}, "restSec": 180, "sets": [
+            {"targetWeightKg": 80, "targetReps": 12},
+            {"targetWeightKg": 100, "targetReps": 10, "targetRepsMax": 12, "targetRir": 3}]}]}}
+    cases["list_scheduled_workouts"] = lambda: {"from": tomorrow, "to": tomorrow}
+    cases["skip_scheduled_workout"] = lambda: {"id": cc.scheduled_id, "skipped": True}
     cases["request_deletion"] = lambda: {"entity": "session", "id": cc.session_id, "reason": "e2e 점검용 삭제 요청"}
     return cases
 
@@ -1181,7 +1207,8 @@ def build_call_cases(R, cc):
 # 호출 순서: 데이터를 만드는 쓰기 도구를 먼저, 그 값을 읽는 조회 도구를 나중에
 CALL_ORDER = ["get_profile", "search_exercises", "list_programs", "get_program", "validate_program", "create_program",
               "create_exercise", "start_program", "list_program_instances", "get_plan", "adjust_program_instance",
-              "log_session", "log_body_weight", "import_bundle", "list_sessions", "get_session", "get_exercise_records",
+              "log_session", "log_body_weight", "import_bundle", "schedule_workout", "list_scheduled_workouts",
+              "skip_scheduled_workout", "list_sessions", "get_session", "get_exercise_records",
               "get_exercise_progress", "get_training_summary", "get_body_measurements", "request_deletion", "list_deletion_requests"]
 
 
@@ -1233,6 +1260,28 @@ def mcp_tools(R):
             if name in ("create_program", "start_program", "log_session", "log_body_weight", "import_bundle"):
                 expect(sc.get("status") == "SAVED", f"{name}: status={sc.get('status')} (SAVED 기대) {json.dumps(sc, ensure_ascii=False)[:400]}")
                 expect(sc.get("importBatchId"), f"{name}: importBatchId 없음")
+            if name == "schedule_workout":
+                expect(sc.get("status") == "SAVED", f"schedule_workout status={sc.get('status')}: {json.dumps(sc, ensure_ascii=False)[:400]}")
+                sw = sc.get("scheduledWorkouts") or []
+                expect(sw and sw[0].get("id"), f"schedule_workout 응답에 scheduledWorkouts[0].id 없음: {json.dumps(sc, ensure_ascii=False)[:300]}")
+                cc.scheduled_id = sw[0]["id"]
+                # 완전히 같은 내용을 다시 보내면 멱등 재생(같은 묶음, created=false)
+                again = tool_ok(R, b["access"], sid, name, args)
+                expect(again.get("status") == "SAVED" and again.get("created") is False and again.get("importBatchId") == sc.get("importBatchId"),
+                       f"같은 요청 재호출은 같은 묶음을 돌려주는 멱등 재생이어야 함: {json.dumps(again, ensure_ascii=False)[:300]}")
+                # 같은 날짜+제목인데 내용이 다르면 중복 충돌로 저장하지 않는다
+                other = json.loads(json.dumps(args))
+                other["workout"]["items"][0]["sets"][0]["targetReps"] = 8
+                dup = tool_ok(R, b["access"], sid, name, other)
+                codes = [c.get("code") for c in dup.get("conflicts", [])]
+                expect(dup.get("status") == "NEEDS_RESOLUTION" and "SCHEDULED_DUPLICATE" in codes,
+                       f"같은 날짜+제목(내용 다름) 재호출은 NEEDS_RESOLUTION(SCHEDULED_DUPLICATE) 기대: {json.dumps(dup, ensure_ascii=False)[:300]}")
+            if name == "list_scheduled_workouts":
+                items = next((v for v in sc.values() if isinstance(v, list)), [])
+                hit = [i for i in items if i.get("id") == cc.scheduled_id]
+                expect(hit and hit[0].get("status") == "PLANNED", f"예정 운동 목록에 PLANNED 항목이 없음: {json.dumps(sc, ensure_ascii=False)[:300]}")
+            if name == "skip_scheduled_workout":
+                expect(json.dumps(sc).count("SKIPPED") >= 1, f"skip_scheduled_workout 결과에 SKIPPED 없음: {json.dumps(sc, ensure_ascii=False)[:300]}")
             if name == "list_sessions":
                 expect(any(s.get("id") == cc.session_id for s in sc.get("sessions", sc.get("items", []))) or sc.get("count", 0) >= 1,
                        f"list_sessions 에 앱이 기록한 세션이 없음: {json.dumps(sc, ensure_ascii=False)[:300]}")
@@ -1280,7 +1329,7 @@ def mcp_tools(R):
 
     def make_bad(name):
         def f():
-            use_f = name in ("create_exercise", "adjust_program_instance", "request_deletion", "log_body_weight")
+            use_f = name in ("create_exercise", "adjust_program_instance", "request_deletion", "log_body_weight", "skip_scheduled_workout")
             a = R.need("mcp_f" if use_f else "mcp_a")
             sid = R.need("mcp_f_sid" if use_f else "mcp_sid")
             schema = (R.ctx["_tools_by_name"].get(name) or {}).get("inputSchema", {})
@@ -1455,6 +1504,7 @@ def main():
     ap.add_argument("--consent-version", default=None, help="앱의 consentVersion. 기본은 app/lib/core/config.dart 에서 읽음")
     ap.add_argument("--wait", type=int, default=90, help="서버가 준비될 때까지 기다리는 최대 초(무료 호스팅 콜드 스타트)")
     ap.add_argument("--cleanup", action="store_true", help="끝에서 이 실행이 만든 계정을 삭제(라이브 서버용)")
+    ap.add_argument("--reuse-grace-wait", type=int, default=62, help="리프레시 재사용 유예(서버 60초) 뒤 점검 전에 기다리는 초. 0 이면 바로 점검")
     ap.add_argument("--verbose", "-v", action="store_true")
     args = ap.parse_args()
 
@@ -1485,6 +1535,8 @@ def main():
         section("[OAuth 등록·인가·토큰]", c_oauth)
         section("[MCP 프로토콜]", mcp_protocol)
         section("[MCP 도구]", mcp_tools)
+        print("[리프레시 재사용 감지(유예 대기 포함)]")
+        c_reuse_after_grace(R)
         if args.phase == "before-restart":
             finish_before(R)
         elif args.cleanup:
