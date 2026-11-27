@@ -78,7 +78,7 @@ npx @modelcontextprotocol/inspector
 
 1. Transport Type: **Streamable HTTP**, URL: `<PUBLIC_BASE_URL>/mcp`
 2. **Open Auth Settings** → **Quick OAuth Flow** (또는 Connect 시 자동 안내). 브라우저에서 Google 로그인 → 동의 화면에서 **허용**
-3. **Connect** 후 **Tools → List Tools**에 도구 25개(조회 15, 쓰기 10)가 보이는지 확인
+3. **Connect** 후 **Tools → List Tools**에 도구 27개(조회 17, 쓰기 10)가 보이는지 확인
 4. `get_profile`, `list_programs`를 실행해 결과(요약 한 줄 + structuredContent)를 확인
 
 쓰기 도구는 동의 화면에서 "기록 추가·수정 허용"을 켠 연결에서만 동작한다. 읽기만 허용했으면 쓰기 도구는 "권한 없음" 오류를 돌려준다.
@@ -113,6 +113,15 @@ Google 설정 없이 `PASSWORD_LOGIN_ENABLED=true` 로 돌리는 테스트 서�
 3. 만들기 후 **연결** → Fitlog 로그인 창에서 Google 로그인 → **허용**
 4. 대화 입력창의 **+ / 도구**에서 개발자 모드와 Fitlog 커넥터를 선택하고 사용한다. 쓰기 도구는 ChatGPT가 호출 전 확인을 물을 수 있다
 
+#### ChatGPT 점검 순서 (도구가 0개로 보일 때)
+
+1. 설정 → 앱 → 고급 설정에서 **개발자 모드**를 켠다
+2. **앱 만들기**: MCP 서버 URL `<PUBLIC_BASE_URL>/mcp`, 인증 OAuth → 로그인·허용
+3. 서버를 다시 연결했거나 도구를 바꿨다면 앱 설정에서 **새로고침(Refresh)** 을 눌러 도구 목록을 다시 읽게 한다
+4. 대화 입력창 **+ 메뉴**에서 이 앱을 켠다(웹에서 "앱 열기" 버튼만 보이면 데스크톱/앱에서 시도)
+5. 서버는 `search`·`fetch` 읽기 도구도 제공한다(개발자 모드 밖 일반 채팅·deep research 용). 세션 헤더는 없어도 처리한다
+6. 그래도 안 보이면 `GET <PUBLIC_BASE_URL>/health/mcp-trace`(`MCP_TRACE=true` 또는 테스트 서버)로 ChatGPT 가 /mcp 를 실제로 호출했는지(User-Agent, initialize, tools/list) 확인한다
+
 ### Gemini (Gemini CLI)
 
 Gemini CLI의 `settings.json`(사용자 전체는 `~/.gemini/settings.json`, 프로젝트별은 `.gemini/settings.json`)에 원격 MCP 서버를 추가한다.
@@ -129,7 +138,7 @@ Gemini CLI의 `settings.json`(사용자 전체는 `~/.gemini/settings.json`, 프
 
 1. 위처럼 `httpUrl`(Streamable HTTP)에 `<PUBLIC_BASE_URL>/mcp`를 넣고 Gemini CLI를 다시 시작
 2. CLI 안에서 `/mcp auth fitlog`를 실행하면 브라우저가 열린다 → Google 로그인 → **허용**(OAuth는 동적 등록으로 자동)
-3. `/mcp`로 서버가 `CONNECTED`이고 도구 25개가 보이는지 확인한 뒤 "내 운동 프로그램 목록 알려줘"처럼 요청한다
+3. `/mcp`로 서버가 `CONNECTED`이고 도구 27개가 보이는지 확인한 뒤 "내 운동 프로그램 목록 알려줘"처럼 요청한다
 
 Gemini CLI의 인증 명령과 설정 키는 버전에 따라 다를 수 있으니 `/help`와 공식 문서를 함께 본다.
 

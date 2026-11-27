@@ -633,4 +633,4 @@ internal val READ_TOOLS: List<Tool> = listOf(
             ToolOutput("삭제 요청 ${rows.size}건", list("requests", JsonArray(rows), rows.size))
         },
     ),
-)
+) + OPENAI_COMPAT_TOOLS

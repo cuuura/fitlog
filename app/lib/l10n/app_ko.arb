@@ -1517,45 +1517,114 @@
   "homeStartProgramHint": "프로그램을 시작하면 세트·무게가 자동으로 채워져요",
   "homeStartProgramAction": "프로그램 시작하기",
   "instanceStartToday": "오늘 운동 시작",
-"shellNavToday": "오늘",
+  "shellNavToday": "오늘",
   "shellNavHistory": "기록",
   "shellNavPrograms": "프로그램",
   "shellNavMe": "나",
   "shellMiniActive": "진행 중 · {name} {done}/{total}세트",
-  "@shellMiniActive": {"placeholders": {"name": {"type": "String"}, "done": {"type": "int"}, "total": {"type": "int"}}},
+  "@shellMiniActive": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "shellMiniRest": "휴식 {time}",
-  "@shellMiniRest": {"placeholders": {"time": {"type": "String"}}},
+  "@shellMiniRest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "shellMiniOpen": "진행 중인 세션 열기",
   "syncChipOfflinePending": "오프라인 · {count}개 대기",
-  "@syncChipOfflinePending": {"placeholders": {"count": {"type": "int"}}},
+  "@syncChipOfflinePending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "meTitle": "나",
   "meGuestName": "FitLog 사용자",
   "meSectionBody": "신체 수치",
   "meBodyLatest": "최근 체중 {weight}",
-  "@meBodyLatest": {"placeholders": {"weight": {"type": "String"}}},
+  "@meBodyLatest": {
+    "placeholders": {
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
   "meBodyEmpty": "아직 기록이 없어요",
   "meSectionProfile": "프로필",
   "meProfileEmpty": "키·성별·출생연도를 입력하세요",
   "meSectionAi": "AI 연동",
   "meAiSubtitle": "연결, 가져오기, 삭제 요청",
   "meAiPending": "삭제 요청 {count}건",
-  "@meAiPending": {"placeholders": {"count": {"type": "int"}}},
+  "@meAiPending": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "meSectionExport": "내보내기",
   "meExportSubtitle": "내 기록을 파일로 저장",
   "meSectionSettings": "설정",
   "meSettingsSubtitle": "단위, 휴식 타이머, 계정",
   "meHeight": "키 {value}cm",
-  "@meHeight": {"placeholders": {"value": {"type": "String"}}},
+  "@meHeight": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "meBirthYear": "{year}년생",
-  "@meBirthYear": {"placeholders": {"year": {"type": "int"}}},
+  "@meBirthYear": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      }
+    }
+  },
   "bodyDeltaDown": "지난주 대비 −{value}",
-  "@bodyDeltaDown": {"placeholders": {"value": {"type": "String"}}},
+  "@bodyDeltaDown": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "bodyDeltaUp": "지난주 대비 +{value}",
-  "@bodyDeltaUp": {"placeholders": {"value": {"type": "String"}}},
+  "@bodyDeltaUp": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "bodyDeltaSame": "지난주와 같아요",
   "bodyChartTitle": "12주 체중 변화",
   "bodyChartDesc": "12주 동안 {from}에서 {to}(으)로 바뀌었어요.",
-  "@bodyChartDesc": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
+  "@bodyChartDesc": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "to": {
+        "type": "String"
+      }
+    }
+  },
   "bodyMetricHeight": "키",
   "bodyMetricBmi": "BMI",
   "bodyMetricFat": "체지방률",
@@ -1568,26 +1637,101 @@
   "bodyHistoryTitle": "기록",
   "homeTodayTitle": "오늘",
   "homeDateLabel": "{month}월 {day}일 {weekday}",
-  "@homeDateLabel": {"placeholders": {"month": {"type": "int"}, "day": {"type": "int"}, "weekday": {"type": "String"}}},
+  "@homeDateLabel": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
   "homeWeekdayLong": "{day, select, mon{월요일} tue{화요일} wed{수요일} thu{목요일} fri{금요일} sat{토요일} other{일요일}}",
-  "@homeWeekdayLong": {"placeholders": {"day": {"type": "String"}}},
+  "@homeWeekdayLong": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "homePlanSubToday": "{week}주차 · {day} · 오늘 예정",
-  "@homePlanSubToday": {"placeholders": {"week": {"type": "int"}, "day": {"type": "String"}}},
+  "@homePlanSubToday": {
+    "placeholders": {
+      "week": {
+        "type": "int"
+      },
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "homePlanSubLate": "{week}주차 · {day}",
-  "@homePlanSubLate": {"placeholders": {"week": {"type": "int"}, "day": {"type": "String"}}},
+  "@homePlanSubLate": {
+    "placeholders": {
+      "week": {
+        "type": "int"
+      },
+      "day": {
+        "type": "String"
+      }
+    }
+  },
   "homeChipDue": "예정",
   "homeChipLate": "{days, plural, =1{하루 밀림} other{{days}일 밀림}}",
-  "@homeChipLate": {"placeholders": {"days": {"type": "int"}}},
+  "@homeChipLate": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "homeMainMeta": "메인 · {sets}세트",
-  "@homeMainMeta": {"placeholders": {"sets": {"type": "int"}}},
+  "@homeMainMeta": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
   "homeAuxName": "보조 · {name}",
-  "@homeAuxName": {"placeholders": {"name": {"type": "String"}}},
+  "@homeAuxName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "homeAuxSets": "{sets}세트",
-  "@homeAuxSets": {"placeholders": {"sets": {"type": "int"}}},
+  "@homeAuxSets": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
   "homeAuxSetsWeight": "{sets}세트 · {weight}",
-  "@homeAuxSetsWeight": {"placeholders": {"sets": {"type": "int"}, "weight": {"type": "String"}}},
+  "@homeAuxSetsWeight": {
+    "placeholders": {
+      "sets": {
+        "type": "int"
+      },
+      "weight": {
+        "type": "String"
+      }
+    }
+  },
   "homeAuxMore": "보조운동 {n}개 더",
-  "@homeAuxMore": {"placeholders": {"n": {"type": "int"}}},
+  "@homeAuxMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "homeStartWorkout": "운동 시작",
   "homeStartShort": "시작",
   "homeSkip": "건너뛰기",
@@ -1596,33 +1740,102 @@
   "homeRecentYesterday": "어제",
   "summaryHeading": "운동 완료",
   "summaryVolumeUnit": "볼륨 ({unit})",
-  "@summaryVolumeUnit": {"placeholders": {"unit": {"type": "String"}}},
+  "@summaryVolumeUnit": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
   "summarySetsShort": "세트",
   "summaryPrTitle": "{name} {weight} × {reps}",
-  "@summaryPrTitle": {"placeholders": {"name": {"type": "String"}, "weight": {"type": "String"}, "reps": {"type": "int"}}},
+  "@summaryPrTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "weight": {
+        "type": "String"
+      },
+      "reps": {
+        "type": "int"
+      }
+    }
+  },
   "summaryPrE1rm": "추정 1RM {value} 신기록",
-  "@summaryPrE1rm": {"placeholders": {"value": {"type": "String"}}},
+  "@summaryPrE1rm": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "summaryPrWeight": "최고 무게 신기록",
   "summaryMissTitle": "목표 미달 {n}건",
-  "@summaryMissTitle": {"placeholders": {"n": {"type": "int"}}},
+  "@summaryMissTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "summaryMissItem": "{name} {sets}세트 {reps}/{target}",
-  "@summaryMissItem": {"placeholders": {"name": {"type": "String"}, "sets": {"type": "int"}, "reps": {"type": "int"}, "target": {"type": "int"}}},
+  "@summaryMissItem": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "sets": {
+        "type": "int"
+      },
+      "reps": {
+        "type": "int"
+      },
+      "target": {
+        "type": "int"
+      }
+    }
+  },
   "summaryNextHeading": "다음 회차 무게",
   "summaryTmName": "{name} TM",
-  "@summaryTmName": {"placeholders": {"name": {"type": "String"}}},
+  "@summaryTmName": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "summaryTmNoChange": "변동 없음",
   "summaryOffline": "다음 무게는 연결되면 계산돼요",
   "summaryOfflineCount": "다음 무게는 연결되면 계산돼요 · {count}개 대기",
-  "@summaryOfflineCount": {"placeholders": {"count": {"type": "int"}}},
+  "@summaryOfflineCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "summaryCompare": "그래프로 비교",
   "summaryClose": "닫기",
   "progSegActive": "진행 중 {n}",
-  "@progSegActive": {"placeholders": {"n": {"type": "int"}}},
+  "@progSegActive": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "progSegTemplates": "템플릿",
   "progSegMine": "내 프로그램",
   "progImportAi": "AI로 프로그램 가져오기",
   "progWeekDays": "주 {n}일",
-  "@progWeekDays": {"placeholders": {"n": {"type": "int"}}},
+  "@progWeekDays": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "progWeekStructure": "주 구조",
   "progRules": "규칙",
   "progRuleProgression": "증량",
@@ -1632,35 +1845,119 @@
   "progRuleSkip": "건너뛰기",
   "progRuleAmrap": "1+ 세트 횟수로 TM 증량",
   "progRuleLinear": "성공하면 매 회차 {inc}씩 증량",
-  "@progRuleLinear": {"placeholders": {"inc": {"type": "String"}}},
+  "@progRuleLinear": {
+    "placeholders": {
+      "inc": {
+        "type": "String"
+      }
+    }
+  },
   "progRuleCycle": "사이클이 끝날 때마다 {inc}씩 증량",
-  "@progRuleCycle": {"placeholders": {"inc": {"type": "String"}}},
+  "@progRuleCycle": {
+    "placeholders": {
+      "inc": {
+        "type": "String"
+      }
+    }
+  },
   "progRuleStages": "성공하면 {inc}씩 증량, 실패하면 다음 단계로",
-  "@progRuleStages": {"placeholders": {"inc": {"type": "String"}}},
+  "@progRuleStages": {
+    "placeholders": {
+      "inc": {
+        "type": "String"
+      }
+    }
+  },
   "progRuleFailDefault": "목표 횟수 미달 세트가 있으면 실패",
   "progRuleFailStreak": "{n}회 연속 실패하면 디로드",
-  "@progRuleFailStreak": {"placeholders": {"n": {"type": "int"}}},
+  "@progRuleFailStreak": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "progRuleDeloadPct": "−{pct}%",
-  "@progRuleDeloadPct": {"placeholders": {"pct": {"type": "int"}}},
+  "@progRuleDeloadPct": {
+    "placeholders": {
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
   "progRuleRoundKg": "{value}씩 반올림",
-  "@progRuleRoundKg": {"placeholders": {"value": {"type": "String"}}},
+  "@progRuleRoundKg": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
   "progRuleSkipHint": "시작할 때 방식을 골라요",
   "progRuleHold": "유지",
   "progRuleReps": "{range}회",
-  "@progRuleReps": {"placeholders": {"range": {"type": "String"}}},
+  "@progRuleReps": {
+    "placeholders": {
+      "range": {
+        "type": "String"
+      }
+    }
+  },
   "progSkipShiftSeg": "다음 날로 밀기",
   "progSkipFixedSeg": "날짜 고정",
   "progStartTmHeader": "초기 TM",
   "progStartSourceMeasured": "측정",
   "progStartSourceEstimated": "추정",
   "progStartBasisMeasured": "최근 측정 1RM {rm} → TM {tm} ({pct}%)",
-  "@progStartBasisMeasured": {"placeholders": {"rm": {"type": "String"}, "tm": {"type": "String"}, "pct": {"type": "int"}}},
+  "@progStartBasisMeasured": {
+    "placeholders": {
+      "rm": {
+        "type": "String"
+      },
+      "tm": {
+        "type": "String"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
   "progStartBasisEstimated": "추정 1RM {rm} → TM {tm} ({pct}%)",
-  "@progStartBasisEstimated": {"placeholders": {"rm": {"type": "String"}, "tm": {"type": "String"}, "pct": {"type": "int"}}},
+  "@progStartBasisEstimated": {
+    "placeholders": {
+      "rm": {
+        "type": "String"
+      },
+      "tm": {
+        "type": "String"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
   "progStartBasisWorkingMeasured": "최근 측정 1RM {rm} → 작업 {tm}",
-  "@progStartBasisWorkingMeasured": {"placeholders": {"rm": {"type": "String"}, "tm": {"type": "String"}}},
+  "@progStartBasisWorkingMeasured": {
+    "placeholders": {
+      "rm": {
+        "type": "String"
+      },
+      "tm": {
+        "type": "String"
+      }
+    }
+  },
   "progStartBasisWorkingEstimated": "추정 1RM {rm} → 작업 {tm}",
-  "@progStartBasisWorkingEstimated": {"placeholders": {"rm": {"type": "String"}, "tm": {"type": "String"}}},
+  "@progStartBasisWorkingEstimated": {
+    "placeholders": {
+      "rm": {
+        "type": "String"
+      },
+      "tm": {
+        "type": "String"
+      }
+    }
+  },
   "progStartCta": "이 프로그램 시작",
   "progStartTmField": "TM",
   "progStartWorkingField": "작업",
@@ -1842,15 +2139,19 @@
   },
   "aiDelNoSilent": "AI는 승인 없이 지울 수 없어요.",
   "aiDelApproveBtn": "삭제 승인",
-"sessionCurRpeLabel": "RPE (선택)",
+  "sessionCurRpeLabel": "RPE (선택)",
   "sessionCurRirLabel": "RIR (선택)",
   "sessionCurShowRir": "RIR로 보기",
   "sessionCurShowRpe": "RPE로 보기",
   "sessionCurNextNotif": "다음 {exercise} {summary}",
   "@sessionCurNextNotif": {
     "placeholders": {
-      "exercise": {"type": "String"},
-      "summary": {"type": "String"}
+      "exercise": {
+        "type": "String"
+      },
+      "summary": {
+        "type": "String"
+      }
     }
   },
   "sessionCurWarnTitle": "휴식 10초 남음",
@@ -1858,45 +2159,148 @@
   "sessionCurChannelWarn": "휴식 곧 종료 알림",
   "sessionCurChannelWarnDesc": "휴식이 끝나기 10초 전에 알려줘요",
   "sessionCurPlaylistTitle": "오늘 운동 · {done}/{total} 종목",
-  "@sessionCurPlaylistTitle": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "@sessionCurPlaylistTitle": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "sessionCurDockStatus": "운동 중 · {elapsed} 경과 · 전체 {done}/{total}세트",
-  "@sessionCurDockStatus": {"placeholders": {"elapsed": {"type": "String"}, "done": {"type": "int"}, "total": {"type": "int"}}},
+  "@sessionCurDockStatus": {
+    "placeholders": {
+      "elapsed": {
+        "type": "String"
+      },
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
   "calendarWeekdays": "월,화,수,목,금,토,일",
   "calendarWeekSummary": "이번 주 {count}회 운동",
-  "@calendarWeekSummary": {"placeholders": {"count": {"type": "int"}}},
+  "@calendarWeekSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "calendarWeekNone": "이번 주 아직 운동 전이에요",
   "calendarPlanned": "예정",
   "calendarWorkedDay": "운동함",
   "calendarMonthTitle": "{year}년 {month}월 · {days}일 운동",
-  "@calendarMonthTitle": {"placeholders": {"year": {"type": "int"}, "month": {"type": "int"}, "days": {"type": "int"}}},
+  "@calendarMonthTitle": {
+    "placeholders": {
+      "year": {
+        "type": "int"
+      },
+      "month": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "calendarPrevMonth": "이전 달",
   "calendarNextMonth": "다음 달",
   "calendarEmptyDay": "이 날은 운동 기록이 없어요",
   "calendarDayHeading": "{month}월 {day}일 ({weekday})",
-  "@calendarDayHeading": {"placeholders": {"month": {"type": "int"}, "day": {"type": "int"}, "weekday": {"type": "String"}}},
-  "calendarViewList": "목록",
-  "calendarViewCalendar": "달력",
+  "@calendarDayHeading": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
   "calendarOpenHint": "달력 보기",
   "calendarSessionSummary": "{exercises}종목 · {sets}세트 · {volume}",
-  "@calendarSessionSummary": {"placeholders": {"exercises": {"type": "int"}, "sets": {"type": "int"}, "volume": {"type": "String"}}},
+  "@calendarSessionSummary": {
+    "placeholders": {
+      "exercises": {
+        "type": "int"
+      },
+      "sets": {
+        "type": "int"
+      },
+      "volume": {
+        "type": "String"
+      }
+    }
+  },
   "importConflictScheduledDuplicate": "같은 날 같은 제목의 예정 운동이 있어요",
   "importCountKindScheduledWorkouts": "예정 운동",
   "importSummaryScheduled": "예정 운동 {n}",
-  "@importSummaryScheduled": {"placeholders": {"n": {"type": "int"}}},
+  "@importSummaryScheduled": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "impCountScheduled": "예정 운동",
   "aiEntityScheduledWorkout": "예정 운동",
   "aiCountScheduledWorkout": "예정 운동 {n}개",
-  "@aiCountScheduledWorkout": {"placeholders": {"n": {"type": "int"}}},
+  "@aiCountScheduledWorkout": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "aiHistorySummaryScheduled": "예정 운동 {n}",
-  "@aiHistorySummaryScheduled": {"placeholders": {"n": {"type": "int"}}},
+  "@aiHistorySummaryScheduled": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "schedTodayTitle": "오늘 예정",
   "schedLateTitle": "지난 예정",
   "schedLateChip": "{month}월 {day}일 예정",
-  "@schedLateChip": {"placeholders": {"month": {"type": "int"}, "day": {"type": "int"}}},
+  "@schedLateChip": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
   "schedCounts": "종목 {exercises}개 · {sets}세트",
-  "@schedCounts": {"placeholders": {"exercises": {"type": "int"}, "sets": {"type": "int"}}},
+  "@schedCounts": {
+    "placeholders": {
+      "exercises": {
+        "type": "int"
+      },
+      "sets": {
+        "type": "int"
+      }
+    }
+  },
   "schedMoreExercises": "외 {n}개",
-  "@schedMoreExercises": {"placeholders": {"n": {"type": "int"}}},
+  "@schedMoreExercises": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "schedStart": "시작",
   "schedResume": "이어서",
   "schedMenuEdit": "수정",
@@ -1906,7 +2310,13 @@
   "schedMenuTooltip": "예정 운동 메뉴",
   "schedDeleteTitle": "예정 운동 삭제",
   "schedDeleteBody": "'{title}' 예정을 삭제할까요? 이미 한 운동 기록은 그대로 남아요.",
-  "@schedDeleteBody": {"placeholders": {"title": {"type": "String"}}},
+  "@schedDeleteBody": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
   "schedActionError": "처리하지 못했어요. 다시 시도해 주세요.",
   "schedStartError": "예정 운동을 시작하지 못했어요",
   "schedViewAll": "모두 보기",
@@ -1921,7 +2331,19 @@
   "schedListPast": "지난 예정",
   "schedListEmpty": "예정한 운동이 없어요. 하루짜리 운동 계획을 만들어 보세요.",
   "schedListDate": "{month}월 {day}일 ({weekday})",
-  "@schedListDate": {"placeholders": {"month": {"type": "int"}, "day": {"type": "int"}, "weekday": {"type": "String"}}},
+  "@schedListDate": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
   "schedEditNewTitle": "예정 운동 만들기",
   "schedEditEditTitle": "예정 운동 수정",
   "schedFieldDate": "날짜",
@@ -1931,7 +2353,13 @@
   "schedAddSet": "세트 추가",
   "schedRestLabel": "휴식 (초)",
   "schedFieldWeight": "무게 ({unit})",
-  "@schedFieldWeight": {"placeholders": {"unit": {"type": "String"}}},
+  "@schedFieldWeight": {
+    "placeholders": {
+      "unit": {
+        "type": "String"
+      }
+    }
+  },
   "schedFieldReps": "횟수",
   "schedFieldRepsMax": "~최대",
   "schedFieldRir": "RIR",
@@ -1950,12 +2378,48 @@
   "schedMoveDown": "아래로",
   "schedPickDate": "날짜 선택",
   "schedTargetRir": "RIR {n}",
-  "@schedTargetRir": {"placeholders": {"n": {"type": "int"}}},
+  "@schedTargetRir": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "calendarScheduledHeading": "예정 운동",
   "calendarScheduledDay": "예정 운동 있음",
   "homePlanLoadError": "계획을 불러오지 못했어요",
   "homeRetry": "다시 시도",
   "sessionErrLoadFailed": "세션을 불러오지 못했어요",
   "sessionErrRetry": "다시 시도",
-  "sessionErrHome": "홈으로"
+  "sessionErrHome": "홈으로",
+  "calendarWeekTitle": "{month}월 {week}주 · {days}회 운동",
+  "@calendarWeekTitle": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "week": {
+        "type": "int"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarPrevWeek": "이전 주",
+  "calendarNextWeek": "다음 주",
+  "calendarExpand": "달력 펼치기",
+  "calendarCollapse": "달력 접기",
+  "calendarFilterChip": "{month}월 {day}일 기록만 보기",
+  "@calendarFilterChip": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      }
+    }
+  },
+  "calendarFilterClear": "날짜 필터 해제"
 }

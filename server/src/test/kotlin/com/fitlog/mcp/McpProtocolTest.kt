@@ -38,7 +38,7 @@ class McpProtocolTest {
     private val readTools = listOf(
         "get_profile", "search_exercises", "list_programs", "get_program", "validate_program", "list_program_instances",
         "get_plan", "list_sessions", "get_session", "get_exercise_records", "get_exercise_progress", "get_training_summary", "get_body_measurements",
-        "list_deletion_requests", "list_scheduled_workouts",
+        "list_deletion_requests", "list_scheduled_workouts", "search", "fetch",
     )
     private val writeTools = listOf(
         "import_bundle", "create_program", "start_program", "log_session", "log_body_weight", "create_exercise",
@@ -95,21 +95,27 @@ class McpProtocolTest {
     }
 
     @Test
-    fun session_header_is_required_and_checked() = a2Test {
+    fun session_header_is_optional_and_stale_sessions_are_served() = a2Test {
         val c = plainClient()
         val conn = c.connect()
         val sid = c.mcpInit(conn.access)
         val ping = """{"jsonrpc":"2.0","id":5,"method":"ping"}"""
         assertEquals(HttpStatusCode.OK, c.mcpPost(conn.access, sid, ping).status)
-        assertEquals(HttpStatusCode.BadRequest, c.mcpPost(conn.access, null, ping).status)
-        assertEquals(HttpStatusCode.NotFound, c.mcpPost(conn.access, "no-such-session", ping).status)
-        // 다른 연결의 세션은 쓸 수 없다
+        // 세션 헤더가 없거나 모르는 세션이어도 처리한다(인증은 Bearer 토큰이 한다)
+        assertEquals(HttpStatusCode.OK, c.mcpPost(conn.access, null, ping).status)
+        assertEquals(HttpStatusCode.OK, c.mcpPost(conn.access, "no-such-session", ping).status)
+        // 다른 연결의 세션도 처리한다
         val other = c.connect()
-        assertEquals(HttpStatusCode.NotFound, c.mcpPost(other.access, sid, ping).status)
-        // 종료
+        assertEquals(HttpStatusCode.OK, c.mcpPost(other.access, sid, ping).status)
+        // 종료: 검증되는 세션만 200, 닫은 뒤에도 같은 세션 ID 는 계속 처리된다
         val del = c.delete("/mcp") { header(HttpHeaders.Authorization, "Bearer ${conn.access}"); header("Mcp-Session-Id", sid) }
         assertEquals(HttpStatusCode.OK, del.status)
-        assertEquals(HttpStatusCode.NotFound, c.mcpPost(conn.access, sid, ping).status)
+        assertEquals(HttpStatusCode.OK, c.mcpPost(conn.access, sid, ping).status)
+        val delBad = c.delete("/mcp") { header(HttpHeaders.Authorization, "Bearer ${conn.access}"); header("Mcp-Session-Id", "nope") }
+        assertEquals(HttpStatusCode.NotFound, delBad.status)
+        // 세션 없이 tools/list, tools/call 도 된다
+        assertEquals(HttpStatusCode.OK, c.mcpPost(conn.access, null, """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""").status)
+        assertNotNull(c.mcpCall(conn.access, "stale", "get_profile")["result"])
     }
 
     @Test
@@ -144,12 +150,12 @@ class McpProtocolTest {
     }
 
     @Test
-    fun tools_list_has_25_tools_with_schemas_and_annotations() = a2Test {
+    fun tools_list_has_27_tools_with_schemas_and_annotations() = a2Test {
         val c = plainClient()
         val conn = c.connect()
         val sid = c.mcpInit(conn.access)
         val tools = c.mcpPost(conn.access, sid, """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""").json().result()["tools"]!!.jsonArray
-        assertEquals(25, tools.size)
+        assertEquals(27, tools.size)
         assertEquals((readTools + writeTools).toSet(), tools.map { it.jsonObject["name"]!!.jsonPrimitive.content }.toSet())
         for (t in tools.map { it.jsonObject }) {
             val name = t["name"]!!.jsonPrimitive.content
@@ -168,7 +174,7 @@ class McpProtocolTest {
         val ro = c.connect(write = false)
         val roSid = c.mcpInit(ro.access)
         val roTools = c.mcpPost(ro.access, roSid, """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""").json().result()["tools"]!!.jsonArray
-        assertEquals(25, roTools.size)
+        assertEquals(27, roTools.size)
     }
 
     @Test

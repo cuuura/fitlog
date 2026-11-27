@@ -1,7 +1,6 @@
 import 'package:fitlog/core/api/dto.dart';
 import 'package:fitlog/core/routes.dart';
 import 'package:fitlog/features/calendar/calendar_logic.dart';
-import 'package:fitlog/features/calendar/month_calendar.dart';
 import 'package:fitlog/features/calendar/week_strip.dart';
 import 'package:fitlog/features/history/history_page.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,7 +9,8 @@ import 'package:material_ui/material_ui.dart';
 
 import '../b2/harness.dart';
 
-SessionSummary sum(String id, DateTime localStart, {DateTime? ended}) => SessionSummary(
+SessionSummary sum(String id, DateTime localStart, {DateTime? ended}) =>
+    SessionSummary(
       id: id,
       startedAt: localStart.toUtc(),
       endedAt: ended ?? localStart.add(const Duration(hours: 1)).toUtc(),
@@ -49,7 +49,13 @@ void main() {
       final early = sum('a', DateTime(2026, 11, 26, 0, 10));
       final next = sum('c', DateTime(2026, 11, 27, 0, 5));
       final active = SessionSummary(
-          id: 'x', startedAt: DateTime(2026, 11, 20, 10).toUtc(), tz: 'Asia/Seoul', exerciseCount: 0, setCount: 0, totalVolumeKg: 0);
+        id: 'x',
+        startedAt: DateTime(2026, 11, 20, 10).toUtc(),
+        tz: 'Asia/Seoul',
+        exerciseCount: 0,
+        setCount: 0,
+        totalVolumeKg: 0,
+      );
       final m = byLocalDay([late, early, next, active]);
       expect(m.keys.toSet(), {DateTime(2026, 11, 26), DateTime(2026, 11, 27)});
       expect(m[DateTime(2026, 11, 26)]!.map((e) => e.id), ['a', 'b']);
@@ -88,63 +94,154 @@ void main() {
 
     testWidgets('week strip tap opens history calendar', (tester) async {
       final h = Harness(start: DateTime(2026, 11, 26, 9).toUtc());
-      await h.pump(tester, extraRoutes: [
-        GoRoute(path: Routes.history, builder: (_, _) => const HistoryPage()),
-      ]);
+      await h.pump(
+        tester,
+        extraRoutes: [
+          GoRoute(path: Routes.history, builder: (_, _) => const HistoryPage()),
+        ],
+      );
       await tester.tap(find.byType(WeekStrip));
       await tester.pump(const Duration(milliseconds: 300));
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.byKey(const Key('month-calendar')), findsOneWidget);
     });
 
-    testWidgets('history toggle list/calendar, list default', (tester) async {
+    Future<Harness> openHistory(
+      WidgetTester tester, {
+      List<DateTime> at = const [],
+    }) async {
       final h = Harness(start: DateTime(2026, 11, 26, 9).toUtc());
-      await h.pump(tester, initial: Routes.history, extraRoutes: [
-        GoRoute(path: Routes.history, builder: (_, _) => const HistoryPage()),
-      ]);
+      for (final d in at) {
+        await done(h, d);
+      }
+      h.now = DateTime(2026, 11, 26, 9).toUtc();
+      await h.pump(
+        tester,
+        initial: Routes.history,
+        extraRoutes: [
+          GoRoute(path: Routes.history, builder: (_, _) => const HistoryPage()),
+        ],
+      );
+      return h;
+    }
+
+    Future<void> settle(WidgetTester tester) async {
+      await tester.pump(const Duration(milliseconds: 250));
+      await tester.pump(const Duration(milliseconds: 250));
+    }
+
+    testWidgets('history starts collapsed as week view, no toggle', (
+      tester,
+    ) async {
+      await openHistory(
+        tester,
+        at: [DateTime(2026, 11, 24, 10), DateTime(2026, 11, 18, 10)],
+      );
+      expect(find.byKey(const Key('week-calendar')), findsOneWidget);
       expect(find.byKey(const Key('month-calendar')), findsNothing);
-      expect(find.byKey(const Key('history-empty')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('history-view-calendar')));
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.byKey(const Key('month-calendar')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('history-view-list')));
-      await tester.pump(const Duration(milliseconds: 300));
-      expect(find.byKey(const Key('month-calendar')), findsNothing);
+      expect(find.byKey(const Key('history-view-calendar')), findsNothing);
+      expect(find.text('11월 4주 · 1회 운동'), findsOneWidget);
+      expect(find.byKey(const Key('week-dot-2026-11-24')), findsOneWidget);
+      expect(find.byKey(const Key('week-dot-2026-11-18')), findsNothing);
+      // 목록은 아래에 항상 보인다.
+      expect(find.byKey(const Key('history-list')), findsOneWidget);
+      expect(find.byKey(const Key('month-2026-11')), findsOneWidget);
     });
 
-    testWidgets('month calendar dots, navigation, day selection', (tester) async {
-      final h = Harness(start: DateTime(2026, 11, 26, 9).toUtc());
-      final id = await done(h, DateTime(2026, 11, 24, 10));
-      await done(h, DateTime(2026, 10, 28, 10)); // 앞쪽 인접 달 칸
-      await done(h, DateTime(2026, 12, 3, 10));
-      h.now = DateTime(2026, 11, 26, 9).toUtc();
-      await h.pump(tester, extraRoutes: [
-        GoRoute(path: '/cal', builder: (_, _) => const Scaffold(body: MonthCalendar())),
-      ], initial: '/cal');
+    testWidgets('expand by button, collapse back', (tester) async {
+      await openHistory(
+        tester,
+        at: [DateTime(2026, 11, 24, 10), DateTime(2026, 10, 28, 10)],
+      );
+      await tester.tap(find.byKey(const Key('history-cal-expand')));
+      await settle(tester);
+      expect(find.byKey(const Key('month-calendar')), findsOneWidget);
+      expect(find.byKey(const Key('week-calendar')), findsNothing);
       expect(find.text('2026년 11월 · 1일 운동'), findsOneWidget);
       expect(find.byKey(const Key('cal-dot-2026-11-24')), findsOneWidget);
       expect(find.byKey(const Key('cal-dot-2026-10-28')), findsOneWidget);
-      expect(find.byKey(const Key('cal-dot-2026-11-25')), findsNothing);
-      // 오늘(운동 없음) 선택 상태
-      expect(find.byKey(const Key('cal-empty')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('cal-day-2026-11-24')));
-      await tester.pump();
-      expect(find.byKey(Key('cal-session-$id')), findsOneWidget);
-      expect(find.byKey(const Key('cal-empty')), findsNothing);
-      await tester.tap(find.byKey(const Key('cal-day-2026-11-25')));
-      await tester.pump();
-      expect(find.text('이 날은 운동 기록이 없어요'), findsOneWidget);
+      expect(find.byTooltip('달력 접기'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('history-cal-expand')));
+      await settle(tester);
+      expect(find.byKey(const Key('week-calendar')), findsOneWidget);
+      expect(find.byKey(const Key('month-calendar')), findsNothing);
+    });
+
+    testWidgets('expand by tapping the header title', (tester) async {
+      await openHistory(tester);
+      await tester.tap(find.byKey(const Key('cal-title')));
+      await settle(tester);
+      expect(find.byKey(const Key('month-calendar')), findsOneWidget);
+    });
+
+    testWidgets('week and month navigation', (tester) async {
+      await openHistory(
+        tester,
+        at: [DateTime(2026, 11, 18, 10), DateTime(2026, 12, 3, 10)],
+      );
+      await tester.tap(find.byKey(const Key('cal-prev')));
+      await settle(tester);
+      expect(find.text('11월 3주 · 1회 운동'), findsOneWidget);
+      expect(find.byKey(const Key('week-dot-2026-11-18')), findsOneWidget);
       await tester.tap(find.byKey(const Key('cal-next')));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump(const Duration(milliseconds: 200));
+      await tester.tap(find.byKey(const Key('cal-next')));
+      await settle(tester);
+      expect(find.text('12월 1주 · 1회 운동'), findsOneWidget);
+      expect(find.byKey(const Key('week-dot-2026-12-03')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('history-cal-expand')));
+      await settle(tester);
       expect(find.text('2026년 12월 · 1일 운동'), findsOneWidget);
-      expect(find.byKey(const Key('cal-dot-2026-12-03')), findsOneWidget);
       await tester.tap(find.byKey(const Key('cal-prev')));
-      await tester.pump();
+      await settle(tester);
+      expect(find.text('2026년 11월 · 1일 운동'), findsOneWidget);
       await tester.tap(find.byKey(const Key('cal-prev')));
-      await tester.pump(const Duration(milliseconds: 200));
-      await tester.pump(const Duration(milliseconds: 200));
-      expect(find.text('2026년 10월 · 1일 운동'), findsOneWidget);
+      await settle(tester);
+      expect(find.text('2026년 10월 · 0일 운동'), findsOneWidget);
+    });
+
+    for (final expand in [false, true]) {
+      testWidgets('day tap filters list, chip clears (expanded=$expand)', (
+        tester,
+      ) async {
+        final h = await openHistory(
+          tester,
+          at: [DateTime(2026, 11, 24, 10), DateTime(2026, 11, 25, 10)],
+        );
+        final all = await h.sessions.watchRecentSessions(limit: 10).first;
+        expect(all.length, 2);
+        if (expand) {
+          await tester.tap(find.byKey(const Key('history-cal-expand')));
+          await settle(tester);
+        }
+        for (final s in all) {
+          expect(find.byKey(Key('history-${s.id}')), findsOneWidget);
+        }
+        await tester.tap(find.byKey(const Key('cal-day-2026-11-24')));
+        await settle(tester);
+        expect(find.byKey(const Key('history-day-chip')), findsOneWidget);
+        expect(find.text('11월 24일 기록만 보기'), findsOneWidget);
+        expect(find.byKey(const Key('history-day-chip')), findsOneWidget);
+        final shown = all
+            .where(
+              (s) => find.byKey(Key('history-${s.id}')).evaluate().isNotEmpty,
+            )
+            .toList();
+        expect(shown.length, 1);
+        await tester.tap(find.byKey(const Key('history-day-chip')));
+        await settle(tester);
+        expect(find.byKey(const Key('history-day-chip')), findsNothing);
+        for (final s in all) {
+          expect(find.byKey(Key('history-${s.id}')), findsOneWidget);
+        }
+      });
+    }
+
+    testWidgets('day without sessions shows empty message', (tester) async {
+      await openHistory(tester, at: [DateTime(2026, 11, 24, 10)]);
+      await tester.tap(find.byKey(const Key('cal-day-2026-11-25')));
+      await settle(tester);
+      expect(find.text('이 날은 운동 기록이 없어요'), findsOneWidget);
+      expect(find.byKey(const Key('month-2026-11')), findsNothing);
     });
 
     for (final dark in [false, true]) {
@@ -152,14 +249,29 @@ void main() {
         final h = Harness(start: DateTime(2026, 11, 26, 9).toUtc());
         await done(h, DateTime(2026, 11, 24, 10));
         h.now = DateTime(2026, 11, 26, 9).toUtc();
-        await h.pump(tester, initial: Routes.history, extraRoutes: [
-          GoRoute(path: Routes.history, builder: (_, _) => const HistoryPage()),
-        ]);
+        await h.pump(
+          tester,
+          initial: Routes.history,
+          extraRoutes: [
+            GoRoute(
+              path: Routes.history,
+              builder: (_, _) => const HistoryPage(),
+            ),
+          ],
+        );
         tester.view.physicalSize = const Size(320, 640);
         tester.platformDispatcher.textScaleFactorTestValue = 2.0;
-        if (dark) tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+        if (dark) {
+          tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+        }
         addTearDown(tester.platformDispatcher.clearAllTestValues);
-        await tester.tap(find.byKey(const Key('history-view-calendar')));
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.byKey(const Key('history-cal-expand')));
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pump(const Duration(milliseconds: 300));
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.byKey(const Key('cal-day-2026-11-24')));
         await tester.pump(const Duration(milliseconds: 300));
         expect(tester.takeException(), isNull);
       });

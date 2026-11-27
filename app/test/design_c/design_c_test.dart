@@ -142,7 +142,7 @@ void main() {
       await h.pump(tester, '/history');
       await tester.pump(const Duration(milliseconds: 100));
       expect(find.byKey(Key('history-day-${s.id}')), findsOneWidget);
-      expect(find.text('15'), findsOneWidget);
+      expect((tester.widget(find.byKey(Key('history-day-${s.id}'))) as Text).data, '15');
       expect(find.text('자유 운동'), findsOneWidget);
       expect(find.text('스쿼트 · 벤치 프레스 외 1'), findsOneWidget);
       expect(find.byKey(Key('history-volume-${s.id}')), findsOneWidget);
