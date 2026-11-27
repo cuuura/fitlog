@@ -127,6 +127,7 @@ class _Env {
     programs
       ..programs['p-tpl'] = _prog('p-tpl', '템플릿 5x5')
       ..programs['p-mine'] = _prog('p-mine', '내 루틴', builtIn: false)
+      ..programs['p-opt'] = _prog('p-opt', '더블')
       ..programs['p-noday'] = _prog('p-noday', '요일 없음', weekdays: false)
       ..suggestions['p-tpl'] = const [
         SuggestItem(
@@ -138,6 +139,10 @@ class _Env {
           suggestedKg: 100,
         ),
         SuggestItem(key: 'bench', exerciseId: 'ex-bench', needs: SuggestNeeds.WORKING),
+      ]
+      ..suggestions['p-opt'] = const [
+        SuggestItem(key: 'squat', exerciseId: 'ex-squat', needs: SuggestNeeds.WORKING, optional: true),
+        SuggestItem(key: 'bench', exerciseId: 'ex-bench', needs: SuggestNeeds.TM, suggestedKg: 80),
       ]
       ..suggestions['p-noday'] = const [];
     cache = MemoryPlanCache(programs);
@@ -291,6 +296,19 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('start-WORKING:bench')), '60');
       await tester.pump();
       expect(btn().onPressed, isNotNull);
+    });
+
+    testWidgets('optional 칸은 비워도 시작되고 요청에서 빠진다', (tester) async {
+      final env = _Env();
+      await env.pump(tester, Routes.programStart('p-opt'));
+      expect(find.text('비워두면 첫 운동 기록으로 정합니다'), findsOneWidget);
+      FilledButton btn() => tester.widget<FilledButton>(find.widgetWithText(FilledButton, '이 프로그램 시작'));
+      expect(btn().onPressed, isNotNull);
+      await tester.tap(find.text('이 프로그램 시작'));
+      await tester.pumpAndSettle();
+      final i = env.programs.instances.values.single;
+      expect(i.state.tm, {'bench': 80});
+      expect(i.state.working, isEmpty);
     });
 
     testWidgets('kg로 저장하고 인스턴스 화면으로 이동', (tester) async {

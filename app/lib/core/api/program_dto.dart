@@ -106,6 +106,9 @@ class SuggestItem {
 
   /// null이면 사용자가 입력해야 한다.
   final double? suggestedKg;
+
+  /// v1.1: true면 시작 시 값을 비워둘 수 있다(첫 운동 기록으로 정함).
+  final bool optional;
   const SuggestItem({
     required this.key,
     required this.exerciseId,
@@ -113,6 +116,7 @@ class SuggestItem {
     this.oneRmKg,
     this.oneRmSource,
     this.suggestedKg,
+    this.optional = false,
   });
 
   factory SuggestItem.fromJson(Map<String, Object?> j) => SuggestItem(
@@ -122,6 +126,7 @@ class SuggestItem {
     oneRmKg: _num(j['oneRmKg']),
     oneRmSource: j['oneRmSource'] == null ? null : _enumByName(OneRmSource.values, j['oneRmSource']),
     suggestedKg: _num(j['suggestedKg']),
+    optional: j['optional'] as bool? ?? false,
   );
 }
 
@@ -258,12 +263,20 @@ class PlannedSet {
   final double? targetWeightKg;
   final bool isAmrap;
   final bool isWarmup;
+
+  /// v1.1: 범위 상한(없으면 null).
+  final int? targetRepsMax;
+
+  /// v1.1: 세트 휴식(초). 없으면 null(앱 기본 휴식).
+  final int? restSec;
   const PlannedSet({
     required this.plannedSetKey,
     required this.targetReps,
     this.targetWeightKg,
     required this.isAmrap,
     required this.isWarmup,
+    this.targetRepsMax,
+    this.restSec,
   });
 
   factory PlannedSet.fromJson(Map<String, Object?> j) => PlannedSet(
@@ -272,13 +285,17 @@ class PlannedSet {
     targetWeightKg: _num(j['targetWeightKg']),
     isAmrap: j['isAmrap'] as bool? ?? false,
     isWarmup: j['isWarmup'] as bool? ?? false,
+    targetRepsMax: j['targetRepsMax'] as int?,
+    restSec: j['restSec'] as int?,
   );
   Map<String, Object?> toJson() => {
     'plannedSetKey': plannedSetKey,
     'targetReps': targetReps,
+    'targetRepsMax': ?targetRepsMax,
     'targetWeightKg': ?targetWeightKg,
     'isAmrap': isAmrap,
     'isWarmup': isWarmup,
+    'restSec': ?restSec,
   };
 }
 

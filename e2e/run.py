@@ -809,6 +809,37 @@ def c_app_flow(R):
         return f"스쿼트 100 → {inst['state']['working']['squat']}"
     R.run("app.record_session_put_and_progression", record_session)
 
+    def double_progression():
+        # v1.1: DOUBLE 규칙 프로그램을 working 없이 시작 → 세션 기록으로 무게 확정 → 계획에 반영
+        name = f"E2E 더블 {secrets.token_hex(3)}"
+        defn = {"schemaVersion": 1, "name": name,
+                "lifts": {"press": {"exercise": {"id": R.need("squat_id")}}},
+                "progression": {"press": {"type": "DOUBLE", "incrementKg": 2.5}},
+                "days": [{"key": "A", "name": "더블", "exercises": [
+                    {"lift": "press", "restSec": 90,
+                     "sets": [{"count": 3, "reps": 8, "repsMax": 12, "load": {"type": "WORKING"}}]}]}]}
+        pid = str(uuid.uuid4())
+        r = api(R, "POST", "/v1/programs", tok(), {"id": pid, "definition": defn})
+        expect_status(r, (200, 201), "DOUBLE 프로그램 저장")
+        iid = str(uuid.uuid4())
+        r = api(R, "POST", "/v1/program-instances", tok(), {"id": iid, "programId": pid, "startDate": datetime.now().strftime("%Y-%m-%d"),
+                                                             "tz": "Asia/Seoul", "tm": {}, "working": {}})
+        expect_status(r, 201, "working 없이 시작(DOUBLE 은 선택)")
+        p0 = api(R, "GET", f"/v1/program-instances/{iid}/plan?count=1", tok()).json()[0]
+        sets0 = p0["exercises"][0]["sets"]
+        expect(all(x["targetWeightKg"] is None and x["targetReps"] == 8 and x.get("targetRepsMax") == 12 and x.get("restSec") == 90 for x in sets0),
+               f"첫 계획에 무게 없음·8~12·휴식 90 기대: {sets0}")
+        s = plan_to_session(p0, instance_id=iid)
+        for e in s["exercises"]:
+            for st in e["sets"]:
+                st["weightKg"], st["reps"] = 40.0, 10
+        expect_status(api(R, "PUT", f"/v1/sessions/{s['id']}", tok(), s), (200, 201), "DOUBLE 세션 저장")
+        inst = api(R, "GET", f"/v1/program-instances/{iid}", tok()).json()
+        expect(inst["state"]["working"].get("press") == 40.0, f"첫 기록의 최소 무게로 working 확정 기대: {inst['state']['working']}")
+        p1 = api(R, "GET", f"/v1/program-instances/{iid}/plan?count=1", tok()).json()[0]
+        expect(all(x["targetWeightKg"] == 40.0 for x in p1["exercises"][0]["sets"]), "다음 계획 무게가 40 이어야 함")
+    R.run("app.double_progression_without_start_weight", double_progression)
+
     def sync_flow():
         # 오프라인으로 쌓은 운동을 sync push 로 올린다(앱 동기화)
         squat = R.need("squat_id")

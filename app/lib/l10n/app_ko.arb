@@ -1961,6 +1961,7 @@
   "progStartCta": "이 프로그램 시작",
   "progStartTmField": "TM",
   "progStartWorkingField": "작업",
+  "progStartOptionalHint": "비워두면 첫 운동 기록으로 정합니다",
   "histMonthStats": "세션 {count}회 · {volume}",
   "@histMonthStats": {
     "placeholders": {

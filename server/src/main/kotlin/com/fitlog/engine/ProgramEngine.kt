@@ -30,8 +30,16 @@ object ProgramEngine : ProgramCalculator {
         return result
     }
 
+    override fun optionalInputs(program: ProgramDefinition): Set<String> {
+        val required = requiredInputs(program)
+        return program.progression.filter { it.value is Rule.Double }.keys
+            .map { stateKey(program, it, null) }.filter { required[it] == Needs.WORKING }.toSet()
+    }
+
     override fun initialState(program: ProgramDefinition, tm: Map<String, Double>, working: Map<String, Double>): ProgramState {
+        val optional = optionalInputs(program)
         for ((key, needs) in requiredInputs(program)) {
+            if (key in optional) continue
             val ok = if (needs == Needs.TM) tm.containsKey(key) else working.containsKey(key)
             require(ok) { "missing ${needs.name} value for key: $key" }
         }
@@ -64,12 +72,20 @@ object ProgramEngine : ProgramCalculator {
                         exerciseId = x.exerciseId,
                         accessory = x.de.accessory,
                         sets = x.sets.mapIndexed { si, xs ->
-                            PlannedSet("${day.key}.${x.index}.$si", xs.reps, xs.weight, xs.amrap, xs.warmup)
+                            PlannedSet("${day.key}.${x.index}.$si", xs.reps, xs.weight, xs.amrap, xs.warmup, xs.repsMax, xs.restSec)
                         },
                     )
                 },
             )
-            if (i < count - 1) s = apply(program, s, ProgramEvent.Completed(planSeq, assumeAllSuccess(program, day, expanded)), settings)
+            if (i < count - 1) {
+                val next = apply(program, s, ProgramEvent.Completed(planSeq, assumeAllSuccess(program, day, expanded)), settings)
+                // DOUBLE 키는 "모두 성공" 가정에서 무게 유지(범위 안 가정)
+                val keys = program.progression.filter { it.value is Rule.Double }.keys
+                s = if (keys.isEmpty()) next else next.copy(
+                    working = next.working.filterKeys { it !in keys } + s.working.filterKeys { it in keys },
+                    failStreak = next.failStreak.filterKeys { it !in keys } + s.failStreak.filterKeys { it in keys },
+                )
+            }
         }
         return out
     }
@@ -94,31 +110,36 @@ object ProgramEngine : ProgramCalculator {
 
     // ------------------------------------------------------------ 세트 펼치기
 
-    private class XSet(val reps: Int, val amrap: Boolean, val warmup: Boolean, val weight: Double?)
+    private class XSet(val reps: Int, val amrap: Boolean, val warmup: Boolean, val weight: Double?, val repsMax: Int? = null, val restSec: Int? = null)
     private class XEx(val de: DayExercise, val index: Int, val exerciseId: String, val sets: List<XSet>)
 
     private fun expandDay(p: ProgramDefinition, s: ProgramState, day: Day, settings: EngineSettings): List<XEx> =
-        day.exercises.mapIndexed { ei, de ->
+        day.exercises.mapIndexedNotNull { ei, de ->
             val exerciseId = requireNotNull(p.lifts[de.lift]?.exercise?.id) { "lift has no exercise id: ${de.lift}" }
             val stageRule = p.progression[de.lift] as? Rule.Stages
             val sets = ArrayList<XSet>()
             var stageDone = false
             for (spec in de.sets) {
                 val weekly = spec.weekly?.getOrNull(s.week - 1)
+                if (weekly?.skip == true) continue
                 val load = overrideValue(spec.load, weekly?.value)
+                val addKg = weekly?.addKg ?: 0.0
+                val rest = spec.restSec ?: de.restSec
                 if (stageRule != null && !spec.warmup) {
                     if (stageDone) continue
                     stageDone = true
                     val idx = (s.stage[de.lift] ?: 0).coerceIn(0, stageRule.stages.lastIndex)
                     val st = stageRule.stages[idx]
-                    val w = weightOf(p, s, de, load, exerciseId, settings)
-                    repeat(st.sets) { n -> sets += XSet(st.reps, st.lastAmrap && n == st.sets - 1, false, w) }
+                    val w = weightOf(p, s, de, load, exerciseId, settings, addKg)
+                    repeat(st.sets) { n -> sets += XSet(st.reps, st.lastAmrap && n == st.sets - 1, false, w, null, rest) }
                 } else {
-                    val w = weightOf(p, s, de, load, exerciseId, settings)
-                    repeat(spec.count) { sets += XSet(weekly?.reps ?: spec.reps, weekly?.amrap ?: spec.amrap, spec.warmup, w) }
+                    val w = weightOf(p, s, de, load, exerciseId, settings, addKg)
+                    val amrap = weekly?.amrap ?: spec.amrap
+                    val repsMax = (weekly?.repsMax ?: spec.repsMax)?.takeIf { !amrap }
+                    repeat(weekly?.count ?: spec.count) { sets += XSet(weekly?.reps ?: spec.reps, amrap, spec.warmup, w, repsMax, rest) }
                 }
             }
-            XEx(de, ei, exerciseId, sets)
+            if (sets.isEmpty()) null else XEx(de, ei, exerciseId, sets)
         }
 
     private fun overrideValue(load: Load, value: Double?): Load = when {
@@ -128,20 +149,21 @@ object ProgramEngine : ProgramCalculator {
         else -> load
     }
 
-    private fun weightOf(p: ProgramDefinition, s: ProgramState, de: DayExercise, load: Load, exerciseId: String, settings: EngineSettings): Double? {
+    private fun weightOf(p: ProgramDefinition, s: ProgramState, de: DayExercise, load: Load, exerciseId: String, settings: EngineSettings, addKg: Double = 0.0): Double? {
         val barbell = exerciseId in settings.barbellExerciseIds
         return when (load) {
             is Load.PercentTm -> {
                 val key = stateKey(p, de.lift, load.of)
                 val base = checkNotNull(s.tm[key]) { "missing tm for key: $key" }
-                roundWeight(base * load.value, p.roundingKg, p.barKg, barbell)
+                roundWeight(base * load.value + addKg, p.roundingKg, p.barKg, barbell)
             }
             is Load.Working -> {
                 val key = stateKey(p, de.lift, load.of)
-                val base = checkNotNull(s.working[key]) { "missing working for key: $key" }
-                roundWeight(base * load.value, p.roundingKg, p.barKg, barbell)
+                val base = s.working[key]
+                    ?: if (p.progression[key] is Rule.Double) return null else error("missing working for key: $key")
+                roundWeight(base * load.value + addKg, p.roundingKg, p.barKg, barbell)
             }
-            is Load.Fixed -> load.kg
+            is Load.Fixed -> load.kg + addKg
             Load.Bodyweight -> 0.0
             Load.NoLoad -> null
         }
@@ -205,6 +227,12 @@ object ProgramEngine : ProgramCalculator {
             if (ps.isWarmup) continue
             performed.merge(key, ps.reps ?: 0, ::maxOf)
         }
+        val weights = HashMap<String, Double>()
+        for (pe in event.exercises) for (ps in pe.sets) {
+            val key = ps.plannedSetKey ?: continue
+            if (ps.isWarmup) continue
+            ps.weightKg?.let { weights[key] = it }
+        }
         fun repsOf(x: XEx, si: Int): Int = performed["${day.key}.${x.index}.$si"] ?: 0
         fun setOk(x: XEx, si: Int): Boolean = repsOf(x, si) >= x.sets[si].reps
         fun allOk(xs: List<XEx>): Boolean = xs.all { x -> x.sets.indices.all { si -> x.sets[si].warmup || setOk(x, si) } }
@@ -227,6 +255,24 @@ object ProgramEngine : ProgramCalculator {
                             m.failStreak[key] = 0
                         } else m.failStreak[key] = fs
                     }
+                }
+                is Rule.Double -> {
+                    val judged = xs.flatMap { x -> x.sets.indices.filter { !x.sets[it].warmup }.map { x to it } }
+                    if (judged.isEmpty()) continue
+                    val w = m.working[key] ?: judged
+                        .mapNotNull { (x, si) -> weights["${day.key}.${x.index}.$si"]?.takeIf { it > 0.0 } }
+                        .minOrNull()?.let { r2(it) } ?: continue
+                    m.working[key] = w
+                    if (judged.all { (x, si) -> repsOf(x, si) >= (x.sets[si].repsMax ?: x.sets[si].reps) }) {
+                        m.working[key] = r2(w + rule.incrementKg)
+                        m.failStreak[key] = 0
+                    } else if (judged.any { (x, si) -> repsOf(x, si) < x.sets[si].reps }) {
+                        val fs = (m.failStreak[key] ?: 0) + 1
+                        if (fs >= rule.failuresBeforeDeload) {
+                            m.working[key] = r2(w * (1 - rule.deloadPercent))
+                            m.failStreak[key] = 0
+                        } else m.failStreak[key] = fs
+                    } else m.failStreak[key] = 0
                 }
                 is Rule.Stages -> {
                     val w = m.working[key] ?: continue

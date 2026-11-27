@@ -9,7 +9,10 @@
 - 무게는 kg(내 표시 단위는 {UNIT}이지만 저장은 kg), 덤벨은 한쪽 무게. 시각은 시간대 포함 ISO-8601, 내 시간대는 {TZ}, 오늘은 {TODAY}.
 - 종목은 {"name": "벤치프레스"}처럼 한국어나 영어 이름으로 적어도 된다. 없는 종목이면 exercises 배열에 nameKo·type·primaryMuscle을 함께 넣는다.
 - id는 넣지 않는다.
-- 프로그램의 증량 규칙은 LINEAR, AMRAP_TABLE, CYCLE, STAGES, NONE 중에서 고른다.
+- 프로그램의 증량 규칙은 LINEAR, AMRAP_TABLE, CYCLE, STAGES, DOUBLE, NONE 중에서 고른다.
+- 반복 범위는 세트에 {"reps": 8, "repsMax": 12}(reps가 하한, AMRAP과는 같이 못 씀). 세트 뒤 휴식은 세트나 종목에 "restSec"(초).
+- 더블 프로그레션: {"type": "DOUBLE", "incrementKg": 2.5}. 모든 세트가 repsMax에 닿으면 증량, 하한 미달이면 실패로 센다. 시작 무게는 비워도 된다.
+- 주차별로 세트를 바꾸려면 세트의 weekly 배열에 {"count": 4, "addKg": 5, "reps": 5, "repsMax": 8}처럼 쓰고, 그 주에 그 세트를 빼려면 {"skip": true}.
 
 내 요청:
 ```

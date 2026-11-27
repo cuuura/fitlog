@@ -243,6 +243,8 @@ class MemorySessionRepository implements SessionRepository {
                     targetReps: plan.exercises[ei].sets[si].targetReps,
                     targetWeightKg: plan.exercises[ei].sets[si].targetWeightKg,
                     isAmrap: plan.exercises[ei].sets[si].isAmrap,
+                    targetRepsMax: plan.exercises[ei].sets[si].targetRepsMax,
+                    targetRestSec: plan.exercises[ei].sets[si].restSec,
                   ),
               ],
             ),

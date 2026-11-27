@@ -1889,6 +1889,7 @@
   "progStartCta": "Start this program",
   "progStartTmField": "TM",
   "progStartWorkingField": "Work",
+  "progStartOptionalHint": "Leave blank to set it from your first workout",
   "histMonthStats": "{count} sessions · {volume}",
   "@histMonthStats": {
     "placeholders": {

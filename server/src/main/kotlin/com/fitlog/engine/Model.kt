@@ -50,7 +50,15 @@ sealed interface Load {
 }
 
 @Serializable
-data class WeeklyOverride(val reps: Int? = null, val amrap: Boolean? = null, val value: Double? = null)
+data class WeeklyOverride(
+    val reps: Int? = null,
+    val amrap: Boolean? = null,
+    val value: Double? = null,
+    val repsMax: Int? = null,
+    val count: Int? = null,
+    val addKg: Double? = null,
+    val skip: Boolean? = null,
+)
 
 @Serializable
 data class SetSpec(
@@ -60,6 +68,8 @@ data class SetSpec(
     val warmup: Boolean = false,
     val load: Load,
     val weekly: List<WeeklyOverride>? = null,
+    val repsMax: Int? = null,
+    val restSec: Int? = null,
 )
 
 @Serializable
@@ -69,6 +79,7 @@ data class DayExercise(
     val amrapSet: Int? = null,
     val sets: List<SetSpec>,
     val countsForProgression: Boolean = true,
+    val restSec: Int? = null,
 )
 
 @Serializable
@@ -83,21 +94,24 @@ data class Stage(val sets: Int, val reps: Int, val lastAmrap: Boolean = false)
 @Serializable
 sealed interface Rule {
     @Serializable @SerialName("LINEAR")
-    data class Linear(val incrementKg: Double, val failuresBeforeDeload: Int = 3, val deloadPercent: Double = 0.1) : Rule
+    data class Linear(val incrementKg: kotlin.Double, val failuresBeforeDeload: Int = 3, val deloadPercent: kotlin.Double = 0.1) : Rule
 
     @Serializable @SerialName("AMRAP_TABLE")
     data class AmrapTable(
         val table: List<TableRow>,
         val applyAt: ApplyAt = ApplyAt.WEEK_END,
         val failuresBeforeDeload: Int = 2,
-        val deloadPercent: Double = 0.1,
+        val deloadPercent: kotlin.Double = 0.1,
     ) : Rule
 
     @Serializable @SerialName("CYCLE")
-    data class Cycle(val incrementKg: Double, val deloadPercent: Double = 0.1) : Rule
+    data class Cycle(val incrementKg: kotlin.Double, val deloadPercent: kotlin.Double = 0.1) : Rule
 
     @Serializable @SerialName("STAGES")
-    data class Stages(val incrementKg: Double, val stages: List<Stage>, val deloadPercent: Double = 0.15) : Rule
+    data class Stages(val incrementKg: kotlin.Double, val stages: List<Stage>, val deloadPercent: kotlin.Double = 0.15) : Rule
+
+    @Serializable @SerialName("DOUBLE")
+    data class Double(val incrementKg: kotlin.Double, val failuresBeforeDeload: Int = 3, val deloadPercent: kotlin.Double = 0.1) : Rule
 
     @Serializable @SerialName("NONE")
     data object NoRule : Rule
@@ -162,6 +176,8 @@ data class PlannedSet(
     val targetWeightKg: Double? = null,
     val isAmrap: Boolean,
     val isWarmup: Boolean,
+    val targetRepsMax: Int? = null,
+    val restSec: Int? = null,
 )
 
 @Serializable

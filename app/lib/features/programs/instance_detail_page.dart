@@ -13,6 +13,7 @@ import '../../core/theme.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../session/current_set.dart' show repsRangeText;
 import '../session/start_program_flow.dart';
 import 'program_common.dart';
 import 'programs_providers.dart';
@@ -391,11 +392,12 @@ class _Body extends ConsumerWidget {
     if (sets.isEmpty) return '';
     final w0 = sets.first.targetWeightKg;
     final r0 = sets.first.targetReps;
-    final uniform = sets.every((s) => s.targetWeightKg == w0 && s.targetReps == r0 && !s.isAmrap);
+    final m0 = sets.first.targetRepsMax;
+    final uniform = sets.every((s) => s.targetWeightKg == w0 && s.targetReps == r0 && s.targetRepsMax == m0 && !s.isAmrap);
     final weight = w0 == null ? '' : '${Units.format(w0, unit)} ';
-    if (uniform) return '$weight${sets.length}×$r0';
+    if (uniform) return '$weight${sets.length}×${repsRangeText(r0, m0)}';
     return sets
-        .map((s) => '${s.targetWeightKg == null ? '' : '${Units.format(s.targetWeightKg!, unit, withUnit: false)}×'}${s.targetReps}${s.isAmrap ? '+' : ''}')
+        .map((s) => '${s.targetWeightKg == null ? '' : '${Units.format(s.targetWeightKg!, unit, withUnit: false)}×'}${s.isAmrap ? '${s.targetReps}+' : repsRangeText(s.targetReps, s.targetRepsMax)}')
         .join(', ');
   }
 }
