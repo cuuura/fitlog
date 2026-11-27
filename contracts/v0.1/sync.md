@@ -23,3 +23,5 @@
 ## 세션 진행 중 규칙
 - 진행 중 세션은 `ended_at = null`. 앱은 한 번에 하나의 진행 중 세션만 연다(v0.1)
 - 앱이 강제 종료돼도 로컬 DB에서 진행 중 세션을 복구해 이어서 기록한다
+
+> v1.0 추가: 대상 엔티티 `scheduled_workout`, 세션 `scheduledWorkoutId`, 세트 `targetRepsMax`·`targetRir`·`targetRestSec`. `../v1.0/scheduled-workout.md` §4.

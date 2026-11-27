@@ -6,6 +6,7 @@ v0.1~v0.3 계약에 **더하는** 계약이다. WP는 이 계약을 바꾸지 �
 | --- | --- | --- |
 | `openapi.yaml` | STA-4 그래프 API(종목 추이, 회차 비교), 공개 페이지(/privacy, /account-deletion) | A1, B1 |
 | `security.md` | Play Integrity 헤더, 서버 모드(off/report/enforce), 호출 제한(429) | A2, B2, B3 |
+| `scheduled-workout.md`, `db/V6__scheduled_workout.sql` | LOG-13 하루짜리 예정 운동: 엔티티·동기화·REST·가져오기(`SCHEDULED_DUPLICATE`)·내보내기·MCP 도구 3개 | SW-A, SW-B, SW-C |
 | `privacy-policy.md` | 개인정보 처리방침 본문. 서버가 빌드 시 읽어 `/privacy` HTML로 렌더링. `{{CONTACT_EMAIL}}` 자리표시자 | A2·A3(렌더링), B2(스토어 등록) |
 
 ## 결정 사항
