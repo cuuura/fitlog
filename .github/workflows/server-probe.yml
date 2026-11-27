@@ -1,0 +1,36 @@
+name: server-probe
+
+# 테스트 서버 공개 엔드포인트 점검(수동 실행). 헬스·OAuth 메타데이터·MCP 401 헤더·동적 등록·인가 페이지를 찍는다.
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "서버 주소(비우면 Variables KEEP_AWAKE_URL 또는 Render 기본값)"
+        required: false
+
+permissions: {}
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      BASE: ${{ inputs.base_url || vars.KEEP_AWAKE_URL || 'https://fitlog-server-3wnw.onrender.com' }}
+    steps:
+      - name: Probe
+        run: |
+          set +e
+          c() { echo "=== $*"; curl -sS -m 90 -D - "$@" | head -c 3000; echo; echo; }
+          c "$BASE/health/ready"
+          c "$BASE/.well-known/oauth-protected-resource"
+          c "$BASE/.well-known/oauth-protected-resource/mcp"
+          c "$BASE/.well-known/oauth-authorization-server"
+          c -X POST "$BASE/mcp" -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"probe","version":"1"}}}'
+          REG=$(curl -sS -m 30 -X POST "$BASE/oauth/register" -H 'content-type: application/json' \
+            -d '{"client_name":"probe","redirect_uris":["https://example.com/cb"],"token_endpoint_auth_method":"none","grant_types":["authorization_code","refresh_token"],"response_types":["code"]}')
+          echo "=== register"; echo "$REG"; echo
+          CID=$(echo "$REG" | python3 -c 'import json,sys;print(json.load(sys.stdin).get("client_id",""))' 2>/dev/null)
+          if [ -n "$CID" ]; then
+            c "$BASE/oauth/authorize?response_type=code&client_id=$CID&redirect_uri=https%3A%2F%2Fexample.com%2Fcb&code_challenge=E9Melhoa2OwvFrEMTJguCHaoeK1t8URWbuGJSstw-cM&code_challenge_method=S256&scope=fitlog.read&state=x&resource=$BASE/mcp"
+          fi
