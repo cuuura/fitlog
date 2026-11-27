@@ -54,7 +54,8 @@ class McpProtocolTest {
         assertEquals(expected, none.headers[HttpHeaders.WWWAuthenticate])
         val bad = c.mcpPost("fla_not-a-token", null, """{"jsonrpc":"2.0","id":1,"method":"ping"}""")
         assertEquals(HttpStatusCode.Unauthorized, bad.status)
-        assertEquals(expected, bad.headers[HttpHeaders.WWWAuthenticate])
+        // 토큰을 보냈는데 거절되면 error="invalid_token" 이 붙는다(RFC 6750)
+        assertEquals(expected.replace("Bearer ", "Bearer error=\"invalid_token\", "), bad.headers[HttpHeaders.WWWAuthenticate])
         val wrongScheme = c.mcpPost(null, null, "{}") // 헤더 없이
         assertEquals(HttpStatusCode.Unauthorized, wrongScheme.status)
     }

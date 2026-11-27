@@ -6,6 +6,7 @@ import com.fitlog.core.ErrorResponse
 import com.fitlog.core.dbQuery
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.withCharset
 import io.ktor.server.application.Application
@@ -16,6 +17,7 @@ import io.ktor.server.plugins.callid.CallId
 import io.ktor.server.plugins.callid.callIdMdc
 import io.ktor.server.plugins.calllogging.CallLogging
 import io.ktor.server.request.contentLength
+import io.ktor.server.request.header
 import io.ktor.server.response.header
 import io.ktor.server.response.respond
 import io.ktor.server.response.respondText
@@ -74,6 +76,29 @@ private val BodyLimit = createApplicationPlugin("BodyLimit", ::BodyLimitConfig) 
     }
 }
 
+/** 브라우저 기반 MCP 클라이언트(Inspector 등)가 직접 호출하는 경로. 쿠키를 쓰지 않는 Bearer 방식이라 와일드카드 허용 */
+internal fun isCrossOriginPath(path: String): Boolean =
+    path == "/mcp" || path.startsWith("/mcp/") || path.startsWith("/.well-known/") ||
+        path == "/oauth/token" || path == "/oauth/register"
+
+/** /mcp·메타데이터·토큰·등록 엔드포인트에 CORS 헤더를 붙이고 OPTIONS 사전 요청에 204 로 답한다 */
+private val McpCors = createApplicationPlugin("McpCors") {
+    onCall { call ->
+        if (!isCrossOriginPath(call.request.local.uri.substringBefore('?'))) return@onCall
+        call.response.header("Access-Control-Allow-Origin", "*")
+        call.response.header("Access-Control-Expose-Headers", "Mcp-Session-Id, WWW-Authenticate")
+        if (call.request.local.method == HttpMethod.Options) {
+            call.response.header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+            call.response.header(
+                "Access-Control-Allow-Headers",
+                call.request.header("Access-Control-Request-Headers") ?: "Authorization, Content-Type, Accept, Mcp-Session-Id, MCP-Protocol-Version",
+            )
+            call.response.header("Access-Control-Max-Age", "86400")
+            call.respond(HttpStatusCode.NoContent)
+        }
+    }
+}
+
 /** A3 소유. CallId(X-Request-Id)·로그, 본문 크기 제한. DB 풀 종료는 main() 의 ApplicationStopped 에서 한다 */
 fun Application.installOps(config: AppConfig) {
     install(CallId) {
@@ -88,5 +113,6 @@ fun Application.installOps(config: AppConfig) {
         // 헬스 체크는 로그에서 뺀다(주기 호출이라 잡음)
         filter { call -> !call.request.local.uri.startsWith("/health") }
     }
+    install(McpCors)
     install(BodyLimit) { maxBytes = config.maxBodyBytes }
 }

@@ -313,7 +313,10 @@ class OAuthFlowTest {
         val refresh2 = r2.json()["refresh_token"]!!.jsonPrimitive.content
         val access2 = r2.json()["access_token"]!!.jsonPrimitive.content
 
-        // 이미 회전된 리프레시를 다시 쓰면 거절 + 계열 전체 폐기
+        // 이미 회전된 리프레시를 유예 시간(60초) 뒤에 다시 쓰면 거절 + 계열 전체 폐기
+        transaction {
+            OAuthTokens.update({ OAuthTokens.tokenHash eq sha256Hex(refresh1) }) { it[revokedAt] = Times.now().minusSeconds(300) }
+        }
         val reuse = refresh(refresh1)
         assertEquals(HttpStatusCode.BadRequest, reuse.status)
         assertEquals("invalid_grant", reuse.json()["error"]!!.jsonPrimitive.content)

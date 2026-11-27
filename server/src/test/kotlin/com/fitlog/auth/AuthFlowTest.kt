@@ -108,10 +108,31 @@ class AuthFlowTest {
         assertEquals(HttpStatusCode.OK, r2.status)
         val rt2 = r2.obj().getValue("refreshToken").jsonPrimitive.content
 
-        // old (already rotated) token reused -> theft detection
+        // old (already rotated) token reused after the grace window -> theft detection
+        transaction {
+            RefreshTokens.update({ RefreshTokens.tokenHash eq RefreshTokenService.hash(rt0) }) {
+                it[revokedAt] = java.time.Instant.now().minusSeconds(300)
+            }
+        }
         assertEquals(HttpStatusCode.Unauthorized, c.refresh(rt0).status)
         // the whole family is dead now, including the newest token
         assertEquals(HttpStatusCode.Unauthorized, c.refresh(rt2).status)
+    }
+
+    @Test
+    fun refreshRetryRightAfterRotationDoesNotLockUserOut() = fitlogTest {
+        val c = jsonClient()
+        val rt0 = c.google("test:${sub()}:g@x.com").obj().getValue("refreshToken").jsonPrimitive.content
+        val r1 = c.refresh(rt0)
+        assertEquals(HttpStatusCode.OK, r1.status)
+        val rt1 = r1.obj().getValue("refreshToken").jsonPrimitive.content
+        // 응답이 유실돼 앱이 같은 옛 토큰으로 곧바로 재시도: 로그아웃되면 안 되고 새 토큰을 받는다
+        val retry = c.refresh(rt0)
+        assertEquals(HttpStatusCode.OK, retry.status)
+        val rt2 = retry.obj().getValue("refreshToken").jsonPrimitive.content
+        assertNotEquals(rt1, rt2)
+        // 앞서 받은 후속 토큰도 그대로 살아 있다
+        assertEquals(HttpStatusCode.OK, c.refresh(rt1).status)
     }
 
     @Test
