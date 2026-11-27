@@ -89,6 +89,8 @@ fun Route.authRoutes(config: AppConfig) {
         AuthTokens(access.issue(userId), refresh, access.ttlSec, isNew)
 
     route("/auth") {
+        passwordAuthRoutes(config)
+
         post("/google") {
             val req = call.receive<GoogleLoginRequest>()
             checkIntegrity(call, config, req.idToken)

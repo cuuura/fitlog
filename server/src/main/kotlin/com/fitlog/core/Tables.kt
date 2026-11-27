@@ -28,6 +28,18 @@ object AppUsers : Table("app_user") {
     override val primaryKey = PrimaryKey(id)
 }
 
+/** 아이디·비밀번호 로그인 자격(V5). 사용자 삭제 시 FK 연쇄 삭제 */
+object PasswordCredentials : Table("password_credential") {
+    val userId = uuid("user_id")
+    val username = text("username")
+    val passwordHash = text("password_hash")
+    val failedCount = integer("failed_count")
+    val lockedUntil = timestamp("locked_until").nullable()
+    val createdAt = timestamp("created_at")
+    val updatedAt = timestamp("updated_at")
+    override val primaryKey = PrimaryKey(userId)
+}
+
 object RefreshTokens : Table("refresh_token") {
     val id = uuid("id")
     val userId = uuid("user_id")

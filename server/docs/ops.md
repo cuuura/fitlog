@@ -42,6 +42,7 @@ curl -fsS http://localhost:8080/health/ready   # ok
 | `CONTACT_EMAIL` `POLICY_EFFECTIVE_DATE` `BACKUP_RETENTION_DAYS` | `/privacy`·`/account-deletion` 에 들어가는 값 |
 | `INTEGRITY_MODE` `INTEGRITY_PACKAGE_NAMES` `PLAY_INTEGRITY_CREDENTIALS` | Play Integrity(off/report/enforce) |
 | `RATE_LIMIT_*` `TRUST_PROXY` | 호출 제한. `TRUST_PROXY=true` 는 프록시 뒤에서만 |
+| `PASSWORD_LOGIN_ENABLED` `PASSWORD_SIGNUP_CODE` | 테스트용 아이디·비밀번호 로그인. 기본 꺼짐, 스토어 출시 전에는 반드시 `false`. 가입 코드가 없으면 가입 불가 |
 | `MAX_BODY_BYTES` | 요청 본문 한도(기본 5MB). 초과 시 413 |
 | `BACKUP_DIR` `BACKUP_HOUR_UTC` `BACKUP_UPLOAD_CMD` `ALERT_WEBHOOK_URL` | 백업 |
 
