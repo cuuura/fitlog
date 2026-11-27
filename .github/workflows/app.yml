@@ -16,6 +16,11 @@ on:
   pull_request:
     paths: ["app/**", ".github/workflows/app.yml"]
 
+# test-build 프리릴리스를 동시에 덮어쓰지 않도록 main 빌드는 한 번에 하나씩
+concurrency:
+  group: app-${{ github.event_name == 'pull_request' && github.ref || 'main' }}
+  cancel-in-progress: false
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,7 +31,8 @@ jobs:
         working-directory: app
     env:
       # 저장소 Variables(Settings > Secrets and variables > Actions > Variables) 또는 Secrets.
-      API_BASE_URL: ${{ inputs.api_base_url || vars.API_BASE_URL || secrets.API_BASE_URL }}
+      # 아무것도 없으면 Render 무료 테스트 서버(server/docs/free-hosting.md). 출시 빌드 전에는 Variables 로 실제 주소를 지정할 것
+      API_BASE_URL: ${{ inputs.api_base_url || vars.API_BASE_URL || secrets.API_BASE_URL || 'https://fitlog-server-3wnw.onrender.com' }}
       GOOGLE_SERVER_CLIENT_ID: ${{ vars.GOOGLE_SERVER_CLIENT_ID || secrets.GOOGLE_SERVER_CLIENT_ID }}
       PLAY_CLOUD_PROJECT_NUMBER: ${{ vars.PLAY_CLOUD_PROJECT_NUMBER || secrets.PLAY_CLOUD_PROJECT_NUMBER }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN || vars.SENTRY_DSN }}
@@ -117,9 +123,10 @@ jobs:
           path: app/build/symbols
           if-no-files-found: error
 
-      # 수동 실행 시 테스트용 APK를 프리릴리스(test-build)로 교체해 올린다. 폰 브라우저로 바로 받을 수 있다.
+      # main 푸시·수동 실행마다 테스트용 APK를 프리릴리스(test-build)로 덮어쓴다(수동 실행은 체크 해제로 끌 수 있음).
+      # 고정 링크: https://github.com/<owner>/<repo>/releases/download/test-build/fitlog-test.apk
       - name: Publish test-build prerelease
-        if: github.event_name == 'workflow_dispatch' && inputs.publish_test_release && env.RELEASE_CONFIGURED == 'true'
+        if: github.event_name != 'pull_request' && env.RELEASE_CONFIGURED == 'true' && (github.event_name == 'push' || inputs.publish_test_release)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
