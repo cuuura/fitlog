@@ -27,6 +27,8 @@ import com.fitlog.program.catalog.ProgramSummary
 import com.fitlog.program.instance.Instance
 import com.fitlog.program.schema.ProgramValidator
 import com.fitlog.program.schema.ValidationResult
+import com.fitlog.scheduled.ScheduledStatus
+import com.fitlog.scheduled.listScheduled
 import com.fitlog.session.listSummaries
 import com.fitlog.session.loadSession
 import com.fitlog.stats.statsProgress
@@ -574,6 +576,45 @@ internal val READ_TOOLS: List<Tool> = listOf(
             }
             val latest = rows.firstOrNull()?.get(BodyMeasurements.weightKg)?.toDouble()
             ToolOutput("체중 기록 ${rows.size}건" + (latest?.let { " (최신 ${it}kg)" } ?: ""), list("measurements", items, rows.size))
+        },
+    ),
+    Tool(
+        name = "list_scheduled_workouts", title = "예정 운동 목록",
+        description = "앞으로 할 하루짜리 예정 운동(날짜·제목·종목별 세트 목표·상태 PLANNED/IN_PROGRESS/DONE/SKIPPED)을 조회합니다. 기간 기본값은 오늘~14일 뒤(내 시간대), 최대 92일. / List scheduled one-day workouts with per-exercise set targets and computed status; default range is today..+14 days (max 92 days).",
+        write = false,
+        input = S.obj(
+            "from" to S.str("시작 날짜 YYYY-MM-DD(포함). 기본 오늘", format = "date"),
+            "to" to S.str("끝 날짜 YYYY-MM-DD(포함). 기본 from+14일", format = "date"),
+            "status" to S.str("이 상태만", enum = ScheduledStatus.entries.map { it.name }),
+        ),
+        output = listOut(
+            "scheduledWorkouts",
+            S.obj(
+                "id" to idS, "plannedDate" to S.str(format = "date"), "title" to S.str(), "note" to S.str(),
+                "items" to S.arr(S.anyObj("exerciseId, exerciseName, note, restSec, sets[{isWarmup,targetWeightKg,targetReps,targetRepsMax,targetRir,targetRpe,targetDurationSec}]")),
+                "itemCount" to S.int(), "status" to S.str(enum = ScheduledStatus.entries.map { it.name }), "sessionId" to idS,
+                "skippedAt" to S.str(format = "date-time"), "source" to S.str(),
+                required = listOf("id", "plannedDate", "title", "items", "status"),
+            ),
+            "from" to S.str(format = "date"), "to" to S.str(format = "date"),
+        ),
+        run = { ctx, a ->
+            val status = a.enum("status", ScheduledStatus.entries.map { it.name })
+            val fromArg = a.str("from")?.let { parseDate(it, "from") }
+            val toArg = a.str("to")?.let { parseDate(it, "to") }
+            val found = dbQuery {
+                val today = LocalDate.now(ZoneId.of(userTz(ctx.userId)))
+                val from = fromArg ?: today
+                val to = toArg ?: from.plusDays(14)
+                if (to < from) validation("to must be on or after from", "to")
+                if (java.time.temporal.ChronoUnit.DAYS.between(from, to) > 91) validation("range must be at most 92 days", "to")
+                Triple(from, to, scheduledJson(listScheduled(ctx.userId, from, to).filter { status == null || it.status?.name == status }))
+            }
+            val (from, to, rows) = found
+            ToolOutput(
+                "예정 운동 ${rows.size}건 ($from ~ $to)" + rows.take(3).joinToString("") { "\n- ${(it["plannedDate"] as JsonPrimitive).content} ${(it["title"] as JsonPrimitive).content} [${(it["status"] as JsonPrimitive).content}]" },
+                list("scheduledWorkouts", JsonArray(rows), rows.size, mapOf("from" to JsonPrimitive(from.toString()), "to" to JsonPrimitive(to.toString()))),
+            )
         },
     ),
     Tool(

@@ -261,3 +261,24 @@ internal fun Transaction.mcpTrainingSummary(uid: UUID, from: LocalDate, to: Loca
 
 internal fun JsonObject.withText(key: String, value: String?): JsonObject =
     if (value == null) this else JsonObject(this + (key to JsonPrimitive(value)))
+
+// ---------------------------------------------------------------- 예정 운동 (scheduled-workout.md §9)
+
+/** 예정 운동 응답: 계산 필드(status, sessionId)와 종목 이름·종목 수를 더한다 */
+internal fun Transaction.scheduledJson(list: List<com.fitlog.scheduled.ScheduledWorkout>): List<kotlinx.serialization.json.JsonObject> {
+    val ids = list.flatMap { w -> w.items.map { it.exerciseId } }.distinct()
+    val names = if (ids.isEmpty()) emptyMap() else com.fitlog.core.Exercises.select(com.fitlog.core.Exercises.id, com.fitlog.core.Exercises.nameKo)
+        .where { com.fitlog.core.Exercises.id inList ids }.associate { it[com.fitlog.core.Exercises.id] to it[com.fitlog.core.Exercises.nameKo] }
+    return list.map { w ->
+        val base = com.fitlog.core.AppJson.encodeToJsonElement(com.fitlog.scheduled.ScheduledWorkout.serializer(), w) as kotlinx.serialization.json.JsonObject
+        val items = kotlinx.serialization.json.JsonArray(
+            (base["items"] as kotlinx.serialization.json.JsonArray).mapIndexed { i, el ->
+                val n = names[w.items[i].exerciseId]
+                kotlinx.serialization.json.JsonObject(
+                    (el as kotlinx.serialization.json.JsonObject) + ("exerciseName" to (n?.let { kotlinx.serialization.json.JsonPrimitive(it) } ?: kotlinx.serialization.json.JsonNull)),
+                )
+            },
+        )
+        kotlinx.serialization.json.JsonObject(base + ("items" to items) + ("itemCount" to kotlinx.serialization.json.JsonPrimitive(w.items.size)))
+    }
+}

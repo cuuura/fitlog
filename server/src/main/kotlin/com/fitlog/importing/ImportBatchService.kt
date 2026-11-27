@@ -12,6 +12,7 @@ import com.fitlog.core.ImportItems
 import com.fitlog.core.InstantSerializer
 import com.fitlog.core.ProgramInstances
 import com.fitlog.core.Programs
+import com.fitlog.core.ScheduledWorkouts
 import com.fitlog.core.SessionExercises
 import com.fitlog.core.Times
 import com.fitlog.core.UUIDSerializer
@@ -21,6 +22,7 @@ import com.fitlog.core.lockUser
 import com.fitlog.core.notFound
 import com.fitlog.engine.ProgramEngine
 import com.fitlog.program.instance.replayInstances
+import com.fitlog.scheduled.softDeleteScheduledRow
 import com.fitlog.session.softDeleteSession
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.UseSerializers
@@ -115,6 +117,7 @@ internal fun Transaction.revertImport(userId: UUID, id: UUID): ImportBatch {
                     softDeleteSession(eid, now)
                 }
             }
+            "scheduled_workout" -> softDeleteScheduledRow(userId, eid, now)
             "body_measurement" -> {
                 val b = BodyMeasurements.selectAll().where { (BodyMeasurements.id eq eid) and (BodyMeasurements.userId eq userId) }.singleOrNull()
                 if (b != null && b[BodyMeasurements.deletedAt] == null) softDeleteMeasurementRow(eid, now)
@@ -136,6 +139,11 @@ internal fun Transaction.revertImport(userId: UUID, id: UUID): ImportBatch {
                 u[serverSeq] = ChangeSeq.next
             }
             "workout_session" -> restoreSession(userId, eid, now, affected)
+            "scheduled_workout" -> ScheduledWorkouts.update({ (ScheduledWorkouts.id eq eid) and (ScheduledWorkouts.userId eq userId) }) { u ->
+                u[deletedAt] = null
+                u[updatedAt] = now
+                u[serverSeq] = ChangeSeq.next
+            }
         }
     }
 
