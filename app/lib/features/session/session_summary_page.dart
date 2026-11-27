@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../calendar/week_strip.dart';
 import '../../core/api/dto.dart';
 import '../../core/api/program_dto.dart' hide formatDate;
 import '../../core/api/stats_dto.dart';
@@ -89,6 +90,7 @@ class SessionSummaryPage extends ConsumerWidget {
         children: [
           Text(l.summaryHeading, key: const Key('summary-heading'), style: text.headlineSmall),
           const SizedBox(height: 12),
+          const WeekStrip(),
           Row(
             children: [
               Expanded(

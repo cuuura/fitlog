@@ -235,6 +235,20 @@ class DriftSessionRepository extends _DriftBase implements SessionRepository {
     return [for (final s in await _assemble(rows)) summarize(s)];
   });
 
+  @override
+  Stream<List<SessionSummary>> watchSessionsBetween(DateTime fromUtc, DateTime toUtc) => _changes.asyncMap((_) async {
+    final rows =
+        await (db.select(db.sessions)
+              ..where((t) =>
+                  t.deletedAt.isNull() &
+                  t.endedAt.isNotNull() &
+                  t.startedAt.isBiggerOrEqualValue(fromUtc) &
+                  t.startedAt.isSmallerThanValue(toUtc))
+              ..orderBy([(t) => OrderingTerm.asc(t.startedAt)]))
+            .get();
+    return [for (final s in await _assemble(rows)) summarize(s)];
+  });
+
   /// SessionSummary 계산 규칙(openapi): setCount·totalVolumeKg는 워밍업 제외, 완료 여부와 무관하게 값이 있는 세트.
   static SessionSummary summarize(Session s) {
     var sets = 0;

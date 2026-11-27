@@ -37,6 +37,9 @@ abstract interface class SessionRepository {
   /// 최근 세션 요약(startedAt 내림차순). 진행 중 세션도 포함.
   Stream<List<SessionSummary>> watchRecentSessions({int limit = 20});
 
+  /// startedAt이 [fromUtc, toUtc) 안인 끝난(삭제 안 된) 세션 요약, 시작 시각 오름차순. 달력·주간 표시용.
+  Stream<List<SessionSummary>> watchSessionsBetween(DateTime fromUtc, DateTime toUtc);
+
   /// 세션 시작. 이미 진행 중 세션이 있으면 그것을 돌려준다(plan은 무시). tz는 기기의 IANA 시간대.
   /// plan이 있으면(v0.2) 프로그램 회차 세션: programInstanceId·planSeq·planDayKey를 채우고, 계획 종목을
   /// 순서대로 만들며(liftKey=key, accessory) 계획 세트마다 세트를 만든다:

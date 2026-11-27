@@ -16,6 +16,8 @@ import '../session/session_format.dart';
 import '../exercise_picker/exercise_labels.dart';
 import '../source_badge/source_badge.dart';
 import '../sync_status/sync_status_indicator.dart';
+import '../calendar/calendar_providers.dart';
+import '../calendar/month_calendar.dart';
 
 const historyPageSize = 20;
 
@@ -82,10 +84,21 @@ class HistoryPage extends ConsumerStatefulWidget {
 
 class _HistoryPageState extends ConsumerState<HistoryPage> {
   final _scroll = ScrollController();
+  bool _calendar = false;
+
+  /// 홈의 주간 띠를 눌러 들어오면 달력으로 연다.
+  void _consumeCalendarRequest() {
+    if (!ref.read(historyCalendarRequestProvider)) return;
+    _calendar = true;
+    Future.microtask(() {
+      if (mounted) ref.read(historyCalendarRequestProvider.notifier).clear();
+    });
+  }
 
   @override
   void initState() {
     super.initState();
+    _consumeCalendarRequest();
     _scroll.addListener(_maybeLoadMore);
   }
 
@@ -116,6 +129,9 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
+    ref.listen<bool>(historyCalendarRequestProvider, (_, v) {
+      if (v) setState(_consumeCalendarRequest);
+    });
     final async = ref.watch(historySessionsProvider);
     final unit = ref.watch(settingsProvider).weightUnit;
     final list = async.value;
@@ -181,7 +197,19 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
             onTap: _openRecords,
           ),
           Divider(height: 1, color: AppColors.of(context).line),
-          Expanded(child: body),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+            child: SegmentedButton<bool>(
+              showSelectedIcon: false,
+              segments: [
+                ButtonSegment(value: false, label: Text(l.calendarViewList, key: const Key('history-view-list'))),
+                ButtonSegment(value: true, label: Text(l.calendarViewCalendar, key: const Key('history-view-calendar'))),
+              ],
+              selected: {_calendar},
+              onSelectionChanged: (v) => setState(() => _calendar = v.first),
+            ),
+          ),
+          Expanded(child: _calendar ? const MonthCalendar() : body),
         ],
       ),
     );
