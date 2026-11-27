@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../calendar/week_strip.dart';
 import '../../core/api/dto.dart';
 import '../../core/api/program_dto.dart' hide formatDate;
 import '../../core/clock.dart';
@@ -106,6 +107,7 @@ class HomePage extends ConsumerWidget {
                 ),
               ),
             ),
+          const WeekStrip(),
           for (final p in plans)
             _PlanCard(
               key: Key('plan-card-${p.instance.id}'),

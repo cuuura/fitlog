@@ -152,6 +152,15 @@ class MemorySessionRepository implements SessionRepository {
     return list.take(limit).map(summarize).toList();
   }).cast<List<SessionSummary>>();
 
+  @override
+  Stream<List<SessionSummary>> watchSessionsBetween(DateTime fromUtc, DateTime toUtc) => _bus.watch(() {
+    final list = _sessions.values
+        .where((s) => s.endedAt != null && !s.startedAt.isBefore(fromUtc) && s.startedAt.isBefore(toUtc))
+        .toList()
+      ..sort((a, b) => a.startedAt.compareTo(b.startedAt));
+    return list.map(summarize).toList();
+  }).cast<List<SessionSummary>>();
+
   /// SessionSummary 계산 규칙(openapi): setCount·totalVolumeKg는 워밍업 제외, 완료 여부와 무관하게 값이 있는 세트.
   static SessionSummary summarize(Session s) {
     var sets = 0;
