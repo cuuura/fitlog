@@ -1,0 +1,284 @@
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=33381 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+Picked up _JAVA_OPTIONS: -XX:+UnlockDiagnosticVMOptions -XX:DisableIntrinsic=_base64_encodeBlock,_base64_decodeBlock
+07:07:42.896 INFO  [-] io.ktor.server.Application - Autoreload is disabled because the development mode is off.
+07:07:45.933 INFO  [-] io.ktor.server.Application - Application started in 3.282 seconds.
+07:07:46.191 INFO  [-] io.ktor.server.Application - Responding at http://0.0.0.0:18080
+07:07:47.543 INFO  [77d41f86-a837-43f0-8dc9-dcd85892c0da] io.ktor.server.Application - 200 OK: GET - /.well-known/oauth-protected-resource in 39ms
+07:07:47.545 INFO  [7bfc9189-daa8-4a48-8342-4286cde16940] io.ktor.server.Application - 200 OK: GET - /.well-known/oauth-protected-resource/mcp in 11ms
+07:07:47.549 INFO  [d139a72d-3539-4127-92b1-b8b9d58f3259] io.ktor.server.Application - 200 OK: GET - /.well-known/oauth-authorization-server in 2ms
+07:07:47.557 INFO  [871bb9d9-9b12-42d4-b2a8-21e81fbe8567] io.ktor.server.Application - 200 OK: GET - /.well-known/oauth-authorization-server/mcp in 3ms
+07:07:47.565 INFO  [9e076f7c-dcac-46c7-8ea2-e888398865ab] io.ktor.server.Application - 200 OK: GET - /.well-known/openid-configuration in 2ms
+07:07:47.580 INFO  [61ec0e89-b19d-4980-ac03-05e4ee95ed3c] io.ktor.server.Application - 401 Unauthorized: POST - /mcp in 9ms
+07:07:47.618 INFO  [996b2450-31be-46b9-b29f-5e8d815951f8] io.ktor.server.Application - 401 Unauthorized: POST - /mcp in 27ms
+07:07:47.631 INFO  [a52fe300-5c67-4f46-9f5c-da533b7c7471] io.ktor.server.Application - 200 OK: GET - /.well-known/oauth-protected-resource in 3ms
+07:07:47.644 INFO  [8b4f12a1-8e1d-4872-952a-16eb7847880b] io.ktor.server.Application - 200 OK: GET - /.well-known/oauth-protected-resource in 7ms
+07:07:47.653 INFO  [385b57c5-8d35-4611-ad60-787ea4f9a1f6] io.ktor.server.Application - 200 OK: GET - /.well-known/oauth-authorization-server in 5ms
+07:07:47.663 INFO  [b74d2809-c810-492e-bddf-d9f576664968] io.ktor.server.Application - 401 Unauthorized: POST - /mcp in 6ms
+07:07:47.670 INFO  [45ec5491-17b4-4022-9fe0-12050fb96040] io.ktor.server.Application - 200 OK: GET - /.well-known/oauth-protected-resource in 3ms
+07:07:47.683 INFO  [d0daa8dc-f141-4879-834a-6ae12ee4bcbe] io.ktor.server.Application - 200 OK: GET - /v1/auth/methods in 9ms
+07:07:47.721 INFO  [2d3ddf97-2272-470a-af80-9216d23ab346] io.ktor.server.Application - 403 Forbidden: POST - /v1/auth/password/register in 33ms
+07:07:47.732 INFO  [43b5b88e-d3f7-4ed9-a534-7b4ebfbb0a68] io.ktor.server.Application - 400 Bad Request: POST - /v1/auth/password/register in 5ms
+07:07:47.922 INFO  [4ff0de61-9523-4868-bb73-2ea8651598ce] io.ktor.server.Application - 200 OK: POST - /v1/auth/password/register in 183ms
+07:07:48.014 INFO  [02ea3cee-3bcc-4ef8-ace0-7023125bfebd] io.ktor.server.Application - 409 Conflict: POST - /v1/auth/password/register in 82ms
+07:07:48.163 INFO  [18088ce9-1226-4c32-bbcc-716bad1bd0b5] io.ktor.server.Application - 401 Unauthorized: POST - /v1/auth/password/login in 122ms
+07:07:48.292 INFO  [e7967e7c-e6bd-468e-89fe-35aae8d7c2fc] io.ktor.server.Application - 200 OK: POST - /v1/auth/password/login in 123ms
+07:07:48.413 INFO  [c27062e1-de58-420c-af43-b58c96b47e36] io.ktor.server.Application - 200 OK: POST - /v1/auth/password/register in 116ms
+07:07:48.538 INFO  [bc83fed0-5f4a-452d-a798-352beacaa1ab] io.ktor.server.Application - 401 Unauthorized: POST - /v1/auth/password/login in 119ms
+07:07:48.633 INFO  [4c33308a-5372-4bcf-bd4e-923163af51b8] io.ktor.server.Application - 401 Unauthorized: POST - /v1/auth/password/login in 91ms
+07:07:48.714 INFO  [50d669b5-a47f-4ac7-8988-5d934b348442] io.ktor.server.Application - 401 Unauthorized: POST - /v1/auth/password/login in 75ms
+07:07:48.824 INFO  [2f9bf225-a7df-4401-a77a-0a35168dc598] io.ktor.server.Application - 401 Unauthorized: POST - /v1/auth/password/login in 108ms
+07:07:48.935 INFO  [e10cd90c-e184-4866-a879-01c2f75baea9] io.ktor.server.Application - 401 Unauthorized: POST - /v1/auth/password/login in 111ms
+07:07:48.956 INFO  [b4e33e7f-07eb-43a9-b92a-cf72f8739079] io.ktor.server.Application - 429 Too Many Requests: POST - /v1/auth/password/login in 14ms
+07:07:48.973 INFO  [2ed21bd0-ec4f-49e1-84a3-e23f91e3a76f] io.ktor.server.Application - 200 OK: POST - /v1/auth/refresh in 15ms
+07:07:49.057 INFO  [f8984d12-15c1-40f6-9d70-ed12c4098ed3] io.ktor.server.Application - 200 OK: POST - /v1/auth/password/register in 82ms
+07:07:49.074 INFO  [f728e764-c6e9-4c48-965f-ed7f38582f84] io.ktor.server.Application - 200 OK: POST - /v1/auth/refresh in 12ms
+07:07:49.098 INFO  [62b93c93-d05e-4376-ad9a-47de4e9d1712] io.ktor.server.Application - 200 OK: POST - /v1/auth/refresh in 20ms
+07:07:49.186 INFO  [025f5769-293a-4614-b9b7-c4d048452de3] io.ktor.server.Application - 200 OK: GET - /v1/me in 86ms
+07:07:49.195 INFO  [10c35e1d-e9f8-4a5b-ab80-e1024aab537d] io.ktor.server.Application - 401 Unauthorized: GET - /v1/me in 5ms
+07:07:49.222 INFO  [57a57d1a-1947-4d19-b2bc-8274bdcd5242] io.ktor.server.Application - 201 Created: POST - /v1/me/consents in 21ms
+07:07:49.239 INFO  [7eb696e1-256c-412b-928d-1257cd89747e] io.ktor.server.Application - 201 Created: POST - /v1/me/consents in 12ms
+07:07:49.254 INFO  [173e4821-ed6a-49d7-b36d-081ab573a3da] io.ktor.server.Application - 201 Created: POST - /v1/me/consents in 11ms
+07:07:49.276 INFO  [c6bcf927-c2d2-470f-8a15-02b798436ebf] io.ktor.server.Application - 200 OK: GET - /v1/me in 15ms
+07:07:49.293 INFO  [c086db08-e842-4d92-a02e-87cfe6d3b285] io.ktor.server.Application - 200 OK: GET - /v1/me/consents in 13ms
+07:07:49.309 INFO  [c724ca9e-d540-4732-a7d5-a1756c3cd0a5] io.ktor.server.Application - 400 Bad Request: POST - /v1/me/consents in 11ms
+07:07:49.413 INFO  [c7207473-730b-4e87-9ff6-10b0e92b3599] io.ktor.server.Application - 200 OK: POST - /v1/auth/password/register in 99ms
+07:07:49.425 INFO  [2f23340d-2f52-402a-a9f0-0030449569e1] io.ktor.server.Application - 201 Created: POST - /v1/me/consents in 7ms
+07:07:49.439 INFO  [1072d794-5b09-41f8-a566-39fff1f495d2] io.ktor.server.Application - 201 Created: POST - /v1/me/consents in 10ms
+07:07:49.460 INFO  [064d46d4-62ad-4c71-bf51-8eaef39ded86] io.ktor.server.Application - 201 Created: POST - /v1/me/consents in 15ms
+07:07:49.475 INFO  [75416aa1-cccf-47c6-9b4f-c0f4b0eb0d2c] io.ktor.server.Application - 200 OK: GET - /v1/me in 12ms
+07:07:49.538 INFO  [65d98a88-8b85-487b-8498-5f73eeb5c5c2] io.ktor.server.Application - 200 OK: GET - /v1/programs in 58ms
+07:07:49.601 INFO  [37948afd-d05b-4a7f-abca-29fda49a57d3] io.ktor.server.Application - 200 OK: GET - /v1/exercises in 59ms
+07:07:49.701 INFO  [264bc286-c167-4120-a4d8-5965861f3682] io.ktor.server.Application - 201 Created: POST - /v1/program-instances in 96ms
+07:07:49.730 INFO  [6bb7c499-55f6-4f30-95bb-5bd9fadc007e] io.ktor.server.Application - 200 OK: GET - /v1/program-instances in 20ms
+07:07:49.767 INFO  [f0626803-5d64-4c4e-89e1-a447f424c580] io.ktor.server.Application - 200 OK: GET - /v1/program-instances/db2b9254-d57e-4032-9d5a-1178d1c114cc/plan in 32ms
+07:07:49.927 INFO  [9b4df685-f2f4-48bb-ac59-c347f5a95bd8] io.ktor.server.Application - 200 OK: PUT - /v1/sessions/7f3315d7-3f5f-4d7c-bda3-29bd9a6398a8 in 153ms
+07:07:49.954 INFO  [fd8ddea8-540e-4b2f-8193-47087bb0dd37] io.ktor.server.Application - 200 OK: GET - /v1/program-instances/db2b9254-d57e-4032-9d5a-1178d1c114cc in 22ms
+07:07:50.073 INFO  [84c56652-3903-465a-8e20-0af143ffdf9a] io.ktor.server.Application - 200 OK: POST - /v1/sync/push in 107ms
+07:07:50.152 INFO  [a18849b1-616f-41b2-86d3-8f93670ce0aa] io.ktor.server.Application - 200 OK: POST - /v1/sync/push in 74ms
+07:07:50.275 INFO  [574b4f99-2209-415b-8e0f-70d1fd38b19a] io.ktor.server.Application - 200 OK: GET - /v1/sync/pull in 120ms
+07:07:50.327 INFO  [ae1a04a5-1c92-4141-b863-b474c9e2fb58] io.ktor.server.Application - 200 OK: GET - /v1/sessions in 20ms
+07:07:50.351 INFO  [3c9dbd87-17bb-4afe-a9f5-dfb7b6c8f393] io.ktor.server.Application - 200 OK: GET - /v1/sessions/7f3315d7-3f5f-4d7c-bda3-29bd9a6398a8 in 18ms
+07:07:50.384 INFO  [ea0c29df-fdc5-4e02-9853-bc871c79d8ca] io.ktor.server.Application - 200 OK: GET - /v1/exercises/019b76da-4000-7000-8000-000000000001/last in 27ms
+07:07:50.410 INFO  [1dba300a-3c48-44fc-8622-262817b9ad34] io.ktor.server.Application - 200 OK: GET - /v1/exercises/019b76da-4000-7000-8000-000000000001/records in 21ms
+07:07:50.434 INFO  [292fe3ad-4b84-4e78-97f4-80259f7d5559] io.ktor.server.Application - 200 OK: GET - /v1/exercises/019b76da-4000-7000-8000-000000000001/progress in 21ms
+07:07:50.546 INFO  [7397101c-2402-4691-8575-b96f6d28f870] io.ktor.server.Application - 200 OK: GET - /v1/sessions/7f3315d7-3f5f-4d7c-bda3-29bd9a6398a8/comparison in 109ms
+07:07:50.566 INFO  [f914d8b7-84ae-45e8-8b51-ceefe939f9f9] io.ktor.server.Application - 200 OK: GET - /v1/me/settings in 16ms
+07:07:50.590 INFO  [3338ecfc-cb03-444f-8b92-17de0db4e8d3] io.ktor.server.Application - 200 OK: PUT - /v1/me/settings in 20ms
+07:07:50.609 INFO  [c4935d93-6229-4ae2-9688-f6aff939de01] io.ktor.server.Application - 200 OK: GET - /v1/body/measurements in 15ms
+07:07:50.692 INFO  [a6b7c651-af82-40cc-95c9-6d79590905cb] io.ktor.server.Application - 200 OK: GET - /v1/deletion-requests/count in 81ms
+07:07:50.708 INFO  [22eaa24c-ee30-4af4-9975-0af0e079d842] io.ktor.server.Application - 200 OK: GET - /v1/imports in 24ms
+07:07:50.721 INFO  [4f486786-71eb-4f23-8a0b-2e04f742d55b] io.ktor.server.Application - 200 OK: GET - /v1/mcp-info in 16ms
+07:07:50.755 INFO  [35ccdf09-b418-4628-84d2-c32737db4182] io.ktor.server.Application - 200 OK: GET - /v1/export.json in 28ms
+07:07:50.761 INFO  [608b41ba-705a-4260-b406-d340b5e9bca1] io.ktor.server.Application - 200 OK: GET - /v1/public/schema/import.json in 1ms
+07:07:50.926 INFO  [7872301a-56a2-4087-ae50-6b3a95c00ae5] io.ktor.server.Application - 201 Created: POST - /oauth/register in 153ms
+07:07:50.936 INFO  [367d6aad-1154-463d-bbb0-3086741bac48] io.ktor.server.Application - 201 Created: POST - /oauth/register in 9ms
+07:07:50.967 INFO  [58921022-a451-47d5-ad66-f23964c9d508] io.ktor.server.Application - 201 Created: POST - /oauth/register in 20ms
+07:07:50.981 INFO  [93c0c021-854a-4f10-8a15-abebb3056ee4] io.ktor.server.Application - 201 Created: POST - /oauth/register in 11ms
+07:07:50.996 INFO  [f730d840-cc03-47af-8f41-e9078163c205] io.ktor.server.Application - 201 Created: POST - /oauth/register in 10ms
+07:07:51.009 INFO  [516c42cd-80cb-4652-a2d1-0c7a31928b57] io.ktor.server.Application - 201 Created: POST - /oauth/register in 10ms
+07:07:51.040 INFO  [ce870fb2-a277-447e-8064-e689f42f61fa] io.ktor.server.Application - 201 Created: POST - /oauth/register in 18ms
+07:07:51.054 INFO  [10b77284-a3f3-4c82-a083-d02ad41a0e36] io.ktor.server.Application - 201 Created: POST - /oauth/register in 11ms
+07:07:51.065 INFO  [b8ecc862-444a-4d4e-91de-80f46edbacbd] io.ktor.server.Application - 400 Bad Request: POST - /oauth/register in 8ms
+07:07:51.078 INFO  [5b3d0626-e332-43f0-a36a-0cf7c24e3455] io.ktor.server.Application - 400 Bad Request: POST - /oauth/register in 8ms
+07:07:51.085 INFO  [9af1b506-d7b4-4fcb-b9ae-170bcde44fa8] io.ktor.server.Application - 400 Bad Request: POST - /oauth/register in 3ms
+07:07:51.091 INFO  [d37d3168-9c1c-4c8b-b623-a371a5dc4023] io.ktor.server.Application - 400 Bad Request: POST - /oauth/register in 3ms
+07:07:51.098 INFO  [16760339-70a2-4c2d-8f4f-1e7a3d0c0063] io.ktor.server.Application - 400 Bad Request: POST - /oauth/register in 4ms
+07:07:51.109 INFO  [1d639e45-d601-40f5-9f4b-a74b0febd4cd] io.ktor.server.Application - 201 Created: POST - /oauth/register in 8ms
+07:07:51.128 INFO  [8eaff92b-9012-4661-834a-4343ed47c3f9] io.ktor.server.Application - 302 Found: GET - /oauth/authorize in 15ms -> https://chatgpt.com/connector_platform_oauth_redirect?error=invalid_request&error_description=PKCE+with+code_challenge_method%3DS256+is+required&state=s1
+07:07:51.141 INFO  [dc3a9342-846e-484a-97c2-d89fa787c09a] io.ktor.server.Application - 302 Found: GET - /oauth/authorize in 10ms -> https://chatgpt.com/connector_platform_oauth_redirect?error=invalid_request&error_description=PKCE+with+code_challenge_method%3DS256+is+required&state=s1
+07:07:51.149 INFO  [b8531887-5878-4f30-b0c9-ddb26a98a7f0] io.ktor.server.Application - 302 Found: GET - /oauth/authorize in 6ms -> https://chatgpt.com/connector_platform_oauth_redirect?error=invalid_target&error_description=resource+must+be+http%3A%2F%2Flocalhost%3A18080%2Fmcp&state=s1
+07:07:51.162 INFO  [d654d46f-53c1-4db5-9f6c-09dbb7414369] io.ktor.server.Application - 400 Bad Request: GET - /oauth/authorize in 10ms
+07:07:51.178 INFO  [50ce4a11-afec-4655-8271-4b17b1a3c4a6] io.ktor.server.Application - 400 Bad Request: GET - /oauth/authorize in 7ms
+07:07:51.201 INFO  [5e3ef700-9379-4c8f-9e1f-8156d478f93b] io.ktor.server.Application - 201 Created: POST - /oauth/register in 19ms
+07:07:51.219 INFO  [18436b6f-d016-4935-bec4-3415f35280e6] io.ktor.server.Application - 200 OK: GET - /oauth/authorize in 4ms
+07:07:51.302 INFO  [3ee98abb-3e50-414f-946d-f73fa62e9a93] io.ktor.server.Application - 401 Unauthorized: POST - /oauth/password in 76ms
+07:07:51.314 INFO  [8a5f6439-4804-4bad-b86a-767949439621] io.ktor.server.Application - 201 Created: POST - /oauth/register in 7ms
+07:07:51.321 INFO  [066d692f-abd7-48ab-9dd0-112229f4b0f5] io.ktor.server.Application - 200 OK: GET - /oauth/authorize in 4ms
+07:07:51.408 INFO  [2d6cbac0-3b27-4de2-84dd-3b36e0ae7306] io.ktor.server.Application - 200 OK: POST - /oauth/password in 80ms
+07:07:51.433 INFO  [f31f6c32-77f0-44d5-8911-c87663467bdf] io.ktor.server.Application - 302 Found: POST - /oauth/consent in 21ms -> https://chatgpt.com/connector_platform_oauth_redirect?code=flc_-gpnkGW5DCveVYYVSQ5REF28J-tC6PrhYOz-jaxT858&state=midl-gB1QGd6xudk
+07:07:51.465 INFO  [e89625dd-ff12-424e-9629-8fd2aa647dc4] io.ktor.server.Application - 200 OK: POST - /oauth/token in 26ms
+07:07:51.475 INFO  [7419b500-d853-4719-ab1a-6cb64aa8998d] io.ktor.server.Application - 201 Created: POST - /oauth/register in 6ms
+07:07:51.491 INFO  [48d3931e-7cac-4fae-b4b8-b4d7e0e604b2] io.ktor.server.Application - 200 OK: GET - /oauth/authorize in 11ms
+07:07:51.598 INFO  [49fd071d-6c42-4090-9177-b3fa2397be62] io.ktor.server.Application - 200 OK: POST - /oauth/password in 105ms
+07:07:51.613 INFO  [71074d9a-82fa-4d1f-a56d-852c0cddad1e] io.ktor.server.Application - 302 Found: POST - /oauth/consent in 12ms -> https://claude.ai/api/mcp/auth_callback?code=flc_ejPzu6f7Xlis5ofjkTRyz_-cX_B4-09jVNTdky79zJQ&state=7YBwapCr0uYLx42v
+07:07:51.629 INFO  [909a2a74-1988-42d9-b938-087d3ab740a9] io.ktor.server.Application - 200 OK: POST - /oauth/token in 13ms
+07:07:51.637 INFO  [917d95fd-49c9-4f0b-bf12-4607fc69f650] io.ktor.server.Application - 201 Created: POST - /oauth/register in 5ms
+07:07:51.643 INFO  [be32547a-e74e-45c3-b948-c05b78a173f5] io.ktor.server.Application - 200 OK: GET - /oauth/authorize in 4ms
+07:07:51.752 INFO  [9ccde31f-79be-455c-8241-81b61724c8b8] io.ktor.server.Application - 200 OK: POST - /oauth/password in 106ms
+07:07:51.773 INFO  [804b5871-94eb-427e-92f8-361b1a76779a] io.ktor.server.Application - 302 Found: POST - /oauth/consent in 16ms -> https://chatgpt.com/connector_platform_oauth_redirect?code=flc_OuigYDOwdXzEVCgdzBQgFe89RdzBdczJiY0wANydfTA&state=MQZ60CLvPtNOSR99
+07:07:51.800 INFO  [d6eb616f-a2bb-4596-8478-568bcffe5b51] io.ktor.server.Application - 200 OK: POST - /oauth/token in 17ms
+07:07:51.808 INFO  [72e50bf0-45e1-4a4d-a413-2643784585a2] io.ktor.server.Application - 201 Created: POST - /oauth/register in 8ms
+07:07:51.817 INFO  [468c0054-e395-449b-82ea-a7e33c7f1bae] io.ktor.server.Application - 200 OK: GET - /oauth/authorize in 4ms
+07:07:51.889 INFO  [30d024aa-ad26-4221-a729-1151eae65338] io.ktor.server.Application - 200 OK: POST - /oauth/password in 67ms
+07:07:51.904 INFO  [e7c745e7-0846-4d0f-8ec2-8b15e3eb7f31] io.ktor.server.Application - 302 Found: POST - /oauth/consent in 10ms -> https://claude.ai/api/mcp/auth_callback?code=flc_BAeP8Fe6LSPzLQUQdcuB8f9F1zJwouldJXGKJQ8uY_k&state=vZP9c7ixy43zVB88
+07:07:51.920 INFO  [c4a999d0-8033-43c6-ad5e-17fe427f3a3b] io.ktor.server.Application - 200 OK: POST - /oauth/token in 13ms
+07:07:51.928 INFO  [674ac560-d6a9-4f31-82f8-9bbd583ee772] io.ktor.server.Application - 400 Bad Request: POST - /oauth/token in 5ms
+07:07:51.932 INFO  [bc058a7d-df0f-4548-89ca-e7785f408fbe] io.ktor.server.Application - 200 OK: GET - /oauth/authorize in 2ms
+07:07:52.006 INFO  [a005d487-4d54-4057-b044-55472e0f0e49] io.ktor.server.Application - 200 OK: POST - /oauth/password in 71ms
+07:07:52.024 INFO  [cc08ecb6-c550-4064-b7e1-345291be03bd] io.ktor.server.Application - 302 Found: POST - /oauth/consent in 8ms -> https://chatgpt.com/connector_platform_oauth_redirect?code=flc_GHJomN0MT1IwzNgxcHmQKqx51_z6Cyp36j8ENLeus-A&state=Ejb8YB6lePO_rVt6
+07:07:52.031 INFO  [1baf678f-1e6d-4a82-a617-2e88fbd1e7f7] io.ktor.server.Application - 400 Bad Request: POST - /oauth/token in 4ms
+07:07:52.035 INFO  [b9aa4c71-a655-4863-ab17-c1290f7ad11c] io.ktor.server.Application - 400 Bad Request: POST - /oauth/token in 1ms
+07:07:52.047 INFO  [620a95c2-ddc4-4ad5-978b-0e365cb5e65b] io.ktor.server.Application - 400 Bad Request: POST - /oauth/token in 8ms
+07:07:52.057 INFO  [4e99b801-df7f-47c3-bf51-717c2f7526f2] io.ktor.server.Application - 201 Created: POST - /oauth/register in 5ms
+07:07:52.062 INFO  [1d2761ac-f731-4aa5-9ef7-65c98c3f1a2c] io.ktor.server.Application - 200 OK: GET - /oauth/authorize in 3ms
+07:07:52.139 INFO  [52686bb8-c908-46d1-9781-7f7cdd1e1638] io.ktor.server.Application - 200 OK: POST - /oauth/password in 75ms
+07:07:52.166 INFO  [918b3f6f-eb9d-47b6-b48d-23f0c8b1bfe7] io.ktor.server.Application - 302 Found: POST - /oauth/consent in 21ms -> https://claude.ai/api/mcp/auth_callback?code=flc_NgFqBca7uwoxmXtEWNitHmBnKKc7V0O6K_gXk1qdkbA&state=1UI1a-n39wpLhLZ-
+07:07:52.177 INFO  [6c1d606b-e8fc-4409-b0b3-bc52f0bd3ca4] io.ktor.server.Application - 200 OK: POST - /oauth/token in 8ms
+07:07:52.194 INFO  [588e03bb-3b1b-472e-9832-bee5a2a279e3] io.ktor.server.Application - 200 OK: POST - /oauth/token in 12ms
+07:07:52.205 INFO  [136f9e24-3518-4125-b4a4-94e7970a014a] io.ktor.server.Application - 200 OK: POST - /mcp in 7ms
+07:07:52.216 INFO  [32ff88b4-2407-4295-becb-6abd81ef54ea] io.ktor.server.Application - 200 OK: POST - /mcp in 5ms
+07:07:52.231 INFO  [3719df9d-4dcb-44d1-a335-dcfa4a0b3edc] io.ktor.server.Application - 202 Accepted: POST - /mcp in 9ms
+07:07:52.248 INFO  [4d0621f6-d212-4e4b-a38c-20a311de21d0] io.ktor.server.Application - 200 OK: POST - /mcp in 15ms
+07:07:52.259 INFO  [1b3f232b-f57b-4511-a09f-367e91a2919b] io.ktor.server.Application - 200 OK: POST - /mcp in 8ms
+07:07:52.264 INFO  [8a402822-cf5b-4d9d-8728-08d819d3a38b] io.ktor.server.Application - 202 Accepted: POST - /mcp in 4ms
+07:07:52.278 INFO  [10e772a2-d2d9-4f1a-91e8-4651193b19ab] io.ktor.server.Application - 200 OK: POST - /mcp in 11ms
+07:07:52.290 INFO  [359155eb-1ad2-4a10-bf74-e71884ac2359] io.ktor.server.Application - 200 OK: POST - /mcp in 10ms
+07:07:52.306 INFO  [43f69e74-e292-41c3-9bcf-95a41f353451] io.ktor.server.Application - 202 Accepted: POST - /mcp in 13ms
+07:07:52.318 INFO  [66b69309-566e-4feb-a07c-176928292659] io.ktor.server.Application - 200 OK: POST - /mcp in 10ms
+07:07:52.332 INFO  [b5b14498-1e38-45bf-b904-4c615b51e913] io.ktor.server.Application - 200 OK: POST - /mcp in 7ms
+07:07:52.342 INFO  [83661d66-2e13-4bd6-90ca-4a5e187a3451] io.ktor.server.Application - 404 Not Found: POST - /mcp in 5ms
+07:07:52.349 INFO  [e9962c96-40ea-4ad4-9374-43fbd4d37db1] io.ktor.server.Application - 400 Bad Request: POST - /mcp in 3ms
+07:07:52.356 INFO  [0cd24bdc-7578-4f34-9f82-38f6f174a4ba] io.ktor.server.Application - 200 OK: POST - /mcp in 5ms
+07:07:52.362 INFO  [d0c2a69c-423c-49ed-849f-c08431226cf0] io.ktor.server.Application - 200 OK: POST - /mcp in 3ms
+07:07:52.369 INFO  [78f24840-d340-4ce0-8d25-c33ec0e0dcf3] io.ktor.server.Application - 400 Bad Request: POST - /mcp in 5ms
+07:07:52.372 INFO  [2a5ca5d9-9f04-42ae-86f6-c44a848ae0cc] io.ktor.server.Application - 405 Method Not Allowed: GET - /mcp in 1ms
+07:07:52.383 INFO  [d45550fc-d98e-46ce-a669-ea7a807580b9] io.ktor.server.Application - 200 OK: POST - /mcp in 8ms
+07:07:52.390 INFO  [4ade4d1e-cae1-47f4-be20-fcd25730a750] io.ktor.server.Application - 202 Accepted: POST - /mcp in 6ms
+07:07:52.400 INFO  [729d1478-889b-4842-a827-09984b8a2d10] io.ktor.server.Application - 200 OK: DELETE - /mcp in 6ms
+07:07:52.408 INFO  [8fef1be9-a126-4351-8b85-32db2cfda475] io.ktor.server.Application - 404 Not Found: POST - /mcp in 7ms
+07:07:52.417 INFO  [24c9e855-fd60-481b-805c-f84e039e0ebf] io.ktor.server.Application - 200 OK: POST - /mcp in 4ms
+07:07:52.423 INFO  [f8e6c217-4c95-41cc-affb-9d5454c7f4c4] io.ktor.server.Application - 202 Accepted: POST - /mcp in 3ms
+07:07:52.432 INFO  [847ae493-c320-4a51-8f64-ecf798987584] io.ktor.server.Application - 200 OK: POST - /mcp in 7ms
+07:07:52.455 INFO  [dfc4fafa-3c46-4551-9938-5d5e8ec1e898] io.ktor.server.Application - 200 OK: POST - /mcp in 19ms
+07:07:52.472 INFO  [5f9847d4-6cbf-4347-8de9-b029a99e0cc9] io.ktor.server.Application - 200 OK: POST - /mcp in 13ms
+07:07:52.497 INFO  [bc038275-d22c-4b66-ad34-ff984afb9755] io.ktor.server.Application - 200 OK: POST - /mcp in 17ms
+07:07:52.545 INFO  [c73ecec1-ff4c-4aac-bead-1288e92eca67] io.ktor.server.Application - 200 OK: POST - /mcp in 34ms
+07:07:52.565 INFO  [f52a0472-28b7-4c99-9742-a32b68595da8] io.ktor.server.Application - 200 OK: POST - /mcp in 14ms
+07:07:52.587 INFO  [7d59fdd1-78f0-4e04-92a1-1387723f7d76] io.ktor.server.Application - 200 OK: POST - /mcp in 18ms
+07:07:52.672 INFO  [34361bd9-d102-442e-9c5c-66b4fefe1871] io.ktor.server.Application - 200 OK: POST - /mcp in 81ms
+07:07:52.711 INFO  [9902e91b-f486-4175-8078-cf355aa94b0d] io.ktor.server.Application - 200 OK: POST - /mcp in 35ms
+07:07:52.788 INFO  [55796ad1-160c-4894-875f-43b31fd89fdb] io.ktor.server.Application - 200 OK: POST - /mcp in 72ms
+07:07:52.928 INFO  [8536a279-cfa9-417b-a40c-c0b161c230a1] io.ktor.server.Application - 200 OK: POST - /mcp in 137ms
+07:07:52.972 INFO  [1cd09b79-a84c-43cb-be87-5a2be1abefe5] io.ktor.server.Application - 200 OK: POST - /mcp in 37ms
+07:07:53.039 INFO  [e00d5e68-8a17-4ac3-bbd5-61efa4b6cc60] io.ktor.server.Application - 200 OK: POST - /mcp in 65ms
+07:07:53.099 INFO  [f54afaf2-4a59-4b71-ba99-ed6d5dbc1dfb] io.ktor.server.Application - 200 OK: POST - /mcp in 58ms
+07:07:53.151 INFO  [e6686798-52c0-4400-8a9c-0d519846e463] io.ktor.server.Application - 200 OK: POST - /mcp in 45ms
+07:07:53.203 INFO  [ce038066-e8aa-4110-a336-8e503a86fceb] io.ktor.server.Application - 200 OK: POST - /mcp in 46ms
+07:07:53.260 INFO  [4cb58c1e-f3e3-4f7e-ad07-0168bfe2fb23] io.ktor.server.Application - 200 OK: POST - /mcp in 54ms
+07:07:53.290 INFO  [3182e28c-b4e8-4544-bc1e-6d935c590b2b] io.ktor.server.Application - 200 OK: POST - /mcp in 20ms
+07:07:53.340 INFO  [6a97bb2a-bf32-46fc-9e8c-e9a6a941ccb7] io.ktor.server.Application - 200 OK: POST - /mcp in 44ms
+07:07:53.362 INFO  [892fbe92-055d-42ef-b8c0-845d8285fe68] io.ktor.server.Application - 200 OK: POST - /mcp in 19ms
+07:07:53.384 INFO  [919723b5-8d7c-46bd-a095-71305dc1aa98] io.ktor.server.Application - 200 OK: POST - /mcp in 19ms
+07:07:53.410 INFO  [5bd3aa87-eeb5-42b1-bcb2-597c1dec27c3] io.ktor.server.Application - 200 OK: POST - /mcp in 20ms
+07:07:53.437 INFO  [f4ef659f-76c1-4176-811a-ed69ce087da0] io.ktor.server.Application - 200 OK: POST - /mcp in 20ms
+07:07:53.460 INFO  [0ce02094-22b6-4921-952b-d63793cbca1c] io.ktor.server.Application - 200 OK: POST - /mcp in 20ms
+07:07:53.477 INFO  [0aa8b56d-d1c1-44bb-9d4f-da6a779c71cf] io.ktor.server.Application - 200 OK: POST - /mcp in 14ms
+07:07:53.512 INFO  [44c5499c-b412-45f5-89be-f14bc6d9d5b9] io.ktor.server.Application - 200 OK: POST - /mcp in 32ms
+07:07:53.541 INFO  [3c72f277-a2ae-4d82-b791-fb645ee78f06] io.ktor.server.Application - 200 OK: POST - /mcp in 26ms
+07:07:53.614 INFO  [7dad5d91-1574-4852-81db-fa78cecfef50] io.ktor.server.Application - 200 OK: POST - /mcp in 67ms
+07:07:53.628 INFO  [cc6022da-ae1a-45c3-9033-b29666cefedb] io.ktor.server.Application - 200 OK: POST - /mcp in 10ms
+07:07:53.634 INFO  [00b29896-8b0b-4d0e-a674-e0e94b08d343] io.ktor.server.Application - 200 OK: POST - /mcp in 4ms
+07:07:53.640 INFO  [8ad78ea5-d07d-4c29-a05d-bfdc8f6fe705] io.ktor.server.Application - 202 Accepted: POST - /mcp in 5ms
+07:07:53.657 INFO  [94d6532c-dcfa-4355-b671-0ed8e59f8ec4] io.ktor.server.Application - 200 OK: POST - /mcp in 15ms
+07:07:53.673 INFO  [783810cf-847d-4575-9066-943402a47776] io.ktor.server.Application - 200 OK: POST - /mcp in 12ms
+07:07:53.678 INFO  [9e771299-5199-4559-9a8d-a177f915131a] io.ktor.server.Application - 201 Created: POST - /oauth/register in 3ms
+07:07:53.686 INFO  [2f952594-aa3f-422e-b024-10fc5db50bcf] io.ktor.server.Application - 200 OK: GET - /oauth/authorize in 4ms
+07:07:53.753 INFO  [3e4fc170-01e7-4df5-b296-cacfdc28efb0] io.ktor.server.Application - 200 OK: POST - /oauth/password in 64ms
+07:07:53.768 INFO  [f7d31640-9812-4a1f-9963-e59038ccb13f] io.ktor.server.Application - 302 Found: POST - /oauth/consent in 8ms -> https://claude.ai/api/mcp/auth_callback?code=flc_17LoepCACmr-1Npiunkr-_gFjJtZ3Zj1JSZSN_2DSak&state=WpNolVR-QN0DlzXn
+07:07:53.778 INFO  [8b5c22b6-f5e7-40b8-8db7-fc42460042ff] io.ktor.server.Application - 200 OK: POST - /oauth/token in 8ms
+07:07:53.789 INFO  [b854bd6a-6d22-42e4-a002-e804cd3254c3] io.ktor.server.Application - 200 OK: POST - /mcp in 8ms
+07:07:53.805 INFO  [885156d2-6e50-4cf0-ae2f-3649c6fcb3df] io.ktor.server.Application - 202 Accepted: POST - /mcp in 13ms
+07:07:53.871 INFO  [989545e4-57dd-414e-bfc8-2b7d5aa92f83] io.ktor.server.Application - 200 OK: POST - /mcp in 63ms
+07:07:53.895 INFO  [cabc9103-70c0-4dfe-a3f4-4bd981f92c9a] io.ktor.server.Application - 200 OK: POST - /mcp in 13ms
+07:07:53.914 INFO  [dadbd656-4662-427f-a58d-2631bd2e5ba1] io.ktor.server.Application - 200 OK: POST - /mcp in 17ms
+07:07:53.929 INFO  [1ff22cf6-2f25-41f6-8f3c-9d0120299191] io.ktor.server.Application - 200 OK: POST - /mcp in 9ms
+07:07:53.954 INFO  [f9e89907-a6c4-4f18-a471-e6d473abfb5a] io.ktor.server.Application - 200 OK: POST - /mcp in 22ms
+07:07:53.985 INFO  [a9d940ed-7b85-42ac-bf12-97b84f50394c] io.ktor.server.Application - 200 OK: POST - /mcp in 25ms
+07:07:53.995 INFO  [e7e51856-137a-41c8-b749-078051350f02] io.ktor.server.Application - 200 OK: POST - /mcp in 7ms
+07:07:54.010 INFO  [7d74d4a9-9e4e-4e39-9032-88002193384f] io.ktor.server.Application - 200 OK: POST - /mcp in 14ms
+07:07:54.069 INFO  [81d7cbb7-8ea5-46e4-a852-86173ba057fb] io.ktor.server.Application - 200 OK: POST - /mcp in 57ms
+07:07:54.085 INFO  [a108220a-f15a-4195-b196-1da6c4f1c066] io.ktor.server.Application - 200 OK: POST - /mcp in 12ms
+07:07:54.101 INFO  [81f18c8d-df94-4ac5-bc69-bfb9515fa9b5] io.ktor.server.Application - 200 OK: POST - /mcp in 13ms
+07:07:54.125 INFO  [0c3f8ca4-a156-407e-a91f-c67824f510ef] io.ktor.server.Application - 200 OK: POST - /mcp in 18ms
+07:07:54.131 INFO  [b94bc041-ebbd-47f5-90d5-e20f2e8c8c68] io.ktor.server.Application - 200 OK: POST - /mcp in 5ms
+07:07:54.170 INFO  [5839beaa-743c-49d5-8d54-a44a4e96ea1e] io.ktor.server.Application - 200 OK: POST - /mcp in 29ms
+07:07:54.189 INFO  [b4b50fab-f05c-4884-84ec-6ab1be2e7e37] io.ktor.server.Application - 200 OK: POST - /mcp in 16ms
+07:07:54.319 INFO  [035dcd4c-abe7-45d5-ad92-fc117888eafc] io.ktor.server.Application - 200 OK: POST - /mcp in 31ms
+07:07:54.354 INFO  [0b3e3bbe-d440-4024-89cd-347313e6d986] io.ktor.server.Application - 200 OK: POST - /mcp in 29ms
+07:07:54.373 INFO  [7c8c9b48-66b8-45ca-b68f-90d8e3ffd88e] io.ktor.server.Application - 200 OK: POST - /mcp in 16ms
+07:07:54.381 INFO  [2811d07f-751a-4be7-bbe6-c4a35f21f54e] io.ktor.server.Application - 200 OK: POST - /mcp in 6ms
+07:07:54.392 INFO  [bf9f9852-3522-481d-8dfa-b6740610b384] io.ktor.server.Application - 200 OK: POST - /mcp in 9ms
+07:07:54.404 INFO  [09da3f04-38b6-430f-9767-a65c3546538a] io.ktor.server.Application - 200 OK: POST - /mcp in 7ms
+07:07:54.412 INFO  [1fb3a651-b6bf-4625-bac8-e6447c2ef2a8] io.ktor.server.Application - 200 OK: POST - /mcp in 5ms
+07:07:54.421 INFO  [89c06d64-39bc-4027-bca0-4b6a93c8cba8] io.ktor.server.Application - 200 OK: POST - /mcp in 7ms
+07:07:54.428 INFO  [478514b2-880d-4bbf-9b55-55c172f04e66] io.ktor.server.Application - 200 OK: POST - /mcp in 6ms
+07:07:54.436 INFO  [56995ff7-21ab-4380-b894-aabf4c7daf4f] io.ktor.server.Application - 200 OK: POST - /mcp in 7ms
+07:07:54.444 INFO  [8221c1e1-3f8a-4b4b-bcae-ba89af216c77] io.ktor.server.Application - 200 OK: POST - /mcp in 7ms
+07:07:54.450 INFO  [68aad433-c53f-4d68-aae0-68a0f4d70668] io.ktor.server.Application - 200 OK: POST - /mcp in 4ms
+07:07:54.470 INFO  [74dae10f-a826-434e-a58e-099a52fd86f1] io.ktor.server.Application - 200 OK: POST - /mcp in 18ms
+07:07:54.487 INFO  [be055bd3-a0a3-4fb2-b874-669d4d057a60] io.ktor.server.Application - 200 OK: POST - /mcp in 13ms
+07:07:54.497 INFO  [0f49cdb8-1058-4129-b6ac-dd7c7dc0e864] io.ktor.server.Application - 200 OK: POST - /mcp in 10ms
+07:07:54.509 INFO  [1b939cf6-f41a-4be2-babd-547da01f5ae2] io.ktor.server.Application - 200 OK: POST - /mcp in 10ms
+07:07:54.515 INFO  [86046265-f449-4f23-9ec2-594da6e23dd9] io.ktor.server.Application - 200 OK: POST - /mcp in 4ms
+07:07:54.525 INFO  [8e8e2425-90b6-4f9d-9aae-a968b7e79eb2] io.ktor.server.Application - 200 OK: POST - /mcp in 8ms
+07:07:54.537 INFO  [dc69583f-e326-4e20-8ae7-dac259673797] io.ktor.server.Application - 200 OK: POST - /mcp in 10ms
+07:07:54.653 INFO  [30661478-fa44-4210-aaee-7d9a1275eecb] io.ktor.server.Application - 200 OK: POST - /mcp in 108ms
+07:07:54.686 INFO  [83e66cf4-a57d-4761-a531-6e5b4d8df14b] io.ktor.server.Application - 200 OK: POST - /mcp in 24ms
+07:07:54.700 INFO  [92885ee9-af90-4575-8362-3f5b7755e851] io.ktor.server.Application - 200 OK: POST - /mcp in 11ms
+07:07:54.726 INFO  [2d4d18eb-9f14-4584-a486-3089dae8472d] io.ktor.server.Application - 200 OK: POST - /mcp in 24ms
+07:07:54.749 INFO  [baa12f10-dc6c-4b15-a742-163806b5f3c6] io.ktor.server.Application - 200 OK: POST - /mcp in 16ms
+07:07:54.773 INFO  [412375e2-0879-4543-823e-702b1d482b6c] io.ktor.server.Application - 200 OK: POST - /mcp in 22ms
+07:07:54.798 INFO  [add0efb4-5376-4d11-b47c-bbb06ad1875e] io.ktor.server.Application - 200 OK: POST - /mcp in 22ms
+07:07:54.808 INFO  [08c28ab8-e1dc-4c55-b955-67dd226da25c] io.ktor.server.Application - 200 OK: POST - /mcp in 8ms
+07:07:54.825 INFO  [8c5355f5-1845-4ac6-a676-e0105a3667a7] io.ktor.server.Application - 200 OK: POST - /mcp in 15ms
+07:07:54.841 INFO  [f9355336-0164-4065-a9d0-778ccc9aafd9] io.ktor.server.Application - 200 OK: POST - /mcp in 14ms
+07:07:54.852 INFO  [4def85db-191b-4d83-afb9-f968a7a4d2cb] io.ktor.server.Application - 200 OK: POST - /mcp in 9ms
+07:07:54.861 INFO  [a8c0e368-9d78-44c5-872a-9d76911d938b] io.ktor.server.Application - 200 OK: POST - /mcp in 7ms
+07:07:54.869 INFO  [dec18cf1-16d6-4206-af51-3613e6281258] io.ktor.server.Application - 200 OK: POST - /mcp in 6ms
+07:07:54.881 INFO  [6de66e1f-8288-49a5-a058-8b00fa1fd244] io.ktor.server.Application - 200 OK: POST - /mcp in 10ms
+07:07:54.891 INFO  [a4d9dddb-2091-401c-a913-b636308be75e] io.ktor.server.Application - 200 OK: POST - /mcp in 8ms
+07:07:54.905 INFO  [0911cafb-763c-470c-9c2c-a5152f809bfd] io.ktor.server.Application - 200 OK: POST - /mcp in 11ms
+07:07:54.912 INFO  [58827de2-5c86-4c63-aff3-82550b439f4f] io.ktor.server.Application - 200 OK: POST - /mcp in 5ms
+07:07:54.923 INFO  [b5c90c75-6152-463a-ae31-a0ddfedc27a8] io.ktor.server.Application - 200 OK: POST - /mcp in 5ms
+07:07:54.932 INFO  [1898dab4-4e5f-452a-9fe1-0ffc75bac2cb] io.ktor.server.Application - 200 OK: POST - /mcp in 7ms
+07:07:54.941 INFO  [8077da03-de1c-4c32-a9ed-a40931a70a25] io.ktor.server.Application - 200 OK: POST - /mcp in 7ms
+07:07:54.954 INFO  [d4f0bb06-829e-4d2e-9b3c-cb8df131a166] io.ktor.server.Application - 200 OK: GET - /v1/me/ai-connections in 10ms
+07:07:54.965 INFO  [5d348904-5d72-46fc-9968-5666b042d4b1] io.ktor.server.Application - 200 OK: GET - /v1/deletion-requests in 10ms
+07:07:54.969 INFO  [2fc272d0-bc5d-431d-83b3-e326cb261ff2] io.ktor.server.Application - 200 OK: GET - /v1/imports in 3ms
+07:07:54.973 INFO  [6a0be5a2-90b4-460e-b724-8c6d91fe213c] io.ktor.server.Application - 200 OK: GET - /v1/exercises in 3ms
+07:07:54.981 INFO  [78a4a04a-606e-454b-8290-0e70d9098a9f] io.ktor.server.Application - 200 OK: GET - /v1/sessions in 6ms
+07:08:57.171 INFO  [bb6dd268-4a91-4f94-ad72-3d8e53a746ce] io.ktor.server.Application - 401 Unauthorized: POST - /v1/auth/refresh in 185ms
+07:08:57.178 INFO  [0a5e8d60-0054-4902-977f-84c62bb7bd3e] io.ktor.server.Application - 400 Bad Request: POST - /oauth/token in 5ms
+=== 서버 재시작 ===
+Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts -Djavax.net.ssl.trustStoreType=JKS -Dhttps.proxyHost=127.0.0.1 -Dhttps.proxyPort=33381 -Dhttp.nonProxyHosts=localhost|127.0.0.1|::1|127.*|0.*|::|169.254.*|api.anthropic.com|api-staging.anthropic.com|api-pr-preview.anthropic.com|mcp-proxy.anthropic.com|mcp-proxy-staging.anthropic.com|registry.npmjs.org|jsr.io|npm.jsr.io|pypi.org|files.pythonhosted.org|index.crates.io|proxy.golang.org|host.docker.internal|10.*|172.16.*|172.17.*|172.18.*|172.19.*|172.20.*|172.21.*|172.22.*|172.23.*|172.24.*|172.25.*|172.26.*|172.27.*|172.28.*|172.29.*|172.30.*|172.31.*|192.168.*|100.64.0.0/10|*.svc.cluster.local|*.svc.cluster.local -Djdk.http.auth.tunneling.disabledSchemes= -Djdk.http.auth.proxying.disabledSchemes=
+Picked up _JAVA_OPTIONS: -XX:+UnlockDiagnosticVMOptions -XX:DisableIntrinsic=_base64_encodeBlock,_base64_decodeBlock
+07:09:08.656 INFO  [-] io.ktor.server.Application - Autoreload is disabled because the development mode is off.
+07:09:10.492 INFO  [-] io.ktor.server.Application - Application started in 2.118 seconds.
+07:09:10.686 INFO  [-] io.ktor.server.Application - Responding at http://0.0.0.0:18080
+07:09:11.438 INFO  [80e88605-1af4-4955-a7b1-f4b2590283cb] io.ktor.server.Application - 200 OK: POST - /mcp in 121ms
+07:09:11.550 INFO  [e606de68-8397-4c68-95a0-91009dc85714] io.ktor.server.Application - 200 OK: POST - /mcp in 114ms
+07:09:11.773 INFO  [efb2fd57-c905-4ecc-82e7-017c67db0b9b] io.ktor.server.Application - 200 OK: POST - /mcp in 208ms
+07:09:11.807 INFO  [cbfcfa9c-8068-4b3e-9873-48e020dbaeb8] io.ktor.server.Application - 200 OK: POST - /mcp in 28ms
+07:09:11.927 INFO  [19d27ef8-5083-4ef1-9b5f-0a0120916cc0] io.ktor.server.Application - 200 OK: POST - /mcp in 113ms
+07:09:11.954 INFO  [08057b9c-0120-4a20-a4f7-deb2f71d63ae] io.ktor.server.Application - 200 OK: POST - /mcp in 18ms
+07:09:11.972 INFO  [1171dcc1-fc83-4443-8f2f-74554da802de] io.ktor.server.Application - 202 Accepted: POST - /mcp in 14ms
+07:09:12.004 INFO  [09778960-753c-4d33-8b4a-0dd7cf07f52a] io.ktor.server.Application - 200 OK: POST - /mcp in 24ms
+07:09:12.069 INFO  [ede513de-58e0-4825-93b0-108c6d81791b] io.ktor.server.Application - 200 OK: POST - /oauth/token in 49ms
+07:09:12.086 INFO  [098ab5cb-c0e6-402a-bbae-db0eafc54146] io.ktor.server.Application - 200 OK: POST - /mcp in 12ms
+07:09:12.103 INFO  [be825acc-421d-4d24-91bc-8a5d61c7e83b] io.ktor.server.Application - 202 Accepted: POST - /mcp in 13ms
+07:09:12.125 INFO  [00ba6a32-7210-4847-a127-560bde258922] io.ktor.server.Application - 200 OK: POST - /mcp in 17ms
+07:09:12.156 INFO  [1d7d589a-13d9-4733-98e5-bdfa4343d35c] io.ktor.server.Application - 200 OK: POST - /mcp in 22ms
+07:09:12.214 INFO  [ac089469-c811-432c-b6eb-1d81997d3ecd] io.ktor.server.Application - 200 OK: GET - /v1/me in 53ms
+07:09:12.247 INFO  [bc67d324-8652-497b-89af-50add36bfa62] io.ktor.server.Application - 200 OK: POST - /v1/auth/refresh in 29ms
+07:09:12.262 INFO  [d75baf5a-5959-486d-86da-1fefa2752b73] io.ktor.server.Application - 200 OK: GET - /v1/me in 9ms
+07:09:12.293 INFO  [35218f2b-cac0-4db1-863d-85721a36b172] io.ktor.server.Application - 200 OK: GET - /v1/sessions/7f3315d7-3f5f-4d7c-bda3-29bd9a6398a8 in 27ms
+07:09:12.490 INFO  [4c569314-1e4d-4400-8b1f-a562fd11a219] io.ktor.server.Application - 200 OK: POST - /v1/auth/password/login in 192ms
+07:09:12.509 INFO  [7d13017b-2521-4c34-9765-4d60243ae75d] io.ktor.server.Application - 200 OK: GET - /oauth/authorize in 11ms
+07:09:12.529 INFO  [c3430ea1-0220-42aa-9030-921140a75036] io.ktor.server.Application - 200 OK: GET - /oauth/authorize in 16ms
+07:09:12.680 INFO  [1c507bf7-a913-47a9-aa08-a23dce8a18ed] io.ktor.server.Application - 200 OK: POST - /oauth/password in 136ms
+07:09:12.734 INFO  [bb825ddb-b150-4452-820f-1a3c5612e3ce] io.ktor.server.Application - 302 Found: POST - /oauth/consent in 50ms -> https://chatgpt.com/connector_platform_oauth_redirect?code=flc_opE4CABzgt2Yf60BdrSDSCvBSvgmj8kc6XsZssGUYLI&state=lK3wL96HCCUeqH8y
+07:09:12.763 INFO  [a92d89d1-87e7-4c22-bbfa-820c3728020a] io.ktor.server.Application - 200 OK: POST - /oauth/token in 14ms
+07:09:12.778 INFO  [ad346fe7-6571-42fb-a6dc-89e57e5a31e5] io.ktor.server.Application - 200 OK: POST - /mcp in 11ms
+07:09:12.789 INFO  [3c9ab8ca-8704-4d20-8d00-e39d77aa611b] io.ktor.server.Application - 202 Accepted: POST - /mcp in 7ms
+07:09:12.805 INFO  [88442849-bfc5-43e0-9027-280a31e87c3e] io.ktor.server.Application - 200 OK: POST - /mcp in 11ms
+07:09:12.817 INFO  [bb941680-dc19-41f8-bb3b-0dd9dcf58862] io.ktor.server.Application - 200 OK: GET - /.well-known/oauth-protected-resource in 4ms

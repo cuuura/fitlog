@@ -1,0 +1,72 @@
+name: e2e
+
+# 블랙박스 E2E: 실제 서버 프로세스에 진짜 HTTP 로 접속해 앱·ChatGPT·Claude 가 하는 요청을 재현한다(자세한 설명은 e2e/run.py 머리말).
+on:
+  push:
+    branches: [main]
+    paths: ["server/**", "contracts/**", "e2e/**", ".github/workflows/e2e.yml"]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 21 * * *" # 매일 06:17 KST: 배포된 테스트 서버 점검
+
+permissions:
+  contents: read
+
+jobs:
+  local:
+    # 서버를 새로 빌드해 띄우고, 중간에 재시작하면서 전체 점검을 돌린다
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: fitlog
+          POSTGRES_PASSWORD: fitlog
+          POSTGRES_DB: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fitlog"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: E2E (빌드, 서버 시작, 점검, 재시작, 점검)
+        env:
+          PG_HOST: localhost
+          PG_USER: fitlog
+          PG_PASSWORD: fitlog
+        run: e2e/run_local.sh
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-server-log
+          path: e2e/.server.log
+
+  live:
+    # 배포된 테스트 서버. 임시 계정으로만 점검하고 끝나면 계정을 지운다. 재시작 단계는 없다
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      E2E_BASE_URL: ${{ vars.E2E_BASE_URL || 'https://fitlog-server-3wnw.onrender.com' }}
+      E2E_SIGNUP_CODE: ${{ secrets.E2E_SIGNUP_CODE }}
+    steps:
+      - name: 가입 코드 확인
+        id: guard
+        run: |
+          if [ -z "$E2E_SIGNUP_CODE" ]; then
+            echo "::warning::secrets.E2E_SIGNUP_CODE 가 없어 라이브 E2E 를 건너뜁니다."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.guard.outputs.skip != 'true'
+        uses: actions/checkout@v4
+      - name: 라이브 E2E (재시작 없음)
+        if: steps.guard.outputs.skip != 'true'
+        run: python3 e2e/run.py --base-url "$E2E_BASE_URL" --phase all --cleanup --wait 120
