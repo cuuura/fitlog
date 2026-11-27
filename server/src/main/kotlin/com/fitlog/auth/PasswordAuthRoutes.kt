@@ -104,10 +104,61 @@ private fun normalizeUsername(raw: String) = raw.trim().lowercase()
 private fun constantTimeEquals(a: String, b: String): Boolean =
     MessageDigest.isEqual(a.toByteArray(Charsets.UTF_8), b.toByteArray(Charsets.UTF_8))
 
-private sealed interface LoginOutcome {
-    data class Ok(val userId: UUID, val refresh: String) : LoginOutcome
-    data class Locked(val retryAfterSec: Long) : LoginOutcome
-    data object Invalid : LoginOutcome
+/** 아이디·비밀번호 확인 결과 (REST 로그인과 OAuth 로그인 페이지가 함께 쓴다) */
+internal sealed interface PasswordAuthResult {
+    data class Ok(val userId: UUID) : PasswordAuthResult
+    data class Locked(val retryAfterSec: Long) : PasswordAuthResult
+    data object Invalid : PasswordAuthResult
+}
+
+/**
+ * 아이디 정규화 → PBKDF2 검증 → 실패 횟수·잠금 갱신. 비밀번호 로그인 사용 여부는 호출 쪽에서 확인한다.
+ * 잠금 중에는 비밀번호가 맞아도 Locked.
+ */
+internal suspend fun authenticatePassword(rawUsername: String, password: String): PasswordAuthResult {
+    val username = normalizeUsername(rawUsername)
+    val row = dbQuery {
+        PasswordCredentials.selectAll().where { PasswordCredentials.username eq username }.singleOrNull()
+    }
+    if (row == null) {
+        withContext(Dispatchers.Default) { PasswordHasher.verify(password, dummyHash) }
+        return PasswordAuthResult.Invalid
+    }
+    val uid = row[PasswordCredentials.userId]
+    val lockedAt = row[PasswordCredentials.lockedUntil]
+    val now0 = Times.now()
+    if (lockedAt != null && lockedAt.isAfter(now0)) {
+        return PasswordAuthResult.Locked(Duration.between(now0, lockedAt).seconds.coerceAtLeast(1))
+    }
+    val ok = withContext(Dispatchers.Default) { PasswordHasher.verify(password, row[PasswordCredentials.passwordHash]) }
+
+    return dbQuery {
+        val now = Times.now()
+        // 동시 시도에서 실패 횟수가 유실되지 않도록 행을 잠근다
+        val cur = PasswordCredentials.selectAll().where { PasswordCredentials.userId eq uid }.forUpdate().single()
+        val locked = cur[PasswordCredentials.lockedUntil]
+        if (locked != null && locked.isAfter(now)) {
+            return@dbQuery PasswordAuthResult.Locked(Duration.between(now, locked).seconds.coerceAtLeast(1))
+        }
+        if (ok) {
+            PasswordCredentials.update({ PasswordCredentials.userId eq uid }) {
+                it[failedCount] = 0
+                it[lockedUntil] = null
+                it[updatedAt] = now
+            }
+            PasswordAuthResult.Ok(uid)
+        } else {
+            val failures = cur[PasswordCredentials.failedCount] + 1
+            val lock = failures >= MAX_FAILURES
+            PasswordCredentials.update({ PasswordCredentials.userId eq uid }) {
+                // 잠금이 걸리면 횟수를 0으로 되돌려 해제 후 다시 5번의 기회를 준다
+                it[failedCount] = if (lock) 0 else failures
+                it[lockedUntil] = if (lock) now.plus(LOCK_DURATION) else null
+                it[updatedAt] = now
+            }
+            PasswordAuthResult.Invalid
+        }
+    }
 }
 
 /** Retry-After 헤더는 호출 쪽에서 먼저 붙인다 */
@@ -187,60 +238,16 @@ fun Route.passwordAuthRoutes(config: AppConfig) {
         if (!pw.enabled) notFound()
         val req = call.receive<PasswordLoginRequest>()
         checkIntegrity(call, config, req.username)
-        val username = normalizeUsername(req.username)
-
-        val row = dbQuery {
-            PasswordCredentials.selectAll().where { PasswordCredentials.username eq username }.singleOrNull()
-        }
-        if (row == null) {
-            withContext(Dispatchers.Default) { PasswordHasher.verify(req.password, dummyHash) }
-            unauthenticated("invalid username or password")
-        }
-        val uid = row[PasswordCredentials.userId]
-        val lockedAt = row[PasswordCredentials.lockedUntil]
-        val now0 = Times.now()
-        if (lockedAt != null && lockedAt.isAfter(now0)) {
-            // 잠금 중에는 비밀번호가 맞아도 429
-            val sec = Duration.between(now0, lockedAt).seconds.coerceAtLeast(1)
-            call.response.header(HttpHeaders.RetryAfter, sec.toString())
-            tooManyAttempts()
-        }
-        val ok = withContext(Dispatchers.Default) { PasswordHasher.verify(req.password, row[PasswordCredentials.passwordHash]) }
-
-        val outcome: LoginOutcome = dbQuery {
-            val now = Times.now()
-            // 동시 시도에서 실패 횟수가 유실되지 않도록 행을 잠근다
-            val cur = PasswordCredentials.selectAll().where { PasswordCredentials.userId eq uid }.forUpdate().single()
-            val locked = cur[PasswordCredentials.lockedUntil]
-            if (locked != null && locked.isAfter(now)) {
-                return@dbQuery LoginOutcome.Locked(Duration.between(now, locked).seconds.coerceAtLeast(1))
+        when (val outcome = authenticatePassword(req.username, req.password)) {
+            is PasswordAuthResult.Ok -> {
+                val refresh = dbQuery { RefreshTokenService.issue(this, outcome.userId, config.jwt.refreshTtlSec) }
+                call.respond(tokens(outcome.userId, refresh, false))
             }
-            if (ok) {
-                PasswordCredentials.update({ PasswordCredentials.userId eq uid }) {
-                    it[failedCount] = 0
-                    it[lockedUntil] = null
-                    it[updatedAt] = now
-                }
-                LoginOutcome.Ok(uid, RefreshTokenService.issue(this, uid, config.jwt.refreshTtlSec))
-            } else {
-                val failures = cur[PasswordCredentials.failedCount] + 1
-                val lock = failures >= MAX_FAILURES
-                PasswordCredentials.update({ PasswordCredentials.userId eq uid }) {
-                    // 잠금이 걸리면 횟수를 0으로 되돌려 해제 후 다시 5번의 기회를 준다
-                    it[failedCount] = if (lock) 0 else failures
-                    it[lockedUntil] = if (lock) now.plus(LOCK_DURATION) else null
-                    it[updatedAt] = now
-                }
-                LoginOutcome.Invalid
-            }
-        }
-        when (outcome) {
-            is LoginOutcome.Ok -> call.respond(tokens(outcome.userId, outcome.refresh, false))
-            is LoginOutcome.Locked -> {
+            is PasswordAuthResult.Locked -> {
                 call.response.header(HttpHeaders.RetryAfter, outcome.retryAfterSec.toString())
                 tooManyAttempts()
             }
-            LoginOutcome.Invalid -> unauthenticated("invalid username or password")
+            PasswordAuthResult.Invalid -> unauthenticated("invalid username or password")
         }
     }
 }

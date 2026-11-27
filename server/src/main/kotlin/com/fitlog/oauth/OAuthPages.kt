@@ -24,6 +24,9 @@ h1{font-size:20px;margin:0 0 16px}
 p{line-height:1.55;margin:8px 0}
 .muted{color:#666;font-size:13px}
 label.opt{display:flex;gap:10px;align-items:flex-start;margin:14px 0;padding:12px;border:1px solid #d8dbe0;border-radius:10px}
+input[type=text],input[type=password]{width:100%;box-sizing:border-box;padding:11px;margin:4px 0 12px;border:1px solid #c5c9d0;border-radius:10px;font-size:15px}
+.err{color:#b3261e;background:#fdecea;border-radius:8px;padding:10px 12px}
+a.btn{display:block;text-align:center;padding:12px;border-radius:10px;border:1px solid #c5c9d0;color:#1c1e21;text-decoration:none;margin-top:14px}
 .btns{display:flex;gap:10px;margin-top:20px}
 button{flex:1;padding:12px;border-radius:10px;border:1px solid #c5c9d0;background:#fff;font-size:15px;cursor:pointer}
 button.primary{background:#1a73e8;color:#fff;border-color:#1a73e8}
@@ -31,6 +34,24 @@ button.primary{background:#1a73e8;color:#fff;border-color:#1a73e8}
 
     fun error(title: String, message: String) =
         page(title, "<h1>${esc(title)}</h1><p>${esc(message)}</p><p class=\"muted\">이 창을 닫고 AI 앱에서 다시 시도해 주세요.</p>")
+
+    fun login(clientName: String, formToken: String, action: String, googleUrl: String?, errorMessage: String? = null): String {
+        val err = if (errorMessage != null) "<p class=\"err\" role=\"alert\">${esc(errorMessage)}</p>" else ""
+        val google = if (googleUrl != null) "<a class=\"btn\" href=\"${esc(googleUrl)}\">Google로 계속하기</a>" else ""
+        return page(
+            "로그인",
+            """<h1>${esc(clientName)} 연결을 위해 로그인</h1>
+<p class="muted">Fitlog 앱에서 쓰는 아이디·비밀번호로 로그인해 주세요.</p>
+$err
+<form method="post" action="${esc(action)}">
+<input type="hidden" name="authz" value="${esc(formToken)}">
+<label>아이디<input type="text" name="username" autocomplete="username" autocapitalize="none" required></label>
+<label>비밀번호<input type="password" name="password" autocomplete="current-password" required></label>
+<div class="btns"><button type="submit" class="primary">로그인</button></div>
+</form>
+$google""",
+        )
+    }
 
     fun consent(clientName: String, email: String, canWrite: Boolean, formToken: String, action: String): String {
         val writeBox = if (canWrite) {

@@ -1327,7 +1327,6 @@
   "qaStepDecrease": "Decrease",
   "qaStepIncrease": "Increase",
   "authPasswordAccountLabel": "ID login",
-  "authPasswordAiNote": "AI connection (MCP) is only available when signed in with Google. ID login accounts cannot use it.",
   "authMethodsLoading": "Connecting to the server… (a sleeping server can take about a minute)",
   "authMethodsError": "Couldn't reach the server. Try again if username sign-in is missing.",
   "authMethodsRetry": "Try again",

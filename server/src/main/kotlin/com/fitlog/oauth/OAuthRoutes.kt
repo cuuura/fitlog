@@ -2,6 +2,8 @@ package com.fitlog.oauth
 
 import com.fitlog.account.ensureSettings
 import com.fitlog.auth.GoogleIdTokenVerifierImpl
+import com.fitlog.auth.PasswordAuthResult
+import com.fitlog.auth.authenticatePassword
 import com.fitlog.core.AiConnections
 import com.fitlog.core.AppConfig
 import com.fitlog.core.AppUsers
@@ -207,8 +209,8 @@ fun Route.oauthRoutes(config: AppConfig) {
         val resource = q["resource"]
         if (resource != null && resource.trimEnd('/') != config.mcpUrl()) return@get fail("invalid_target", "resource must be ${config.mcpUrl()}")
         val scopes = parseScopes(q["scope"]) ?: return@get fail("invalid_scope", "supported scopes: ${SUPPORTED_SCOPES.joinToString(" ")}")
-        val webClientId = config.googleWebClientId
-        if (webClientId.isNullOrEmpty()) {
+        val webClientId = config.googleWebClientId?.takeIf { it.isNotEmpty() }
+        if (webClientId == null && !config.passwordLogin.enabled) {
             return@get call.html(HttpStatusCode.ServiceUnavailable, OAuthPages.error("로그인을 사용할 수 없음", "서버에 Google 웹 로그인이 설정되지 않았습니다."))
         }
         val signed = Signer.sign(
@@ -219,20 +221,69 @@ fun Route.oauthRoutes(config: AppConfig) {
             ),
             AUTH_CODE_TTL_SEC,
         )
-        call.noStore()
-        call.respondRedirect(
+        val googleUrl = webClientId?.let {
             appendQuery(
                 "https://accounts.google.com/o/oauth2/v2/auth",
                 mapOf(
-                    "client_id" to webClientId,
+                    "client_id" to it,
                     "redirect_uri" to googleCallback,
                     "response_type" to "code",
                     "scope" to "openid email profile",
                     "state" to signed,
                     "prompt" to "select_account",
                 ),
-            ),
-        )
+            )
+        }
+        call.noStore()
+        if (config.passwordLogin.enabled) {
+            return@get call.html(HttpStatusCode.OK, OAuthPages.login(client.name, signed, "$base/oauth/password", googleUrl))
+        }
+        call.respondRedirect(googleUrl!!)
+    }
+
+    // ---------------------------------------------------------------- 아이디·비밀번호 로그인 (테스트 서버)
+    post("/oauth/password") {
+        call.noStore()
+        val params = call.receiveParameters()
+        val token = params["authz"]
+        val st = Signer.verify(secret, "authz", token)
+            ?: return@post call.html(HttpStatusCode.BadRequest, OAuthPages.error("잘못된 요청", "로그인 요청이 만료되었거나 올바르지 않습니다. 처음부터 다시 시도해 주세요."))
+        if (!config.passwordLogin.enabled) {
+            return@post call.html(HttpStatusCode.NotFound, OAuthPages.error("로그인을 사용할 수 없음", "이 서버는 아이디·비밀번호 로그인을 사용하지 않습니다."))
+        }
+        val client = findClient(st["cid"])
+            ?: return@post call.html(HttpStatusCode.BadRequest, OAuthPages.error("잘못된 요청", "등록되지 않은 클라이언트입니다."))
+        val username = params["username"].orEmpty()
+        val password = params["password"].orEmpty()
+        val webClientId = config.googleWebClientId?.takeIf { it.isNotEmpty() }
+        val googleUrl = webClientId?.let {
+            appendQuery(
+                "https://accounts.google.com/o/oauth2/v2/auth",
+                mapOf(
+                    "client_id" to it, "redirect_uri" to googleCallback, "response_type" to "code",
+                    "scope" to "openid email profile", "state" to token, "prompt" to "select_account",
+                ),
+            )
+        }
+        suspend fun again(status: HttpStatusCode, msg: String) =
+            call.html(status, OAuthPages.login(client.name, token!!, "$base/oauth/password", googleUrl, msg))
+
+        if (username.length > 64 || password.length > 128) return@post again(HttpStatusCode.Unauthorized, "아이디 또는 비밀번호가 올바르지 않습니다.")
+        when (val r = authenticatePassword(username, password)) {
+            PasswordAuthResult.Invalid -> again(HttpStatusCode.Unauthorized, "아이디 또는 비밀번호가 올바르지 않습니다.")
+            is PasswordAuthResult.Locked -> {
+                call.response.header(HttpHeaders.RetryAfter, r.retryAfterSec.toString())
+                again(HttpStatusCode.TooManyRequests, "로그인 시도가 너무 많아 잠겼습니다. ${(r.retryAfterSec + 59) / 60}분 뒤에 다시 시도해 주세요.")
+            }
+            is PasswordAuthResult.Ok -> {
+                val scopes = st.getValue("sc").split(' ').filter { it.isNotEmpty() }
+                val form = Signer.sign(secret, "consent", st + mapOf("uid" to r.userId.toString()), AUTH_CODE_TTL_SEC)
+                call.html(
+                    HttpStatusCode.OK,
+                    OAuthPages.consent(client.name, username.trim().lowercase(), SCOPE_WRITE in scopes, form, "$base/oauth/consent"),
+                )
+            }
+        }
     }
 
     // ---------------------------------------------------------------- Google 웹 로그인 콜백

@@ -37,7 +37,7 @@ flutter run --dart-define=API_BASE_URL=https://fitlog-server-xxxx.onrender.com
 ## 선택 설정
 
 - Google 로그인: 서비스 Environment 에 `GOOGLE_CLIENT_IDS` 를 추가한다.
-- MCP 연결: [mcp-connect.md](mcp-connect.md). `PUBLIC_BASE_URL` 은 Render 주소(`RENDER_EXTERNAL_URL`)가 자동으로 쓰인다.
+- MCP 연결: [mcp-connect.md](mcp-connect.md#테스트-서버아이디비밀번호로-연결) (아이디·비밀번호 계정으로도 연결된다). `PUBLIC_BASE_URL` 은 Render 주소(`RENDER_EXTERNAL_URL`)가 자동으로 쓰인다.
 
 ## 출시 전
 

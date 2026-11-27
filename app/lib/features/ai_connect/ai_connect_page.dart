@@ -24,7 +24,6 @@ class AiConnectPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     ref.watch(authControllerProvider);
-    final isPasswordAccount = ref.read(authControllerProvider.notifier).me?.isPasswordAccount ?? false;
     final info = ref.watch(_mcpInfoProvider);
     final conns = ref.watch(_connectionsProvider);
     void retry() {
@@ -54,11 +53,6 @@ class AiConnectPage extends ConsumerWidget {
         data: (i) => ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            if (isPasswordAccount)
-              Card(
-                key: const Key('aiPasswordNote'),
-                child: ListTile(leading: const Icon(Icons.info_outline), title: Text(l.authPasswordAiNote)),
-              ),
             Text(l.aiConnectUrlLabel, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 4),
             SelectableText(i.mcpUrl, style: const TextStyle(fontFamily: 'monospace', fontSize: 14)),

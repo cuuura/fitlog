@@ -7,9 +7,6 @@ import 'package:fitlog/core/auth/auth_controller.dart';
 import 'package:fitlog/core/auth/token_store.dart';
 import 'package:fitlog/core/integrity/integrity.dart';
 import 'package:fitlog/core/settings/settings_controller.dart';
-import 'package:fitlog/data/memory/memory_repositories.dart';
-import 'package:fitlog/data/providers.dart';
-import 'package:fitlog/features/ai_connect/ai_connect_page.dart';
 import 'package:fitlog/features/auth/login_page.dart';
 import 'package:fitlog/features/settings/settings_page.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -392,20 +389,5 @@ void main() {
       expect(find.text('a@b.c'), findsOneWidget);
       expect(find.textContaining('아이디 로그인'), findsNothing);
     });
-
-    for (final (email, shown) in [('jae@password.local', true), ('a@b.c', false)]) {
-      testWidgets('AI 연결 안내: $email -> $shown', (tester) async {
-        final c = authContainer(
-          adapter: _server(),
-          extra: [
-            authControllerProvider.overrideWith(() => PwAuth(_me(email))),
-            aiConnectionRepositoryProvider.overrideWithValue(MemoryAiConnectionRepository()),
-          ],
-        );
-        await tester.pumpWidget(containerApp(c, const AiConnectPage()));
-        await tester.pumpAndSettle();
-        expect(find.byKey(const Key('aiPasswordNote')), shown ? findsOneWidget : findsNothing);
-      });
-    }
   });
 }

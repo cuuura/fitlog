@@ -11,6 +11,8 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
+import io.ktor.server.testing.testApplication
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
@@ -339,5 +341,93 @@ class OAuthFlowTest {
         }
         assertNull(OAuthTokenService.authenticate(first.access), "old token must not come back to life")
         assertNotNull(OAuthTokenService.authenticate(second.access))
+    }
+
+    // ---------------------------------------------------------------- 아이디·비밀번호 로그인 (Google 설정 없음)
+
+    private fun pwConfig(enabled: Boolean = true) = a2Config().copy(
+        googleWebClientId = null,
+        passwordLogin = com.fitlog.core.PasswordLoginConfig(enabled = enabled, signupCode = "letmein"),
+    )
+
+    private suspend fun io.ktor.client.HttpClient.registerPw(username: String, password: String) {
+        val res = post("/v1/auth/password/register") {
+            contentType(ContentType.Application.Json)
+            setBody("""{"username":"$username","password":"$password","signupCode":"letmein"}""")
+        }
+        assertEquals(HttpStatusCode.OK, res.status, res.bodyAsText())
+    }
+
+    private fun tokenOf(html: String, field: String) = Regex("name=\"$field\" value=\"([^\"]+)\"").find(html)!!.groupValues[1]
+
+    @Test
+    fun password_login_page_is_shown_when_enabled_without_google() = a2Test(pwConfig()) {
+        val c = plainClient()
+        val cid = c.registerClient()
+        val res = c.get(authorizeUrl(cid, challengeOf(pkceVerifier())))
+        assertEquals(HttpStatusCode.OK, res.status)
+        val html = res.bodyAsText()
+        assertTrue(html.contains("action=\"$TEST_BASE/oauth/password\""))
+        assertTrue(html.contains("name=\"username\""))
+        assertFalse(html.contains("Google로 계속하기"))
+        assertTrue(tokenOf(html, "authz").isNotEmpty())
+    }
+
+    @Test
+    fun password_login_leads_to_consent_code_token_and_mcp_call() = a2Test(pwConfig()) {
+        val c = plainClient()
+        val user = "pw" + java.util.UUID.randomUUID().toString().replace("-", "").take(10)
+        c.registerPw(user, "password123")
+        val cid = c.registerClient()
+        val verifier = pkceVerifier()
+        val login = c.get(authorizeUrl(cid, challengeOf(verifier))).bodyAsText()
+        val consentPage = c.post("/oauth/password") {
+            setBody(form("authz" to tokenOf(login, "authz"), "username" to user.uppercase(), "password" to "password123"))
+        }
+        assertEquals(HttpStatusCode.OK, consentPage.status)
+        val consentHtml = consentPage.bodyAsText()
+        assertTrue(consentHtml.contains(user))
+        val allow = c.post("/oauth/consent") { setBody(form("form" to tokenOf(consentHtml, "form"), "decision" to "allow", "write" to "1")) }
+        assertEquals(HttpStatusCode.Found, allow.status)
+        val code = allow.location().parameters["code"]!!
+        val tok = c.post("/oauth/token") {
+            setBody(form("grant_type" to "authorization_code", "code" to code, "redirect_uri" to TEST_REDIRECT, "code_verifier" to verifier, "client_id" to cid))
+        }
+        assertEquals(HttpStatusCode.OK, tok.status)
+        val access = tok.json()["access_token"]!!.jsonPrimitive.content
+        val sid = c.mcpInit(access)
+        val list = c.mcpPost(access, sid, """{"jsonrpc":"2.0","id":3,"method":"tools/list"}""").json()
+        assertTrue(list.result()["tools"]!!.jsonArray.isNotEmpty())
+    }
+
+    @Test
+    fun password_login_with_wrong_password_shows_login_page_with_error() = a2Test(pwConfig()) {
+        val c = plainClient()
+        val user = "pw" + java.util.UUID.randomUUID().toString().replace("-", "").take(10)
+        c.registerPw(user, "password123")
+        val cid = c.registerClient()
+        val token = tokenOf(c.get(authorizeUrl(cid, challengeOf(pkceVerifier()))).bodyAsText(), "authz")
+        val res = c.post("/oauth/password") { setBody(form("authz" to token, "username" to user, "password" to "wrong-password")) }
+        assertEquals(HttpStatusCode.Unauthorized, res.status)
+        val html = res.bodyAsText()
+        assertTrue(html.contains("올바르지 않습니다"))
+        assertEquals(token, tokenOf(html, "authz"))
+        assertFalse(html.contains("name=\"decision\""))
+    }
+
+    @Test
+    fun password_endpoint_is_rejected_when_password_login_is_disabled() = a2Test(pwConfig()) {
+        // 켜진 서버에서 받은 서명 토큰을 꺼진 서버에 보내도 거부된다
+        val on = plainClient()
+        val cid = on.registerClient()
+        val token = tokenOf(on.get(authorizeUrl(cid, challengeOf(pkceVerifier()))).bodyAsText(), "authz")
+        val off = a2Config()
+        a2Test(off) {
+            val c = plainClient()
+            val res = c.post("/oauth/password") { setBody(form("authz" to token, "username" to "anyone", "password" to "password123")) }
+            assertEquals(HttpStatusCode.NotFound, res.status)
+            val noToken = c.post("/oauth/password") { setBody(form("username" to "anyone", "password" to "password123")) }
+            assertEquals(HttpStatusCode.BadRequest, noToken.status)
+        }
     }
 }
