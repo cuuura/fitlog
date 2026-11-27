@@ -1954,5 +1954,8 @@
   "calendarScheduledHeading": "예정 운동",
   "calendarScheduledDay": "예정 운동 있음",
   "homePlanLoadError": "계획을 불러오지 못했어요",
-  "homeRetry": "다시 시도"
+  "homeRetry": "다시 시도",
+  "sessionErrLoadFailed": "세션을 불러오지 못했어요",
+  "sessionErrRetry": "다시 시도",
+  "sessionErrHome": "홈으로"
 }

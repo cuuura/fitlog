@@ -1882,5 +1882,8 @@
   "calendarScheduledHeading": "Scheduled workouts",
   "calendarScheduledDay": "scheduled workout",
   "homePlanLoadError": "Couldn't load your plans",
-  "homeRetry": "Try again"
+  "homeRetry": "Try again",
+  "sessionErrLoadFailed": "Could not load the session",
+  "sessionErrRetry": "Try again",
+  "sessionErrHome": "Go home"
 }

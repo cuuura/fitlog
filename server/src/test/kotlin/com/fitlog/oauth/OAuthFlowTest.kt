@@ -163,6 +163,10 @@ class OAuthFlowTest {
         val page = c.get("/oauth/google/callback?code=test:pg-${System.nanoTime()}:a@b.c&state=${urlEnc(st)}").bodyAsText()
         assertTrue(page.contains("내 AI &lt;b&gt;이(가) 내 운동 기록을 읽고/추가합니다"), page)
         assertTrue(page.contains("name=\"write\""))
+        // 쓰기 체크박스는 <form> 안에 있어야 브라우저가 제출한다(밖에 있으면 모든 연결이 읽기 전용이 되던 결함)
+        val formStart = page.indexOf("<form"); val formEnd = page.indexOf("</form>")
+        val writeAt = page.indexOf("name=\"write\"")
+        assertTrue(writeAt in formStart..formEnd, "write checkbox must be inside <form>")
         assertTrue(page.contains("name=\"decision\" value=\"allow\""))
         // 읽기만 요청하면 쓰기 체크박스가 없다
         val auth2 = c.get(authorizeUrl(cid, challengeOf(verifier), scope = "fitlog.read"))

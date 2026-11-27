@@ -62,11 +62,12 @@ $google""",
             "연결 허용",
             """<h1>${esc(clientName)}이(가) 내 운동 기록을 ${if (canWrite) "읽고/추가합니다" else "읽습니다"}</h1>
 <p class="muted">${esc(email)} 계정으로 로그인됨</p>
-<label class="opt"><input type="checkbox" checked disabled>
-<span><b>운동 기록 읽기</b><br><span class="muted">세션, 프로그램, 기록(PR), 체중</span></span></label>
-$writeBox
 <form method="post" action="${esc(action)}">
 <input type="hidden" name="form" value="${esc(formToken)}">
+<label class="opt"><input type="checkbox" checked disabled>
+<span><b>운동 기록 읽기</b><br><span class="muted">세션, 프로그램, 기록(PR), 체중</span></span></label>
+<!-- 쓰기 체크박스는 반드시 form 안에 있어야 제출된다(밖에 있으면 모든 연결이 읽기 전용이 됨) -->
+$writeBox
 <div class="btns">
 <button type="submit" name="decision" value="deny">거부</button>
 <button type="submit" name="decision" value="allow" class="primary">허용</button>
