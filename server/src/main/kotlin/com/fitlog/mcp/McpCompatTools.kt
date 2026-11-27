@@ -14,7 +14,10 @@ import com.fitlog.engine.ProgramDefinition
 import com.fitlog.exercise.toExercise
 import com.fitlog.session.listSummaries
 import com.fitlog.session.loadSession
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -102,7 +105,12 @@ internal val OPENAI_COMPAT_TOOLS: List<Tool> = listOf(
                 Programs.selectAll().where {
                     Programs.deletedAt.isNull() and (Programs.ownerId.isNull() or (Programs.ownerId eq ctx.userId))
                 }.forEach { r ->
-                    if (norm(r[Programs.name]).contains(nq)) out += Triple("program", r[Programs.id].toString(), "프로그램: ${r[Programs.name]}")
+                    // 템플릿 이름은 일반 이름이라, 원 프로그램 이름(설명에 참고로 적음)·템플릿 키로도 찾는다
+                    val desc = runCatching {
+                        Json.parseToJsonElement(r[Programs.definition]).jsonObject["description"]?.jsonPrimitive?.content
+                    }.getOrNull()
+                    val hay = listOfNotNull(r[Programs.name], r[Programs.templateKey], desc)
+                    if (hay.any { norm(it).contains(nq) }) out += Triple("program", r[Programs.id].toString(), "프로그램: ${r[Programs.name]}")
                 }
                 ProgramInstances.selectAll().where { (ProgramInstances.userId eq ctx.userId) and ProgramInstances.deletedAt.isNull() }
                     .toList().map { mcpInstanceView(ctx.config.engine, it, withNext = false) }
