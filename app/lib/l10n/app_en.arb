@@ -1329,6 +1329,7 @@
   "authPasswordAccountLabel": "ID login",
   "authMethodsLoading": "Connecting to the server… (a sleeping server can take about a minute)",
   "authMethodsError": "Couldn't reach the server. Try again if username sign-in is missing.",
+  "serverWaking": "Waking up the server… the first request can take about a minute",
   "authMethodsRetry": "Try again",
   "authPasswordDivider": "or",
   "authPasswordUsername": "ID",

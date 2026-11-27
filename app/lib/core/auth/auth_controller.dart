@@ -102,6 +102,11 @@ class AuthController extends Notifier<AuthStatus> {
       state = AuthStatus.signedOut;
       return;
     }
+    // 잠든 서버는 깨는 데 1분쯤 걸린다. 그동안 스플래시에 묶어 두지 않고, 잠시 뒤에는 로그인된 것으로 먼저 보여 준다
+    // (오프라인 우선 앱). 동의가 더 필요하거나 토큰이 거부되면 응답이 온 뒤에 상태가 바뀐다.
+    final grace = Timer(restoreGrace, () {
+      if (ref.mounted && state == AuthStatus.unknown) state = AuthStatus.signedIn;
+    });
     try {
       await _loadMe();
     } on ApiException catch (e) {
@@ -114,8 +119,13 @@ class AuthController extends Notifier<AuthStatus> {
       }
     } catch (_) {
       if (ref.mounted && state == AuthStatus.unknown) state = AuthStatus.signedIn;
+    } finally {
+      grace.cancel();
     }
   }
+
+  /// 저장된 토큰이 있을 때 `getMe` 응답을 이만큼만 기다리고 먼저 홈을 보여 준다.
+  Duration get restoreGrace => const Duration(seconds: 8);
 
   /// `getMe()`로 필수 동의를 확인하고 상태를 정한다. 다른 계정이면 로컬 데이터를 비운다.
   Future<void> _loadMe() async {

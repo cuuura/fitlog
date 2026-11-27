@@ -5,18 +5,13 @@ import '../auth/auth_interceptor.dart';
 import '../config.dart';
 import '../integrity/integrity.dart';
 import 'api_client.dart';
+import 'server_wake.dart';
 import 'dto.dart';
 
-/// 공용 Dio. 인증 인터셉터가 Bearer 헤더를 붙이고 401이면 refresh 후 재시도한다.
+/// 공용 Dio. 맨 앞에서 콜드 스타트(잠든 서버)를 기다리고 재시도하며([WakeRetryInterceptor]),
+/// 인증 인터셉터가 Bearer 헤더를 붙이고 401이면 refresh 후 재시도한다.
 final dioProvider = Provider<Dio>((ref) {
-  final dio = Dio(
-    BaseOptions(
-      baseUrl: AppConfig.apiBaseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 20),
-      contentType: 'application/json',
-    ),
-  );
+  final dio = createApiDio(baseUrl: AppConfig.apiBaseUrl, wake: ref.watch(serverWakeProvider));
   dio.interceptors.add(AuthInterceptor.fromRef(ref, dio));
   return dio;
 });
