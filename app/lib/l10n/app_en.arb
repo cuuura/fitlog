@@ -1363,5 +1363,86 @@
   "authPasswordTaken": "That ID is already taken.",
   "authPasswordValidationUsername": "The ID format is invalid.",
   "authPasswordValidationPassword": "The password format is invalid.",
-  "authPasswordValidation": "Please check your input."
+  "authPasswordValidation": "Please check your input.",
+  "sessionTableProgress": "{done}/{total} sets",
+  "@sessionTableProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionTableColSet": "Set",
+  "sessionTableColPlan": "Plan",
+  "sessionTableColReps": "Reps",
+  "sessionTableColDone": "Done",
+  "sessionTableSetLabel": "Set {n}",
+  "@sessionTableSetLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionTableFailed": "Below target",
+  "sessionTableEmptyHint": "No sets yet. Add a set to start logging.",
+  "sessionCurNow": "Now",
+  "sessionCurComplete": "Complete {exercise} {label}",
+  "@sessionCurComplete": {
+    "placeholders": {
+      "exercise": {
+        "type": "String"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionCurAllDone": "All sets done",
+  "sessionCurNext": "Next · {label} · {summary}",
+  "@sessionCurNext": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionCurNextOther": "Next · {exercise} {label} · {summary}",
+  "@sessionCurNextOther": {
+    "placeholders": {
+      "exercise": {
+        "type": "String"
+      },
+      "label": {
+        "type": "String"
+      },
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionCurAmrapHint": "As many as you can",
+  "sessionCurRest": "Rest {time}",
+  "@sessionCurRest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "homeStartFinishFirst": "Finish the session in progress before starting.",
+  "homeStartDiscardTitle": "You have an empty free session",
+  "homeStartDiscardBody": "Discard the free session with no records and start the program workout?",
+  "homeStartDiscardAction": "Discard and start",
+  "homeStartToday": "Start today's workout",
+  "homeStartFreeSecondary": "Start a free session without a plan",
+  "homeStartProgramHint": "Start a program and sets and weights fill in automatically",
+  "homeStartProgramAction": "Start a program",
+  "instanceStartToday": "Start today's workout"
 }

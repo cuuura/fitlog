@@ -169,7 +169,7 @@ void main() {
 
     final s = await e.sessions.watchActiveSession().first;
     final done = find.byKey(Key('done-${s!.exercises.single.sets.first.id}'));
-    await t.ensureVisible(done);
+    await t.scrollUntilVisible(done, 200, scrollable: find.byType(Scrollable).first);
     await t.pump();
     await t.tap(done);
     await settle(t);

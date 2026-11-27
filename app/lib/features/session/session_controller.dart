@@ -185,11 +185,23 @@ class SessionController {
       _repo.deleteSession(sessionId);
   Future<void> setSessionNote(String sessionId, String? note) =>
       _repo.updateSessionNote(sessionId, _blank(note));
-  Future<void> addExercise(
+
+  /// 종목을 붙인다. [firstSet]이면(자유 세션) 첫 세트도 바로 붙여 줄이 즉시 보이게 한다.
+  Future<SessionExercise> addExercise(
     String sessionId,
     String exerciseId, {
     bool accessory = false,
-  }) => _repo.addExercise(sessionId, exerciseId, accessory: accessory);
+    bool firstSet = false,
+  }) async {
+    final se = await _repo.addExercise(
+      sessionId,
+      exerciseId,
+      accessory: accessory,
+    );
+    if (firstSet) await _addSetTo(sessionId, se);
+    return se;
+  }
+
   Future<void> removeExercise(String seId) => _repo.removeExercise(seId);
   Future<void> setExerciseNote(String seId, String? note) =>
       _repo.updateExerciseNote(seId, _blank(note));
@@ -200,14 +212,17 @@ class SessionController {
       (s == null || s.trim().isEmpty) ? null : s.trim();
 
   /// 새 세트를 붙인다. 기본값: 이 종목의 마지막 세트 -> 지난 세션 같은 position -> 빈 값.
-  Future<WorkoutSet> addSet(Session session, SessionExercise se) async {
+  Future<WorkoutSet> addSet(Session session, SessionExercise se) =>
+      _addSetTo(session.id, se);
+
+  Future<WorkoutSet> _addSetTo(String sessionId, SessionExercise se) async {
     final WorkoutSet? base;
     if (se.sets.isNotEmpty) {
       base = se.sets.last;
     } else {
       final last = await _ref
           .read(sessionRepositoryProvider)
-          .lastSetsFor(se.exerciseId, excludeSessionId: session.id);
+          .lastSetsFor(se.exerciseId, excludeSessionId: sessionId);
       final prev = last?.sets;
       if (prev == null || prev.isEmpty) {
         base = null;

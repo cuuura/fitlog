@@ -94,7 +94,9 @@ class Harness {
     sessionRepositoryProvider.overrideWithValue(sessions),
     programRepositoryProvider.overrideWithValue(programs),
     planCacheProvider.overrideWithValue(planCache),
-    deletionRequestRepositoryProvider.overrideWithValue(MemoryDeletionRequestRepository()),
+    deletionRequestRepositoryProvider.overrideWithValue(
+      MemoryDeletionRequestRepository(),
+    ),
     syncServiceProvider.overrideWithValue(NoopSyncService()),
     clockProvider.overrideWithValue(() => now),
     deviceTimezoneProvider.overrideWithValue(() async => 'Asia/Seoul'),
@@ -104,13 +106,18 @@ class Harness {
     ),
   ];
 
-  Future<void> pump(WidgetTester tester, {String initial = Routes.home}) async {
+  Future<void> pump(
+    WidgetTester tester, {
+    String initial = Routes.home,
+    List<RouteBase> extraRoutes = const [],
+  }) async {
     tester.view.physicalSize = const Size(800, 1400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     final router = GoRouter(
       initialLocation: initial,
       routes: [
+        ...extraRoutes,
         GoRoute(path: Routes.home, builder: (_, _) => const HomePage()),
         GoRoute(
           path: Routes.session,

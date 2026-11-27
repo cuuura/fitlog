@@ -12,6 +12,7 @@ import '../../core/settings/settings_controller.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../session/start_program_flow.dart';
 import 'program_common.dart';
 import 'programs_providers.dart';
 
@@ -217,6 +218,25 @@ class _Body extends ConsumerWidget {
               ),
           ],
         ),
+        if (next != null && inst.status == InstanceStatus.ACTIVE) ...[
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              key: const Key('instance-start'),
+              onPressed: () => startProgramFlow(
+                context,
+                ref,
+                instanceId: inst.id,
+                programName: inst.name,
+              ),
+              child: Text(
+                '${l.instanceStartToday} · ${next.dayName} · ${l.instanceProgress(next.week, next.cycle)}',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ],
         const SizedBox(height: 24),
         Text(l.instanceNextSection, style: theme.textTheme.titleMedium),
         if (view.plan.isEmpty) Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l.instanceNoNext)),

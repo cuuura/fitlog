@@ -1435,5 +1435,86 @@
   "authPasswordTaken": "이미 사용 중인 아이디예요.",
   "authPasswordValidationUsername": "아이디 형식이 올바르지 않아요.",
   "authPasswordValidationPassword": "비밀번호 형식이 올바르지 않아요.",
-  "authPasswordValidation": "입력한 내용을 확인해 주세요."
+  "authPasswordValidation": "입력한 내용을 확인해 주세요.",
+  "sessionTableProgress": "{done}/{total}세트",
+  "@sessionTableProgress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionTableColSet": "세트",
+  "sessionTableColPlan": "계획",
+  "sessionTableColReps": "회",
+  "sessionTableColDone": "완료",
+  "sessionTableSetLabel": "{n}세트",
+  "@sessionTableSetLabel": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "sessionTableFailed": "목표 미달",
+  "sessionTableEmptyHint": "아직 세트가 없어요. 세트를 추가해 기록을 시작해요",
+  "sessionCurNow": "지금",
+  "sessionCurComplete": "{exercise} {label} 완료",
+  "@sessionCurComplete": {
+    "placeholders": {
+      "exercise": {
+        "type": "String"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionCurAllDone": "모든 세트 완료",
+  "sessionCurNext": "다음 · {label} · {summary}",
+  "@sessionCurNext": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      },
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionCurNextOther": "다음 · {exercise} {label} · {summary}",
+  "@sessionCurNextOther": {
+    "placeholders": {
+      "exercise": {
+        "type": "String"
+      },
+      "label": {
+        "type": "String"
+      },
+      "summary": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionCurAmrapHint": "최대한 많이",
+  "sessionCurRest": "휴식 {time}",
+  "@sessionCurRest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "homeStartFinishFirst": "진행 중인 세션을 끝내야 시작할 수 있어요",
+  "homeStartDiscardTitle": "비어 있는 자유 세션이 있어요",
+  "homeStartDiscardBody": "기록이 없는 자유 세션을 버리고 프로그램 운동을 시작할까요?",
+  "homeStartDiscardAction": "버리고 시작",
+  "homeStartToday": "오늘 운동 시작",
+  "homeStartFreeSecondary": "계획 없이 자유 세션 시작",
+  "homeStartProgramHint": "프로그램을 시작하면 세트·무게가 자동으로 채워져요",
+  "homeStartProgramAction": "프로그램 시작하기",
+  "instanceStartToday": "오늘 운동 시작"
 }

@@ -11,6 +11,7 @@ import '../exercise_picker/exercise_labels.dart';
 import '../session/plan_logic.dart';
 import '../session/session_controller.dart';
 import '../session/session_format.dart';
+import '../session/start_program_flow.dart';
 import '../sync_status/sync_status_indicator.dart';
 
 class HomePage extends ConsumerWidget {
@@ -25,24 +26,6 @@ class HomePage extends ConsumerWidget {
       router.push(Routes.session);
     } catch (_) {
       messenger.showSnackBar(SnackBar(content: Text(l.homeStartError)));
-    }
-  }
-
-  Future<void> _startPlan(
-    BuildContext context,
-    WidgetRef ref,
-    InstancePlan p,
-  ) async {
-    final l = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final router = GoRouter.of(context);
-    try {
-      await ref
-          .read(sessionControllerProvider)
-          .startProgram(p.instance.id, programName: p.instance.name);
-      router.push(Routes.session);
-    } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l.homePlanStartError)));
     }
   }
 
@@ -107,12 +90,18 @@ class HomePage extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l.homeResumeTitle, style: Theme.of(context).textTheme.titleMedium),
+                    Text(
+                      l.homeResumeTitle,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 4),
                     Text(
                       l.homeSummary(
                         active.exercises.length,
-                        active.exercises.fold<int>(0, (a, e) => a + e.sets.length),
+                        active.exercises.fold<int>(
+                          0,
+                          (a, e) => a + e.sets.length,
+                        ),
                         formatVolume(sessionVolumeKg(active), unit),
                       ),
                     ),
@@ -128,16 +117,9 @@ class HomePage extends ConsumerWidget {
                   ],
                 ),
               ),
-            )
-          else
-            FilledButton.icon(
-              key: const Key('home-start'),
-              icon: const Icon(Icons.play_arrow),
-              label: Text(l.homeStartFree),
-              onPressed: () => _start(context, ref),
             ),
           if (plans.isNotEmpty) ...[
-            const SizedBox(height: 24),
+            if (active != null) const SizedBox(height: 24),
             Text(
               l.homePlanSection,
               style: Theme.of(context).textTheme.titleMedium,
@@ -148,73 +130,114 @@ class HomePage extends ConsumerWidget {
                 key: Key('plan-card-${p.instance.id}'),
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      Text(
+                        p.instance.name,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 4),
+                      if (p.next == null)
+                        Text(l.homePlanUnavailable)
+                      else ...[
+                        Row(
                           children: [
-                            Text(
-                              p.instance.name,
-                              style: Theme.of(context).textTheme.titleSmall,
-                            ),
-                            const SizedBox(height: 4),
-                            if (p.next == null)
-                              Text(l.homePlanUnavailable)
-                            else ...[
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      '${p.next!.dayName} · ${l.homePlanWeek(p.next!.week)}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium,
-                                    ),
-                                  ),
-                                  if (p.fromCache) ...[
-                                    const SizedBox(width: 8),
-                                    Chip(
-                                      key: Key(
-                                        'plan-estimated-${p.instance.id}',
-                                      ),
-                                      label: Text(l.homePlanEstimated),
-                                      visualDensity: VisualDensity.compact,
-                                    ),
-                                  ],
-                                ],
+                            Flexible(
+                              child: Text(
+                                '${p.next!.dayName} · ${l.homePlanWeek(p.next!.week)}',
+                                style: Theme.of(context).textTheme.titleMedium,
                               ),
-                              for (final e in p.next!.exercises.where(
-                                (e) => !e.accessory,
-                              ))
-                                Text(
-                                  planExerciseLine(
-                                    exerciseNames[e.exerciseId] == null
-                                        ? e.key
-                                        : exerciseDisplayName(
-                                            context,
-                                            exerciseNames[e.exerciseId]!,
-                                          ),
-                                    e,
-                                    unit,
-                                  ),
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
+                            ),
+                            if (p.fromCache) ...[
+                              const SizedBox(width: 8),
+                              Chip(
+                                key: Key('plan-estimated-${p.instance.id}'),
+                                label: Text(l.homePlanEstimated),
+                                visualDensity: VisualDensity.compact,
+                              ),
                             ],
                           ],
                         ),
-                      ),
-                      FilledButton(
-                        key: Key('plan-start-${p.instance.id}'),
-                        onPressed: p.next == null || active != null
-                            ? null
-                            : () => _startPlan(context, ref, p),
-                        child: Text(l.homePlanStart),
+                        for (final e in p.next!.exercises.where(
+                          (e) => !e.accessory,
+                        ))
+                          Text(
+                            planExerciseLine(
+                              exerciseNames[e.exerciseId] == null
+                                  ? e.key
+                                  : exerciseDisplayName(
+                                      context,
+                                      exerciseNames[e.exerciseId]!,
+                                    ),
+                              e,
+                              unit,
+                            ),
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                      ],
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: FilledButton(
+                          key: Key('plan-start-${p.instance.id}'),
+                          onPressed: p.next == null
+                              ? null
+                              : () => startProgramFlow(
+                                  context,
+                                  ref,
+                                  instanceId: p.instance.id,
+                                  programName: p.instance.name,
+                                ),
+                          child: Text(
+                            l.homeStartToday,
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
+          ],
+          const SizedBox(height: 16),
+          if (active == null && plans.isNotEmpty)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                key: const Key('home-start'),
+                onPressed: () => _start(context, ref),
+                child: Text(
+                  l.homeStartFreeSecondary,
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            )
+          else if (active == null) ...[
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                key: const Key('home-start'),
+                onPressed: () => _start(context, ref),
+                child: Text(l.homeStartFree, textAlign: TextAlign.center),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Column(
+              key: const Key('home-program-hint'),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l.homeStartProgramHint,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                TextButton(
+                  key: const Key('home-program-hint-action'),
+                  onPressed: () => context.push(Routes.programs),
+                  child: Text(l.homeStartProgramAction),
+                ),
+              ],
+            ),
           ],
           const SizedBox(height: 24),
           Text(l.homeRecent, style: Theme.of(context).textTheme.titleMedium),

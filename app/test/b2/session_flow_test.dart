@@ -35,9 +35,7 @@ void main() {
     expect(s.exercises.single.exerciseId, squat.id);
     final seId = s.exercises.single.id;
 
-    await t.tap(find.byKey(Key('add-set-$seId')));
-    await settle(t);
-    s = await active(h);
+    // 자유 세션은 종목을 추가하면 첫 세트가 바로 생긴다
     final set1 = s.exercises.single.sets.single;
     await t.enterText(find.byKey(Key('weight-${set1.id}')), '100');
     await t.enterText(find.byKey(Key('reps-${set1.id}')), '5');
@@ -110,12 +108,19 @@ void main() {
     final bw = s.exercises[1].sets.single;
 
     expect(find.textContaining('한쪽'), findsWidgets);
+    // 현재 세트(덤벨)만 펼쳐진다
     expect(find.byKey(Key('weight-${db.id}')), findsOneWidget);
     expect(find.byKey(Key('added-${db.id}')), findsNothing);
     expect(find.byKey(Key('weight-${bw.id}')), findsNothing);
-    expect(find.byKey(Key('added-${bw.id}')), findsOneWidget);
+    expect(find.byKey(Key('added-${bw.id}')), findsNothing);
 
     await t.enterText(find.byKey(Key('weight-${db.id}')), '22.5');
+    // 다른 줄을 누르면 그 줄이 펼쳐진다(맨몸: 무게칸 없이 추가 중량)
+    await t.tap(find.byKey(Key('row-${bw.id}')));
+    await settle(t);
+    expect(find.byKey(Key('weight-${db.id}')), findsNothing);
+    expect(find.byKey(Key('weight-${bw.id}')), findsNothing);
+    expect(find.byKey(Key('added-${bw.id}')), findsOneWidget);
     await t.enterText(find.byKey(Key('added-${bw.id}')), '-20');
     await t.enterText(find.byKey(Key('reps-${bw.id}')), '8');
     await settle(t);
@@ -269,8 +274,7 @@ void main() {
     await startAndAdd(t, h, squat.id);
     var s = await active(h);
     final seId = s.exercises.single.id;
-    await t.tap(find.byKey(Key('add-set-$seId')));
-    await settle(t);
+    // 첫 세트는 종목 추가 때 생겼고, 하나 더 붙인다
     await t.tap(find.byKey(Key('add-set-$seId')));
     await settle(t);
     s = await active(h);
@@ -279,7 +283,11 @@ void main() {
     expect(sets[0].reps, 5);
     // 두 번째 세트 기본값 = 이 세션의 마지막 세트
     expect(sets[1].weightKg, 100);
+    // 현재(첫) 세트만 펼쳐져 있어 그 줄의 지난번만 보인다
     expect(find.text('지난번: 100 kg×5'), findsOneWidget);
+    expect(find.text('지난번: 110 kg×3'), findsNothing);
+    await t.tap(find.byKey(Key('row-${sets[1].id}')));
+    await settle(t);
     expect(find.text('지난번: 110 kg×3'), findsOneWidget);
   });
 

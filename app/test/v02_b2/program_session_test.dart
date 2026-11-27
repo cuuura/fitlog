@@ -99,8 +99,12 @@ void main() {
       expect(se.sets.map((e) => e.reps), [5, 5, 5]);
       expect(find.byKey(const Key('plan-header')), findsOneWidget);
       expect(find.text('GZCLP · 데이 A · 2주차'), findsOneWidget);
-      expect(find.text('목표 5회 × 100 kg'), findsNWidgets(2));
-      expect(find.text('목표 5+회 × 100 kg'), findsOneWidget);
+      // 현재(첫) 세트만 펼쳐져 목표 문구가 보이고, 나머지는 계획 열로 보인다
+      expect(find.text('목표 5회 × 100 kg'), findsOneWidget);
+      expect(find.byKey(Key('target-${se.sets[0].id}')), findsOneWidget);
+      expect(find.text('100×5'), findsOneWidget);
+      expect(find.byKey(Key('plan-${se.sets[1].id}')), findsOneWidget);
+      expect(find.text('100×5+'), findsOneWidget);
       expect(find.text('지난번: 100 kg×5,5,4'), findsWidgets);
       expect(find.byKey(Key('past-day-${se.id}')), findsOneWidget);
       expect(find.byKey(Key('differs-${se.sets[0].id}')), findsNothing);

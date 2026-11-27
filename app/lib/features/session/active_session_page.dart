@@ -11,12 +11,14 @@ import '../../core/settings/settings_controller.dart';
 import '../../core/routes.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
-import '../rest_timer/rest_timer_bar.dart';
 import '../rest_timer/session_wakelock.dart';
+import 'current_set.dart';
 import 'plan_logic.dart';
 import 'session_controller.dart';
+import 'session_dock.dart';
 import 'session_format.dart';
 import 'set_row.dart';
+import 'set_table.dart';
 
 Future<bool> confirmDialog(
   BuildContext context, {
@@ -57,12 +59,21 @@ class ActiveSessionPage extends ConsumerStatefulWidget {
 class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
   bool _leaving = false;
 
+  /// 사용자가 직접 펼친 세트(현재 세트가 바뀌면 무효가 되어 다시 현재 세트를 따라간다).
+  String? _pinId;
+  String? _pinForCurrentId;
+
   Future<void> _addExercise(Session session) async {
     final id = await context.push<String>(Routes.pickExercise);
     if (id == null || !mounted) return;
     await ref
         .read(sessionControllerProvider)
-        .addExercise(session.id, id, accessory: session.isProgram);
+        .addExercise(
+          session.id,
+          id,
+          accessory: session.isProgram,
+          firstSet: !session.isProgram,
+        );
   }
 
   Future<void> _end(Session session) async {
@@ -108,11 +119,21 @@ class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     final largeText = MediaQuery.textScalerOf(context).scale(10) > 13;
+    final currentId = currentSetOf(session)?.set.id;
+    final pinned =
+        _pinId != null &&
+            _pinForCurrentId == currentId &&
+            session.exercises.any((e) => e.sets.any((w) => w.id == _pinId))
+        ? _pinId
+        : null;
+    final expandedId = pinned ?? currentId;
     return SessionWakelock(
       child: Scaffold(
         appBar: AppBar(
           // 큰 글씨에서는 제목 자리에 경과 시간만 두고, 종료 버튼은 줄여서 앱바 폭을 넘지 않게 한다.
-          title: largeText ? _Elapsed(startedAt: session.startedAt) : Text(l.sessionTitle),
+          title: largeText
+              ? _Elapsed(startedAt: session.startedAt)
+              : Text(l.sessionTitle),
           actions: [
             if (!largeText) ...[
               Center(child: _Elapsed(startedAt: session.startedAt)),
@@ -124,13 +145,19 @@ class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
               child: largeText
                   ? ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 140),
-                      child: FittedBox(fit: BoxFit.scaleDown, child: Text(l.sessionEnd)),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(l.sessionEnd),
+                      ),
                     )
                   : Text(l.sessionEnd),
             ),
           ],
         ),
-        bottomNavigationBar: const SafeArea(child: RestTimerBar()),
+        bottomNavigationBar: SessionDock(
+          session: session,
+          exercises: exercises,
+        ),
         body: ReorderableListView.builder(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
           buildDefaultDragHandles: false,
@@ -179,6 +206,12 @@ class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
               se: se,
               index: i,
               exercise: exercises[se.exerciseId],
+              expandedSetId: expandedId,
+              currentSetId: currentId,
+              onSelect: (id) => setState(() {
+                _pinId = id;
+                _pinForCurrentId = currentId;
+              }),
             );
           },
         ),
@@ -318,7 +351,13 @@ class _ExerciseCard extends ConsumerWidget {
     required this.se,
     required this.index,
     required this.exercise,
+    required this.expandedSetId,
+    required this.currentSetId,
+    required this.onSelect,
   });
+  final String? expandedSetId;
+  final String? currentSetId;
+  final void Function(String setId) onSelect;
   final Session session;
   final int index;
   final SessionExercise se;
@@ -356,6 +395,7 @@ class _ExerciseCard extends ConsumerWidget {
               : e.exerciseId == se.exerciseId,
         )
         .firstOrNull;
+    final progress = exerciseProgress(se);
     final pastText = pastSe == null
         ? ''
         : formatPastSets(pastSe.sets, type, unit);
@@ -394,9 +434,30 @@ class _ExerciseCard extends ConsumerWidget {
                             ],
                           ],
                         ),
-                        Text(
-                          typeLabel(l, type),
-                          style: Theme.of(context).textTheme.bodySmall,
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            Text(
+                              typeLabel(l, type),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            if (progress.total > 0)
+                              Text(
+                                l.sessionTableProgress(
+                                  progress.done,
+                                  progress.total,
+                                ),
+                                key: Key('progress-${se.id}'),
+                                style: Theme.of(context).textTheme.labelLarge
+                                    ?.copyWith(
+                                      color: progress.done == progress.total
+                                          ? Theme.of(context)
+                                                .colorScheme
+                                                .primary
+                                          : null,
+                                    ),
+                              ),
+                          ],
                         ),
                         if (pastText.isNotEmpty)
                           Text(
@@ -445,6 +506,17 @@ class _ExerciseCard extends ConsumerWidget {
                 onSave: (v) => ctrl.setExerciseNote(se.id, v),
               ),
             ),
+            if (se.sets.isEmpty)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+                child: Text(
+                  l.sessionTableEmptyHint,
+                  key: Key('empty-sets-${se.id}'),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              )
+            else
+              SetTableHeader(type: type),
             ReorderableListView.builder(
               key: Key('sets-${se.id}'),
               shrinkWrap: true,
@@ -464,6 +536,10 @@ class _ExerciseCard extends ConsumerWidget {
                 type: type,
                 set: se.sets[i],
                 index: i,
+                label: setShortLabel(l, se, se.sets[i]),
+                expanded: se.sets[i].id == expandedSetId,
+                isCurrent: se.sets[i].id == currentSetId,
+                onSelect: () => onSelect(se.sets[i].id),
                 previous: last == null || last.sets.isEmpty
                     ? null
                     : (i < last.sets.length ? last.sets[i] : last.sets.last),
@@ -471,12 +547,19 @@ class _ExerciseCard extends ConsumerWidget {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: TextButton.icon(
-                key: Key('add-set-${se.id}'),
-                icon: const Icon(Icons.add),
-                label: Text(l.sessionAddSet),
-                onPressed: () => ctrl.addSet(session, se),
-              ),
+              child: se.sets.isEmpty
+                  ? FilledButton.tonalIcon(
+                      key: Key('add-set-${se.id}'),
+                      icon: const Icon(Icons.add),
+                      label: Text(l.sessionAddSet),
+                      onPressed: () => ctrl.addSet(session, se),
+                    )
+                  : TextButton.icon(
+                      key: Key('add-set-${se.id}'),
+                      icon: const Icon(Icons.add),
+                      label: Text(l.sessionAddSet),
+                      onPressed: () => ctrl.addSet(session, se),
+                    ),
             ),
           ],
         ),

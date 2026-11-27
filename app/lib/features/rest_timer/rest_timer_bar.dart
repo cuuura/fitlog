@@ -17,7 +17,10 @@ String formatRestRemaining(Duration d) {
 }
 
 class RestTimerBar extends ConsumerStatefulWidget {
-  const RestTimerBar({super.key});
+  const RestTimerBar({super.key, this.nextText});
+
+  /// 휴식 중에 보여줄 "다음 세트" 안내(없으면 생략).
+  final String? nextText;
   @override
   ConsumerState<RestTimerBar> createState() => _RestTimerBarState();
 }
@@ -53,8 +56,10 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
     final time = Text(
       formatRestRemaining(left),
       key: const Key('restTimerRemaining'),
-      style: Theme.of(context).textTheme.displaySmall
-          ?.copyWith(fontFeatures: const [FontFeature.tabularFigures()], color: scheme.onSecondaryContainer),
+      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+        fontFeatures: const [FontFeature.tabularFigures()],
+        color: scheme.onSecondaryContainer,
+      ),
     );
     final buttons = <Widget>[
       TextButton(
@@ -67,7 +72,11 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
         onPressed: () => ctrl.addSeconds(15),
         child: Text(l10n.timerAddSeconds(15)),
       ),
-      FilledButton.tonal(key: const Key('restTimerSkip'), onPressed: ctrl.stop, child: Text(l10n.timerSkip)),
+      FilledButton.tonal(
+        key: const Key('restTimerSkip'),
+        onPressed: ctrl.stop,
+        child: Text(l10n.timerSkip),
+      ),
     ];
 
     return Material(
@@ -87,8 +96,22 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
+              if (widget.nextText != null && widget.nextText!.isNotEmpty)
+                Text(
+                  widget.nextText!,
+                  key: const Key('restTimerNext'),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSecondaryContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
               if (large)
-                Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [time, ...buttons])
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [time, ...buttons],
+                )
               else
                 Row(children: [time, const Spacer(), ...buttons]),
               const SizedBox(height: 4),

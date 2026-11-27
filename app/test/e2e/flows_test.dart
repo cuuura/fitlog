@@ -48,8 +48,7 @@ void main() {
     var s = await active(e);
     final se = s.exercises.single;
     expect(se.exerciseId, squat.id);
-    await t.tap(find.byKey(Key('add-set-${se.id}')));
-    await settle(t);
+    // 자유 세션은 종목을 추가하면 첫 세트가 바로 생긴다
     final set1 = (await active(e)).exercises.single.sets.single;
     await t.enterText(find.byKey(Key('weight-${set1.id}')), '100');
     await t.enterText(find.byKey(Key('reps-${set1.id}')), '5');

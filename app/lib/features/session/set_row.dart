@@ -8,6 +8,7 @@ import '../../core/api/dto.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/units.dart';
 import '../../l10n/gen/app_localizations.dart';
+import 'current_set.dart';
 import 'plan_logic.dart';
 import 'session_controller.dart';
 import 'session_format.dart';
@@ -21,6 +22,10 @@ class SetRow extends ConsumerStatefulWidget {
     required this.type,
     required this.set,
     required this.index,
+    required this.label,
+    this.expanded = false,
+    this.isCurrent = false,
+    this.onSelect,
     this.previous,
   });
 
@@ -32,6 +37,18 @@ class SetRow extends ConsumerStatefulWidget {
 
   /// 이 종목 안에서 0부터 센 순번.
   final int index;
+
+  /// 세트 열에 보일 짧은 이름: "1", "W1".
+  final String label;
+
+  /// 펼친 패널로 보이는지(화면에서 한 번에 하나).
+  final bool expanded;
+
+  /// 세션의 현재 세트(첫 미완료)인지.
+  final bool isCurrent;
+
+  /// 접힌 줄을 눌렀을 때.
+  final VoidCallback? onSelect;
 
   /// "지난번" 참고용 세트.
   final WorkoutSet? previous;
@@ -47,7 +64,7 @@ class _SetRowState extends ConsumerState<SetRow> {
   final _rpe = TextEditingController();
   final _rir = TextEditingController();
   final _note = TextEditingController();
-  bool _expanded = false;
+  bool _details = false;
 
   final _errors = <String, String?>{};
 
@@ -188,31 +205,17 @@ class _SetRowState extends ConsumerState<SetRow> {
 
   double get _weightStep => _unit == WeightUnit.KG ? 2.5 : 5;
 
-  Future<void> _toggleDone(bool? v) async {
-    final l = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final ctrl = ref.read(sessionControllerProvider);
-    final s = widget.set;
-    if (v == true) {
-      switch (checkComplete(widget.type, s)) {
-        case SetCheck.needsReps:
-          messenger.showSnackBar(SnackBar(content: Text(l.sessionNeedsReps)));
-          return;
-        case SetCheck.needsWeight:
-          messenger.showSnackBar(SnackBar(content: Text(l.sessionNeedsWeight)));
-          return;
-        case SetCheck.ok:
-      }
-      await ctrl.setCompleted(
-        widget.session,
-        s,
-        true,
-        timerLabel: l.sessionRestLabel(widget.exerciseName, widget.index + 1),
-      );
-    } else {
-      await ctrl.setCompleted(widget.session, s, false, timerLabel: '');
-    }
-  }
+  Future<void> _toggleDone(bool? v) => completeSetChecked(
+    context,
+    ref,
+    session: widget.session,
+    se: widget.sessionExercise,
+    set: widget.set,
+    type: widget.type,
+    exerciseName: widget.exerciseName,
+    done: v == true,
+    n: widget.index + 1,
+  );
 
   Widget _field(
     String id,
@@ -223,7 +226,10 @@ class _SetRowState extends ConsumerState<SetRow> {
     String? helper,
     VoidCallback? onMinus,
     VoidCallback? onPlus,
+    bool big = false,
   }) {
+    final iconSize = big ? 24.0 : 18.0;
+    final box = big ? 48.0 : 36.0;
     return TextField(
       key: Key('$id-${widget.set.id}'),
       controller: c,
@@ -237,6 +243,12 @@ class _SetRowState extends ConsumerState<SetRow> {
         ),
       ],
       textAlign: TextAlign.center,
+      style: big
+          ? Theme.of(context).textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            )
+          : null,
       onChanged: (_) => _commit(),
       decoration: InputDecoration(
         isDense: true,
@@ -249,42 +261,194 @@ class _SetRowState extends ConsumerState<SetRow> {
             ? null
             : IconButton(
                 key: Key('$id-minus-${widget.set.id}'),
-                visualDensity: VisualDensity.compact,
+                visualDensity: big ? null : VisualDensity.compact,
                 tooltip: AppLocalizations.of(context).qaStepDecrease,
-                icon: const Icon(Icons.remove, size: 18),
+                icon: Icon(Icons.remove, size: iconSize),
                 onPressed: onMinus,
               ),
         suffixIcon: onPlus == null
             ? null
             : IconButton(
                 key: Key('$id-plus-${widget.set.id}'),
-                visualDensity: VisualDensity.compact,
+                visualDensity: big ? null : VisualDensity.compact,
                 tooltip: AppLocalizations.of(context).qaStepIncrease,
-                icon: const Icon(Icons.add, size: 18),
+                icon: Icon(Icons.add, size: iconSize),
                 onPressed: onPlus,
               ),
-        prefixIconConstraints: const BoxConstraints(
-          minWidth: 36,
-          minHeight: 36,
-        ),
-        suffixIconConstraints: const BoxConstraints(
-          minWidth: 36,
-          minHeight: 36,
+        prefixIconConstraints: BoxConstraints(minWidth: box, minHeight: box),
+        suffixIconConstraints: BoxConstraints(minWidth: box, minHeight: box),
+      ),
+    );
+  }
+
+  Widget _doneButton(AppLocalizations l, ColorScheme scheme, bool failed) {
+    final s = widget.set;
+    final IconData icon;
+    Color? color;
+    if (failed) {
+      icon = Icons.error_outline;
+      color = scheme.error;
+    } else if (s.isCompleted) {
+      icon = Icons.check_circle;
+      color = scheme.primary;
+    } else {
+      icon = Icons.radio_button_unchecked;
+    }
+    return IconButton(
+      key: Key('done-${s.id}'),
+      tooltip: l.sessionSetComplete,
+      isSelected: s.isCompleted,
+      icon: Icon(icon, color: color),
+      onPressed: () => _toggleDone(!s.isCompleted),
+    );
+  }
+
+  Widget _numberCell(
+    AppLocalizations l,
+    ColorScheme scheme,
+    bool failed, {
+    bool bold = false,
+  }) {
+    final s = widget.set;
+    return ReorderableDragStartListener(
+      index: widget.index,
+      child: Tooltip(
+        message: l.sessionReorderHandle,
+        child: SizedBox(
+          key: Key('drag-${s.id}'),
+          width: kSetColWidth,
+          height: 40,
+          child: Center(
+            child: Text(
+              widget.label,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: failed ? scheme.error : null,
+                fontWeight: bold ? FontWeight.bold : null,
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final settings = ref.watch(settingsProvider);
-    final unitName = settings.weightUnit == WeightUnit.KG ? 'kg' : 'lb';
+  Widget _failedBadge(ColorScheme scheme, AppLocalizations l, WorkoutSet s) {
+    return Row(
+      key: Key('failed-${s.id}'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.error_outline, size: 14, color: scheme.error),
+        const SizedBox(width: 2),
+        Text(
+          l.sessionTableFailed,
+          style: Theme.of(context).textTheme.labelSmall
+              ?.copyWith(color: scheme.error, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
+  Widget _differsBadge(ColorScheme scheme, AppLocalizations l, WorkoutSet s) {
+    return Text(
+      l.sessionPlanDiffers,
+      key: Key('differs-${s.id}'),
+      style: Theme.of(context).textTheme.labelSmall
+          ?.copyWith(color: scheme.tertiary),
+    );
+  }
+
+  /// 접힌 한 줄: 세트 | 계획 | kg | 회 | 완료.
+  Widget _compactRow(
+    AppLocalizations l,
+    ColorScheme scheme,
+    Settings settings,
+    bool failed,
+  ) {
+    final s = widget.set;
+    final theme = Theme.of(context);
+    final unit = settings.weightUnit;
+    final cellStyle = theme.textTheme.bodyMedium?.copyWith(
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+    final dim = s.isCompleted && !failed
+        ? cellStyle?.copyWith(color: scheme.onSurfaceVariant)
+        : cellStyle;
+    final w = _isBodyweight ? s.addedWeightKg : s.weightKg;
+    var wText = w == null ? '–' : Units.format(w, unit, withUnit: false);
+    if (_isBodyweight && w != null && w > 0) wText = '+$wText';
+    final repsText = s.reps == null
+        ? '–'
+        : (failed ? '${s.reps}/${s.targetReps}' : '${s.reps}');
+    Widget cell(String t, {Key? key, TextStyle? style}) => FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Text(t, key: key, style: style ?? dim, maxLines: 1),
+    );
+    return InkWell(
+      key: Key('row-${s.id}'),
+      onTap: widget.onSelect,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                _numberCell(l, scheme, failed),
+                Expanded(
+                  flex: 3,
+                  child: cell(
+                    planCellText(s, unit),
+                    key: Key('plan-${s.id}'),
+                    style: cellStyle?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                ),
+                Expanded(flex: 2, child: cell(wText)),
+                Expanded(
+                  flex: 2,
+                  child: cell(
+                    repsText,
+                    style: failed
+                        ? cellStyle?.copyWith(
+                            color: scheme.error,
+                            fontWeight: FontWeight.bold,
+                          )
+                        : null,
+                  ),
+                ),
+                _doneButton(l, scheme, failed),
+              ],
+            ),
+            if (failed || differsFromPlan(s))
+              Padding(
+                padding: const EdgeInsets.only(left: kSetColWidth, bottom: 4),
+                child: Wrap(
+                  spacing: 8,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    if (failed) _failedBadge(scheme, l, s),
+                    if (differsFromPlan(s)) _differsBadge(scheme, l, s),
+                  ],
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 펼친 패널: 큰 숫자 + 스테퍼, 목표, 휴식 시간, 세부 입력.
+  Widget _panel(
+    AppLocalizations l,
+    ColorScheme scheme,
+    Settings settings,
+    bool failed,
+  ) {
     final s = widget.set;
     final type = widget.type;
-
-    final scheme = Theme.of(context).colorScheme;
-    final failed = isSetFailed(widget.sessionExercise, s);
+    final unitName = settings.weightUnit == WeightUnit.KG ? 'kg' : 'lb';
+    final theme = Theme.of(context);
     final weightLabel = type == ExerciseType.DUMBBELL
         ? l.sessionWeightPerSide(unitName)
         : l.sessionWeight(unitName);
@@ -294,6 +458,7 @@ class _SetRowState extends ConsumerState<SetRow> {
       _weight,
       weightLabel,
       decimal: true,
+      big: true,
       onMinus: () => _step(_weight, -_weightStep, weight: true),
       onPlus: () => _step(_weight, _weightStep, weight: true),
     );
@@ -303,6 +468,7 @@ class _SetRowState extends ConsumerState<SetRow> {
       l.sessionAddedWeight(unitName),
       decimal: true,
       signed: true,
+      big: true,
       helper: l.sessionAddedWeightHelp,
       onMinus: () =>
           _step(_added, -_weightStep, weight: true, allowNegative: true),
@@ -314,163 +480,203 @@ class _SetRowState extends ConsumerState<SetRow> {
       _reps,
       l.sessionReps,
       decimal: false,
+      big: true,
       onMinus: () => _step(_reps, -1, weight: false),
       onPlus: () => _step(_reps, 1, weight: false),
     );
 
-    final row = Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Material(
+        color: widget.isCurrent
+            ? scheme.primaryContainer.withValues(alpha: 0.5)
+            : scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        shape: RoundedRectangleBorder(
+          side: BorderSide(
+            color: failed
+                ? scheme.error
+                : (widget.isCurrent ? scheme.primary : scheme.outlineVariant),
+            width: widget.isCurrent ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(4, 4, 4, 8),
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ReorderableDragStartListener(
-                index: widget.index,
-                child: Tooltip(
-                  message: l.sessionReorderHandle,
-                  child: SizedBox(
-                    key: Key('drag-${s.id}'),
-                    width: 28,
-                    child: Padding(
-                      padding: const EdgeInsets.only(top: 10),
-                      child: Text(
-                        s.isWarmup
-                            ? l.sessionWarmupShort
-                            : '${widget.index + 1}',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.titleSmall
-                            ?.copyWith(color: failed ? scheme.error : null),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 4),
-              Expanded(child: _isBodyweight ? addedField : weightField),
-              const SizedBox(width: 6),
-              Expanded(child: repsField),
-              Checkbox(
-                key: Key('done-${s.id}'),
-                value: s.isCompleted,
-                semanticLabel: l.sessionSetComplete,
-                onChanged: _toggleDone,
-              ),
-              IconButton(
-                key: Key('more-${s.id}'),
-                tooltip: l.sessionSetMore,
-                icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
-                onPressed: () => setState(() => _expanded = !_expanded),
-              ),
-            ],
-          ),
-          if (s.targetReps != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 32, top: 2),
-              child: Wrap(
-                spacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
+              Row(
                 children: [
-                  Text(
-                    _targetText(l, s, settings.weightUnit),
-                    key: Key('target-${s.id}'),
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  if (differsFromPlan(s))
-                    Text(
-                      l.sessionPlanDiffers,
-                      key: Key('differs-${s.id}'),
-                      style: Theme.of(context).textTheme.labelSmall
-                          ?.copyWith(color: scheme.tertiary),
-                    ),
-                  if (failed)
-                    Text(
-                      l.sessionSetFailed,
-                      key: Key('failed-${s.id}'),
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: scheme.error,
-                        fontWeight: FontWeight.bold,
+                  _numberCell(l, scheme, failed, bold: true),
+                  if (widget.isCurrent)
+                    Container(
+                      key: Key('current-${s.id}'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        l.sessionCurNow,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: scheme.onPrimary,
+                        ),
                       ),
                     ),
+                  const Spacer(),
+                  _doneButton(l, scheme, failed),
                 ],
               ),
-            ),
-          if (widget.previous != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 32, top: 2),
-              child: Text(
-                l.sessionLast(
-                  formatSetBrief(widget.previous!, type, settings.weightUnit),
-                ),
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ),
-          if (_expanded)
-            Padding(
-              padding: const EdgeInsets.only(left: 32, top: 8, bottom: 4),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SwitchListTile(
-                    key: Key('warmup-${s.id}'),
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(l.sessionWarmup),
-                    value: s.isWarmup,
-                    onChanged: (v) => ref
-                        .read(sessionControllerProvider)
-                        .updateSet(s.copyWith(isWarmup: v)),
-                  ),
-                  if (settings.rpeInputEnabled)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _field(
-                            'rpe',
-                            _rpe,
-                            l.sessionRpe,
-                            decimal: true,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (s.targetReps != null)
+                      Wrap(
+                        spacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          Text(
+                            _targetText(l, s, settings.weightUnit),
+                            key: Key('target-${s.id}'),
+                            style: theme.textTheme.titleSmall,
+                          ),
+                          if (s.isAmrap)
+                            Text(
+                              l.sessionCurAmrapHint,
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                color: scheme.primary,
+                              ),
+                            ),
+                          if (differsFromPlan(s)) _differsBadge(scheme, l, s),
+                          if (failed) _failedBadge(scheme, l, s),
+                        ],
+                      ),
+                    if (widget.previous != null)
+                      Text(
+                        l.sessionLast(
+                          formatSetBrief(
+                            widget.previous!,
+                            type,
+                            settings.weightUnit,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _field(
-                            'rir',
-                            _rir,
-                            l.sessionRir,
-                            decimal: false,
+                        style: theme.textTheme.bodySmall,
+                      ),
+                    const SizedBox(height: 8),
+                    _isBodyweight ? addedField : weightField,
+                    const SizedBox(height: 8),
+                    repsField,
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.timer_outlined,
+                          size: 16,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          l.sessionCurRest(
+                            formatRestSec(settings.defaultRestSec),
                           ),
+                          key: Key('rest-len-${s.id}'),
+                          style: theme.textTheme.bodySmall,
                         ),
                       ],
                     ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    key: Key('note-${s.id}'),
-                    controller: _note,
-                    onChanged: (_) => _commit(),
-                    decoration: InputDecoration(
-                      isDense: true,
-                      labelText: l.sessionSetNote,
-                      border: const OutlineInputBorder(),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: TextButton.icon(
+                        key: Key('more-${s.id}'),
+                        icon: Icon(
+                          _details ? Icons.expand_less : Icons.expand_more,
+                        ),
+                        label: Text(l.sessionSetMore),
+                        onPressed: () => setState(() => _details = !_details),
+                      ),
                     ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      key: Key('delete-${s.id}'),
-                      icon: const Icon(Icons.delete_outline),
-                      label: Text(l.sessionSetDelete),
-                      onPressed: () =>
-                          ref.read(sessionControllerProvider).deleteSet(s.id),
-                    ),
-                  ),
-                ],
+                    if (_details) ...[
+                      SwitchListTile(
+                        key: Key('warmup-${s.id}'),
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(l.sessionWarmup),
+                        value: s.isWarmup,
+                        onChanged: (v) => ref
+                            .read(sessionControllerProvider)
+                            .updateSet(s.copyWith(isWarmup: v)),
+                      ),
+                      if (settings.rpeInputEnabled)
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _field(
+                                'rpe',
+                                _rpe,
+                                l.sessionRpe,
+                                decimal: true,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _field(
+                                'rir',
+                                _rir,
+                                l.sessionRir,
+                                decimal: false,
+                              ),
+                            ),
+                          ],
+                        ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        key: Key('note-${s.id}'),
+                        controller: _note,
+                        onChanged: (_) => _commit(),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          labelText: l.sessionSetNote,
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton.icon(
+                          key: Key('delete-${s.id}'),
+                          icon: const Icon(Icons.delete_outline),
+                          label: Text(l.sessionSetDelete),
+                          onPressed: () => ref
+                              .read(sessionControllerProvider)
+                              .deleteSet(s.id),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ),
-        ],
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final settings = ref.watch(settingsProvider);
+    final s = widget.set;
+    final scheme = Theme.of(context).colorScheme;
+    final failed = isSetFailed(widget.sessionExercise, s);
+
+    final row = widget.expanded
+        ? _panel(l, scheme, settings, failed)
+        : _compactRow(l, scheme, settings, failed);
 
     return Dismissible(
       key: ValueKey('dismiss-${s.id}'),
@@ -482,7 +688,7 @@ class _SetRowState extends ConsumerState<SetRow> {
         child: const Icon(Icons.delete_outline),
       ),
       onDismissed: (_) => ref.read(sessionControllerProvider).deleteSet(s.id),
-      child: failed
+      child: failed && !widget.expanded
           ? ColoredBox(
               color: scheme.errorContainer.withValues(alpha: 0.4),
               child: row,
@@ -503,4 +709,45 @@ class _SetRowState extends ConsumerState<SetRow> {
         ? l.sessionTargetAmrap(reps, ws)
         : l.sessionTarget(reps, ws);
   }
+}
+
+/// 세트 열 너비(표 머리글과 줄이 같이 쓴다).
+const double kSetColWidth = 44;
+
+/// 완료 체크 전 검증(`checkComplete`)을 거쳐 세트를 완료/해제한다. 체크박스와 하단 "N세트 완료"가 같이 쓴다.
+/// 완료됐으면 true.
+Future<bool> completeSetChecked(
+  BuildContext context,
+  WidgetRef ref, {
+  required Session session,
+  required SessionExercise se,
+  required WorkoutSet set,
+  required ExerciseType type,
+  required String exerciseName,
+  required bool done,
+  required int n,
+}) async {
+  final l = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  final ctrl = ref.read(sessionControllerProvider);
+  if (!done) {
+    await ctrl.setCompleted(session, set, false, timerLabel: '');
+    return false;
+  }
+  switch (checkComplete(type, set)) {
+    case SetCheck.needsReps:
+      messenger.showSnackBar(SnackBar(content: Text(l.sessionNeedsReps)));
+      return false;
+    case SetCheck.needsWeight:
+      messenger.showSnackBar(SnackBar(content: Text(l.sessionNeedsWeight)));
+      return false;
+    case SetCheck.ok:
+  }
+  await ctrl.setCompleted(
+    session,
+    set,
+    true,
+    timerLabel: l.sessionRestLabel(exerciseName, n),
+  );
+  return true;
 }
