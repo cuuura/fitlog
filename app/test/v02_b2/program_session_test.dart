@@ -276,19 +276,30 @@ void main() {
       plannedSetKey: 'A.0.0',
       completedAt: done ? DateTime.utc(2026) : null,
     );
-    expect(
-      exerciseVerdict(ex(sets: [w(5), w(6)])),
-      ExerciseVerdict.success,
-    ); // 무게를 낮춰도 횟수만
-    expect(exerciseVerdict(ex(sets: [w(5), w(4)])), ExerciseVerdict.failure);
-    expect(
-      exerciseVerdict(ex(sets: [w(5), w(5, done: false)])),
-      ExerciseVerdict.failure,
+    final prog = Session(
+      id: 's',
+      startedAt: DateTime.utc(2026),
+      tz: 'Asia/Seoul',
+      programInstanceId: 'i1',
     );
-    expect(
-      exerciseVerdict(ex(sets: [w(5), w(1, warm: true)])),
-      ExerciseVerdict.success,
+    final sched = Session(
+      id: 's2',
+      startedAt: DateTime.utc(2026),
+      tz: 'Asia/Seoul',
+      scheduledWorkoutId: 'sw1',
     );
-    expect(exerciseVerdict(ex(acc: true, sets: [w(1)])), isNull);
+    ExerciseVerdict? verdict(SessionExercise e) => exerciseVerdict(prog, e);
+    expect(verdict(ex(sets: [w(5), w(6)])), ExerciseVerdict.success); // 무게를 낮춰도 횟수만
+    expect(verdict(ex(sets: [w(5), w(4)])), ExerciseVerdict.failure);
+    expect(verdict(ex(sets: [w(5), w(5, done: false)])), ExerciseVerdict.failure);
+    expect(verdict(ex(sets: [w(5), w(1, warm: true)])), ExerciseVerdict.success);
+    expect(verdict(ex(acc: true, sets: [w(1)])), isNull);
+    // 예정 운동 세션은 목표가 있어도 판정하지 않는다.
+    final miss = ex(sets: [w(1)]);
+    expect(isJudged(prog, miss, miss.sets.first), isTrue);
+    expect(isJudged(sched, miss, miss.sets.first), isFalse);
+    expect(isSetFailed(prog, miss, miss.sets.first), isTrue);
+    expect(isSetFailed(sched, miss, miss.sets.first), isFalse);
+    expect(exerciseVerdict(sched, miss), isNull);
   });
 }

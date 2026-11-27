@@ -8,6 +8,7 @@ String aiEntityLabel(AppLocalizations l, String entity) => switch (entity) {
   'program_instance' => l.aiEntityProgramInstance,
   'workout_session' => l.aiEntitySession,
   'body_measurement' => l.aiEntityBody,
+  'scheduled_workout' => l.aiEntityScheduledWorkout,
   _ => entity,
 };
 
@@ -18,11 +19,12 @@ String aiEntityCount(AppLocalizations l, String entity, int n) => switch (entity
   'program_instance' => l.aiCountProgramInstance(n),
   'workout_session' => l.aiCountSession(n),
   'body_measurement' => l.aiCountBody(n),
+  'scheduled_workout' => l.aiCountScheduledWorkout(n),
   _ => '$entity $n',
 };
 
 /// 화면에 보여주는 순서.
-const aiEntityOrder = ['workout_session', 'program', 'program_instance', 'exercise', 'body_measurement'];
+const aiEntityOrder = ['workout_session', 'program', 'program_instance', 'exercise', 'body_measurement', 'scheduled_workout'];
 
 String _two(int v) => v.toString().padLeft(2, '0');
 

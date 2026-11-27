@@ -1,4 +1,6 @@
 // B3 소유. drift 행 <-> DTO <-> sync payload 변환, 서버에서 받은 Change를 로컬에 덮어쓰기.
+import 'dart:convert';
+
 import 'package:drift/drift.dart';
 
 import '../../core/api/dto.dart';
@@ -43,6 +45,9 @@ WorkoutSet setOf(WorkoutSetRow r) => WorkoutSet(
   targetReps: r.targetReps,
   targetWeightKg: r.targetWeightKg,
   isAmrap: r.isAmrap,
+  targetRepsMax: r.targetRepsMax,
+  targetRir: r.targetRir,
+  targetRestSec: r.targetRestSec,
 );
 
 SessionExercise sessionExerciseOf(SessionExerciseRow r, List<WorkoutSet> sets) => SessionExercise(
@@ -68,7 +73,31 @@ Session sessionOf(SessionRow r, List<SessionExercise> exercises) => Session(
   planSeq: r.planSeq,
   planDayKey: r.planDayKey,
   importBatchId: r.importBatchId,
+  scheduledWorkoutId: r.scheduledWorkoutId,
 );
+
+List<ScheduledItem> parseScheduledItems(String json) {
+  try {
+    return [for (final i in (jsonDecode(json) as List)) ScheduledItem.fromJson((i as Map).cast())];
+  } on Object {
+    return const [];
+  }
+}
+
+ScheduledWorkout scheduledOf(ScheduledWorkoutRow r) => ScheduledWorkout(
+  id: r.id,
+  plannedDate: r.plannedDate,
+  title: r.title,
+  note: r.note,
+  items: parseScheduledItems(r.itemsJson),
+  skippedAt: r.skippedAt?.toUtc(),
+  source: r.source == null ? null : SessionSource.values.byName(r.source!),
+  importBatchId: r.importBatchId,
+  updatedAt: r.updatedAt.toUtc(),
+  deletedAt: r.deletedAt?.toUtc(),
+);
+
+String scheduledItemsJson(List<ScheduledItem> items) => jsonEncode([for (final i in items) i.toJson()]);
 
 BodyMeasurement measurementOf(BodyMeasurementRow r) => BodyMeasurement(
   id: r.id,
@@ -98,6 +127,9 @@ Map<String, Object?> setPayload(WorkoutSetRow r) => setOf(r).toJson();
 
 Map<String, Object?> measurementPayload(BodyMeasurementRow r) => measurementOf(r).toJson();
 
+/// items는 중첩 JSON 그대로 보낸다(문서 단위 동기화, scheduled-workout.md §2·§4).
+Map<String, Object?> scheduledPayload(ScheduledWorkoutRow r) => scheduledOf(r).toJson();
+
 // ---------- DTO -> companion ----------
 
 String musclesToText(List<Muscle> m) => m.map((e) => e.name).join(',');
@@ -115,7 +147,22 @@ SessionsCompanion sessionCompanion(Session s, {required DateTime updatedAt}) => 
   planSeq: Value(s.planSeq),
   planDayKey: Value(s.planDayKey),
   importBatchId: Value(s.importBatchId),
+  scheduledWorkoutId: Value(s.scheduledWorkoutId),
 );
+
+ScheduledWorkoutsCompanion scheduledCompanion(ScheduledWorkout w, {required DateTime updatedAt}) =>
+    ScheduledWorkoutsCompanion(
+      id: Value(w.id),
+      plannedDate: Value(w.plannedDate),
+      title: Value(w.title),
+      note: Value(w.note),
+      itemsJson: Value(scheduledItemsJson(w.items)),
+      skippedAt: Value(w.skippedAt?.toUtc()),
+      source: Value(w.source?.name),
+      importBatchId: Value(w.importBatchId),
+      updatedAt: Value(updatedAt.toUtc()),
+      deletedAt: const Value(null),
+    );
 
 WorkoutSetsCompanion setCompanion(WorkoutSet w, {required String sessionExerciseId, required DateTime updatedAt}) =>
     WorkoutSetsCompanion(
@@ -140,6 +187,9 @@ WorkoutSetsCompanion setCompanion(WorkoutSet w, {required String sessionExercise
       targetReps: Value(w.targetReps),
       targetWeightKg: Value(w.targetWeightKg),
       isAmrap: Value(w.isAmrap),
+      targetRepsMax: Value(w.targetRepsMax),
+      targetRir: Value(w.targetRir),
+      targetRestSec: Value(w.targetRestSec),
     );
 
 ExercisesCompanion exerciseCompanion(Exercise e, {DateTime? updatedAt}) => ExercisesCompanion(
@@ -197,6 +247,9 @@ extension ApplyServerChange on AppDatabase {
           final seId = (c.parentId ?? p['sessionExerciseId']) as String;
           final w = WorkoutSet.fromJson(p);
           await into(workoutSets).insertOnConflictUpdate(setCompanion(w, sessionExerciseId: seId, updatedAt: at));
+        case SyncEntity.scheduled_workout:
+          final w = ScheduledWorkout.fromJson(p);
+          await into(scheduledWorkouts).insertOnConflictUpdate(scheduledCompanion(w, updatedAt: at));
         case SyncEntity.body_measurement:
           final m = BodyMeasurement.fromJson(p);
           await into(bodyMeasurements).insertOnConflictUpdate(
@@ -248,6 +301,10 @@ extension ApplyServerChange on AppDatabase {
         await (update(
           workoutSets,
         )..where((t) => t.id.equals(id))).write(WorkoutSetsCompanion(deletedAt: del, updatedAt: Value(at)));
+      case SyncEntity.scheduled_workout:
+        await (update(
+          scheduledWorkouts,
+        )..where((t) => t.id.equals(id))).write(ScheduledWorkoutsCompanion(deletedAt: del, updatedAt: Value(at)));
       case SyncEntity.body_measurement:
         await (update(
           bodyMeasurements,

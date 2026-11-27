@@ -122,6 +122,7 @@ class MemorySessionRepository implements SessionRepository {
     programInstanceId: s.programInstanceId,
     planSeq: s.planSeq,
     planDayKey: s.planDayKey,
+    scheduledWorkoutId: s.scheduledWorkoutId,
   );
 
   SessionExercise _copySe(SessionExercise e, {int? position, String? Function()? note, List<WorkoutSet>? sets}) =>
@@ -183,7 +184,16 @@ class MemorySessionRepository implements SessionRepository {
   }
 
   @override
-  Future<Session> startSession({required String tz, PlannedWorkout? plan}) async {
+  Stream<List<ScheduledLink>> watchScheduledLinks() => _bus.watch(
+    () => [
+      for (final s in _sessions.values)
+        if (s.scheduledWorkoutId != null)
+          ScheduledLink(scheduledWorkoutId: s.scheduledWorkoutId!, sessionId: s.id, endedAt: s.endedAt),
+    ],
+  ).cast<List<ScheduledLink>>();
+
+  @override
+  Future<Session> startSession({required String tz, PlannedWorkout? plan, ScheduledWorkout? scheduled}) async {
     final a = _active();
     if (a != null) return a;
     final s = Session(
@@ -195,7 +205,24 @@ class MemorySessionRepository implements SessionRepository {
       programInstanceId: plan?.instanceId,
       planSeq: plan?.planSeq,
       planDayKey: plan?.dayKey,
+      scheduledWorkoutId: plan == null ? scheduled?.id : null,
       exercises: [
+        if (plan == null && scheduled != null)
+          for (var ei = 0; ei < scheduled.items.length; ei++)
+            SessionExercise(
+              id: newId(),
+              exerciseId: scheduled.items[ei].exerciseId,
+              position: ei,
+              note: scheduled.items[ei].note,
+              sets: [
+                for (var si = 0; si < scheduled.items[ei].sets.length; si++)
+                  scheduled.items[ei].sets[si].toWorkoutSet(
+                    id: newId(),
+                    position: si,
+                    restSec: scheduled.items[ei].restSec,
+                  ),
+              ],
+            ),
         if (plan != null)
           for (var ei = 0; ei < plan.exercises.length; ei++)
             SessionExercise(
@@ -359,6 +386,58 @@ class MemorySessionRepository implements SessionRepository {
       if (se != null && se.sets.isNotEmpty) return LastSets(sessionId: s.id, startedAt: s.startedAt, sets: se.sets);
     }
     return null;
+  }
+}
+
+class MemoryScheduledWorkoutRepository implements ScheduledWorkoutRepository {
+  final Map<String, ScheduledWorkout> _items = {};
+  final _bus = _Bus<List<ScheduledWorkout>>();
+  final DateTime Function() now;
+  MemoryScheduledWorkoutRepository({DateTime Function()? now}) : now = now ?? (() => DateTime.now().toUtc());
+
+  /// 테스트용: 현재 저장된(삭제 포함 안 함) 전부.
+  List<ScheduledWorkout> get all => _items.values.toList();
+
+  @override
+  Stream<List<ScheduledWorkout>> watchBetween(String fromDate, String toDate) => _bus.watch(
+    () => [
+      for (final w in _items.values)
+        if (w.plannedDate.compareTo(fromDate) >= 0 && w.plannedDate.compareTo(toDate) <= 0) w,
+    ]..sort((a, b) => a.plannedDate.compareTo(b.plannedDate)),
+  );
+
+  @override
+  Future<ScheduledWorkout?> byId(String id) async => _items[id];
+
+  @override
+  Future<void> upsert(ScheduledWorkout w) async {
+    final old = _items[w.id];
+    _items[w.id] = ScheduledWorkout(
+      id: w.id,
+      plannedDate: w.plannedDate,
+      title: w.title,
+      note: w.note,
+      items: w.items,
+      skippedAt: w.skippedAt,
+      source: old?.source ?? w.source,
+      importBatchId: old?.importBatchId ?? w.importBatchId,
+      updatedAt: now(),
+    );
+    _bus.emit();
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    _items.remove(id);
+    _bus.emit();
+  }
+
+  @override
+  Future<void> setSkipped(String id, bool skipped) async {
+    final w = _items[id];
+    if (w == null) return;
+    _items[id] = w.copyWith(skippedAt: () => skipped ? now() : null);
+    _bus.emit();
   }
 }
 

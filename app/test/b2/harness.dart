@@ -77,6 +77,7 @@ class Harness {
       seed: seed ?? [squat, dbPress, pullUp, legPress],
     );
     sessions = MemorySessionRepository(now: () => now);
+    scheduled = MemoryScheduledWorkoutRepository(now: () => now);
     programs = MemoryProgramRepository();
     planCache = MemoryPlanCache(programs);
   }
@@ -85,6 +86,7 @@ class Harness {
   final Settings settings;
   late final MemoryExerciseRepository exercises;
   late final MemorySessionRepository sessions;
+  late final MemoryScheduledWorkoutRepository scheduled;
   late final MemoryProgramRepository programs;
   late final PlanCache planCache;
   late final ProviderContainer container;
@@ -92,6 +94,7 @@ class Harness {
   List<Override> get overrides => [
     exerciseRepositoryProvider.overrideWithValue(exercises),
     sessionRepositoryProvider.overrideWithValue(sessions),
+    scheduledWorkoutRepositoryProvider.overrideWithValue(scheduled),
     programRepositoryProvider.overrideWithValue(programs),
     planCacheProvider.overrideWithValue(planCache),
     deletionRequestRepositoryProvider.overrideWithValue(

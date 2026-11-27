@@ -488,6 +488,15 @@ class _SetRowState extends ConsumerState<SetRow> {
     final type = widget.type;
     final unitName = settings.weightUnit == WeightUnit.KG ? 'kg' : 'lb';
     final theme = Theme.of(context);
+    // 예정 운동 세션은 "80kg × 12~15 · RIR 3"(판정 없음), 프로그램 세션은 기존 목표 문구.
+    final scheduledSession =
+        widget.session.scheduledWorkoutId != null &&
+        widget.session.programInstanceId == null;
+    final String? targetLine = scheduledSession
+        ? scheduledTargetText(l, s, settings.weightUnit)
+        : (s.targetReps != null
+              ? _targetText(l, s, settings.weightUnit)
+              : null);
     final weightLabel = type == ExerciseType.DUMBBELL
         ? l.sessionWeightPerSide(unitName)
         : l.sessionWeight(unitName);
@@ -574,13 +583,13 @@ class _SetRowState extends ConsumerState<SetRow> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (s.targetReps != null)
+                    if (targetLine != null)
                       Wrap(
                         spacing: 8,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Text(
-                            _targetText(l, s, settings.weightUnit),
+                            targetLine,
                             key: Key('target-${s.id}'),
                             style: theme.textTheme.titleSmall,
                           ),
@@ -622,7 +631,9 @@ class _SetRowState extends ConsumerState<SetRow> {
                         const SizedBox(width: 4),
                         Text(
                           l.sessionCurRest(
-                            formatRestSec(settings.defaultRestSec),
+                            formatRestSec(
+                              restSecFor(s, settings.defaultRestSec),
+                            ),
                           ),
                           key: Key('rest-len-${s.id}'),
                           style: theme.textTheme.bodySmall,
@@ -690,7 +701,7 @@ class _SetRowState extends ConsumerState<SetRow> {
     final settings = ref.watch(settingsProvider);
     final s = widget.set;
     final scheme = Theme.of(context).colorScheme;
-    final failed = isSetFailed(widget.sessionExercise, s);
+    final failed = isSetFailed(widget.session, widget.sessionExercise, s);
 
     final row = widget.expanded
         ? _panel(l, scheme, settings, failed)

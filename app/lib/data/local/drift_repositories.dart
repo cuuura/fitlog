@@ -305,7 +305,7 @@ class DriftSessionRepository extends _DriftBase implements SessionRepository {
   // ---- 세션 ----
 
   @override
-  Future<Session> startSession({required String tz, PlannedWorkout? plan}) async {
+  Future<Session> startSession({required String tz, PlannedWorkout? plan, ScheduledWorkout? scheduled}) async {
     final session = await db.transaction(() async {
       final active = await _activeRow();
       if (active != null) return (await _assemble([active])).single;
@@ -323,6 +323,7 @@ class DriftSessionRepository extends _DriftBase implements SessionRepository {
               programInstanceId: Value(plan?.instanceId),
               planSeq: Value(plan?.planSeq),
               planDayKey: Value(plan?.dayKey),
+              scheduledWorkoutId: Value(plan == null ? scheduled?.id : null),
             ),
           );
       await _enqSession(await _sessionRow(id));
@@ -362,11 +363,48 @@ class DriftSessionRepository extends _DriftBase implements SessionRepository {
           }
         }
       }
+      if (plan == null && scheduled != null) {
+        for (var ei = 0; ei < scheduled.items.length; ei++) {
+          final item = scheduled.items[ei];
+          final seId = newId();
+          await db
+              .into(db.sessionExercises)
+              .insert(
+                SessionExercisesCompanion.insert(
+                  id: seId,
+                  sessionId: id,
+                  exerciseId: item.exerciseId,
+                  position: ei,
+                  updatedAt: at,
+                  note: Value(item.note),
+                ),
+              );
+          await _enqSe(await _seRow(seId));
+          for (var si = 0; si < item.sets.length; si++) {
+            final set = item.sets[si].toWorkoutSet(id: newId(), position: si, restSec: item.restSec);
+            await db.into(db.workoutSets).insert(setCompanion(set, sessionExerciseId: seId, updatedAt: at));
+            await _enqSet(await (db.select(db.workoutSets)..where((t) => t.id.equals(set.id))).getSingle());
+          }
+        }
+      }
       return (await _assemble([await _sessionRow(id)])).single;
     });
     scheduleSync();
     return session;
   }
+
+  @override
+  Stream<List<ScheduledLink>> watchScheduledLinks() =>
+      (db.select(db.sessions)..where((t) => t.deletedAt.isNull() & t.scheduledWorkoutId.isNotNull())).watch().map(
+        (rows) => [
+          for (final r in rows)
+            ScheduledLink(
+              scheduledWorkoutId: r.scheduledWorkoutId!,
+              sessionId: r.id,
+              endedAt: r.endedAt?.toUtc(),
+            ),
+        ],
+      );
 
   @override
   Future<void> reorderExercises(String sessionId, List<String> sessionExerciseIds) async {
@@ -671,6 +709,87 @@ class DriftSessionRepository extends _DriftBase implements SessionRepository {
       }
     }
     return null;
+  }
+}
+
+// ---------- 예정 운동 ----------
+
+class DriftScheduledWorkoutRepository extends _DriftBase implements ScheduledWorkoutRepository {
+  DriftScheduledWorkoutRepository(super.db, super.sync, {super.clock});
+
+  Future<ScheduledWorkoutRow?> _row(String id) =>
+      (db.select(db.scheduledWorkouts)..where((t) => t.id.equals(id))).getSingleOrNull();
+
+  Future<void> _enq(ScheduledWorkoutRow r) => db.enqueue(
+    entity: SyncEntity.scheduled_workout,
+    entityId: r.id,
+    op: ChangeOp.UPSERT,
+    payload: scheduledPayload(r),
+    clientUpdatedAt: r.updatedAt,
+  );
+
+  @override
+  Stream<List<ScheduledWorkout>> watchBetween(String fromDate, String toDate) =>
+      (db.select(db.scheduledWorkouts)
+            ..where(
+              (t) =>
+                  t.deletedAt.isNull() &
+                  t.plannedDate.isBiggerOrEqualValue(fromDate) &
+                  t.plannedDate.isSmallerOrEqualValue(toDate),
+            )
+            ..orderBy([(t) => OrderingTerm.asc(t.plannedDate), (t) => OrderingTerm.asc(t.updatedAt)]))
+          .watch()
+          .map((rows) => [for (final r in rows) scheduledOf(r)]);
+
+  @override
+  Future<ScheduledWorkout?> byId(String id) async {
+    final r = await _row(id);
+    return r == null || r.deletedAt != null ? null : scheduledOf(r);
+  }
+
+  @override
+  Future<void> upsert(ScheduledWorkout w) async {
+    await db.transaction(() async {
+      final old = await _row(w.id);
+      final c = scheduledCompanion(w, updatedAt: stamp(old?.updatedAt));
+      await db
+          .into(db.scheduledWorkouts)
+          .insertOnConflictUpdate(
+            old == null
+                ? c
+                : c.copyWith(source: Value(old.source), importBatchId: Value(old.importBatchId)),
+          );
+      await _enq((await _row(w.id))!);
+    });
+    scheduleSync();
+  }
+
+  @override
+  Future<void> delete(String id) async {
+    await db.transaction(() async {
+      final old = await _row(id);
+      if (old == null || old.deletedAt != null) return;
+      final at = stamp(old.updatedAt);
+      await (db.update(
+        db.scheduledWorkouts,
+      )..where((t) => t.id.equals(id))).write(ScheduledWorkoutsCompanion(deletedAt: Value(at), updatedAt: Value(at)));
+      await db.enqueue(entity: SyncEntity.scheduled_workout, entityId: id, op: ChangeOp.DELETE, clientUpdatedAt: at);
+    });
+    scheduleSync();
+  }
+
+  @override
+  Future<void> setSkipped(String id, bool skipped) async {
+    await db.transaction(() async {
+      final old = await _row(id);
+      if (old == null || old.deletedAt != null) return;
+      final at = stamp(old.updatedAt);
+      await (db.update(db.scheduledWorkouts)..where((t) => t.id.equals(id))).write(
+        ScheduledWorkoutsCompanion(skippedAt: Value(skipped ? at : null), updatedAt: Value(at)),
+      );
+      await _enq((await _row(id))!);
+    });
+    scheduleSync();
   }
 }
 

@@ -116,6 +116,7 @@ class Harness {
         overrides: [
           exerciseRepositoryProvider.overrideWithValue(exercises),
           sessionRepositoryProvider.overrideWithValue(sessions),
+          scheduledWorkoutRepositoryProvider.overrideWithValue(MemoryScheduledWorkoutRepository()),
           recordsRepositoryProvider.overrideWithValue(records),
           statsRepositoryProvider.overrideWithValue(stats),
           syncServiceProvider.overrideWithValue(NoopSyncService()),

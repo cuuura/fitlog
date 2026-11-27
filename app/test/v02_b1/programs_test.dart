@@ -155,6 +155,7 @@ class _Env {
     planCacheProvider.overrideWithValue(cache),
     exerciseRepositoryProvider.overrideWithValue(exercises),
     sessionRepositoryProvider.overrideWithValue(MemorySessionRepository()),
+    scheduledWorkoutRepositoryProvider.overrideWithValue(MemoryScheduledWorkoutRepository()),
     syncServiceProvider.overrideWithValue(NoopSyncService()),
     clockProvider.overrideWithValue(() => DateTime.utc(2026, 11, 26, 3)),
     deviceTimezoneProvider.overrideWithValue(() async => 'Asia/Seoul'),

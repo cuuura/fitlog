@@ -43,6 +43,14 @@ final driftSessionRepositoryProvider = Provider<SessionRepository>(
   ),
 );
 
+final driftScheduledWorkoutRepositoryProvider = Provider<ScheduledWorkoutRepository>(
+  (ref) => DriftScheduledWorkoutRepository(
+    ref.watch(appDatabaseProvider),
+    ref.watch(syncEngineProvider),
+    clock: ref.watch(clockProvider),
+  ),
+);
+
 final driftBodyRepositoryProvider = Provider<BodyRepository>(
   (ref) => DriftBodyRepository(
     ref.watch(appDatabaseProvider),

@@ -84,6 +84,7 @@ class _AiHistoryPageState extends ConsumerState<AiHistoryPage> {
       parts.add(switch (e.key) {
         'sessions' => l.aiHistorySummarySessions(e.value),
         'programs' => l.aiHistorySummaryPrograms(e.value),
+        'scheduledWorkouts' => l.aiHistorySummaryScheduled(e.value),
         'replaced' => l.aiHistorySummaryReplaced(e.value),
         _ => l.aiHistorySummaryOther(e.key, e.value),
       });

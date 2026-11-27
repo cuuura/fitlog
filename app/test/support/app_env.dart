@@ -33,6 +33,7 @@ class AppEnv {
     : now = start ?? DateTime.utc(2026, 11, 26, 9) {
     exercises = MemoryExerciseRepository(seed: seed ?? [squat, bench, pullUp, dbPress]);
     sessions = MemorySessionRepository(now: () => now);
+    scheduled = MemoryScheduledWorkoutRepository(now: () => now);
     programs = MemoryProgramRepository();
     planCache = MemoryPlanCache(programs);
     imports = MemoryImportRepository(now: () => now);
@@ -42,6 +43,7 @@ class AppEnv {
   final Settings settings;
   late final MemoryExerciseRepository exercises;
   late final MemorySessionRepository sessions;
+  late final MemoryScheduledWorkoutRepository scheduled;
   late final MemoryProgramRepository programs;
   late final MemoryPlanCache planCache;
   late final MemoryImportRepository imports;
@@ -55,6 +57,7 @@ class AppEnv {
   List<Override> get overrides => [
     exerciseRepositoryProvider.overrideWithValue(exercises),
     sessionRepositoryProvider.overrideWithValue(sessions),
+    scheduledWorkoutRepositoryProvider.overrideWithValue(scheduled),
     bodyRepositoryProvider.overrideWithValue(body),
     programRepositoryProvider.overrideWithValue(programs),
     recordsRepositoryProvider.overrideWithValue(records),

@@ -111,7 +111,7 @@ class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
     final unfinished = [
       for (final e in session.exercises)
         for (final w in e.sets)
-          if (isJudged(e, w) && !w.isCompleted) w,
+          if (isJudged(session, e, w) && !w.isCompleted) w,
     ].length;
     final ok = await confirmDialog(
       context,

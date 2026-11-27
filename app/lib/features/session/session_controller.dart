@@ -11,6 +11,7 @@ import '../../core/settings/settings_controller.dart';
 import '../../data/providers.dart';
 import '../../domain/repositories.dart';
 import '../rest_timer/rest_timer_controller.dart';
+import 'current_set.dart' show restSecFor;
 
 /// 기기의 IANA 시간대. 테스트에서 override 한다.
 final deviceTimezoneProvider = Provider<Future<String> Function()>((ref) {
@@ -136,6 +137,16 @@ class SessionController {
     return session;
   }
 
+  /// 예정 운동 시작(scheduled-workout.md §5). 로컬에서 세션을 만든다(오프라인 가능).
+  /// 진행 중 세션이 있으면 저장소가 그것을 돌려준다(호출 쪽이 먼저 걸러야 한다, start_scheduled_flow.dart).
+  /// 목표 무게가 없는 세트는 프로그램 시작과 같이 지난 기록으로 채운다.
+  Future<Session> startScheduled(ScheduledWorkout w) async {
+    final tz = await _ref.read(deviceTimezoneProvider)();
+    final session = await _repo.startSession(tz: tz, scheduled: w);
+    if (session.scheduledWorkoutId == w.id) await _fillMissingWeights(session);
+    return session;
+  }
+
   Future<void> _fillMissingWeights(Session session) async {
     final exercises = await _ref
         .read(exerciseRepositoryProvider)
@@ -146,7 +157,7 @@ class SessionController {
       final type = byId[se.exerciseId]?.type ?? ExerciseType.BARBELL;
       final needs = [
         for (final s in se.sets)
-          if (s.isPlanned &&
+          if ((s.isPlanned || session.scheduledWorkoutId != null) &&
               s.targetWeightKg == null &&
               s.weightKg == null &&
               s.addedWeightKg == null)
@@ -273,7 +284,7 @@ class SessionController {
     _ref
         .read(restTimerProvider.notifier)
         .start(
-          _ref.read(settingsProvider).defaultRestSec,
+          restSecFor(set, _ref.read(settingsProvider).defaultRestSec),
           label: timerLabel,
           body: nextText,
         );

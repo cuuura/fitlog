@@ -97,6 +97,7 @@ class V03Harness {
   List<Override> get overrides => [
     exerciseRepositoryProvider.overrideWithValue(exercises),
     sessionRepositoryProvider.overrideWithValue(sessions),
+    scheduledWorkoutRepositoryProvider.overrideWithValue(MemoryScheduledWorkoutRepository()),
     bodyRepositoryProvider.overrideWithValue(body),
     programRepositoryProvider.overrideWithValue(programs),
     planCacheProvider.overrideWithValue(planCache),

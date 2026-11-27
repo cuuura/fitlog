@@ -57,11 +57,33 @@ String setLongLabel(AppLocalizations l, SessionExercise se, WorkoutSet s) {
 String planCellText(WorkoutSet s, WeightUnit unit) {
   final reps = s.targetReps;
   if (reps == null) return '—';
-  final r = s.isAmrap ? '$reps+' : '$reps';
+  final r = s.isAmrap ? '$reps+' : _repsRange(reps, s.targetRepsMax);
   final w = s.targetWeightKg;
   if (w == null) return r;
   return '${Units.format(w, unit, withUnit: false)}×$r';
 }
+
+/// 목표 횟수: "12" 또는 범위 "12~15".
+String _repsRange(int reps, int? max) => max == null || max <= reps ? '$reps' : '$reps~$max';
+
+/// 예정 운동 세트 목표 한 줄: "80kg × 12~15 · RIR 3". 목표가 하나도 없으면 null.
+String? scheduledTargetText(AppLocalizations l, WorkoutSet s, WeightUnit unit) {
+  final w = s.targetWeightKg;
+  final reps = s.targetReps;
+  final main = [
+    if (w != null) Units.format(w, unit, withUnit: false) + (unit == WeightUnit.KG ? 'kg' : 'lb'),
+    if (reps != null) _repsRange(reps, s.targetRepsMax),
+  ];
+  final head = main.length == 2 ? '${main[0]} × ${main[1]}' : main.join();
+  final parts = [
+    if (head.isNotEmpty) head,
+    if (s.targetRir != null) l.schedTargetRir(s.targetRir!),
+  ];
+  return parts.isEmpty ? null : parts.join(' · ');
+}
+
+/// 이 세트를 끝낸 뒤 휴식 시간(초): 세트의 목표 휴식이 있으면 그 값, 없으면 설정 기본값.
+int restSecFor(WorkoutSet s, int defaultRestSec) => s.targetRestSec ?? defaultRestSec;
 
 String formatRestSec(int sec) =>
     '${sec ~/ 60}:${(sec % 60).toString().padLeft(2, '0')}';

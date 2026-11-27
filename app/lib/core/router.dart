@@ -23,6 +23,8 @@ import '../features/programs/program_detail_page.dart';
 import '../features/programs/program_start_page.dart';
 import '../features/programs/programs_page.dart';
 import '../features/records/exercise_records_page.dart';
+import '../features/scheduled/scheduled_edit_page.dart';
+import '../features/scheduled/scheduled_list_page.dart';
 import '../features/session/session_summary_page.dart';
 import '../features/home/home_page.dart';
 import '../features/profile/body_weight_page.dart';
@@ -70,6 +72,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         branches: [
           StatefulShellBranch(routes: [
             GoRoute(path: Routes.home, builder: (_, _) => const HomePage()),
+            // 하루짜리 예정 운동: 오늘 탭 아래라 하단 내비가 그대로 보인다.
+            GoRoute(path: Routes.scheduled, builder: (_, _) => const ScheduledListPage()),
+            GoRoute(
+              path: Routes.scheduledNew,
+              builder: (_, s) => ScheduledEditPage(initialDate: s.uri.queryParameters['date']),
+            ),
+            GoRoute(
+              path: '/scheduled/:id/edit',
+              builder: (_, s) => ScheduledEditPage(scheduledId: s.pathParameters['id']!),
+            ),
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: Routes.history, builder: (_, _) => const HistoryPage()),

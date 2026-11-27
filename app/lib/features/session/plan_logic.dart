@@ -4,13 +4,17 @@ import '../../core/api/program_dto.dart';
 import '../../core/units.dart';
 import 'session_format.dart';
 
-/// 판정 대상 세트: 계획 세트이며 워밍업이 아니고 보조운동 종목이 아니다.
-bool isJudged(SessionExercise se, WorkoutSet s) =>
-    s.targetReps != null && !s.isWarmup && !se.accessory;
+/// 판정 대상 세트: 프로그램 세션(programInstanceId != null)의 계획 세트이며 워밍업이 아니고 보조운동 종목이 아니다.
+/// 예정 운동 세션·자유 세션은 목표가 있어도 판정하지 않는다(scheduled-workout.md §1).
+bool isJudged(Session session, SessionExercise se, WorkoutSet s) =>
+    session.programInstanceId != null &&
+    s.targetReps != null &&
+    !s.isWarmup &&
+    !se.accessory;
 
 /// 완료한 세트가 목표 횟수에 못 미치면 실패(무게는 보지 않는다, PRG-5).
-bool isSetFailed(SessionExercise se, WorkoutSet s) =>
-    isJudged(se, s) && s.isCompleted && (s.reps ?? 0) < s.targetReps!;
+bool isSetFailed(Session session, SessionExercise se, WorkoutSet s) =>
+    isJudged(session, se, s) && s.isCompleted && (s.reps ?? 0) < s.targetReps!;
 
 /// 기록 무게가 계획 무게와 다르다(PRG-5 "계획과 다름").
 bool differsFromPlan(WorkoutSet s) =>
@@ -21,10 +25,10 @@ bool differsFromPlan(WorkoutSet s) =>
 enum ExerciseVerdict { success, failure }
 
 /// 종목 판정(요약용): 판정 대상 세트가 하나도 없으면 null. 미완료 세트는 실패로 본다.
-ExerciseVerdict? exerciseVerdict(SessionExercise se) {
+ExerciseVerdict? exerciseVerdict(Session session, SessionExercise se) {
   final judged = [
     for (final s in se.sets)
-      if (isJudged(se, s)) s,
+      if (isJudged(session, se, s)) s,
   ];
   if (judged.isEmpty) return null;
   final ok = judged.every(

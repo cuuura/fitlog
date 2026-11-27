@@ -9,6 +9,8 @@ import '../../core/clock.dart';
 import '../../core/routes.dart';
 import '../../core/theme.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../scheduled/scheduled_logic.dart' show parsePlannedDate;
+import '../scheduled/scheduled_providers.dart';
 import '../session/session_controller.dart' show planItemsProvider;
 import 'calendar_logic.dart';
 import 'calendar_providers.dart';
@@ -31,6 +33,16 @@ class WeekStrip extends ConsumerWidget {
       final sd = p.next?.scheduledDate;
       if (p.instance.skipPolicy != SkipPolicy.FIXED_DATE || sd == null) continue;
       planned.add(dateOnly(sd));
+    }
+    // 하루짜리 예정 운동이 있는 날도 같은 "예정" 윤곽 점으로 보인다(건너뜀·완료 제외).
+    final scheduledViews = ref.watch(
+      scheduledViewsProvider((from: dayKey(days.first), to: dayKey(days.last))),
+    );
+    for (final v in scheduledViews) {
+      if (v.status == ScheduledStatus.PLANNED || v.status == ScheduledStatus.IN_PROGRESS) {
+        final d = parsePlannedDate(v.workout.plannedDate);
+        if (d != null) planned.add(d);
+      }
     }
     final count = workedDayCount(byDay, days);
     final names = l.calendarWeekdays.split(',');

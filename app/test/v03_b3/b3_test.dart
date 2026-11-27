@@ -53,6 +53,7 @@ class Env {
     settingsProvider.overrideWith(() => FixedSettings()),
     exerciseRepositoryProvider.overrideWithValue(MemoryExerciseRepository()),
     sessionRepositoryProvider.overrideWithValue(MemorySessionRepository()),
+    scheduledWorkoutRepositoryProvider.overrideWithValue(MemoryScheduledWorkoutRepository()),
     bodyRepositoryProvider.overrideWithValue(MemoryBodyRepository()),
     syncServiceProvider.overrideWithValue(NoopSyncService()),
     planCacheProvider.overrideWithValue(MemoryPlanCache(_NoPrograms())),
