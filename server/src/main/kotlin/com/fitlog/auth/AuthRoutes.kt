@@ -18,6 +18,8 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import kotlinx.serialization.Serializable
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.Transaction
 import org.jetbrains.exposed.sql.and
 import org.jetbrains.exposed.sql.insert
@@ -34,6 +36,9 @@ import java.util.UUID
 
 @Serializable
 data class AuthTokens(val accessToken: String, val refreshToken: String, val expiresIn: Long, val isNewUser: Boolean)
+
+/** 회전 직후 옛 리프레시가 다시 오면(네트워크 재시도) 탈취로 보지 않는 유예 시간 */
+const val REFRESH_REUSE_GRACE_SEC = 60L
 
 /** 리프레시 토큰 발급·폐기. 불투명 문자열은 DB에 SHA-256 hex 로만 저장한다 */
 object RefreshTokenService {
@@ -136,7 +141,15 @@ fun Route.authRoutes(config: AppConfig) {
                     .where { RefreshTokens.tokenHash eq RefreshTokenService.hash(req.refreshToken) }
                     .forUpdate().singleOrNull() ?: return@dbQuery RotateResult.Invalid
                 val uid = row[RefreshTokens.userId]
-                if (row[RefreshTokens.revokedAt] != null) {
+                val rotatedAt = row[RefreshTokens.revokedAt]
+                // 회전 직후 재시도(응답 유실로 앱이 옛 토큰을 다시 보냄)는 탈취가 아니다:
+                // 유예 시간 안이고 그 뒤에 만들어진 살아 있는 후속 토큰이 있으면 로그아웃시키지 않고 새 토큰을 준다
+                val retry = rotatedAt != null && !rotatedAt.plusSeconds(REFRESH_REUSE_GRACE_SEC).isBefore(now) &&
+                    RefreshTokens.selectAll().where {
+                        (RefreshTokens.userId eq uid) and RefreshTokens.revokedAt.isNull() and
+                            (RefreshTokens.createdAt greaterEq rotatedAt.minusSeconds(2)) and (RefreshTokens.expiresAt greater now)
+                    }.any()
+                if (rotatedAt != null && !retry) {
                     // 이미 회전/폐기된 토큰의 재사용 = 탈취 의심. 사용자의 모든 리프레시 토큰을 폐기한다
                     RefreshTokens.update({ (RefreshTokens.userId eq uid) and RefreshTokens.revokedAt.isNull() }) {
                         it[revokedAt] = now
@@ -144,7 +157,7 @@ fun Route.authRoutes(config: AppConfig) {
                     return@dbQuery RotateResult.Invalid
                 }
                 if (!row[RefreshTokens.expiresAt].isAfter(now)) return@dbQuery RotateResult.Invalid
-                RefreshTokens.update({ RefreshTokens.id eq row[RefreshTokens.id] }) { it[revokedAt] = now }
+                if (!retry) RefreshTokens.update({ RefreshTokens.id eq row[RefreshTokens.id] }) { it[revokedAt] = now }
                 RotateResult.Ok(uid, RefreshTokenService.issue(this, uid, config.jwt.refreshTtlSec))
             }
             when (result) {

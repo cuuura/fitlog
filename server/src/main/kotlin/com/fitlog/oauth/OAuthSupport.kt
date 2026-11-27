@@ -45,6 +45,9 @@ const val ACCESS_TTL_SEC = 3600L
 const val REFRESH_TTL_SEC = 30L * 24 * 3600
 const val AUTH_CODE_TTL_SEC = 600L
 
+/** 리프레시 회전 직후 옛 토큰이 다시 오면(응답 유실 재시도) 탈취로 보지 않는 유예 시간 */
+const val REFRESH_REUSE_GRACE_SEC = 60L
+
 internal fun AppConfig.mcpUrl() = "$publicBaseUrl/mcp"
 
 internal fun urlEnc(s: String): String = URLEncoder.encode(s, Charsets.UTF_8)

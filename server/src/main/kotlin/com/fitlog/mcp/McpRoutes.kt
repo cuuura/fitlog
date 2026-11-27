@@ -136,7 +136,12 @@ fun Route.mcpRoutes(config: AppConfig) {
         respondText(body.toString(), ContentType.Application.Json, status)
 
     suspend fun ApplicationCall.unauthorized() {
-        response.header(HttpHeaders.WWWAuthenticate, "Bearer resource_metadata=\"$metadataUrl\"")
+        // 토큰을 보냈는데 거절된 경우(만료·폐기)는 error="invalid_token" 을 붙여 클라이언트가 갱신하게 한다(RFC 6750)
+        val presented = request.header(HttpHeaders.Authorization) != null
+        response.header(
+            HttpHeaders.WWWAuthenticate,
+            "Bearer " + (if (presented) "error=\"invalid_token\", " else "") + "resource_metadata=\"$metadataUrl\"",
+        )
         respondText(
             buildJsonObject { put("error", "unauthorized"); put("error_description", "missing, invalid or revoked access token") }.toString(),
             ContentType.Application.Json, HttpStatusCode.Unauthorized,
