@@ -9,11 +9,21 @@ WORKDIR /src/server
 # 의존성 레이어 캐시: 빌드 스크립트만 먼저 복사해 의존성을 받아 둔다
 COPY server/gradlew server/settings.gradle.kts server/build.gradle.kts server/gradle.properties ./
 COPY server/gradle ./gradle
-RUN chmod +x gradlew && ./gradlew --no-daemon --console=plain dependencies > /dev/null 2>&1 || true
+RUN chmod +x gradlew && GRADLE_OPTS="-Xmx64m" ./gradlew --no-daemon --console=plain -Dorg.gradle.jvmargs=-Xmx448m dependencies > /dev/null 2>&1 || true
 
 COPY server/src ./src
 COPY contracts /src/contracts
-RUN ./gradlew --no-daemon --console=plain installDist -x test
+# 무료 호스팅(Render) 빌드 머신은 메모리가 작다. 기본 설정(Gradle 1g + 별도 Kotlin 데몬)은 최대 1.5GB 를 써서
+# Kotlin 데몬이 죽고 "Exited with status 1" 로 배포가 실패했다. Kotlin 을 Gradle 프로세스 안에서 컴파일하고 힙을 줄여 ~0.9GB 로 낮춘다.
+# Maven Central 이 가끔 429 를 주므로 실패하면 두 번 더 시도한다.
+RUN printf '%s\n' \
+      'org.gradle.jvmargs=-Xmx448m -XX:MaxMetaspaceSize=320m -XX:ReservedCodeCacheSize=96m -XX:+UseSerialGC -XX:TieredStopAtLevel=1' \
+      'kotlin.compiler.execution.strategy=in-process' \
+      'kotlin.incremental=false' >> gradle.properties \
+    && for i in 1 2 3; do \
+         GRADLE_OPTS="-Xmx64m" ./gradlew --no-daemon --console=plain --max-workers=1 installDist -x test && exit 0; \
+         echo "gradle 실패, 20초 뒤 재시도 $i/3"; sleep 20; \
+       done; exit 1
 
 # ---- 실행 ----
 FROM eclipse-temurin:21-jre
