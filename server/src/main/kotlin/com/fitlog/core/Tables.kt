@@ -109,6 +109,8 @@ object WorkoutSessions : Table("workout_session") {
     val planSeq = integer("plan_seq").nullable()
     val planDayKey = text("plan_day_key").nullable()
     val importBatchId = uuid("import_batch_id").nullable()
+    /** V6 (LOG-13) */
+    val scheduledWorkoutId = uuid("scheduled_workout_id").nullable()
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -149,6 +151,10 @@ object WorkoutSets : Table("workout_set") {
     val targetReps = integer("target_reps").nullable()
     val targetWeightKg = decimal("target_weight_kg", 6, 2).nullable()
     val isAmrap = bool("is_amrap").default(false)
+    /** V6 (LOG-13) */
+    val targetRepsMax = integer("target_reps_max").nullable()
+    val targetRir = integer("target_rir").nullable()
+    val targetRestSec = integer("target_rest_sec").nullable()
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -342,5 +348,24 @@ object DeletionRequests : Table("deletion_request") {
     val createdAt = timestamp("created_at")
     val expiresAt = timestamp("expires_at")
     val decidedAt = timestamp("decided_at").nullable()
+    override val primaryKey = PrimaryKey(id)
+}
+
+// ---------------------------------------------------------------- v1.0 (V6__scheduled_workout.sql, contracts/v1.0/scheduled-workout.md)
+object ScheduledWorkouts : Table("scheduled_workout") {
+    val id = uuid("id")
+    val userId = uuid("user_id")
+    val plannedDate = date("planned_date")
+    val title = text("title")
+    val note = text("note").nullable()
+    /** ScheduledItem[] (exerciseId 로 풀린 상태). jsonb */
+    val items = jsonbText("items")
+    val skippedAt = timestamp("skipped_at").nullable()
+    val sourceCol = text("source")
+    val importBatchId = uuid("import_batch_id").nullable()
+    val createdAt = timestamp("created_at")
+    val updatedAt = timestamp("updated_at")
+    val deletedAt = timestamp("deleted_at").nullable()
+    val serverSeq = long("server_seq")
     override val primaryKey = PrimaryKey(id)
 }
