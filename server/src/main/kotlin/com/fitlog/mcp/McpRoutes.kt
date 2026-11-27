@@ -10,6 +10,7 @@ import com.fitlog.oauth.McpPrincipal
 import com.fitlog.oauth.OAuthTokenService
 import com.fitlog.oauth.SCOPE_READ
 import com.fitlog.oauth.SCOPE_WRITE
+import com.fitlog.oauth.Signer
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -74,7 +75,6 @@ internal class SlidingWindow(private val limit: Int, private val windowMs: Long,
     }
 }
 
-private class McpSession(val connectionId: UUID, val createdAt: Long)
 
 private fun rpcError(id: JsonElement?, code: Int, message: String): JsonObject = buildJsonObject {
     put("jsonrpc", "2.0")
@@ -119,7 +119,15 @@ private fun errorText(e: ApiException): String = buildString {
 
 /** A2 소유 (v0.3). 등록 위치: 루트(/mcp), 자체 OAuth 토큰 인증. 사양 2025-06-18 Streamable HTTP(JSON 응답만) */
 fun Route.mcpRoutes(config: AppConfig) {
-    val sessions = ConcurrentHashMap<String, McpSession>()
+    // 세션 ID 는 서명된 토큰(연결 ID 포함)이라 서버가 재시작·재배포돼도(무료 호스팅은 자주 잠든다) 그대로 통한다.
+    // 메모리 맵은 DELETE 로 닫은 세션을 거절하는 데만 쓴다
+    val closedSessions = ConcurrentHashMap<String, Long>()
+    val sessionSecret = config.jwt.secret
+    fun sessionValid(sid: String, connectionId: UUID): Boolean {
+        if (closedSessions.containsKey(sid)) return false
+        val v = Signer.verify(sessionSecret, "mcpsid", sid) ?: return false
+        return v["cid"] == connectionId.toString()
+    }
     val callLimiter = SlidingWindow(60, 60_000)
     val writeLimiter = SlidingWindow(20, 60_000)
     val metadataUrl = "${config.publicBaseUrl}/.well-known/oauth-protected-resource"
@@ -235,11 +243,11 @@ fun Route.mcpRoutes(config: AppConfig) {
                 if (id == null) return@post call.rpc(HttpStatusCode.BadRequest, rpcError(null, ERR_INVALID_REQUEST, "initialize must be a request"))
                 val asked = (params?.get("protocolVersion") as? JsonPrimitive)?.contentOrNull
                 val version = if (asked in SUPPORTED_PROTOCOLS) asked!! else LATEST_PROTOCOL
-                val sid = UUID.randomUUID().toString()
-                if (sessions.size > 10_000) {
-                    sessions.entries.sortedBy { it.value.createdAt }.take(1_000).forEach { sessions.remove(it.key) }
-                }
-                sessions[sid] = McpSession(principal.connectionId, System.currentTimeMillis())
+                val sid = Signer.sign(
+                    sessionSecret, "mcpsid",
+                    mapOf("cid" to principal.connectionId.toString(), "n" to UUID.randomUUID().toString()),
+                    30L * 24 * 3600,
+                )
                 call.response.header("Mcp-Session-Id", sid)
                 return@post call.rpc(
                     HttpStatusCode.OK,
@@ -255,8 +263,7 @@ fun Route.mcpRoutes(config: AppConfig) {
             // initialize 이후 요청은 세션 헤더가 필요하다. 모르는 세션은 404(클라이언트가 다시 initialize)
             val sid = call.request.header("Mcp-Session-Id")
                 ?: return@post call.rpc(HttpStatusCode.BadRequest, rpcError(id, ERR_INVALID_REQUEST, "Mcp-Session-Id header is required"))
-            val session = sessions[sid]
-            if (session == null || session.connectionId != principal.connectionId) {
+            if (!sessionValid(sid, principal.connectionId)) {
                 return@post call.rpc(HttpStatusCode.NotFound, rpcError(id, ERR_INVALID_REQUEST, "Unknown session; send initialize again"))
             }
 
@@ -278,8 +285,9 @@ fun Route.mcpRoutes(config: AppConfig) {
         delete {
             val principal = authenticate(call) ?: return@delete call.unauthorized()
             val sid = call.request.header("Mcp-Session-Id")
-            if (sid != null && sessions[sid]?.connectionId == principal.connectionId) {
-                sessions.remove(sid)
+            if (sid != null && sessionValid(sid, principal.connectionId)) {
+                if (closedSessions.size > 50_000) closedSessions.clear()
+                closedSessions[sid] = System.currentTimeMillis()
                 call.respondText("", status = HttpStatusCode.OK)
             } else {
                 call.respondText("", status = HttpStatusCode.NotFound)
