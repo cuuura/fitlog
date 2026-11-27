@@ -6,7 +6,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// 릴리스 서명 정보: app/android/key.properties(gitignore) 또는 환경 변수(CI). 둘 다 없으면 디버그 키로 폴백(로컬 실행용).
+// 릴리스 서명 정보: app/android/key.properties(gitignore) 또는 환경 변수(CI). 둘 다 없으면 저장소의 고정 테스트 키로 폴백(테스트 설치용, Play 업로드 불가).
 // key.properties 키: storeFile, storePassword, keyAlias, keyPassword
 val keyProps = Properties().apply {
     val f = rootProject.file("key.properties")
@@ -51,6 +51,13 @@ android {
     }
 
     signingConfigs {
+        // 릴리스 키가 없을 때 쓰는 고정 테스트 키(android/test-signing/README.md). 빌드마다 서명이 같아 덮어 설치가 된다.
+        create("testSigning") {
+            storeFile = rootProject.file("test-signing/fitlog-test.keystore")
+            storePassword = "fitlogtest"
+            keyAlias = "fitlogtest"
+            keyPassword = "fitlogtest"
+        }
         if (hasReleaseSigning) {
             create("release") {
                 storeFile = rootProject.file(releaseStoreFile!!)
@@ -63,7 +70,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
+            signingConfig = if (hasReleaseSigning) signingConfigs.getByName("release") else signingConfigs.getByName("testSigning")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")

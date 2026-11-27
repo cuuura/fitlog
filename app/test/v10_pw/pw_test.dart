@@ -205,6 +205,27 @@ void main() {
       expect(find.byKey(const Key('pwUsername')), findsNothing);
     });
 
+    testWidgets('methods 가 잠깐 5xx 면 다시 물어 폼을 보인다(잠든 서버)', (tester) async {
+      var n = 0;
+      await pump(
+        tester,
+        FakeAdapter((o) {
+          if (o.path == '/v1/auth/methods') {
+            n++;
+            return n == 1 ? errorBody(503, 'INTERNAL') : json({'google': true, 'password': true, 'passwordSignup': true});
+          }
+          return errorBody(404, 'NOT_FOUND');
+        }),
+      );
+      expect(n, 2);
+      expect(find.byKey(const Key('pwUsername')), findsOneWidget);
+    });
+
+    testWidgets('methods 가 계속 실패하면 다시 시도 버튼', (tester) async {
+      await pump(tester, _server());
+      expect(find.byKey(const Key('methodsRetry')), findsOneWidget);
+    });
+
     testWidgets('google만 켜짐 -> 폼 없음', (tester) async {
       await pump(tester, _server(methods: {'google': true, 'password': false, 'passwordSignup': false}));
       expect(find.byKey(const Key('pwUsername')), findsNothing);

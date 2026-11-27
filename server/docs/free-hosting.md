@@ -8,7 +8,7 @@ Render 무료 플랜(웹 서비스 + 무료 PostgreSQL)에 Blueprint(`render.yam
 2. Dashboard → **New → Blueprint** → `cuuura/fitlog` 저장소를 연결·선택한다. `PASSWORD_SIGNUP_CODE`(가입 코드, 본인만 아는 값)를 입력하고 **Apply**. 첫 빌드는 5~10분 걸린다.
 3. 서비스 주소(`https://fitlog-server-xxxx.onrender.com`)에 `/health/ready` 를 붙여 열어 정상인지 확인한다.
 4. GitHub Actions → **app** → **Run workflow**(main)에서 `api_base_url` 칸에 그 주소(끝 슬래시 없음)를 넣고 실행한다. 매번 넣기 싫으면 Settings → Secrets and variables → Actions → **Variables** 에 `API_BASE_URL` 로 저장해 두면 main 푸시 때도 그 주소로 빌드된다.
-5. 끝나면 APK가 고정 링크 https://github.com/cuuura/fitlog/releases/download/test-build/fitlog-test.apk 로 올라간다(main 푸시 때마다 덮어씀). 폰에서 이 링크를 누르면 바로 받아 설치된다. 또는 `app-release` 아티팩트에서 APK를 받아 설치한다. 디버그 키로 서명되므로 Play 업로드는 못 하지만 테스트 설치는 된다.
+5. 끝나면 APK가 고정 링크 https://github.com/cuuura/fitlog/releases/download/test-build/fitlog-test.apk 로 올라간다(main 푸시 때마다 덮어씀). 폰에서 이 링크를 누르면 바로 받아 설치된다. 또는 `app-release` 아티팩트에서 APK를 받아 설치한다. 저장소의 고정 테스트 키(app/android/test-signing)로 서명돼 빌드가 바뀌어도 덮어 설치된다. Play 업로드는 못 한다.
 6. 앱 로그인 화면에서 아이디로 가입(가입 코드 입력)한 뒤 사용한다.
 
 로컬 빌드 대안:

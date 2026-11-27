@@ -103,7 +103,12 @@ class ApiClient {
       _map(await dio.post('/v1/auth/google', data: {'idToken': idToken}, options: await _integrityOptions(idToken))),
     ),
   );
-  Future<AuthMethods> authMethods() => _call(() async => AuthMethods.fromJson(_map(await dio.get('/v1/auth/methods'))));
+  /// [timeout]: 무료 서버가 잠에서 깨는 동안(최대 1분) 기다릴 수 있게 응답 대기 시간을 늘린다.
+  Future<AuthMethods> authMethods({Duration? timeout}) => _call(
+    () async => AuthMethods.fromJson(
+      _map(await dio.get('/v1/auth/methods', options: timeout == null ? null : Options(receiveTimeout: timeout))),
+    ),
+  );
   Future<AuthTokens> authPasswordLogin(String username, String password) => _call(
     () async => AuthTokens.fromJson(
       _map(

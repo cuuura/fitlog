@@ -208,8 +208,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final t = Theme.of(context);
-    // 조회 중·실패 때는 Google만 보인다(기존 동작 유지).
-    final m = ref.watch(authMethodsProvider).value ?? AuthMethods.googleOnly;
+    // 조회 중·실패 때는 Google만 보이고, 그동안 '서버 확인 중'/'다시 시도'를 함께 보인다.
+    final methods = ref.watch(authMethodsProvider);
+    final m = methods.value ?? AuthMethods.googleOnly;
     // 둘 다 꺼져 있으면 로그인 수단이 없으므로 Google 버튼을 남긴다.
     final showGoogle = m.google || !m.password;
     return Scaffold(
@@ -259,6 +260,26 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       const SizedBox(height: 20),
                     ],
                     _passwordForm(l, m),
+                  ],
+                  if (methods.isLoading && !methods.hasValue) ...[
+                    const SizedBox(height: 20),
+                    Row(
+                      key: const Key('methodsLoading'),
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)),
+                        const SizedBox(width: 12),
+                        Flexible(child: Text(l.authMethodsLoading, style: t.textTheme.bodySmall)),
+                      ],
+                    ),
+                  ] else if (methods.hasError && !methods.hasValue) ...[
+                    const SizedBox(height: 20),
+                    Text(l.authMethodsError, textAlign: TextAlign.center, style: t.textTheme.bodySmall),
+                    TextButton(
+                      key: const Key('methodsRetry'),
+                      onPressed: () => ref.invalidate(authMethodsProvider),
+                      child: Text(l.authMethodsRetry),
+                    ),
                   ],
                   if (_error != null) ...[
                     const SizedBox(height: 16),
