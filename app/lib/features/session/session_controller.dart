@@ -246,6 +246,7 @@ class SessionController {
     WorkoutSet set,
     bool done, {
     required String timerLabel,
+    String? nextText,
   }) async {
     final repo = _ref.read(sessionRepositoryProvider);
     if (!done) {
@@ -271,7 +272,11 @@ class SessionController {
     await repo.updateSet(set.copyWith(completedAt: () => now));
     _ref
         .read(restTimerProvider.notifier)
-        .start(_ref.read(settingsProvider).defaultRestSec, label: timerLabel);
+        .start(
+          _ref.read(settingsProvider).defaultRestSec,
+          label: timerLabel,
+          body: nextText,
+        );
   }
 }
 

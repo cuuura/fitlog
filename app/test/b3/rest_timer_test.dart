@@ -16,6 +16,10 @@ class FakeNotifier implements RestTimerNotifier {
   final calls = <String>[];
   DateTime? lastEndsAt;
   String? lastLabel;
+  String? lastBody;
+  DateTime? warnAt;
+  String? warnBody;
+  final warnLog = <String>[];
   void Function(RestTimerAction)? handler;
 
   @override
@@ -25,7 +29,23 @@ class FakeNotifier implements RestTimerNotifier {
   @override
   Future<bool> requestExactAlarmPermission() async => false;
   @override
-  Future<void> cancel() async => calls.add('cancel');
+  Future<void> scheduleWarning({required DateTime at, String? body}) async {
+    warnAt = at;
+    warnBody = body;
+    warnLog.add('warn');
+  }
+
+  @override
+  Future<void> cancelWarning() async {
+    warnAt = null;
+    warnLog.add('unwarn');
+  }
+
+  @override
+  Future<void> cancel() async {
+    warnAt = null;
+    calls.add('cancel');
+  }
   @override
   Future<void> requestPermission() async => calls.add('permission');
   @override
@@ -33,9 +53,11 @@ class FakeNotifier implements RestTimerNotifier {
     required DateTime endsAt,
     required int totalSec,
     String? label,
+    String? body,
     required DateTime now,
   }) async {
     calls.add('show:$totalSec');
+    lastBody = body;
     lastEndsAt = endsAt;
     lastLabel = label;
   }
@@ -58,6 +80,7 @@ void main() {
   late FakeNotifier notifier;
   late MemStorage storage;
   late int vibrations;
+  late int warnVibrations;
 
   ProviderContainer make() {
     final c = ProviderContainer(
@@ -66,6 +89,7 @@ void main() {
         restTimerNotifierProvider.overrideWithValue(notifier),
         restTimerStorageProvider.overrideWithValue(storage),
         restTimerVibrateProvider.overrideWithValue(() async => vibrations++),
+        restTimerWarnVibrateProvider.overrideWithValue(() async => warnVibrations++),
       ],
     );
     addTearDown(c.dispose);
@@ -77,6 +101,7 @@ void main() {
     notifier = FakeNotifier();
     storage = MemStorage();
     vibrations = 0;
+    warnVibrations = 0;
   });
 
   test('start/addSeconds/stop 상태와 알림 호출', () async {
@@ -113,6 +138,48 @@ void main() {
     expect(storage.saved, isNull);
     ctl.addSeconds(10); // 멈춘 상태는 무시
     expect(c.read(restTimerProvider).running, isFalse);
+  });
+
+  test('종료 10초 전 경고: 예약, +30초 재예약, 건너뛰기 취소, 짧은 휴식은 생략', () async {
+    final c = make();
+    final ctl = c.read(restTimerProvider.notifier);
+    ctl.start(90, body: '다음 벤치 92.5kg×3');
+    await pumpEventQueue();
+    expect(notifier.warnAt, t(80));
+    expect(notifier.warnBody, '다음 벤치 92.5kg×3');
+    expect(notifier.lastBody, '다음 벤치 92.5kg×3');
+    ctl.addSeconds(30);
+    await pumpEventQueue();
+    expect(notifier.warnAt, t(110));
+    ctl.stop();
+    await pumpEventQueue();
+    expect(notifier.warnAt, isNull);
+
+    ctl.start(15);
+    await pumpEventQueue();
+    expect(notifier.warnAt, isNull);
+    expect(notifier.warnLog.last, 'unwarn');
+  });
+
+  test('포그라운드 경고 진동은 종료 10초 전에 한 번만', () async {
+    final c = make();
+    final ctl = c.read(restTimerProvider.notifier);
+    ctl.start(60);
+    now = t(40);
+    ctl.checkWarning();
+    expect(warnVibrations, 0);
+    now = t(50);
+    ctl.checkWarning();
+    ctl.checkWarning();
+    await pumpEventQueue();
+    expect(warnVibrations, 1);
+    expect(c.read(restTimerProvider).inWarning(now), isTrue);
+    ctl.addSeconds(30); // 새 종료 시각이면 다시 경고할 수 있다
+    now = t(80);
+    ctl.checkWarning();
+    await pumpEventQueue();
+    expect(warnVibrations, 2);
+    ctl.stop();
   });
 
   test('남은 시간보다 많이 줄이면 멈춘다', () async {
@@ -195,7 +262,7 @@ void main() {
       ),
     );
 
-    testWidgets('RestTimerBar: 표시, ±15초, 건너뛰기', (tester) async {
+    testWidgets('RestTimerBar: 표시, +30초, 건너뛰기', (tester) async {
       final c = make();
       await tester.pumpWidget(app(c, const RestTimerBar()));
       expect(find.byKey(const Key('restTimerRemaining')), findsNothing);
@@ -204,21 +271,18 @@ void main() {
       await tester.pump();
       expect(find.text('01:00'), findsOneWidget);
       expect(find.text('벤치'), findsOneWidget);
-      expect(find.text('+15초'), findsOneWidget);
-      expect(find.text('−15초'), findsOneWidget);
+      expect(find.text('+30초'), findsOneWidget);
+      expect(find.byKey(const Key('restTimerMinus')), findsNothing);
 
       await tester.tap(find.byKey(const Key('restTimerPlus')));
       await tester.pump();
-      expect(find.text('01:15'), findsOneWidget);
-      await tester.tap(find.byKey(const Key('restTimerMinus')));
-      await tester.pump();
-      expect(find.text('01:00'), findsOneWidget);
+      expect(find.text('01:30'), findsOneWidget);
 
-      now = t(30);
+      now = t(60);
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.text('00:30'), findsOneWidget);
       final bar = tester.widget<LinearProgressIndicator>(find.byKey(const Key('restTimerProgress')));
-      expect(bar.value, closeTo(0.5, 0.01));
+      expect(bar.value, closeTo(2 / 3, 0.01));
 
       await tester.tap(find.byKey(const Key('restTimerSkip')));
       await tester.pump();

@@ -140,7 +140,7 @@ void main() {
       expect(extra.targetReps, isNull);
 
       // 세트 순서 변경(드래그): 추가한 세트를 맨 위로
-      await t.drag(find.byKey(Key('drag-${extra.id}')), const Offset(0, -420));
+      await t.drag(find.byKey(Key('drag-${extra.id}')), const Offset(0, -520));
       await settle(t);
       s = await active(h);
       expect(s.exercises.single.sets.first.id, extra.id);

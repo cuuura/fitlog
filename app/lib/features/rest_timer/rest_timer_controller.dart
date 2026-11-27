@@ -13,12 +13,21 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/clock.dart';
 import 'rest_timer_notifier.dart';
 
+/// 종료 이만큼 전에 사전 경고(진동·알림)를 한다.
+const kRestWarnLead = Duration(seconds: 10);
+
+/// 전체 휴식이 이 시간 이하면 사전 경고를 하지 않는다.
+const kRestWarnMinTotal = Duration(seconds: 15);
+
 class RestTimerState {
   /// null이면 멈춤.
   final DateTime? endsAt;
   final int totalSec;
   final String? label;
-  const RestTimerState({this.endsAt, this.totalSec = 0, this.label});
+
+  /// 알림 본문("다음 벤치 프레스 92.5kg×3"). 없으면 기본 문구.
+  final String? body;
+  const RestTimerState({this.endsAt, this.totalSec = 0, this.label, this.body});
 
   bool get running => endsAt != null;
 
@@ -27,6 +36,12 @@ class RestTimerState {
     if (endsAt == null) return Duration.zero;
     final d = endsAt!.difference(nowUtc);
     return d.isNegative ? Duration.zero : d;
+  }
+
+  /// 종료 [kRestWarnLead] 안쪽인가(남은 시간이 0보다 크고 10초 이하).
+  bool inWarning(DateTime nowUtc) {
+    final r = remaining(nowUtc);
+    return running && r > Duration.zero && r <= kRestWarnLead;
   }
 
   /// 0.0(방금 시작) ~ 1.0(끝). totalSec이 0이면 1.
@@ -48,6 +63,7 @@ class SharedPrefsRestTimerStorage implements RestTimerStorage {
   static const _kEnds = 'restTimer.endsAt';
   static const _kTotal = 'restTimer.totalSec';
   static const _kLabel = 'restTimer.label';
+  static const _kBody = 'restTimer.body';
 
   @override
   Future<RestTimerState?> load() async {
@@ -58,6 +74,7 @@ class SharedPrefsRestTimerStorage implements RestTimerStorage {
       endsAt: DateTime.tryParse(ends)?.toUtc(),
       totalSec: p.getInt(_kTotal) ?? 0,
       label: p.getString(_kLabel),
+      body: p.getString(_kBody),
     );
   }
 
@@ -71,6 +88,11 @@ class SharedPrefsRestTimerStorage implements RestTimerStorage {
     } else {
       await p.setString(_kLabel, s.label!);
     }
+    if (s.body == null) {
+      await p.remove(_kBody);
+    } else {
+      await p.setString(_kBody, s.body!);
+    }
   }
 
   @override
@@ -79,6 +101,7 @@ class SharedPrefsRestTimerStorage implements RestTimerStorage {
     await p.remove(_kEnds);
     await p.remove(_kTotal);
     await p.remove(_kLabel);
+    await p.remove(_kBody);
   }
 }
 
@@ -92,8 +115,15 @@ final restTimerVibrateProvider = Provider<Future<void> Function()>((ref) => () a
       }
     });
 
+/// 종료 10초 전 사전 경고 진동(짧게 한 번). 테스트는 override한다.
+final restTimerWarnVibrateProvider = Provider<Future<void> Function()>((ref) => () async {
+      await HapticFeedback.heavyImpact();
+    });
+
 class RestTimerController extends Notifier<RestTimerState> {
   Timer? _finishTimer;
+  Timer? _warnTimer;
+  DateTime? _warnedFor;
   bool _permissionAsked = false;
 
   /// 끝난 시각에서 이 시간이 넘게 지나 있으면(앱이 멈춰 있다 돌아온 경우) 진동하지 않는다.
@@ -105,6 +135,7 @@ class RestTimerController extends Notifier<RestTimerState> {
     notifier.actionHandler = _onAction;
     ref.onDispose(() {
       _finishTimer?.cancel();
+      _warnTimer?.cancel();
       notifier.actionHandler = null;
     });
     // 이미 start()가 불렸다면 복구하지 않는다(_restore에서 확인).
@@ -123,12 +154,12 @@ class RestTimerController extends Notifier<RestTimerState> {
     }
   }
 
-  void start(int seconds, {String? label}) {
+  void start(int seconds, {String? label, String? body}) {
     if (seconds <= 0) {
       stop();
       return;
     }
-    state = RestTimerState(endsAt: _now().add(Duration(seconds: seconds)), totalSec: seconds, label: label);
+    state = RestTimerState(endsAt: _now().add(Duration(seconds: seconds)), totalSec: seconds, label: label, body: body);
     _arm(askPermission: true);
   }
 
@@ -141,12 +172,14 @@ class RestTimerController extends Notifier<RestTimerState> {
       stop();
       return;
     }
-    state = RestTimerState(endsAt: next, totalSec: state.totalSec + seconds, label: state.label);
+    state = RestTimerState(endsAt: next, totalSec: state.totalSec + seconds, label: state.label, body: state.body);
     _arm();
   }
 
   void stop() {
     _finishTimer?.cancel();
+    _warnTimer?.cancel();
+    _warnedFor = null;
     state = const RestTimerState();
     _guard(() => ref.read(restTimerNotifierProvider).cancel());
     _guard(() => ref.read(restTimerStorageProvider).clear());
@@ -164,23 +197,51 @@ class RestTimerController extends Notifier<RestTimerState> {
     }
     final fresh = now.difference(e) <= _vibrateWindow;
     _finishTimer?.cancel();
+    _warnTimer?.cancel();
     state = const RestTimerState();
     _guard(() => ref.read(restTimerStorageProvider).clear());
     // 예약된 종료 알림(소리·진동)은 그대로 둔다. 진행 중 알림은 timeoutAfter로 사라진다.
     if (fresh) _guard(() => ref.read(restTimerVibrateProvider)());
   }
 
+  /// 종료 10초 전이 되면 한 번만 짧게 진동한다(내부 Timer가 부르며, 테스트에서도 직접 부른다).
+  void checkWarning() {
+    final e = state.endsAt;
+    if (e == null || state.totalSec <= kRestWarnMinTotal.inSeconds) return;
+    final now = _now();
+    final at = e.subtract(kRestWarnLead);
+    if (at.isAfter(now)) {
+      _warnTimer?.cancel();
+      _warnTimer = Timer(at.difference(now), checkWarning);
+      return;
+    }
+    if (_warnedFor == e || !e.isAfter(now)) return;
+    _warnedFor = e;
+    _guard(() => ref.read(restTimerWarnVibrateProvider)());
+  }
+
   void _arm({bool askPermission = false}) {
     final s = state;
     _finishTimer?.cancel();
     _finishTimer = Timer(s.endsAt!.difference(_now()), checkFinished);
+    _warnTimer?.cancel();
+    final warnAt = s.endsAt!.subtract(kRestWarnLead);
+    final warn = s.totalSec > kRestWarnMinTotal.inSeconds;
+    if (warn && warnAt.isAfter(_now())) {
+      _warnTimer = Timer(warnAt.difference(_now()), checkWarning);
+    }
     final notifier = ref.read(restTimerNotifierProvider);
+    if (warn && warnAt.isAfter(_now())) {
+      _guard(() => notifier.scheduleWarning(at: warnAt, body: s.body));
+    } else {
+      _guard(() => notifier.cancelWarning());
+    }
     _guard(() async {
       if (askPermission && !_permissionAsked) {
         _permissionAsked = true;
         await notifier.requestPermission();
       }
-      await notifier.showRunning(endsAt: s.endsAt!, totalSec: s.totalSec, label: s.label, now: _now());
+      await notifier.showRunning(endsAt: s.endsAt!, totalSec: s.totalSec, label: s.label, body: s.body, now: _now());
     });
     _guard(() => ref.read(restTimerStorageProvider).save(s));
   }

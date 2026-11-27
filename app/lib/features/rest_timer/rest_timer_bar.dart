@@ -1,4 +1,4 @@
-// B3 소유. 세션 화면 하단에 붙이는 휴식 타이머 막대: 남은 시간 큰 글씨, 진행 막대, -15/+15초, 건너뛰기.
+// B3 소유. 세션 화면 하단에 붙이는 휴식 타이머 막대: 남은 시간 큰 글씨, 진행 막대, +30초, 건너뛰기.
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,25 +53,30 @@ class _RestTimerBarState extends ConsumerState<RestTimerBar> {
     final ctrl = ref.read(restTimerProvider.notifier);
 
     final large = MediaQuery.textScalerOf(context).scale(10) > 13;
-    final time = Text(
+    final warning = s.inWarning(now);
+    final pulseOn = !warning || (now.millisecondsSinceEpoch ~/ 500).isEven;
+    final timeText = Text(
       formatRestRemaining(left),
       key: const Key('restTimerRemaining'),
-      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+      style: Theme.of(context).textTheme.displayMedium?.copyWith(
+        fontWeight: FontWeight.bold,
         fontFeatures: const [FontFeature.tabularFigures()],
-        color: scheme.onSecondaryContainer,
+        color: warning ? scheme.error : scheme.onSecondaryContainer,
       ),
     );
+    final time = AnimatedOpacity(
+      key: const Key('restTimerPulse'),
+      opacity: pulseOn ? 1 : 0.5,
+      duration: const Duration(milliseconds: 150),
+      child: timeText,
+    );
     final buttons = <Widget>[
-      TextButton(
-        key: const Key('restTimerMinus'),
-        onPressed: () => ctrl.addSeconds(-15),
-        child: Text(l10n.timerSubSeconds(15)),
-      ),
-      TextButton(
+      OutlinedButton(
         key: const Key('restTimerPlus'),
-        onPressed: () => ctrl.addSeconds(15),
-        child: Text(l10n.timerAddSeconds(15)),
+        onPressed: () => ctrl.addSeconds(30),
+        child: Text(l10n.timerAddSeconds(30)),
       ),
+      const SizedBox(width: 8),
       FilledButton.tonal(
         key: const Key('restTimerSkip'),
         onPressed: ctrl.stop,

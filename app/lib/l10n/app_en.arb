@@ -1444,5 +1444,24 @@
   "homeStartFreeSecondary": "Start a free session without a plan",
   "homeStartProgramHint": "Start a program and sets and weights fill in automatically",
   "homeStartProgramAction": "Start a program",
-  "instanceStartToday": "Start today's workout"
+  "instanceStartToday": "Start today's workout",
+  "sessionCurRpeLabel": "RPE (optional)",
+  "sessionCurRirLabel": "RIR (optional)",
+  "sessionCurShowRir": "View as RIR",
+  "sessionCurShowRpe": "View as RPE",
+  "sessionCurNextNotif": "Next {exercise} {summary}",
+  "@sessionCurNextNotif": {
+    "placeholders": {
+      "exercise": {"type": "String"},
+      "summary": {"type": "String"}
+    }
+  },
+  "sessionCurWarnTitle": "10s of rest left",
+  "sessionCurWarnBody": "Next set is coming up",
+  "sessionCurChannelWarn": "Rest ending soon",
+  "sessionCurChannelWarnDesc": "Heads-up 10 seconds before rest ends",
+  "sessionCurPlaylistTitle": "Today · {done}/{total} exercises",
+  "@sessionCurPlaylistTitle": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "sessionCurDockStatus": "Working out · {elapsed} elapsed · {done}/{total} sets",
+  "@sessionCurDockStatus": {"placeholders": {"elapsed": {"type": "String"}, "done": {"type": "int"}, "total": {"type": "int"}}}
 }

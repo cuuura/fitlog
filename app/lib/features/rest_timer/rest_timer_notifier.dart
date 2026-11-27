@@ -18,7 +18,13 @@ abstract interface class RestTimerNotifier {
   Future<void> requestPermission();
 
   /// 진행 중 알림을 띄우거나 갱신하고, 종료 알림을 [endsAt]에 예약한다(이미 있으면 교체).
-  Future<void> showRunning({required DateTime endsAt, required int totalSec, String? label, required DateTime now});
+  Future<void> showRunning({required DateTime endsAt, required int totalSec, String? label, String? body, required DateTime now});
+
+  /// 종료 [at] 시각에 "휴식 10초 남음" 사전 경고 알림을 예약한다(이미 있으면 교체).
+  Future<void> scheduleWarning({required DateTime at, String? body});
+
+  /// 예약된 사전 경고만 지운다.
+  Future<void> cancelWarning();
 
   /// 정확한 알람 권한 요청을 지원하는 플랫폼인가(Android만). 아니면 설정 항목을 숨긴다.
   bool get supportsExactAlarm;
@@ -37,6 +43,7 @@ abstract interface class RestTimerNotifier {
 class LocalRestTimerNotifier implements RestTimerNotifier {
   static const _runningId = 7001;
   static const _doneId = 7002;
+  static const _warnId = 7003;
   static const _actionAdd30 = 'rest_add30';
   static const _actionSkip = 'rest_skip';
 
@@ -85,7 +92,7 @@ class LocalRestTimerNotifier implements RestTimerNotifier {
   }
 
   @override
-  Future<void> showRunning({required DateTime endsAt, required int totalSec, String? label, required DateTime now}) async {
+  Future<void> showRunning({required DateTime endsAt, required int totalSec, String? label, String? body, required DateTime now}) async {
     if (!_supported) return;
     await _init();
     final l = _l10n;
@@ -96,7 +103,7 @@ class LocalRestTimerNotifier implements RestTimerNotifier {
     await _plugin.show(
       id: _runningId,
       title: title,
-      body: l.timerRunningBody,
+      body: body == null || body.isEmpty ? l.timerRunningBody : body,
       notificationDetails: NotificationDetails(
         android: AndroidNotificationDetails(
           'rest_timer_running',
@@ -145,6 +152,41 @@ class LocalRestTimerNotifier implements RestTimerNotifier {
     );
   }
 
+  @override
+  Future<void> scheduleWarning({required DateTime at, String? body}) async {
+    if (!_supported) return;
+    await _init();
+    final l = _l10n;
+    await _plugin.zonedSchedule(
+      id: _warnId,
+      title: l.sessionCurWarnTitle,
+      body: body == null || body.isEmpty ? l.sessionCurWarnBody : body,
+      scheduledDate: tz.TZDateTime.from(at, tz.UTC),
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          'rest_timer_warn',
+          l.sessionCurChannelWarn,
+          channelDescription: l.sessionCurChannelWarnDesc,
+          importance: Importance.high,
+          priority: Priority.high,
+          playSound: true,
+          enableVibration: true,
+          vibrationPattern: Int64List.fromList([0, 200, 100, 200]),
+          timeoutAfter: 10000,
+          visibility: NotificationVisibility.public,
+        ),
+      ),
+      androidScheduleMode: await _scheduleMode(),
+    );
+  }
+
+  @override
+  Future<void> cancelWarning() async {
+    if (!_supported) return;
+    await _init();
+    await _plugin.cancel(id: _warnId);
+  }
+
   /// 정확한 알람 권한(SCHEDULE_EXACT_ALARM)이 있으면 exact, 없으면 inexact. 사용자를 설정 화면으로 보내지 않는다.
   Future<AndroidScheduleMode> _scheduleMode() async {
     final canExact = await _android?.canScheduleExactNotifications() ?? false;
@@ -169,6 +211,7 @@ class LocalRestTimerNotifier implements RestTimerNotifier {
     await _init();
     await _plugin.cancel(id: _runningId);
     await _plugin.cancel(id: _doneId);
+    await _plugin.cancel(id: _warnId);
   }
 }
 
@@ -183,9 +226,13 @@ class NoopRestTimerNotifier implements RestTimerNotifier {
   @override
   Future<void> cancel() async {}
   @override
+  Future<void> scheduleWarning({required DateTime at, String? body}) async {}
+  @override
+  Future<void> cancelWarning() async {}
+  @override
   Future<void> requestPermission() async {}
   @override
-  Future<void> showRunning({required DateTime endsAt, required int totalSec, String? label, required DateTime now}) async {}
+  Future<void> showRunning({required DateTime endsAt, required int totalSec, String? label, String? body, required DateTime now}) async {}
 }
 
 final restTimerNotifierProvider = Provider<RestTimerNotifier>((ref) => LocalRestTimerNotifier());

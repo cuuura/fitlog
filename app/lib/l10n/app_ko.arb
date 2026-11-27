@@ -1516,5 +1516,24 @@
   "homeStartFreeSecondary": "계획 없이 자유 세션 시작",
   "homeStartProgramHint": "프로그램을 시작하면 세트·무게가 자동으로 채워져요",
   "homeStartProgramAction": "프로그램 시작하기",
-  "instanceStartToday": "오늘 운동 시작"
+  "instanceStartToday": "오늘 운동 시작",
+  "sessionCurRpeLabel": "RPE (선택)",
+  "sessionCurRirLabel": "RIR (선택)",
+  "sessionCurShowRir": "RIR로 보기",
+  "sessionCurShowRpe": "RPE로 보기",
+  "sessionCurNextNotif": "다음 {exercise} {summary}",
+  "@sessionCurNextNotif": {
+    "placeholders": {
+      "exercise": {"type": "String"},
+      "summary": {"type": "String"}
+    }
+  },
+  "sessionCurWarnTitle": "휴식 10초 남음",
+  "sessionCurWarnBody": "곧 다음 세트예요",
+  "sessionCurChannelWarn": "휴식 곧 종료 알림",
+  "sessionCurChannelWarnDesc": "휴식이 끝나기 10초 전에 알려줘요",
+  "sessionCurPlaylistTitle": "오늘 운동 · {done}/{total} 종목",
+  "@sessionCurPlaylistTitle": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "sessionCurDockStatus": "운동 중 · {elapsed} 경과 · 전체 {done}/{total}세트",
+  "@sessionCurDockStatus": {"placeholders": {"elapsed": {"type": "String"}, "done": {"type": "int"}, "total": {"type": "int"}}}
 }

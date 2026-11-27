@@ -58,6 +58,36 @@ class ActiveSessionPage extends ConsumerStatefulWidget {
 
 class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
   bool _leaving = false;
+  bool _playlistOpen = true;
+  final _anchors = <String, GlobalKey>{};
+
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _scrollTo(String seId, List<String> order) {
+    void go() {
+      final ctx = _anchors[seId]?.currentContext;
+      if (ctx == null || !ctx.mounted) return;
+      Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 250),
+        alignment: 0.05,
+      );
+    }
+
+    if (_anchors[seId]?.currentContext != null) return go();
+    // 아직 그려지지 않은(멀리 있는) 카드: 대략 위치로 먼저 이동한 뒤 정확히 맞춘다.
+    if (!_scroll.hasClients || order.length < 2) return;
+    final i = order.indexOf(seId);
+    if (i < 0) return;
+    _scroll.jumpTo(_scroll.position.maxScrollExtent * i / (order.length - 1));
+    WidgetsBinding.instance.addPostFrameCallback((_) => go());
+  }
 
   /// 사용자가 직접 펼친 세트(현재 세트가 바뀌면 무효가 되어 다시 현재 세트를 따라간다).
   String? _pinId;
@@ -159,11 +189,22 @@ class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
           exercises: exercises,
         ),
         body: ReorderableListView.builder(
+          scrollController: _scroll,
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
           buildDefaultDragHandles: false,
           header: Column(
             children: [
               if (session.isProgram) _PlanHeader(session: session),
+              if (session.exercises.isNotEmpty)
+                _Playlist(
+                  session: session,
+                  exercises: exercises,
+                  open: _playlistOpen,
+                  onToggle: () =>
+                      setState(() => _playlistOpen = !_playlistOpen),
+                  onTap: (id) =>
+                      _scrollTo(id, [for (final e in session.exercises) e.id]),
+                ),
               NoteField(
                 key: ValueKey('session-note-${session.id}'),
                 fieldKey: const Key('session-note'),
@@ -206,6 +247,7 @@ class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
               se: se,
               index: i,
               exercise: exercises[se.exerciseId],
+              anchorKey: _anchors.putIfAbsent(se.id, GlobalKey.new),
               expandedSetId: expandedId,
               currentSetId: currentId,
               onSelect: (id) => setState(() {
@@ -354,7 +396,9 @@ class _ExerciseCard extends ConsumerWidget {
     required this.expandedSetId,
     required this.currentSetId,
     required this.onSelect,
+    this.anchorKey,
   });
+  final GlobalKey? anchorKey;
   final String? expandedSetId;
   final String? currentSetId;
   final void Function(String setId) onSelect;
@@ -400,169 +444,355 @@ class _ExerciseCard extends ConsumerWidget {
         ? ''
         : formatPastSets(pastSe.sets, type, unit);
 
-    return Card(
-      key: Key('exercise-${se.id}'),
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(left: 12, right: 4),
-              child: Row(
-                children: [
-                  Expanded(
+    return KeyedSubtree(
+      key: anchorKey,
+      child: Card(
+        key: Key('exercise-${se.id}'),
+        margin: const EdgeInsets.symmetric(vertical: 6),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(left: 12, right: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  name,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium,
+                                ),
+                              ),
+                              if (se.accessory) ...[
+                                const SizedBox(width: 8),
+                                Chip(
+                                  key: Key('accessory-${se.id}'),
+                                  label: Text(l.sessionAccessoryBadge),
+                                  visualDensity: VisualDensity.compact,
+                                ),
+                              ],
+                            ],
+                          ),
+                          Wrap(
+                            spacing: 8,
+                            children: [
+                              Text(
+                                typeLabel(l, type),
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              if (progress.total > 0)
+                                Text(
+                                  l.sessionTableProgress(
+                                    progress.done,
+                                    progress.total,
+                                  ),
+                                  key: Key('progress-${se.id}'),
+                                  style: Theme.of(context).textTheme.labelLarge
+                                      ?.copyWith(
+                                        color: progress.done == progress.total
+                                            ? Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                            : null,
+                                      ),
+                                ),
+                            ],
+                          ),
+                          if (pastText.isNotEmpty)
+                            Text(
+                              l.sessionLastDay(pastText),
+                              key: Key('past-day-${se.id}'),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                        ],
+                      ),
+                    ),
+                    ReorderableDragStartListener(
+                      index: index,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8),
+                        child: Icon(
+                          Icons.drag_handle,
+                          key: Key('drag-exercise-${se.id}'),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      key: Key('remove-exercise-${se.id}'),
+                      tooltip: l.sessionRemoveExercise,
+                      icon: const Icon(Icons.delete_outline),
+                      onPressed: () async {
+                        final ok = await confirmDialog(
+                          context,
+                          title: l.sessionRemoveExercise,
+                          body: l.sessionRemoveExerciseConfirm(name),
+                          confirmLabel: l.commonDelete,
+                          confirmKey: const Key('remove-exercise-confirm'),
+                        );
+                        if (ok) await ctrl.removeExercise(se.id);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+                child: NoteField(
+                  key: ValueKey('note-${se.id}'),
+                  fieldKey: Key('exercise-note-${se.id}'),
+                  label: l.sessionExerciseNoteHint,
+                  value: se.note,
+                  onSave: (v) => ctrl.setExerciseNote(se.id, v),
+                ),
+              ),
+              if (se.sets.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+                  child: Text(
+                    l.sessionTableEmptyHint,
+                    key: Key('empty-sets-${se.id}'),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                )
+              else
+                SetTableHeader(type: type),
+              ReorderableListView.builder(
+                key: Key('sets-${se.id}'),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
+                itemCount: se.sets.length,
+                onReorderItem: (o, n) {
+                  final ids = [for (final w in se.sets) w.id];
+                  ids.insert(n, ids.removeAt(o));
+                  ctrl.reorderSets(se.id, ids);
+                },
+                itemBuilder: (context, i) => SetRow(
+                  key: ValueKey(se.sets[i].id),
+                  session: session,
+                  sessionExercise: se,
+                  exerciseName: name,
+                  type: type,
+                  set: se.sets[i],
+                  index: i,
+                  label: setShortLabel(l, se, se.sets[i]),
+                  expanded: se.sets[i].id == expandedSetId,
+                  isCurrent: se.sets[i].id == currentSetId,
+                  onSelect: () => onSelect(se.sets[i].id),
+                  previous: last == null || last.sets.isEmpty
+                      ? null
+                      : (i < last.sets.length ? last.sets[i] : last.sets.last),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: se.sets.isEmpty
+                    ? FilledButton.tonalIcon(
+                        key: Key('add-set-${se.id}'),
+                        icon: const Icon(Icons.add),
+                        label: Text(l.sessionAddSet),
+                        onPressed: () => ctrl.addSet(session, se),
+                      )
+                    : TextButton.icon(
+                        key: Key('add-set-${se.id}'),
+                        icon: const Icon(Icons.add),
+                        label: Text(l.sessionAddSet),
+                        onPressed: () => ctrl.addSet(session, se),
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "오늘 운동" 플레이리스트: 종목 순서, 진행, 다음 목표. 끌어서 순서를 바꾸고 눌러서 카드로 이동한다.
+class _Playlist extends ConsumerWidget {
+  const _Playlist({
+    required this.session,
+    required this.exercises,
+    required this.open,
+    required this.onToggle,
+    required this.onTap,
+  });
+  final Session session;
+  final Map<String, Exercise> exercises;
+  final bool open;
+  final VoidCallback onToggle;
+  final void Function(String seId) onTap;
+
+  bool _isDone(SessionExercise se) {
+    final p = exerciseProgress(se);
+    return p.total > 0 && p.done == p.total;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final unit = ref.watch(settingsProvider.select((s) => s.weightUnit));
+    final nowId = currentSetOf(session)?.se.id;
+    final list = session.exercises;
+    final doneCount = list.where(_isDone).length;
+    final ctrl = ref.read(sessionControllerProvider);
+
+    Widget row(int i) {
+      final se = list[i];
+      final ex = exercises[se.exerciseId];
+      final name = ex == null ? '…' : exerciseDisplayName(context, ex);
+      final type = ex?.type ?? ExerciseType.BARBELL;
+      final done = _isDone(se);
+      final now = se.id == nowId;
+      final p = exerciseProgress(se);
+      final nextSet =
+          se.sets.where((w) => !w.isCompleted && !w.isWarmup).firstOrNull ??
+          se.sets.where((w) => !w.isCompleted).firstOrNull;
+      final fg = now ? scheme.onPrimaryContainer : null;
+      return Material(
+        key: ValueKey('playlist-item-${se.id}'),
+        color: now ? scheme.primaryContainer : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          key: Key('playlist-row-${se.id}'),
+          borderRadius: BorderRadius.circular(8),
+          onTap: () => onTap(se.id),
+          child: Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  child: Text(
+                    '${i + 1}',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.labelMedium?.copyWith(color: fg),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Icon(
+                  done
+                      ? Icons.check_circle
+                      : (now
+                            ? Icons.play_arrow_rounded
+                            : Icons.radio_button_unchecked),
+                  key: Key(
+                    'playlist-status-${se.id}-${done ? 'done' : (now ? 'now' : 'todo')}',
+                  ),
+                  size: 20,
+                  color: done
+                      ? scheme.primary
+                      : (now ? scheme.primary : scheme.onSurfaceVariant),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 6),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                name,
-                                style: Theme.of(context).textTheme.titleMedium,
-                              ),
-                            ),
-                            if (se.accessory) ...[
-                              const SizedBox(width: 8),
-                              Chip(
-                                key: Key('accessory-${se.id}'),
-                                label: Text(l.sessionAccessoryBadge),
-                                visualDensity: VisualDensity.compact,
-                              ),
-                            ],
-                          ],
+                        Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: fg,
+                            fontWeight: now ? FontWeight.bold : null,
+                          ),
                         ),
-                        Wrap(
-                          spacing: 8,
-                          children: [
-                            Text(
-                              typeLabel(l, type),
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                            if (progress.total > 0)
-                              Text(
-                                l.sessionTableProgress(
-                                  progress.done,
-                                  progress.total,
-                                ),
-                                key: Key('progress-${se.id}'),
-                                style: Theme.of(context).textTheme.labelLarge
-                                    ?.copyWith(
-                                      color: progress.done == progress.total
-                                          ? Theme.of(context)
-                                                .colorScheme
-                                                .primary
-                                          : null,
-                                    ),
-                              ),
-                          ],
-                        ),
-                        if (pastText.isNotEmpty)
+                        if (nextSet != null && !done)
                           Text(
-                            l.sessionLastDay(pastText),
-                            key: Key('past-day-${se.id}'),
-                            style: Theme.of(context).textTheme.bodySmall,
+                            formatSetBrief(nextSet, type, unit),
+                            key: Key('playlist-next-${se.id}'),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: fg ?? scheme.onSurfaceVariant,
+                            ),
                           ),
                       ],
                     ),
                   ),
-                  ReorderableDragStartListener(
-                    index: index,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        Icons.drag_handle,
-                        key: Key('drag-exercise-${se.id}'),
-                      ),
+                ),
+                Text(
+                  '${p.done}/${p.total}',
+                  key: Key('playlist-progress-${se.id}'),
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: fg,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                ReorderableDragStartListener(
+                  index: i,
+                  child: Tooltip(
+                    message: l.sessionReorderHandle,
+                    child: SizedBox(
+                      key: Key('playlist-drag-${se.id}'),
+                      width: 40,
+                      height: 40,
+                      child: Icon(Icons.drag_handle, color: fg),
                     ),
                   ),
-                  IconButton(
-                    key: Key('remove-exercise-${se.id}'),
-                    tooltip: l.sessionRemoveExercise,
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () async {
-                      final ok = await confirmDialog(
-                        context,
-                        title: l.sessionRemoveExercise,
-                        body: l.sessionRemoveExerciseConfirm(name),
-                        confirmLabel: l.commonDelete,
-                        confirmKey: const Key('remove-exercise-confirm'),
-                      );
-                      if (ok) await ctrl.removeExercise(se.id);
-                    },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return Card(
+      key: const Key('playlist'),
+      margin: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          InkWell(
+            key: const Key('playlist-header'),
+            onTap: onToggle,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 8, 8, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      l.sessionCurPlaylistTitle(doneCount, list.length),
+                      style: theme.textTheme.titleSmall,
+                    ),
                   ),
+                  Icon(open ? Icons.expand_less : Icons.expand_more),
                 ],
               ),
             ),
+          ),
+          if (open)
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-              child: NoteField(
-                key: ValueKey('note-${se.id}'),
-                fieldKey: Key('exercise-note-${se.id}'),
-                label: l.sessionExerciseNoteHint,
-                value: se.note,
-                onSave: (v) => ctrl.setExerciseNote(se.id, v),
+              padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
+              child: ReorderableListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
+                itemCount: list.length,
+                onReorderItem: (o, n) {
+                  final ids = [for (final e in list) e.id];
+                  ids.insert(n, ids.removeAt(o));
+                  ctrl.reorderExercises(session.id, ids);
+                },
+                itemBuilder: (c, i) => row(i),
               ),
             ),
-            if (se.sets.isEmpty)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-                child: Text(
-                  l.sessionTableEmptyHint,
-                  key: Key('empty-sets-${se.id}'),
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-              )
-            else
-              SetTableHeader(type: type),
-            ReorderableListView.builder(
-              key: Key('sets-${se.id}'),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              buildDefaultDragHandles: false,
-              itemCount: se.sets.length,
-              onReorderItem: (o, n) {
-                final ids = [for (final w in se.sets) w.id];
-                ids.insert(n, ids.removeAt(o));
-                ctrl.reorderSets(se.id, ids);
-              },
-              itemBuilder: (context, i) => SetRow(
-                key: ValueKey(se.sets[i].id),
-                session: session,
-                sessionExercise: se,
-                exerciseName: name,
-                type: type,
-                set: se.sets[i],
-                index: i,
-                label: setShortLabel(l, se, se.sets[i]),
-                expanded: se.sets[i].id == expandedSetId,
-                isCurrent: se.sets[i].id == currentSetId,
-                onSelect: () => onSelect(se.sets[i].id),
-                previous: last == null || last.sets.isEmpty
-                    ? null
-                    : (i < last.sets.length ? last.sets[i] : last.sets.last),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: se.sets.isEmpty
-                  ? FilledButton.tonalIcon(
-                      key: Key('add-set-${se.id}'),
-                      icon: const Icon(Icons.add),
-                      label: Text(l.sessionAddSet),
-                      onPressed: () => ctrl.addSet(session, se),
-                    )
-                  : TextButton.icon(
-                      key: Key('add-set-${se.id}'),
-                      icon: const Icon(Icons.add),
-                      label: Text(l.sessionAddSet),
-                      onPressed: () => ctrl.addSet(session, se),
-                    ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }
