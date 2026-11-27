@@ -57,7 +57,8 @@ internal const val INSTRUCTIONS = """Fitlog 헬스 기록 서버입니다. / Fit
 - 쓰기 도구는 충돌(같은 이름 종목, 같은 시각 세션, 필요한 TM 누락 등)이 없으면 바로 저장합니다. 충돌이 있으면 저장하지 않고 status NEEDS_RESOLUTION 과 충돌 목록(conflicts[].allowed)을 돌려주니, 사용자와 상의해 resolutions 에 해결 방법을 넣어 같은 묶음으로 다시 호출하세요. / Write tools save immediately when there are no conflicts; otherwise they return NEEDS_RESOLUTION with the conflicts and save nothing — retry the same bundle with resolutions.
 - 저장된 묶음은 사용자가 앱의 AI 기록에서 되돌릴 수 있습니다. / Saved bundles can be reverted by the user in the app's AI history.
 - 데이터를 직접 지울 수 없습니다. 삭제는 request_deletion 으로 요청만 만들고, 사용자가 앱에서 승인해야 실행됩니다. / You cannot delete data; request_deletion only creates a request the user must approve in the app.
-- 프로그램 계산(무게·진행)은 서버 엔진이 합니다. get_plan 으로 계획을 읽기만 하세요. / Program math is done by the server; read plans with get_plan."""
+- 프로그램 계산(무게·진행)은 서버 엔진이 합니다. get_plan 으로 계획을 읽기만 하세요. / Program math is done by the server; read plans with get_plan.
+- 앞으로 할 하루짜리 운동 계획은 schedule_workout, 이미 한 운동 기록은 log_session, 여러 주 반복 규칙은 create_program 을 쓰세요. / Use schedule_workout for a one-day plan, log_session for a finished workout, create_program for multi-week rules."""
 
 /** 슬라이딩 윈도 호출 한도 (메모리) */
 internal class SlidingWindow(private val limit: Int, private val windowMs: Long, private val now: () -> Long = System::currentTimeMillis) {
