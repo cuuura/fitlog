@@ -110,6 +110,9 @@ class ImportController extends Notifier<ImportState> {
       state = state.copyWith(step: ImportStep.preview, preview: p, resolutions: const {}, clearError: true);
     } on ApiException catch (e) {
       _fail(e, backToInput: true);
+    } catch (e) {
+      // ApiException이 아닌 오류(예: 로컬 오류)로 '처리 중' 화면에 영원히 머물지 않게 한다.
+      _fail(ApiException(code: 'UNKNOWN', message: e.toString()), backToInput: true);
     }
   }
 
@@ -172,6 +175,8 @@ class ImportController extends Notifier<ImportState> {
       }
     } on ApiException catch (e) {
       _fail(e, backToInput: false);
+    } catch (e) {
+      _fail(ApiException(code: 'UNKNOWN', message: e.toString()), backToInput: false);
     }
   }
 }

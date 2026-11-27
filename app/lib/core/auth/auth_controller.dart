@@ -102,6 +102,11 @@ class AuthController extends Notifier<AuthStatus> {
       state = AuthStatus.signedOut;
       return;
     }
+    // 잠든 서버는 깨는 데 1분쯤 걸린다. 그동안 스플래시에 묶어 두지 않고, 잠시 뒤에는 로그인된 것으로 먼저 보여 준다
+    // (오프라인 우선 앱). 동의가 더 필요하거나 토큰이 거부되면 응답이 온 뒤에 상태가 바뀐다.
+    final grace = Timer(restoreGrace, () {
+      if (ref.mounted && state == AuthStatus.unknown) state = AuthStatus.signedIn;
+    });
     try {
       await _loadMe();
     } on ApiException catch (e) {
@@ -114,8 +119,13 @@ class AuthController extends Notifier<AuthStatus> {
       }
     } catch (_) {
       if (ref.mounted && state == AuthStatus.unknown) state = AuthStatus.signedIn;
+    } finally {
+      grace.cancel();
     }
   }
+
+  /// 저장된 토큰이 있을 때 `getMe` 응답을 이만큼만 기다리고 먼저 홈을 보여 준다.
+  Duration get restoreGrace => const Duration(seconds: 8);
 
   /// `getMe()`로 필수 동의를 확인하고 상태를 정한다. 다른 계정이면 로컬 데이터를 비운다.
   Future<void> _loadMe() async {
@@ -199,12 +209,30 @@ class AuthController extends Notifier<AuthStatus> {
   /// 로그아웃. 서버 호출이 실패해도 로컬은 정리한다.
   Future<void> signOut() async {
     final tokens = await _store.read();
-    if (tokens != null) {
-      try {
-        await _api.authLogout(tokens.refreshToken);
-      } catch (_) {}
-    }
+    if (tokens != null) await _revokeOnServer(tokens);
     await _cleanup();
+  }
+
+  /// 서버의 리프레시 토큰을 폐기한다(실패해도 로컬 로그아웃은 계속한다).
+  /// 액세스 토큰은 15분이면 만료돼 로그아웃이 401로 거절되는 일이 흔하다. 그럴 땐 refresh 로 새 토큰을 받아 한 번 더 시도한다
+  /// (refresh 는 이전 리프레시 토큰을 폐기하므로 새 토큰으로 로그아웃해야 서버에 살아 있는 토큰이 남지 않는다).
+  Future<void> _revokeOnServer(StoredTokens tokens) async {
+    try {
+      await _api.authLogout(tokens.refreshToken);
+    } on ApiException catch (e) {
+      if (!e.isUnauthenticated) return;
+      try {
+        final fresh = await _api.authRefresh(tokens.refreshToken);
+        await _store.write(
+          StoredTokens(
+            accessToken: fresh.accessToken,
+            refreshToken: fresh.refreshToken,
+            expiresAt: ref.read(clockProvider)().add(Duration(seconds: fresh.expiresIn)),
+          ),
+        );
+        await _api.authLogout(fresh.refreshToken);
+      } catch (_) {}
+    } catch (_) {}
   }
 
   /// 계정 삭제(ACC-5). 서버 삭제에 실패하면 예외를 던지고 로그인 상태를 유지한다.

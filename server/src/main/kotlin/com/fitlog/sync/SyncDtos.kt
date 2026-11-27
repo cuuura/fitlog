@@ -52,6 +52,10 @@ internal data class SessionPayload(
     val planSeq: Int? = null,
     val planDayKey: String? = null,
     val scheduledWorkoutId: UUID? = null,
+    /** pull 전용(readOnly): APP | AI_JSON | AI_MCP | IMPORT. 앱의 출처 배지가 쓴다. push 에서는 무시 */
+    val source: String? = null,
+    /** pull 전용(readOnly): 가져오기 묶음 id */
+    val importBatchId: UUID? = null,
 )
 
 @Serializable
@@ -68,6 +72,8 @@ internal data class BodyPayload(
     val measuredAt: Instant,
     val weightKg: Double,
     val source: String? = null,
+    /** pull 전용(readOnly) */
+    val importBatchId: UUID? = null,
 )
 
 /** ExerciseInput */
@@ -79,4 +85,7 @@ internal data class ExercisePayload(
     val type: String,
     val primaryMuscle: String,
     val secondaryMuscles: List<String> = emptyList(),
+    /** pull 전용(readOnly): 출처와 가져오기 묶음 id. push 에서는 무시 */
+    val source: String? = null,
+    val importBatchId: UUID? = null,
 )

@@ -30,7 +30,11 @@ class ApiException implements Exception {
     this.retryAfter,
   });
 
+  /// 서버가 응답했지만 앱 DTO로 읽을 수 없을 때의 [code].
+  static const badResponseCode = 'BAD_RESPONSE';
+
   bool get isNetwork => code == 'NETWORK';
+  bool get isBadResponse => code == badResponseCode;
   bool get isUnauthenticated => statusCode == 401;
   bool get isRateLimited => statusCode == 429 || code == 'RATE_LIMITED';
 
@@ -91,6 +95,11 @@ class ApiClient {
       return await f();
     } on DioException catch (e) {
       throw ApiException.fromDio(e);
+    } on TypeError catch (e) {
+      // 응답이 DTO와 안 맞을 때(필드 누락·타입 다름). 화면이 '로딩 중'에 멈추지 않게 같은 오류 형식으로 올린다.
+      throw ApiException(code: ApiException.badResponseCode, message: e.toString());
+    } on FormatException catch (e) {
+      throw ApiException(code: ApiException.badResponseCode, message: e.message);
     }
   }
 

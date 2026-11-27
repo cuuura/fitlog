@@ -37,6 +37,7 @@ internal fun Transaction.buildChanges(entity: String, ids: Collection<UUID>): Li
                     ExercisePayload(
                         it[Exercises.id], it[Exercises.nameKo], it[Exercises.nameEn], it[Exercises.type],
                         it[Exercises.primaryMuscle], it[Exercises.secondaryMuscles],
+                        it[Exercises.sourceCol], it[Exercises.importBatchId],
                     ),
                 ),
                 it[Exercises.updatedAt], it[Exercises.serverSeq],
@@ -51,6 +52,7 @@ internal fun Transaction.buildChanges(entity: String, ids: Collection<UUID>): Li
                         it[WorkoutSessions.startedAt], it[WorkoutSessions.endedAt], it[WorkoutSessions.tz], it[WorkoutSessions.note],
                         it[WorkoutSessions.programInstanceId], it[WorkoutSessions.planSeq], it[WorkoutSessions.planDayKey],
                         it[WorkoutSessions.scheduledWorkoutId],
+                        it[WorkoutSessions.sourceCol], it[WorkoutSessions.importBatchId],
                     ),
                 ),
                 it[WorkoutSessions.updatedAt], it[WorkoutSessions.serverSeq],
@@ -82,7 +84,10 @@ internal fun Transaction.buildChanges(entity: String, ids: Collection<UUID>): Li
             Change(
                 entity, it[BodyMeasurements.id], if (del) "DELETE" else "UPSERT", null,
                 if (del) null else payloadOf(
-                    BodyPayload(it[BodyMeasurements.measuredAt], it[BodyMeasurements.weightKg].toDouble(), it[BodyMeasurements.sourceCol]),
+                    BodyPayload(
+                        it[BodyMeasurements.measuredAt], it[BodyMeasurements.weightKg].toDouble(),
+                        it[BodyMeasurements.sourceCol], it[BodyMeasurements.importBatchId],
+                    ),
                 ),
                 it[BodyMeasurements.updatedAt], it[BodyMeasurements.serverSeq],
             )

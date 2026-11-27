@@ -2,6 +2,7 @@ package com.fitlog.importing
 
 import com.fitlog.session.arr
 import com.fitlog.session.getSession
+import com.fitlog.session.pull
 import com.fitlog.session.newId
 import com.fitlog.session.obj
 import com.fitlog.session.str
@@ -135,6 +136,20 @@ class ImportApiTest {
         assertEquals(batch.str("id"), body.str("importBatchId"))
         val list = c.get("/v1/imports") { auth(uid) }.arr()
         assertEquals(1, list.size)
+
+        // 앱의 출처 배지는 sync pull 로 받은 행의 source/importBatchId 로 그린다(REST 와 같은 값이어야 한다)
+        val pulled = c.pull(uid, 0).obj()["changes"]!!.jsonArray.map { it.jsonObject }
+        fun payload(entity: String, id: String) =
+            pulled.single { it.str("entity") == entity && it.str("id") == id }["payload"]!!.jsonObject
+        val sp = payload("workout_session", sid)
+        assertEquals("AI_JSON", sp.str("source"))
+        assertEquals(batch.str("id"), sp.str("importBatchId"))
+        val bp = payload("body_measurement", body.str("id")!!)
+        assertEquals("AI_JSON", bp.str("source"))
+        assertEquals(batch.str("id"), bp.str("importBatchId"))
+        val ep = payload("exercise", ex.str("id")!!)
+        assertEquals("AI_JSON", ep.str("source"))
+        assertEquals(batch.str("id"), ep.str("importBatchId"))
     }
 
     @Test

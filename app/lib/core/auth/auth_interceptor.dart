@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_client.dart';
 import '../api/dto.dart';
+import '../api/server_wake.dart';
 import '../config.dart';
 import '../integrity/integrity.dart';
 import 'auth_controller.dart';
@@ -34,12 +35,10 @@ class AuthInterceptor extends QueuedInterceptor {
 
   /// `dioProvider`에서 `dio.interceptors.add(AuthInterceptor.fromRef(ref, dio))`.
   factory AuthInterceptor.fromRef(Ref ref, Dio dio) {
-    final refreshClient = ApiClient(Dio(BaseOptions(
-      baseUrl: AppConfig.apiBaseUrl,
-      connectTimeout: const Duration(seconds: 10),
-      receiveTimeout: const Duration(seconds: 20),
-      contentType: 'application/json',
-    )), integrity: ref.watch(integrityTokenSourceProvider));
+    final refreshClient = ApiClient(
+      createApiDio(baseUrl: AppConfig.apiBaseUrl, wake: ref.watch(serverWakeProvider)),
+      integrity: ref.watch(integrityTokenSourceProvider),
+    );
     return AuthInterceptor(
       dio: dio,
       store: ref.watch(tokenStoreProvider),
@@ -51,9 +50,12 @@ class AuthInterceptor extends QueuedInterceptor {
 
   static bool _isAuthPath(RequestOptions o) => o.path.contains('/v1/auth/');
 
+  /// 로그아웃만 Bearer가 필요하다(서버 accountRoutes: authenticate 블록 안). 나머지 /v1/auth/*는 인증 없이 부른다.
+  static bool _needsBearer(RequestOptions o) => !_isAuthPath(o) || o.path.endsWith('/v1/auth/logout');
+
   @override
   Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
-    if (!_isAuthPath(options)) {
+    if (_needsBearer(options)) {
       final t = await store.read();
       if (t != null) options.headers['Authorization'] = 'Bearer ${t.accessToken}';
     }
