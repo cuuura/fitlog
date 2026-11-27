@@ -3,6 +3,19 @@ package com.fitlog.core
 /** 빈 문자열은 설정되지 않은 것으로 본다(compose 의 `${VAR:-}` 기본값 대응) */
 fun Map<String, String>.v(k: String): String? = this[k]?.takeIf { it.isNotBlank() }
 
+/** DATABASE_URL(`postgres://user:pass@host[:port]/db[?query]`)을 JDBC 접속 정보로 푼 결과 */
+internal data class ParsedDatabaseUrl(val jdbcUrl: String, val user: String?, val password: String?)
+
+/** Render·Heroku 형식 URL 을 JDBC 로 변환한다. 형식이 맞지 않으면 null */
+internal fun parseDatabaseUrl(raw: String): ParsedDatabaseUrl? {
+    val m = Regex("""^postgres(?:ql)?://(?:([^:@/]*)(?::([^@/]*))?@)?([^:/?#]+)(?::(\d+))?/([^?#]+)(?:\?(.*))?$""")
+        .matchEntire(raw.trim()) ?: return null
+    val (user, pass, host, port, db, query) = m.destructured
+    fun dec(x: String) = java.net.URLDecoder.decode(x.replace("+", "%2B"), Charsets.UTF_8)
+    val jdbc = "jdbc:postgresql://$host:${port.ifEmpty { "5432" }}/$db" + if (query.isNotEmpty()) "?$query" else ""
+    return ParsedDatabaseUrl(jdbc, user.takeIf { it.isNotEmpty() }?.let(::dec), pass.takeIf { it.isNotEmpty() }?.let(::dec))
+}
+
 data class DbConfig(val url: String, val user: String, val password: String, val maxPool: Int = 10)
 
 data class JwtConfig(
@@ -53,18 +66,26 @@ data class AppConfig(
     val importer: com.fitlog.importing.Importer get() = importerOverride ?: com.fitlog.importing.ImportPipeline
 
     companion object {
+        /** DB_URL 이 있으면 그대로, 없고 DATABASE_URL 이 있으면 파싱한다. DB_USER/DB_PASSWORD 가 우선 */
+        private fun dbFromEnv(env: Map<String, String>): DbConfig {
+            val parsed = if (env.v("DB_URL") == null) env.v("DATABASE_URL")?.let {
+                parseDatabaseUrl(it) ?: error("DATABASE_URL must look like postgres://user:pass@host[:port]/db")
+            } else null
+            return DbConfig(
+                url = env.v("DB_URL") ?: parsed?.jdbcUrl ?: "jdbc:postgresql://localhost:5432/fitlog",
+                user = env.v("DB_USER") ?: parsed?.user ?: "fitlog",
+                password = env.v("DB_PASSWORD") ?: parsed?.password ?: "fitlog",
+            )
+        }
+
         fun fromEnv(env: Map<String, String> = System.getenv()): AppConfig = AppConfig(
             port = env.v("PORT")?.toInt() ?: 8080,
             host = env.v("HOST") ?: "0.0.0.0",
-            db = DbConfig(
-                url = env.v("DB_URL") ?: "jdbc:postgresql://localhost:5432/fitlog",
-                user = env.v("DB_USER") ?: "fitlog",
-                password = env.v("DB_PASSWORD") ?: "fitlog",
-            ),
+            db = dbFromEnv(env),
             jwt = JwtConfig(secret = env.v("JWT_SECRET") ?: error("JWT_SECRET is required")),
             googleClientIds = env.v("GOOGLE_CLIENT_IDS")?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
                 ?: emptyList(),
-            publicBaseUrl = (env.v("PUBLIC_BASE_URL") ?: "http://localhost:8080").trimEnd('/'),
+            publicBaseUrl = (env.v("PUBLIC_BASE_URL") ?: env.v("RENDER_EXTERNAL_URL") ?: "http://localhost:8080").trimEnd('/'),
             googleWebClientId = env.v("GOOGLE_WEB_CLIENT_ID"),
             googleWebClientSecret = env.v("GOOGLE_WEB_CLIENT_SECRET"),
             rateLimits = RateLimitConfig.fromEnv(env),

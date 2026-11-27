@@ -13,6 +13,8 @@ flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8080 \
 # 릴리스(복제 방지): flutter build apk --obfuscate --split-debug-info=build/symbols
 ```
 
+무료 테스트 서버(Render)에 붙여 실행하기: [../server/docs/free-hosting.md](../server/docs/free-hosting.md)
+
 ## 구조와 소유
 
 | 경로 | 소유 | 내용 |

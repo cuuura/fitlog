@@ -1,0 +1,39 @@
+# Render Blueprint: 무료 플랜 테스트 서버(웹 서비스 Docker + 무료 PostgreSQL)를 한 번에 만든다.
+# Render 대시보드 New > Blueprint 에서 이 저장소를 연결하면 아래 서비스와 DB가 생성된다.
+# PORT 는 Render 가 주입한다. 선택 값(GOOGLE_CLIENT_IDS 등)은 생성 후 대시보드 Environment 에서 추가.
+# 따라 하기: server/docs/free-hosting.md
+services:
+  - type: web
+    name: fitlog-server
+    runtime: docker
+    plan: free
+    region: singapore
+    branch: main
+    autoDeploy: true
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health/ready
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fitlog-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PASSWORD_LOGIN_ENABLED
+        value: "true"
+      - key: PASSWORD_SIGNUP_CODE
+        sync: false
+      - key: TRUST_PROXY
+        value: "true"
+      - key: JAVA_OPTS
+        value: "-XX:MaxRAMPercentage=60 -XX:+UseSerialGC -Xss512k -XX:+ExitOnOutOfMemoryError"
+
+databases:
+  - name: fitlog-db
+    plan: free
+    region: singapore
+    databaseName: fitlog
+    user: fitlog
+    postgresMajorVersion: "16"
+    ipAllowList: []

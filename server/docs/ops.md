@@ -2,6 +2,8 @@
 
 배포는 Docker Compose(서버 + PostgreSQL 16 + 일일 백업, 선택 Caddy HTTPS)로 한다. 이미지는 GitHub Actions 가 `ghcr.io/<소유자>/fitlog-server` 로 올린다.
 
+무료로 테스트 서버만 띄우려면 [free-hosting.md](free-hosting.md)(Render 무료 플랜).
+
 ## 1. 구성
 
 | 서비스 | 이미지 | 역할 |

@@ -43,4 +43,39 @@ class AppConfigTest {
         assertEquals(9090, cfg.port)
         assertEquals("{\"a\":1}", cfg.integrity.credentialsJson)
     }
+
+    @Test
+    fun parseDatabaseUrlHandlesRenderStyleUrls() {
+        val p = parseDatabaseUrl("postgresql://u%40x:p%2Fw%3Ad@dpg-abc.singapore-postgres.render.com/fitlog?sslmode=require")!!
+        assertEquals("jdbc:postgresql://dpg-abc.singapore-postgres.render.com:5432/fitlog?sslmode=require", p.jdbcUrl)
+        assertEquals("u@x", p.user)
+        assertEquals("p/w:d", p.password)
+        val q = parseDatabaseUrl("postgres://fitlog:secret@db:6543/app")!!
+        assertEquals("jdbc:postgresql://db:6543/app", q.jdbcUrl)
+        assertEquals("secret", q.password)
+        assertNull(parseDatabaseUrl("mysql://a:b@h/db"))
+        assertNull(parseDatabaseUrl("not a url"))
+    }
+
+    @Test
+    fun databaseUrlIsUsedOnlyWithoutDbUrl() {
+        val du = "postgres://ru:rp@host1/rdb"
+        val a = AppConfig.fromEnv(base + mapOf("DATABASE_URL" to du))
+        assertEquals(DbConfig("jdbc:postgresql://host1:5432/rdb", "ru", "rp"), a.db)
+        val b = AppConfig.fromEnv(base + mapOf("DATABASE_URL" to du, "DB_USER" to "o", "DB_PASSWORD" to "op"))
+        assertEquals("o", b.db.user)
+        assertEquals("op", b.db.password)
+        assertEquals("jdbc:postgresql://host1:5432/rdb", b.db.url)
+        val c = AppConfig.fromEnv(base + mapOf("DATABASE_URL" to du, "DB_URL" to "jdbc:postgresql://x:1/y"))
+        assertEquals(DbConfig("jdbc:postgresql://x:1/y", "fitlog", "fitlog"), c.db)
+    }
+
+    @Test
+    fun publicBaseUrlFallsBackToRenderExternalUrl() {
+        assertEquals("https://r.onrender.com", AppConfig.fromEnv(base + mapOf("RENDER_EXTERNAL_URL" to "https://r.onrender.com/")).publicBaseUrl)
+        assertEquals(
+            "https://mine.example",
+            AppConfig.fromEnv(base + mapOf("PUBLIC_BASE_URL" to "https://mine.example", "RENDER_EXTERNAL_URL" to "https://r.onrender.com")).publicBaseUrl,
+        )
+    }
 }

@@ -1,6 +1,11 @@
 name: app
 
 on:
+  workflow_dispatch:
+    inputs:
+      api_base_url:
+        description: "서버 주소(비우면 저장소 변수 API_BASE_URL). 예: https://fitlog-server-xxxx.onrender.com"
+        required: false
   push:
     branches: [main]
     paths: ["app/**", ".github/workflows/app.yml"]
@@ -15,7 +20,7 @@ jobs:
         working-directory: app
     env:
       # 저장소 Variables(Settings > Secrets and variables > Actions > Variables) 또는 Secrets.
-      API_BASE_URL: ${{ vars.API_BASE_URL || secrets.API_BASE_URL }}
+      API_BASE_URL: ${{ inputs.api_base_url || vars.API_BASE_URL || secrets.API_BASE_URL }}
       GOOGLE_SERVER_CLIENT_ID: ${{ vars.GOOGLE_SERVER_CLIENT_ID || secrets.GOOGLE_SERVER_CLIENT_ID }}
       PLAY_CLOUD_PROJECT_NUMBER: ${{ vars.PLAY_CLOUD_PROJECT_NUMBER || secrets.PLAY_CLOUD_PROJECT_NUMBER }}
       SENTRY_DSN: ${{ secrets.SENTRY_DSN || vars.SENTRY_DSN }}
@@ -34,10 +39,10 @@ jobs:
       - run: flutter analyze
       - run: flutter test
 
-      # 릴리스 빌드는 main 푸시에서만. API_BASE_URL이 없으면 빌드(Kotlin·R8 검증)는 하되 산출물은 올리지 않는다
+      # 릴리스 빌드는 main 푸시·수동 실행(workflow_dispatch)에서만(PR 제외). API_BASE_URL이 없으면 빌드(Kotlin·R8 검증)는 하되 산출물은 올리지 않는다
       # (기본값 10.0.2.2가 든 APK가 배포되면 안 된다).
       - name: Check API_BASE_URL
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           if [ -z "$API_BASE_URL" ]; then
             echo "::warning::API_BASE_URL 변수가 없어 컴파일 확인용으로만 빌드하고 산출물은 올리지 않습니다."
@@ -47,7 +52,7 @@ jobs:
           fi
 
       - name: Prepare signing (secrets가 있을 때만)
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -68,7 +73,7 @@ jobs:
           fi
 
       - name: Build appbundle (release, obfuscated)
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           flutter build appbundle --release --obfuscate --split-debug-info=build/symbols \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
@@ -77,7 +82,7 @@ jobs:
             --dart-define=SENTRY_DSN="$SENTRY_DSN"
 
       - name: Build apk (release, obfuscated)
-        if: github.event_name == 'push'
+        if: github.event_name != 'pull_request'
         run: |
           flutter build apk --release --obfuscate --split-debug-info=build/symbols \
             --dart-define=API_BASE_URL="$API_BASE_URL" \
@@ -91,7 +96,7 @@ jobs:
         run: flutter build apk --debug
 
       - uses: actions/upload-artifact@v4
-        if: github.event_name == 'push' && env.RELEASE_CONFIGURED == 'true'
+        if: github.event_name != 'pull_request' && env.RELEASE_CONFIGURED == 'true'
         with:
           name: app-release
           path: |
@@ -100,7 +105,7 @@ jobs:
           if-no-files-found: error
       # 난독화 스택트레이스 복원용. Play Console·Sentry에 올릴 때 필요하니 릴리스마다 보관한다.
       - uses: actions/upload-artifact@v4
-        if: github.event_name == 'push' && env.RELEASE_CONFIGURED == 'true'
+        if: github.event_name != 'pull_request' && env.RELEASE_CONFIGURED == 'true'
         with:
           name: app-symbols
           path: app/build/symbols
