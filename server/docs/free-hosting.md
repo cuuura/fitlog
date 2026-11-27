@@ -24,6 +24,8 @@ flutter run --dart-define=API_BASE_URL=https://fitlog-server-xxxx.onrender.com
 ## 무료 플랜 제약
 
 - 15분간 요청이 없으면 서비스가 잠들고, 다음 첫 요청에 약 1분 걸린다. 앱 첫 요청이 시간 초과되면 브라우저로 `/health/ready` 를 먼저 열어 깨운다.
+  - 잠들지 않게: `.github/workflows/keep-awake.yml` 이 5분마다 `/health/ready` 를 호출한다(주소는 Variables `KEEP_AWAKE_URL`, 없으면 파일의 기본값). GitHub 스케줄은 늦거나 빠질 수 있으니 더 확실히 하려면 UptimeRobot 무료 모니터(HTTP, 5분 간격)로 같은 주소를 등록한다.
+  - 무료 인스턴스 시간은 월 750시간이라 서비스 1개를 24시간 켜 두는 것(최대 744시간)은 한도 안이다. 무료 웹 서비스를 더 만들면 넘는다.
 - 무료 PostgreSQL 은 생성 30일 뒤 만료되고 14일 유예 후 삭제된다. 그 전에 유료로 전환하거나 DB를 새로 만들어 연결한다.
 - 저장 공간은 1GB, 백업은 없다.
 
