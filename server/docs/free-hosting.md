@@ -19,7 +19,7 @@ flutter build apk --release --dart-define=API_BASE_URL=https://fitlog-server-xxx
 flutter run --dart-define=API_BASE_URL=https://fitlog-server-xxxx.onrender.com
 ```
 
-`main` 에 푸시하면 Render 가 자동으로 재배포한다(`autoDeploy`).
+`main` 에 푸시하면 Render 가 자동으로 재배포한다(`autoDeploy`). Render 는 서버를 직접 컴파일하지 않고 GitHub Actions 가 올린 이미지(ghcr.io/cuuura/fitlog-server:latest)를 받는다(server/Dockerfile). 푸시 직후 자동 배포는 이전 이미지를 받으므로, Render Settings > Deploy Hook 주소를 저장소 시크릿 `RENDER_DEPLOY_HOOK_URL` 로 넣어 두면 이미지 빌드 뒤 최신으로 다시 배포된다.
 
 ## 무료 플랜 제약
 

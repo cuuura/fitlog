@@ -13,7 +13,7 @@
 | `backup` | `server/deploy/backup/Dockerfile` | 매일 03:00 UTC `pg_dump -Fc`, 오래된 백업 삭제 |
 | `caddy` (프로필 `https`) | `caddy:2` | 자동 HTTPS 리버스 프록시 |
 
-파일: 저장소 루트 `docker-compose.yml`, `server/Dockerfile`(빌드 컨텍스트는 **저장소 루트**), `server/deploy/{.env.example,Caddyfile,backup/,load/}`.
+파일: 저장소 루트 `docker-compose.yml`, `server/Dockerfile.build`(빌드 컨텍스트는 **저장소 루트**), `server/deploy/{.env.example,Caddyfile,backup/,load/}`.
 
 ## 2. 처음 배포
 
@@ -25,7 +25,7 @@ docker compose up -d                     # 서버 + DB + 백업
 curl -fsS http://localhost:8080/health/ready   # ok
 ```
 
-- 직접 빌드: `docker compose up -d --build` (또는 `docker build -f server/Dockerfile -t fitlog-server .`)
+- 직접 빌드: `docker compose up -d --build` (또는 `docker build -f server/Dockerfile.build -t fitlog-server .`)
 - HTTPS(권장): 도메인 DNS 를 서버에 연결하고 80/443 을 연 뒤 `.env` 에 `DOMAIN=…`, `TRUST_PROXY=true`, `BIND_ADDR=127.0.0.1`, `PUBLIC_BASE_URL=https://…` 를 넣고 `docker compose --profile https up -d`
 - ghcr.io 이미지가 비공개면 `echo <PAT(read:packages)> | docker login ghcr.io -u <사용자> --password-stdin` 먼저
 - 처음 이미지를 올린 뒤 GitHub 패키지 설정에서 저장소와 연결·공개 범위를 정한다

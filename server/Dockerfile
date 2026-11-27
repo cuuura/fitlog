@@ -1,46 +1,8 @@
-# syntax=docker/dockerfile:1
-# fitlog 서버 이미지. 빌드 컨텍스트는 저장소 루트(계약 md 를 jar 에 묶기 위해 contracts/ 가 필요).
-#   docker build -f server/Dockerfile -t fitlog-server .
-
-# ---- 빌드: installDist ----
-FROM eclipse-temurin:21-jdk AS build
-WORKDIR /src/server
-
-# 의존성 레이어 캐시: 빌드 스크립트만 먼저 복사해 의존성을 받아 둔다
-COPY server/gradlew server/settings.gradle.kts server/build.gradle.kts server/gradle.properties ./
-COPY server/gradle ./gradle
-RUN chmod +x gradlew && GRADLE_OPTS="-Xmx64m" ./gradlew --no-daemon --console=plain -Dorg.gradle.jvmargs=-Xmx448m dependencies > /dev/null 2>&1 || true
-
-COPY server/src ./src
-COPY contracts /src/contracts
-# 무료 호스팅(Render) 빌드 머신은 메모리가 작다. 기본 설정(Gradle 1g + 별도 Kotlin 데몬)은 최대 1.5GB 를 써서
-# Kotlin 데몬이 죽고 "Exited with status 1" 로 배포가 실패했다. Kotlin 을 Gradle 프로세스 안에서 컴파일하고 힙을 줄여 ~0.9GB 로 낮춘다.
-# Maven Central 이 가끔 429 를 주므로 실패하면 두 번 더 시도한다.
-RUN printf '%s\n' \
-      'org.gradle.jvmargs=-Xmx448m -XX:MaxMetaspaceSize=320m -XX:ReservedCodeCacheSize=96m -XX:+UseSerialGC -XX:TieredStopAtLevel=1' \
-      'kotlin.compiler.execution.strategy=in-process' \
-      'kotlin.incremental=false' >> gradle.properties \
-    && for i in 1 2 3; do \
-         GRADLE_OPTS="-Xmx64m" ./gradlew --no-daemon --console=plain --max-workers=1 installDist -x test && exit 0; \
-         echo "gradle 실패, 20초 뒤 재시도 $i/3"; sleep 20; \
-       done; exit 1
-
-# ---- 실행 ----
-FROM eclipse-temurin:21-jre
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --uid 10001 --home-dir /app --shell /usr/sbin/nologin fitlog
-WORKDIR /app
-COPY --from=build --chown=fitlog:fitlog /src/server/build/install/fitlog-server/ ./
-
-USER fitlog
-ENV PORT=8080 \
-    JAVA_OPTS="-XX:MaxRAMPercentage=60 -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Xss512k -XX:+ExitOnOutOfMemoryError"
-EXPOSE 8080
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD curl -fsS "http://localhost:${PORT}/health/ready" || exit 1
-
-# exec 형식이라 SIGTERM 이 JVM 에 바로 전달된다(graceful shutdown)
-ENTRYPOINT ["/app/bin/fitlog-server"]
+# Render(무료 테스트 서버) 전용: 서버를 여기서 컴파일하지 않고, GitHub Actions(server-image.yml)가
+# server/Dockerfile.build 로 빌드해 올린 이미지를 그대로 쓴다.
+# Render 무료 빌드 머신은 메모리가 작아 Kotlin 컴파일이 도중에 죽으며 "Exited with status 1" 로 배포가 실패했다.
+#
+# 순서 주의: main 푸시 직후 Render 가 바로 빌드하면 아직 이전 latest 를 받는다.
+# server-image 워크플로가 이미지를 올린 뒤 Render 배포 훅(secrets.RENDER_DEPLOY_HOOK_URL)을 불러 최신 이미지로 다시 배포한다.
+# 직접 빌드(로컬·Portainer 등)는 server/Dockerfile.build 를 쓴다.
+FROM ghcr.io/cuuura/fitlog-server:latest

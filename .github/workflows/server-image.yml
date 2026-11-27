@@ -51,12 +51,25 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          file: server/Dockerfile
+          file: server/Dockerfile.build
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Render 테스트 서버는 server/Dockerfile 로 이 이미지(latest)를 받기만 한다. 푸시 직후 Render 자동 배포는
+      # 아직 이전 이미지를 받으므로, 새 이미지가 올라간 지금 배포 훅으로 한 번 더 배포한다(시크릿이 없으면 건너뜀)
+      - name: Render 재배포(배포 훅)
+        if: github.ref == 'refs/heads/main'
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::warning::RENDER_DEPLOY_HOOK_URL 시크릿이 없어 Render 재배포를 건너뜁니다. Render 대시보드 Settings > Deploy Hook 주소를 저장소 시크릿에 넣으면 자동으로 최신 이미지가 배포됩니다."
+          else
+            curl -fsS -X POST "$HOOK" > /dev/null && echo "Render 배포 요청함"
+          fi
 
       # 백업 사이드카 이미지(docker-compose.yml 의 backup 서비스)
       - id: meta-backup

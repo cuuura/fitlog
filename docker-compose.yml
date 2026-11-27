@@ -25,7 +25,7 @@ services:
   server:
     build:
       context: .
-      dockerfile: server/Dockerfile
+      dockerfile: server/Dockerfile.build
     image: ghcr.io/cuuura/fitlog-server:${TAG:-latest}
     restart: unless-stopped
     depends_on:
