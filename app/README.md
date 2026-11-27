@@ -61,5 +61,6 @@ flutter run --dart-define=API_BASE_URL=http://<PC의 LAN IP>:8080 \
 | 15 | (v1.0) `SENTRY_DSN` 넣은 빌드에서 일부러 오류(개발자 옵션 없이 어렵다면 생략) | Sentry에 이벤트가 오고 이메일·토큰이 가려져 있음. 설정에서 끄면 다음 실행부터 안 보냄 |
 | 16 | (v1.0) 폰 글씨 크기 최대 + 다크 모드로 홈·세션·설정 | 글자 잘림·겹침 없음 |
 | 17 | (v1.0) 설정 → 개인정보 처리방침 | 브라우저에서 `{API_BASE_URL}/privacy`가 열림 |
+| 18 | (테스트용) 서버 `PASSWORD_LOGIN_ENABLED=true`, `PASSWORD_SIGNUP_CODE` 설정 → 로그인 화면 가입 → 로그아웃 → 아이디 로그인 | Google 없이 로그인·동의·기록 가능. 설정 계정 칸에 아이디 표시. 비밀번호 5번 틀리면 잠금 안내 |
 
 v1.0 릴리스 준비(서명 키, Play Console, 스토어 자료, 사용자 결정 항목)는 `store/release-checklist.md`, 등록 문구는 `store/listing-ko.md`.
