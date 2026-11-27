@@ -329,6 +329,7 @@ String _kindLabel(AppLocalizations l, String kind) => switch (kind) {
   'startPrograms' || 'programInstances' => l.importCountKindStartPrograms,
   'sessions' => l.importCountKindSessions,
   'bodyMeasurements' => l.importCountKindBodyMeasurements,
+  'scheduledWorkouts' => l.importCountKindScheduledWorkouts,
   _ => kind,
 };
 
@@ -489,6 +490,7 @@ class _ResultView extends StatelessWidget {
       'instances' || 'startPrograms' || 'programInstances' => l.importSummaryInstances(n),
       'sessions' => l.importSummarySessions(n),
       'body' || 'bodyMeasurements' => l.importSummaryBody(n),
+      'scheduledWorkouts' => l.importSummaryScheduled(n),
       'replaced' => l.importSummaryReplaced(n),
       _ => '$k $n',
     };
@@ -539,15 +541,20 @@ class _ResultView extends StatelessWidget {
 }
 
 /// 종류별 개수(입력 단계, 붙여 넣은 JSON 기준).
-({int programs, int sessions, int body}) bundleCounts(Map<String, Object?> b) {
+({int programs, int sessions, int body, int scheduled}) bundleCounts(Map<String, Object?> b) {
   int n(String k) => b[k] is List ? (b[k] as List).length : 0;
-  return (programs: n('programs'), sessions: n('sessions'), body: n('bodyMeasurements'));
+  return (programs: n('programs'), sessions: n('sessions'), body: n('bodyMeasurements'), scheduled: n('scheduledWorkouts'));
 }
 
 /// 서버 미리보기 counts에서 종류별 합(상태 무관).
-({int programs, int sessions, int body}) previewCounts(Map<String, Map<String, int>> counts) {
+({int programs, int sessions, int body, int scheduled}) previewCounts(Map<String, Map<String, int>> counts) {
   int sum(String k) => (counts[k] ?? const {}).values.fold(0, (a, b) => a + b);
-  return (programs: sum('programs'), sessions: sum('sessions'), body: sum('bodyMeasurements'));
+  return (
+    programs: sum('programs'),
+    sessions: sum('sessions'),
+    body: sum('bodyMeasurements'),
+    scheduled: sum('scheduledWorkouts'),
+  );
 }
 
 /// 바로 저장되는 건수: 새로(NEW) 만들어지는 항목 합.
@@ -575,7 +582,7 @@ Map<String, Object?>? incomingAt(Map<String, Object?>? bundle, String pointer) {
 /// 목업 11번 요약 칸: 큰 숫자 3개 + (미리보기 후) "바로 저장 N건 · 확인 필요 M건".
 class _CountsPanel extends StatelessWidget {
   const _CountsPanel({super.key, required this.counts, this.saveNow, this.needCheck, this.onShowConflicts});
-  final ({int programs, int sessions, int body}) counts;
+  final ({int programs, int sessions, int body, int scheduled}) counts;
   final int? saveNow;
   final int? needCheck;
   final VoidCallback? onShowConflicts;
@@ -607,6 +614,7 @@ class _CountsPanel extends StatelessWidget {
               cell(counts.programs, l.impCountPrograms, const Key('count-big-programs')),
               cell(counts.sessions, l.impCountSessions, const Key('count-big-sessions')),
               cell(counts.body, l.impCountBody, const Key('count-big-body')),
+              if (counts.scheduled > 0) cell(counts.scheduled, l.impCountScheduled, const Key('count-big-scheduled')),
             ],
           ),
           if (saveNow != null && needCheck != null) ...[

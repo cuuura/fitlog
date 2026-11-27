@@ -44,9 +44,10 @@ class SyncEngine implements SyncService {
   static int entityRank(SyncEntity e) => switch (e) {
     SyncEntity.exercise => 0,
     SyncEntity.body_measurement => 0,
-    SyncEntity.workout_session => 1,
-    SyncEntity.session_exercise => 2,
-    SyncEntity.workout_set => 3,
+    SyncEntity.scheduled_workout => 1, // 세션이 가리키므로 세션보다 먼저(scheduled-workout.md §4)
+    SyncEntity.workout_session => 2,
+    SyncEntity.session_exercise => 3,
+    SyncEntity.workout_set => 4,
   };
 
   // ---------- 상태 ----------

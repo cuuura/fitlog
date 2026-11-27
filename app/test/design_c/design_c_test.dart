@@ -165,12 +165,12 @@ void main() {
         'sessions': [{'date': 'a'}, {'date': 'b'}, {}],
         'bodyMeasurements': [{}, {}],
       };
-      expect(bundleCounts(b), (programs: 1, sessions: 3, body: 2));
+      expect(bundleCounts(b), (programs: 1, sessions: 3, body: 2, scheduled: 0));
       final counts = {
         'sessions': {'NEW': 2, 'REPLACE': 1},
         'bodyMeasurements': {'NEW': 2},
       };
-      expect(previewCounts(counts), (programs: 0, sessions: 3, body: 2));
+      expect(previewCounts(counts), (programs: 0, sessions: 3, body: 2, scheduled: 0));
       expect(previewSaveNow(counts), 4);
       expect(incomingAt(b, '/sessions/1'), {'date': 'b'});
       expect(incomingAt(b, '/sessions/9'), isNull);

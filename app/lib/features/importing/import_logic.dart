@@ -4,6 +4,7 @@ import 'dart:convert';
 /// 서버 한도(import.md §1).
 const importMaxSessions = 200;
 const importMaxBodyMeasurements = 1000;
+const importMaxScheduledWorkouts = 30;
 
 /// AI가 붙이는 ```json … ``` 표시를 벗긴다. 표시가 없으면 앞뒤 공백만 뺀다.
 String stripCodeFence(String text) {
@@ -54,23 +55,33 @@ BundleParse parseBundle(String raw) {
 List<List<T>> _chunks<T>(List<T> l, int size) => [for (var i = 0; i < l.length; i += size) l.sublist(i, i + size > l.length ? l.length : i + size)];
 
 /// 한도를 넘는 묶음을 순서대로 보낼 조각으로 나눈다. 한도 안이면 원본 하나.
-/// 첫 조각에 exercises·programs·startPrograms·note와 첫 세션·체중 조각을 담고,
-/// 나머지는 세션 조각 → 체중 조각 순으로 해당 배열만 담는다.
+/// 첫 조각에 exercises·programs·startPrograms·note와 첫 예정 운동·세션·체중 조각을 담고,
+/// 나머지는 예정 운동 조각 → 세션 조각 → 체중 조각 순으로 해당 배열만 담는다.
+/// (세션이 가리키는 예정이 먼저 저장되게 예정 조각을 세션 조각보다 앞에 둔다.)
 List<Map<String, Object?>> splitBundle(Map<String, Object?> bundle) {
   final sessions = (bundle['sessions'] as List?) ?? const [];
   final bodies = (bundle['bodyMeasurements'] as List?) ?? const [];
-  if (sessions.length <= importMaxSessions && bodies.length <= importMaxBodyMeasurements) return [bundle];
+  final scheduled = (bundle['scheduledWorkouts'] as List?) ?? const [];
+  if (sessions.length <= importMaxSessions &&
+      bodies.length <= importMaxBodyMeasurements &&
+      scheduled.length <= importMaxScheduledWorkouts) {
+    return [bundle];
+  }
 
   final sChunks = _chunks<Object?>(sessions.cast(), importMaxSessions);
   final bChunks = _chunks<Object?>(bodies.cast(), importMaxBodyMeasurements);
+  final scChunks = _chunks<Object?>(scheduled.cast(), importMaxScheduledWorkouts);
   final first = Map<String, Object?>.of(bundle)
     ..remove('sessions')
-    ..remove('bodyMeasurements');
+    ..remove('bodyMeasurements')
+    ..remove('scheduledWorkouts');
+  if (scChunks.isNotEmpty) first['scheduledWorkouts'] = scChunks.first;
   if (sChunks.isNotEmpty) first['sessions'] = sChunks.first;
   if (bChunks.isNotEmpty) first['bodyMeasurements'] = bChunks.first;
   final version = bundle['schemaVersion'] ?? 1;
   return [
     first,
+    for (final w in scChunks.skip(1)) {'schemaVersion': version, 'scheduledWorkouts': w},
     for (final s in sChunks.skip(1)) {'schemaVersion': version, 'sessions': s},
     for (final b in bChunks.skip(1)) {'schemaVersion': version, 'bodyMeasurements': b},
   ];

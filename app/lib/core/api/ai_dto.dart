@@ -17,6 +17,9 @@ enum ConflictCode {
   ID_EXISTS,
   PLAN_MISMATCH,
   INSTANCE_NEEDS_VALUE,
+
+  /// v1.0: 같은 날 같은 제목의 살아 있는 예정 운동(SKIP·KEEP_BOTH·REPLACE).
+  SCHEDULED_DUPLICATE,
 }
 
 enum OnConflict { ASK, SKIP_ALL }
@@ -193,7 +196,7 @@ class ImportBatch {
 enum ImportItemAction { CREATED, REPLACED_OLD }
 
 class ImportItem {
-  /// exercise | program | program_instance | workout_session | body_measurement
+  /// exercise | program | program_instance | workout_session | body_measurement | scheduled_workout
   final String entity;
   final String entityId;
   final ImportItemAction action;
@@ -245,7 +248,7 @@ class ImportOutcome {
 }
 
 class DeletionRequest {
-  /// workout_session | program | program_instance | exercise | body_measurement
+  /// workout_session | program | program_instance | exercise | body_measurement | scheduled_workout
   final String entity;
   final String id;
   final String entityId;

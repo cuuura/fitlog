@@ -52,6 +52,9 @@ class Sessions extends Table {
   // v3
   TextColumn get importBatchId => text().nullable()();
 
+  // v4: 예정 운동으로 시작한 세션(scheduled-workout.md §4)
+  TextColumn get scheduledWorkoutId => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -102,6 +105,34 @@ class WorkoutSets extends Table {
   IntColumn get targetReps => integer().nullable()();
   RealColumn get targetWeightKg => real().nullable()();
   BoolColumn get isAmrap => boolean().withDefault(const Constant(false))();
+
+  // v4: 예정 운동 목표(횟수 범위 상한·RIR·휴식 목표)
+  IntColumn get targetRepsMax => integer().nullable()();
+  IntColumn get targetRir => integer().nullable()();
+  IntColumn get targetRestSec => integer().nullable()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// v4: 하루짜리 예정 운동. 종목·세트는 itemsJson 하나(문서 단위 동기화).
+@DataClassName('ScheduledWorkoutRow')
+@TableIndex(name: 'idx_scheduled_date', columns: {#plannedDate})
+class ScheduledWorkouts extends Table {
+  TextColumn get id => text()();
+
+  /// YYYY-MM-DD(현지 날짜).
+  TextColumn get plannedDate => text()();
+  TextColumn get title => text()();
+  TextColumn get note => text().nullable()();
+
+  /// ScheduledItem 목록 JSON.
+  TextColumn get itemsJson => text().withDefault(const Constant('[]'))();
+  DateTimeColumn get skippedAt => dateTime().nullable()();
+  TextColumn get source => text().nullable()();
+  TextColumn get importBatchId => text().nullable()();
+  DateTimeColumn get updatedAt => dateTime()();
+  DateTimeColumn get deletedAt => dateTime().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -155,12 +186,14 @@ class SyncState extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Exercises, Sessions, SessionExercises, WorkoutSets, BodyMeasurements, Outbox, SyncState])
+@DriftDatabase(
+  tables: [Exercises, Sessions, SessionExercises, WorkoutSets, BodyMeasurements, ScheduledWorkouts, Outbox, SyncState],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -185,6 +218,13 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(exercises, exercises.importBatchId);
         await m.addColumn(sessions, sessions.importBatchId);
         await m.addColumn(bodyMeasurements, bodyMeasurements.importBatchId);
+      }
+      if (from < 4) {
+        await m.createTable(scheduledWorkouts);
+        await m.addColumn(sessions, sessions.scheduledWorkoutId);
+        await m.addColumn(workoutSets, workoutSets.targetRepsMax);
+        await m.addColumn(workoutSets, workoutSets.targetRir);
+        await m.addColumn(workoutSets, workoutSets.targetRestSec);
       }
     },
   );

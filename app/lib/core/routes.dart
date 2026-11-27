@@ -34,4 +34,9 @@ abstract final class Routes {
   // v1.0
   static String exerciseProgress(String exerciseId) => '/exercises/$exerciseId/progress'; // B1 종목 추이 꺾은선
   static String sessionComparison(String sessionId) => '/sessions/$sessionId/comparison'; // B1 오늘 vs 지난·PR 막대
+
+  // v1.0 LOG-13 하루짜리 예정 운동(오늘 탭 아래, 하단 내비 유지)
+  static const scheduled = '/scheduled'; // 목록
+  static const scheduledNew = '/scheduled/new'; // 만들기 (?date=YYYY-MM-DD 로 날짜 지정)
+  static String scheduledEdit(String id) => '/scheduled/$id/edit'; // 수정
 }

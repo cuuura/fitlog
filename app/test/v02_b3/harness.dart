@@ -66,6 +66,7 @@ class B3Harness {
   List<Override> get overrides => [
     exerciseRepositoryProvider.overrideWithValue(exercises),
     sessionRepositoryProvider.overrideWithValue(sessions),
+    scheduledWorkoutRepositoryProvider.overrideWithValue(MemoryScheduledWorkoutRepository()),
     recordsRepositoryProvider.overrideWithValue(recordsOverride ?? records),
     syncServiceProvider.overrideWithValue(NoopSyncService()),
     clockProvider.overrideWithValue(() => clock),

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../calendar/calendar_logic.dart' show dayKey;
 import '../calendar/week_strip.dart';
 import '../../core/api/dto.dart';
 import '../../core/api/program_dto.dart' hide formatDate;
@@ -16,6 +17,9 @@ import '../../l10n/gen/app_localizations.dart';
 import '../deletion_requests/pending_deletion_banner.dart';
 import '../exercise_picker/exercise_labels.dart';
 import '../programs/program_common.dart' show confirmDialog;
+import '../scheduled/scheduled_card.dart';
+import '../scheduled/scheduled_logic.dart' show HomeScheduled;
+import '../scheduled/scheduled_providers.dart';
 import '../session/plan_logic.dart';
 import '../session/session_controller.dart';
 import '../session/session_format.dart';
@@ -41,8 +45,10 @@ class HomePage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
-    final plans = ref.watch(planItemsProvider).value ?? const <InstancePlan>[];
-    final exerciseNames = ref.watch(exerciseMapProvider).value ?? const {};
+    final plansAsync = ref.watch(planItemsProvider);
+    final namesAsync = ref.watch(exerciseMapProvider);
+    final plans = plansAsync.value ?? const <InstancePlan>[];
+    final exerciseNames = namesAsync.value ?? const {};
     final active = ref.watch(activeSessionProvider).value;
     final recent = ref.watch(recentSessionsProvider).value ?? const [];
     final unit = ref.watch(settingsProvider).weightUnit;
@@ -50,6 +56,12 @@ class HomePage extends ConsumerWidget {
     final now = ref.watch(clockProvider)().toLocal();
     final today = DateTime(now.year, now.month, now.day);
     final text = Theme.of(context).textTheme;
+    final scheduledAsync = ref.watch(homeScheduledProvider);
+    final scheduled = scheduledAsync.value ?? const HomeScheduled();
+    // 계획·종목·예정 중 하나라도 불러오지 못하면 "계획이 없다"로 보이지 않게 오류와 다시 시도를 보여 준다.
+    final loadFailed = plansAsync.hasError || namesAsync.hasError || scheduledAsync.hasError;
+    final loading = !loadFailed && !plansAsync.hasValue;
+    final todayKey = dayKey(today);
 
     return Scaffold(
       appBar: AppBar(
@@ -108,6 +120,21 @@ class HomePage extends ConsumerWidget {
               ),
             ),
           const WeekStrip(),
+          if (loadFailed)
+            _LoadError(
+              onRetry: () {
+                ref.invalidate(planItemsProvider);
+                ref.invalidate(exerciseMapProvider);
+                ref.invalidate(homeScheduledProvider);
+                ref.invalidate(scheduledLinksProvider);
+                ref.invalidate(scheduledRangeProvider);
+              },
+            )
+          else if (loading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Center(child: CircularProgressIndicator(key: Key('home-plan-loading'))),
+            ),
           for (final p in plans)
             _PlanCard(
               key: Key('plan-card-${p.instance.id}'),
@@ -123,6 +150,33 @@ class HomePage extends ConsumerWidget {
               ),
               onSkip: () => _skip(context, ref, p),
             ),
+          if (scheduled.today.isNotEmpty) ...[
+            _SectionTitle(key: const Key('sched-today-title'), text: l.schedTodayTitle),
+            for (final v in scheduled.today)
+              ScheduledCard(view: v, exercises: exerciseNames, todayKey: todayKey),
+          ],
+          if (scheduled.late.isNotEmpty) ...[
+            _SectionTitle(key: const Key('sched-late-title'), text: l.schedLateTitle),
+            for (final v in scheduled.late)
+              ScheduledCard(view: v, exercises: exerciseNames, todayKey: todayKey),
+          ],
+          Wrap(
+            alignment: WrapAlignment.center,
+            children: [
+              TextButton(
+                key: const Key('sched-create-entry'),
+                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                onPressed: () => context.push(Routes.scheduledNew),
+                child: Text(l.schedCreateEntry),
+              ),
+              TextButton(
+                key: const Key('sched-view-all'),
+                style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                onPressed: () => context.push(Routes.scheduled),
+                child: Text(l.schedViewAll),
+              ),
+            ],
+          ),
           const SizedBox(height: 4),
           if (active == null && plans.isNotEmpty)
             Center(
@@ -200,6 +254,47 @@ class HomePage extends ConsumerWidget {
       messenger.showSnackBar(SnackBar(content: Text(l.instanceActionFailed)));
     }
   }
+}
+
+class _LoadError extends StatelessWidget {
+  const _LoadError({required this.onRetry});
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final c = AppColors.of(context);
+    return Container(
+      key: const Key('home-load-error'),
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: c.failSoft, borderRadius: BorderRadius.circular(AppRadius.md)),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: c.fail),
+          const SizedBox(width: 8),
+          Expanded(child: Text(l.homePlanLoadError)),
+          TextButton(
+            key: const Key('home-load-retry'),
+            style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+            onPressed: onRetry,
+            child: Text(l.homeRetry),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({super.key, required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Text(text, style: Theme.of(context).textTheme.titleSmall),
+  );
 }
 
 class _PlanCard extends StatelessWidget {

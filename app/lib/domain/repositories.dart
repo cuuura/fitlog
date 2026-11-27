@@ -37,6 +37,9 @@ abstract interface class SessionRepository {
   /// 최근 세션 요약(startedAt 내림차순). 진행 중 세션도 포함.
   Stream<List<SessionSummary>> watchRecentSessions({int limit = 20});
 
+  /// 예정 운동을 가리키는(삭제 안 된) 세션들. 예정의 계산 상태(PLANNED·IN_PROGRESS·DONE·SKIPPED)를 구하는 재료.
+  Stream<List<ScheduledLink>> watchScheduledLinks();
+
   /// startedAt이 [fromUtc, toUtc) 안인 끝난(삭제 안 된) 세션 요약, 시작 시각 오름차순. 달력·주간 표시용.
   Stream<List<SessionSummary>> watchSessionsBetween(DateTime fromUtc, DateTime toUtc);
 
@@ -45,7 +48,12 @@ abstract interface class SessionRepository {
   /// 순서대로 만들며(liftKey=key, accessory) 계획 세트마다 세트를 만든다:
   /// plannedSetKey·targetReps·targetWeightKg·isAmrap·isWarmup을 복사하고, 기록 값 weightKg=targetWeightKg,
   /// reps=targetReps로 미리 채운다(미완료). 무게 없는 계획(NONE)은 weightKg=null로 두고 화면이 지난 기록으로 채운다.
-  Future<Session> startSession({required String tz, PlannedWorkout? plan});
+  ///
+  /// scheduled가 있으면(v1.0 예정 운동, scheduled-workout.md §5) 예정 세션: scheduledWorkoutId를 채우고
+  /// programInstanceId는 null로 두며, items 순서대로 종목(note 복사)과 세트를 만든다. 세트는 isWarmup·targetWeightKg·
+  /// targetReps·targetRepsMax·targetRir·targetRestSec(=item.restSec)을 복사하고, 기록 값은 프로그램 시작과 같이
+  /// weightKg=targetWeightKg, reps=targetReps로 미리 채운다(미완료). 진행 중 세션이 있으면 그것을 돌려준다.
+  Future<Session> startSession({required String tz, PlannedWorkout? plan, ScheduledWorkout? scheduled});
   Future<void> endSession(String sessionId);
   Future<void> updateSessionNote(String sessionId, String? note);
 
@@ -81,6 +89,34 @@ abstract interface class SessionRepository {
 
   /// 이 종목을 한 가장 최근의 "끝난" 세션의 세트들. 없으면 null. 세트 입력 기본값용.
   Future<LastSets?> lastSetsFor(String exerciseId, {String? excludeSessionId});
+}
+
+/// 예정 운동 하나와 그것으로 시작한 세션 하나의 연결(상태 계산용).
+class ScheduledLink {
+  final String scheduledWorkoutId;
+  final String sessionId;
+  final DateTime? endedAt;
+  const ScheduledLink({required this.scheduledWorkoutId, required this.sessionId, this.endedAt});
+
+  bool get isActive => endedAt == null;
+}
+
+/// v1.0 하루짜리 예정 운동(LOG-13). 로컬에 먼저 저장하고 outbox로 동기화한다. 삭제는 소프트 삭제.
+/// plannedDate는 YYYY-MM-DD 문자열이라 사전순 비교가 날짜 비교다.
+abstract interface class ScheduledWorkoutRepository {
+  /// plannedDate가 [fromDate, toDate](포함)인 삭제 안 된 예정. 날짜 오름차순, 같은 날은 만든 순.
+  Stream<List<ScheduledWorkout>> watchBetween(String fromDate, String toDate);
+
+  /// 삭제 안 된 예정 하나. 없거나 삭제됐으면 null.
+  Future<ScheduledWorkout?> byId(String id);
+
+  /// 만들기·전체 교체. id는 호출자가 newId()로 만든다. 건너뜀 상태(skippedAt)는 넘긴 값을 그대로 쓴다.
+  Future<void> upsert(ScheduledWorkout workout);
+
+  Future<void> delete(String id);
+
+  /// skippedAt 채우기·비우기.
+  Future<void> setSkipped(String id, bool skipped);
 }
 
 /// v0.2 프로그램·인스턴스(REST 전용, 온라인에서만 변경. 동기화 대상 아님). 실패는 ApiException.

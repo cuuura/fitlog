@@ -10,6 +10,9 @@ import 'remote/remote_repositories.dart';
 
 final exerciseRepositoryProvider = Provider<ExerciseRepository>((ref) => ref.watch(driftExerciseRepositoryProvider));
 final sessionRepositoryProvider = Provider<SessionRepository>((ref) => ref.watch(driftSessionRepositoryProvider));
+final scheduledWorkoutRepositoryProvider = Provider<ScheduledWorkoutRepository>(
+  (ref) => ref.watch(driftScheduledWorkoutRepositoryProvider),
+);
 final bodyRepositoryProvider = Provider<BodyRepository>((ref) => ref.watch(driftBodyRepositoryProvider));
 final syncServiceProvider = Provider<SyncService>((ref) => ref.watch(syncEngineProvider));
 final localDataStoreProvider = Provider<LocalDataStore>((ref) => ref.watch(driftLocalDataStoreProvider));

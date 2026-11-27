@@ -22,6 +22,7 @@ String conflictCodeLabel(AppLocalizations l, ConflictCode? c) => switch (c) {
   ConflictCode.ID_EXISTS => l.importConflictIdExists,
   ConflictCode.PLAN_MISMATCH => l.importConflictPlanMismatch,
   ConflictCode.INSTANCE_NEEDS_VALUE => l.importConflictInstanceNeedsValue,
+  ConflictCode.SCHEDULED_DUPLICATE => l.importConflictScheduledDuplicate,
   null => '',
 };
 

@@ -60,7 +60,7 @@ enum SessionSource { APP, AI_JSON, AI_MCP, IMPORT }
 /// v0.3: AI_JSON·AI_MCP·IMPORT 추가(가져오기로 만든 체중).
 enum MeasurementSource { MANUAL, HEALTH_CONNECT, HEALTHKIT, OCR, AI_JSON, AI_MCP, IMPORT }
 
-enum SyncEntity { exercise, workout_session, session_exercise, workout_set, body_measurement }
+enum SyncEntity { exercise, workout_session, session_exercise, workout_set, body_measurement, scheduled_workout }
 
 enum ChangeOp { UPSERT, DELETE }
 
@@ -318,6 +318,11 @@ class WorkoutSet {
   final double? targetWeightKg;
   final bool isAmrap;
 
+  // v1.0 예정 운동(scheduled-workout.md §4·§5): 목표 횟수 범위 상한, 목표 RIR, 이 세트 뒤 휴식 목표(초).
+  final int? targetRepsMax;
+  final int? targetRir;
+  final int? targetRestSec;
+
   const WorkoutSet({
     required this.id,
     required this.position,
@@ -337,6 +342,9 @@ class WorkoutSet {
     this.targetReps,
     this.targetWeightKg,
     this.isAmrap = false,
+    this.targetRepsMax,
+    this.targetRir,
+    this.targetRestSec,
   });
 
   bool get isPlanned => plannedSetKey != null;
@@ -362,6 +370,9 @@ class WorkoutSet {
     targetReps: j['targetReps'] as int?,
     targetWeightKg: _num(j['targetWeightKg']),
     isAmrap: j['isAmrap'] as bool? ?? false,
+    targetRepsMax: j['targetRepsMax'] as int?,
+    targetRir: j['targetRir'] as int?,
+    targetRestSec: j['targetRestSec'] as int?,
   );
 
   Map<String, Object?> toJson() => _compact({
@@ -383,6 +394,9 @@ class WorkoutSet {
     'targetReps': targetReps,
     'targetWeightKg': targetWeightKg,
     'isAmrap': isAmrap,
+    'targetRepsMax': targetRepsMax,
+    'targetRir': targetRir,
+    'targetRestSec': targetRestSec,
   });
 
   /// nullable 필드는 `() => null`처럼 함수로 넘겨야 null로 바꿀 수 있다.
@@ -419,6 +433,9 @@ class WorkoutSet {
     targetReps: targetReps,
     targetWeightKg: targetWeightKg,
     isAmrap: isAmrap,
+    targetRepsMax: targetRepsMax,
+    targetRir: targetRir,
+    targetRestSec: targetRestSec,
   );
 }
 
@@ -479,6 +496,9 @@ class Session {
 
   /// v0.3: 가져오기 묶음으로 만든 세션이면 그 묶음 id(readOnly). 출처 배지·되돌리기용.
   final String? importBatchId;
+
+  /// v1.0: 예정 운동으로 시작한 세션이면 그 예정 id(scheduled-workout.md §4). 예정이 지워져도 그대로 남는다.
+  final String? scheduledWorkoutId;
   const Session({
     required this.id,
     required this.startedAt,
@@ -492,6 +512,7 @@ class Session {
     this.planSeq,
     this.planDayKey,
     this.importBatchId,
+    this.scheduledWorkoutId,
   });
 
   /// AI가 넣은 데이터(출처 배지 대상).
@@ -514,6 +535,7 @@ class Session {
     planSeq: j['planSeq'] as int?,
     planDayKey: j['planDayKey'] as String?,
     importBatchId: j['importBatchId'] as String?,
+    scheduledWorkoutId: j['scheduledWorkoutId'] as String?,
   );
 
   /// source, updatedAt, importBatchId는 readOnly라 보내지 않는다.
@@ -526,6 +548,7 @@ class Session {
     'programInstanceId': programInstanceId,
     'planSeq': planSeq,
     'planDayKey': planDayKey,
+    'scheduledWorkoutId': scheduledWorkoutId,
     'exercises': [for (final e in exercises) e.toJson()],
   });
 }
@@ -568,6 +591,180 @@ class LastSets {
     sessionId: j['sessionId'] as String,
     startedAt: _dt(j['startedAt'])!,
     sets: [for (final s in (j['sets'] as List? ?? const [])) WorkoutSet.fromJson((s as Map).cast())],
+  );
+}
+
+// ---------- scheduled workout (contracts/v1.0/scheduled-workout.md §2) ----------
+
+/// 계산 상태(저장하지 않는다). 앱은 로컬 세션에서 구한다.
+enum ScheduledStatus { PLANNED, IN_PROGRESS, DONE, SKIPPED }
+
+class ScheduledSet {
+  final bool isWarmup;
+  final double? targetWeightKg;
+  final int? targetReps;
+
+  /// 있으면 targetReps도 있어야 하고 targetRepsMax >= targetReps(범위 "12~15").
+  final int? targetRepsMax;
+  final int? targetRir;
+  final double? targetRpe;
+  final int? targetDurationSec;
+  const ScheduledSet({
+    this.isWarmup = false,
+    this.targetWeightKg,
+    this.targetReps,
+    this.targetRepsMax,
+    this.targetRir,
+    this.targetRpe,
+    this.targetDurationSec,
+  });
+
+  factory ScheduledSet.fromJson(Map<String, Object?> j) => ScheduledSet(
+    isWarmup: j['isWarmup'] as bool? ?? false,
+    targetWeightKg: _num(j['targetWeightKg']),
+    targetReps: j['targetReps'] as int?,
+    targetRepsMax: j['targetRepsMax'] as int?,
+    targetRir: j['targetRir'] as int?,
+    targetRpe: _num(j['targetRpe']),
+    targetDurationSec: j['targetDurationSec'] as int?,
+  );
+
+  Map<String, Object?> toJson() => _compact({
+    'isWarmup': isWarmup,
+    'targetWeightKg': targetWeightKg,
+    'targetReps': targetReps,
+    'targetRepsMax': targetRepsMax,
+    'targetRir': targetRir,
+    'targetRpe': targetRpe,
+    'targetDurationSec': targetDurationSec,
+  });
+
+  /// 세션 세트로 옮긴다(scheduled-workout.md §5). 기록 값은 프로그램 시작과 같이 목표로 미리 채운다(미완료).
+  /// [restSec]은 종목의 restSec(= targetRestSec).
+  WorkoutSet toWorkoutSet({required String id, required int position, int? restSec}) => WorkoutSet(
+    id: id,
+    position: position,
+    isWarmup: isWarmup,
+    weightKg: targetWeightKg,
+    reps: targetReps,
+    targetWeightKg: targetWeightKg,
+    targetReps: targetReps,
+    targetRepsMax: targetRepsMax,
+    targetRir: targetRir,
+    targetRestSec: restSec,
+  );
+
+  ScheduledSet copyWith({
+    bool? isWarmup,
+    double? Function()? targetWeightKg,
+    int? Function()? targetReps,
+    int? Function()? targetRepsMax,
+    int? Function()? targetRir,
+  }) => ScheduledSet(
+    isWarmup: isWarmup ?? this.isWarmup,
+    targetWeightKg: targetWeightKg != null ? targetWeightKg() : this.targetWeightKg,
+    targetReps: targetReps != null ? targetReps() : this.targetReps,
+    targetRepsMax: targetRepsMax != null ? targetRepsMax() : this.targetRepsMax,
+    targetRir: targetRir != null ? targetRir() : this.targetRir,
+    targetRpe: targetRpe,
+    targetDurationSec: targetDurationSec,
+  );
+}
+
+class ScheduledItem {
+  final String exerciseId;
+  final String? note;
+
+  /// 0~3600초. 이 종목 세트 뒤 휴식 목표(선택).
+  final int? restSec;
+  final List<ScheduledSet> sets;
+  const ScheduledItem({required this.exerciseId, this.note, this.restSec, this.sets = const []});
+
+  factory ScheduledItem.fromJson(Map<String, Object?> j) => ScheduledItem(
+    exerciseId: j['exerciseId'] as String,
+    note: j['note'] as String?,
+    restSec: j['restSec'] as int?,
+    sets: [for (final s in (j['sets'] as List? ?? const [])) ScheduledSet.fromJson((s as Map).cast())],
+  );
+
+  Map<String, Object?> toJson() => _compact({
+    'exerciseId': exerciseId,
+    'note': note,
+    'restSec': restSec,
+    'sets': [for (final s in sets) s.toJson()],
+  });
+}
+
+class ScheduledWorkout {
+  final String id;
+
+  /// YYYY-MM-DD(사용자 현지 날짜).
+  final String plannedDate;
+  final String title;
+  final String? note;
+  final List<ScheduledItem> items;
+  final DateTime? skippedAt;
+
+  /// null = APP.
+  final SessionSource? source;
+  final String? importBatchId;
+  final DateTime? updatedAt;
+  final DateTime? deletedAt;
+  const ScheduledWorkout({
+    required this.id,
+    required this.plannedDate,
+    required this.title,
+    this.note,
+    this.items = const [],
+    this.skippedAt,
+    this.source,
+    this.importBatchId,
+    this.updatedAt,
+    this.deletedAt,
+  });
+
+  int get setCount => items.fold(0, (a, i) => a + i.sets.length);
+
+  factory ScheduledWorkout.fromJson(Map<String, Object?> j) => ScheduledWorkout(
+    id: j['id'] as String,
+    plannedDate: j['plannedDate'] as String,
+    title: j['title'] as String,
+    note: j['note'] as String?,
+    items: [for (final i in (j['items'] as List? ?? const [])) ScheduledItem.fromJson((i as Map).cast())],
+    skippedAt: _dt(j['skippedAt']),
+    source: j['source'] == null ? null : _enumByName(SessionSource.values, j['source']),
+    importBatchId: j['importBatchId'] as String?,
+    updatedAt: _dt(j['updatedAt']),
+    deletedAt: _dt(j['deletedAt']),
+  );
+
+  /// sync payload. source·importBatchId·updatedAt은 readOnly, deletedAt은 DELETE 변경으로 보내므로 뺀다.
+  Map<String, Object?> toJson() => _compact({
+    'id': id,
+    'plannedDate': plannedDate,
+    'title': title,
+    'note': note,
+    'items': [for (final i in items) i.toJson()],
+    'skippedAt': _iso(skippedAt),
+  });
+
+  ScheduledWorkout copyWith({
+    String? plannedDate,
+    String? title,
+    String? Function()? note,
+    List<ScheduledItem>? items,
+    DateTime? Function()? skippedAt,
+  }) => ScheduledWorkout(
+    id: id,
+    plannedDate: plannedDate ?? this.plannedDate,
+    title: title ?? this.title,
+    note: note != null ? note() : this.note,
+    items: items ?? this.items,
+    skippedAt: skippedAt != null ? skippedAt() : this.skippedAt,
+    source: source,
+    importBatchId: importBatchId,
+    updatedAt: updatedAt,
+    deletedAt: deletedAt,
   );
 }
 

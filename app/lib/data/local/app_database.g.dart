@@ -804,6 +804,17 @@ class $SessionsTable extends Sessions
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _scheduledWorkoutIdMeta =
+      const VerificationMeta('scheduledWorkoutId');
+  @override
+  late final GeneratedColumn<String> scheduledWorkoutId =
+      GeneratedColumn<String>(
+        'scheduled_workout_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -818,6 +829,7 @@ class $SessionsTable extends Sessions
     planSeq,
     planDayKey,
     importBatchId,
+    scheduledWorkoutId,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -914,6 +926,15 @@ class $SessionsTable extends Sessions
         ),
       );
     }
+    if (data.containsKey('scheduled_workout_id')) {
+      context.handle(
+        _scheduledWorkoutIdMeta,
+        scheduledWorkoutId.isAcceptableOrUnknown(
+          data['scheduled_workout_id']!,
+          _scheduledWorkoutIdMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -971,6 +992,10 @@ class $SessionsTable extends Sessions
         DriftSqlType.string,
         data['${effectivePrefix}import_batch_id'],
       ),
+      scheduledWorkoutId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}scheduled_workout_id'],
+      ),
     );
   }
 
@@ -993,6 +1018,7 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
   final int? planSeq;
   final String? planDayKey;
   final String? importBatchId;
+  final String? scheduledWorkoutId;
   const SessionRow({
     required this.id,
     required this.startedAt,
@@ -1006,6 +1032,7 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     this.planSeq,
     this.planDayKey,
     this.importBatchId,
+    this.scheduledWorkoutId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1038,6 +1065,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     if (!nullToAbsent || importBatchId != null) {
       map['import_batch_id'] = Variable<String>(importBatchId);
     }
+    if (!nullToAbsent || scheduledWorkoutId != null) {
+      map['scheduled_workout_id'] = Variable<String>(scheduledWorkoutId);
+    }
     return map;
   }
 
@@ -1069,6 +1099,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
       importBatchId: importBatchId == null && nullToAbsent
           ? const Value.absent()
           : Value(importBatchId),
+      scheduledWorkoutId: scheduledWorkoutId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(scheduledWorkoutId),
     );
   }
 
@@ -1092,6 +1125,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
       planSeq: serializer.fromJson<int?>(json['planSeq']),
       planDayKey: serializer.fromJson<String?>(json['planDayKey']),
       importBatchId: serializer.fromJson<String?>(json['importBatchId']),
+      scheduledWorkoutId: serializer.fromJson<String?>(
+        json['scheduledWorkoutId'],
+      ),
     );
   }
   @override
@@ -1110,6 +1146,7 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
       'planSeq': serializer.toJson<int?>(planSeq),
       'planDayKey': serializer.toJson<String?>(planDayKey),
       'importBatchId': serializer.toJson<String?>(importBatchId),
+      'scheduledWorkoutId': serializer.toJson<String?>(scheduledWorkoutId),
     };
   }
 
@@ -1126,6 +1163,7 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     Value<int?> planSeq = const Value.absent(),
     Value<String?> planDayKey = const Value.absent(),
     Value<String?> importBatchId = const Value.absent(),
+    Value<String?> scheduledWorkoutId = const Value.absent(),
   }) => SessionRow(
     id: id ?? this.id,
     startedAt: startedAt ?? this.startedAt,
@@ -1143,6 +1181,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     importBatchId: importBatchId.present
         ? importBatchId.value
         : this.importBatchId,
+    scheduledWorkoutId: scheduledWorkoutId.present
+        ? scheduledWorkoutId.value
+        : this.scheduledWorkoutId,
   );
   SessionRow copyWithCompanion(SessionsCompanion data) {
     return SessionRow(
@@ -1164,6 +1205,9 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
       importBatchId: data.importBatchId.present
           ? data.importBatchId.value
           : this.importBatchId,
+      scheduledWorkoutId: data.scheduledWorkoutId.present
+          ? data.scheduledWorkoutId.value
+          : this.scheduledWorkoutId,
     );
   }
 
@@ -1181,7 +1225,8 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
           ..write('programInstanceId: $programInstanceId, ')
           ..write('planSeq: $planSeq, ')
           ..write('planDayKey: $planDayKey, ')
-          ..write('importBatchId: $importBatchId')
+          ..write('importBatchId: $importBatchId, ')
+          ..write('scheduledWorkoutId: $scheduledWorkoutId')
           ..write(')'))
         .toString();
   }
@@ -1200,6 +1245,7 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
     planSeq,
     planDayKey,
     importBatchId,
+    scheduledWorkoutId,
   );
   @override
   bool operator ==(Object other) =>
@@ -1216,7 +1262,8 @@ class SessionRow extends DataClass implements Insertable<SessionRow> {
           other.programInstanceId == this.programInstanceId &&
           other.planSeq == this.planSeq &&
           other.planDayKey == this.planDayKey &&
-          other.importBatchId == this.importBatchId);
+          other.importBatchId == this.importBatchId &&
+          other.scheduledWorkoutId == this.scheduledWorkoutId);
 }
 
 class SessionsCompanion extends UpdateCompanion<SessionRow> {
@@ -1232,6 +1279,7 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
   final Value<int?> planSeq;
   final Value<String?> planDayKey;
   final Value<String?> importBatchId;
+  final Value<String?> scheduledWorkoutId;
   final Value<int> rowid;
   const SessionsCompanion({
     this.id = const Value.absent(),
@@ -1246,6 +1294,7 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     this.planSeq = const Value.absent(),
     this.planDayKey = const Value.absent(),
     this.importBatchId = const Value.absent(),
+    this.scheduledWorkoutId = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SessionsCompanion.insert({
@@ -1261,6 +1310,7 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     this.planSeq = const Value.absent(),
     this.planDayKey = const Value.absent(),
     this.importBatchId = const Value.absent(),
+    this.scheduledWorkoutId = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        startedAt = Value(startedAt),
@@ -1279,6 +1329,7 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     Expression<int>? planSeq,
     Expression<String>? planDayKey,
     Expression<String>? importBatchId,
+    Expression<String>? scheduledWorkoutId,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1294,6 +1345,8 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
       if (planSeq != null) 'plan_seq': planSeq,
       if (planDayKey != null) 'plan_day_key': planDayKey,
       if (importBatchId != null) 'import_batch_id': importBatchId,
+      if (scheduledWorkoutId != null)
+        'scheduled_workout_id': scheduledWorkoutId,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1311,6 +1364,7 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     Value<int?>? planSeq,
     Value<String?>? planDayKey,
     Value<String?>? importBatchId,
+    Value<String?>? scheduledWorkoutId,
     Value<int>? rowid,
   }) {
     return SessionsCompanion(
@@ -1326,6 +1380,7 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
       planSeq: planSeq ?? this.planSeq,
       planDayKey: planDayKey ?? this.planDayKey,
       importBatchId: importBatchId ?? this.importBatchId,
+      scheduledWorkoutId: scheduledWorkoutId ?? this.scheduledWorkoutId,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1369,6 +1424,9 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
     if (importBatchId.present) {
       map['import_batch_id'] = Variable<String>(importBatchId.value);
     }
+    if (scheduledWorkoutId.present) {
+      map['scheduled_workout_id'] = Variable<String>(scheduledWorkoutId.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1390,6 +1448,7 @@ class SessionsCompanion extends UpdateCompanion<SessionRow> {
           ..write('planSeq: $planSeq, ')
           ..write('planDayKey: $planDayKey, ')
           ..write('importBatchId: $importBatchId, ')
+          ..write('scheduledWorkoutId: $scheduledWorkoutId, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2195,6 +2254,39 @@ class $WorkoutSetsTable extends WorkoutSets
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _targetRepsMaxMeta = const VerificationMeta(
+    'targetRepsMax',
+  );
+  @override
+  late final GeneratedColumn<int> targetRepsMax = GeneratedColumn<int>(
+    'target_reps_max',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _targetRirMeta = const VerificationMeta(
+    'targetRir',
+  );
+  @override
+  late final GeneratedColumn<int> targetRir = GeneratedColumn<int>(
+    'target_rir',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _targetRestSecMeta = const VerificationMeta(
+    'targetRestSec',
+  );
+  @override
+  late final GeneratedColumn<int> targetRestSec = GeneratedColumn<int>(
+    'target_rest_sec',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2218,6 +2310,9 @@ class $WorkoutSetsTable extends WorkoutSets
     targetReps,
     targetWeightKg,
     isAmrap,
+    targetRepsMax,
+    targetRir,
+    targetRestSec,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2380,6 +2475,30 @@ class $WorkoutSetsTable extends WorkoutSets
         isAmrap.isAcceptableOrUnknown(data['is_amrap']!, _isAmrapMeta),
       );
     }
+    if (data.containsKey('target_reps_max')) {
+      context.handle(
+        _targetRepsMaxMeta,
+        targetRepsMax.isAcceptableOrUnknown(
+          data['target_reps_max']!,
+          _targetRepsMaxMeta,
+        ),
+      );
+    }
+    if (data.containsKey('target_rir')) {
+      context.handle(
+        _targetRirMeta,
+        targetRir.isAcceptableOrUnknown(data['target_rir']!, _targetRirMeta),
+      );
+    }
+    if (data.containsKey('target_rest_sec')) {
+      context.handle(
+        _targetRestSecMeta,
+        targetRestSec.isAcceptableOrUnknown(
+          data['target_rest_sec']!,
+          _targetRestSecMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2473,6 +2592,18 @@ class $WorkoutSetsTable extends WorkoutSets
         DriftSqlType.bool,
         data['${effectivePrefix}is_amrap'],
       )!,
+      targetRepsMax: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}target_reps_max'],
+      ),
+      targetRir: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}target_rir'],
+      ),
+      targetRestSec: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}target_rest_sec'],
+      ),
     );
   }
 
@@ -2504,6 +2635,9 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
   final int? targetReps;
   final double? targetWeightKg;
   final bool isAmrap;
+  final int? targetRepsMax;
+  final int? targetRir;
+  final int? targetRestSec;
   const WorkoutSetRow({
     required this.id,
     required this.sessionExerciseId,
@@ -2526,6 +2660,9 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     this.targetReps,
     this.targetWeightKg,
     required this.isAmrap,
+    this.targetRepsMax,
+    this.targetRir,
+    this.targetRestSec,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2581,6 +2718,15 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
       map['target_weight_kg'] = Variable<double>(targetWeightKg);
     }
     map['is_amrap'] = Variable<bool>(isAmrap);
+    if (!nullToAbsent || targetRepsMax != null) {
+      map['target_reps_max'] = Variable<int>(targetRepsMax);
+    }
+    if (!nullToAbsent || targetRir != null) {
+      map['target_rir'] = Variable<int>(targetRir);
+    }
+    if (!nullToAbsent || targetRestSec != null) {
+      map['target_rest_sec'] = Variable<int>(targetRestSec);
+    }
     return map;
   }
 
@@ -2629,6 +2775,15 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
           ? const Value.absent()
           : Value(targetWeightKg),
       isAmrap: Value(isAmrap),
+      targetRepsMax: targetRepsMax == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetRepsMax),
+      targetRir: targetRir == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetRir),
+      targetRestSec: targetRestSec == null && nullToAbsent
+          ? const Value.absent()
+          : Value(targetRestSec),
     );
   }
 
@@ -2659,6 +2814,9 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
       targetReps: serializer.fromJson<int?>(json['targetReps']),
       targetWeightKg: serializer.fromJson<double?>(json['targetWeightKg']),
       isAmrap: serializer.fromJson<bool>(json['isAmrap']),
+      targetRepsMax: serializer.fromJson<int?>(json['targetRepsMax']),
+      targetRir: serializer.fromJson<int?>(json['targetRir']),
+      targetRestSec: serializer.fromJson<int?>(json['targetRestSec']),
     );
   }
   @override
@@ -2686,6 +2844,9 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
       'targetReps': serializer.toJson<int?>(targetReps),
       'targetWeightKg': serializer.toJson<double?>(targetWeightKg),
       'isAmrap': serializer.toJson<bool>(isAmrap),
+      'targetRepsMax': serializer.toJson<int?>(targetRepsMax),
+      'targetRir': serializer.toJson<int?>(targetRir),
+      'targetRestSec': serializer.toJson<int?>(targetRestSec),
     };
   }
 
@@ -2711,6 +2872,9 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     Value<int?> targetReps = const Value.absent(),
     Value<double?> targetWeightKg = const Value.absent(),
     bool? isAmrap,
+    Value<int?> targetRepsMax = const Value.absent(),
+    Value<int?> targetRir = const Value.absent(),
+    Value<int?> targetRestSec = const Value.absent(),
   }) => WorkoutSetRow(
     id: id ?? this.id,
     sessionExerciseId: sessionExerciseId ?? this.sessionExerciseId,
@@ -2739,6 +2903,13 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
         ? targetWeightKg.value
         : this.targetWeightKg,
     isAmrap: isAmrap ?? this.isAmrap,
+    targetRepsMax: targetRepsMax.present
+        ? targetRepsMax.value
+        : this.targetRepsMax,
+    targetRir: targetRir.present ? targetRir.value : this.targetRir,
+    targetRestSec: targetRestSec.present
+        ? targetRestSec.value
+        : this.targetRestSec,
   );
   WorkoutSetRow copyWithCompanion(WorkoutSetsCompanion data) {
     return WorkoutSetRow(
@@ -2777,6 +2948,13 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
           ? data.targetWeightKg.value
           : this.targetWeightKg,
       isAmrap: data.isAmrap.present ? data.isAmrap.value : this.isAmrap,
+      targetRepsMax: data.targetRepsMax.present
+          ? data.targetRepsMax.value
+          : this.targetRepsMax,
+      targetRir: data.targetRir.present ? data.targetRir.value : this.targetRir,
+      targetRestSec: data.targetRestSec.present
+          ? data.targetRestSec.value
+          : this.targetRestSec,
     );
   }
 
@@ -2803,7 +2981,10 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
           ..write('plannedSetKey: $plannedSetKey, ')
           ..write('targetReps: $targetReps, ')
           ..write('targetWeightKg: $targetWeightKg, ')
-          ..write('isAmrap: $isAmrap')
+          ..write('isAmrap: $isAmrap, ')
+          ..write('targetRepsMax: $targetRepsMax, ')
+          ..write('targetRir: $targetRir, ')
+          ..write('targetRestSec: $targetRestSec')
           ..write(')'))
         .toString();
   }
@@ -2831,6 +3012,9 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     targetReps,
     targetWeightKg,
     isAmrap,
+    targetRepsMax,
+    targetRir,
+    targetRestSec,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -2856,7 +3040,10 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
           other.plannedSetKey == this.plannedSetKey &&
           other.targetReps == this.targetReps &&
           other.targetWeightKg == this.targetWeightKg &&
-          other.isAmrap == this.isAmrap);
+          other.isAmrap == this.isAmrap &&
+          other.targetRepsMax == this.targetRepsMax &&
+          other.targetRir == this.targetRir &&
+          other.targetRestSec == this.targetRestSec);
 }
 
 class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
@@ -2881,6 +3068,9 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
   final Value<int?> targetReps;
   final Value<double?> targetWeightKg;
   final Value<bool> isAmrap;
+  final Value<int?> targetRepsMax;
+  final Value<int?> targetRir;
+  final Value<int?> targetRestSec;
   final Value<int> rowid;
   const WorkoutSetsCompanion({
     this.id = const Value.absent(),
@@ -2904,6 +3094,9 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     this.targetReps = const Value.absent(),
     this.targetWeightKg = const Value.absent(),
     this.isAmrap = const Value.absent(),
+    this.targetRepsMax = const Value.absent(),
+    this.targetRir = const Value.absent(),
+    this.targetRestSec = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   WorkoutSetsCompanion.insert({
@@ -2928,6 +3121,9 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     this.targetReps = const Value.absent(),
     this.targetWeightKg = const Value.absent(),
     this.isAmrap = const Value.absent(),
+    this.targetRepsMax = const Value.absent(),
+    this.targetRir = const Value.absent(),
+    this.targetRestSec = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        sessionExerciseId = Value(sessionExerciseId),
@@ -2955,6 +3151,9 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     Expression<int>? targetReps,
     Expression<double>? targetWeightKg,
     Expression<bool>? isAmrap,
+    Expression<int>? targetRepsMax,
+    Expression<int>? targetRir,
+    Expression<int>? targetRestSec,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2979,6 +3178,9 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
       if (targetReps != null) 'target_reps': targetReps,
       if (targetWeightKg != null) 'target_weight_kg': targetWeightKg,
       if (isAmrap != null) 'is_amrap': isAmrap,
+      if (targetRepsMax != null) 'target_reps_max': targetRepsMax,
+      if (targetRir != null) 'target_rir': targetRir,
+      if (targetRestSec != null) 'target_rest_sec': targetRestSec,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3005,6 +3207,9 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     Value<int?>? targetReps,
     Value<double?>? targetWeightKg,
     Value<bool>? isAmrap,
+    Value<int?>? targetRepsMax,
+    Value<int?>? targetRir,
+    Value<int?>? targetRestSec,
     Value<int>? rowid,
   }) {
     return WorkoutSetsCompanion(
@@ -3029,6 +3234,9 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
       targetReps: targetReps ?? this.targetReps,
       targetWeightKg: targetWeightKg ?? this.targetWeightKg,
       isAmrap: isAmrap ?? this.isAmrap,
+      targetRepsMax: targetRepsMax ?? this.targetRepsMax,
+      targetRir: targetRir ?? this.targetRir,
+      targetRestSec: targetRestSec ?? this.targetRestSec,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3099,6 +3307,15 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     if (isAmrap.present) {
       map['is_amrap'] = Variable<bool>(isAmrap.value);
     }
+    if (targetRepsMax.present) {
+      map['target_reps_max'] = Variable<int>(targetRepsMax.value);
+    }
+    if (targetRir.present) {
+      map['target_rir'] = Variable<int>(targetRir.value);
+    }
+    if (targetRestSec.present) {
+      map['target_rest_sec'] = Variable<int>(targetRestSec.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3129,6 +3346,9 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
           ..write('targetReps: $targetReps, ')
           ..write('targetWeightKg: $targetWeightKg, ')
           ..write('isAmrap: $isAmrap, ')
+          ..write('targetRepsMax: $targetRepsMax, ')
+          ..write('targetRir: $targetRir, ')
+          ..write('targetRestSec: $targetRestSec, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -3601,6 +3821,626 @@ class BodyMeasurementsCompanion extends UpdateCompanion<BodyMeasurementRow> {
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('importBatchId: $importBatchId, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ScheduledWorkoutsTable extends ScheduledWorkouts
+    with TableInfo<$ScheduledWorkoutsTable, ScheduledWorkoutRow> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ScheduledWorkoutsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _plannedDateMeta = const VerificationMeta(
+    'plannedDate',
+  );
+  @override
+  late final GeneratedColumn<String> plannedDate = GeneratedColumn<String>(
+    'planned_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _itemsJsonMeta = const VerificationMeta(
+    'itemsJson',
+  );
+  @override
+  late final GeneratedColumn<String> itemsJson = GeneratedColumn<String>(
+    'items_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('[]'),
+  );
+  static const VerificationMeta _skippedAtMeta = const VerificationMeta(
+    'skippedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> skippedAt = GeneratedColumn<DateTime>(
+    'skipped_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _importBatchIdMeta = const VerificationMeta(
+    'importBatchId',
+  );
+  @override
+  late final GeneratedColumn<String> importBatchId = GeneratedColumn<String>(
+    'import_batch_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deletedAtMeta = const VerificationMeta(
+    'deletedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> deletedAt = GeneratedColumn<DateTime>(
+    'deleted_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    plannedDate,
+    title,
+    note,
+    itemsJson,
+    skippedAt,
+    source,
+    importBatchId,
+    updatedAt,
+    deletedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'scheduled_workouts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ScheduledWorkoutRow> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('planned_date')) {
+      context.handle(
+        _plannedDateMeta,
+        plannedDate.isAcceptableOrUnknown(
+          data['planned_date']!,
+          _plannedDateMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_plannedDateMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('items_json')) {
+      context.handle(
+        _itemsJsonMeta,
+        itemsJson.isAcceptableOrUnknown(data['items_json']!, _itemsJsonMeta),
+      );
+    }
+    if (data.containsKey('skipped_at')) {
+      context.handle(
+        _skippedAtMeta,
+        skippedAt.isAcceptableOrUnknown(data['skipped_at']!, _skippedAtMeta),
+      );
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
+    if (data.containsKey('import_batch_id')) {
+      context.handle(
+        _importBatchIdMeta,
+        importBatchId.isAcceptableOrUnknown(
+          data['import_batch_id']!,
+          _importBatchIdMeta,
+        ),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    if (data.containsKey('deleted_at')) {
+      context.handle(
+        _deletedAtMeta,
+        deletedAt.isAcceptableOrUnknown(data['deleted_at']!, _deletedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ScheduledWorkoutRow map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ScheduledWorkoutRow(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      plannedDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}planned_date'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      itemsJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}items_json'],
+      )!,
+      skippedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}skipped_at'],
+      ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      ),
+      importBatchId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}import_batch_id'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+      deletedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}deleted_at'],
+      ),
+    );
+  }
+
+  @override
+  $ScheduledWorkoutsTable createAlias(String alias) {
+    return $ScheduledWorkoutsTable(attachedDatabase, alias);
+  }
+}
+
+class ScheduledWorkoutRow extends DataClass
+    implements Insertable<ScheduledWorkoutRow> {
+  final String id;
+
+  /// YYYY-MM-DD(현지 날짜).
+  final String plannedDate;
+  final String title;
+  final String? note;
+
+  /// ScheduledItem 목록 JSON.
+  final String itemsJson;
+  final DateTime? skippedAt;
+  final String? source;
+  final String? importBatchId;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  const ScheduledWorkoutRow({
+    required this.id,
+    required this.plannedDate,
+    required this.title,
+    this.note,
+    required this.itemsJson,
+    this.skippedAt,
+    this.source,
+    this.importBatchId,
+    required this.updatedAt,
+    this.deletedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['planned_date'] = Variable<String>(plannedDate);
+    map['title'] = Variable<String>(title);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['items_json'] = Variable<String>(itemsJson);
+    if (!nullToAbsent || skippedAt != null) {
+      map['skipped_at'] = Variable<DateTime>(skippedAt);
+    }
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
+    }
+    if (!nullToAbsent || importBatchId != null) {
+      map['import_batch_id'] = Variable<String>(importBatchId);
+    }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || deletedAt != null) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt);
+    }
+    return map;
+  }
+
+  ScheduledWorkoutsCompanion toCompanion(bool nullToAbsent) {
+    return ScheduledWorkoutsCompanion(
+      id: Value(id),
+      plannedDate: Value(plannedDate),
+      title: Value(title),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      itemsJson: Value(itemsJson),
+      skippedAt: skippedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(skippedAt),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
+      importBatchId: importBatchId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(importBatchId),
+      updatedAt: Value(updatedAt),
+      deletedAt: deletedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deletedAt),
+    );
+  }
+
+  factory ScheduledWorkoutRow.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ScheduledWorkoutRow(
+      id: serializer.fromJson<String>(json['id']),
+      plannedDate: serializer.fromJson<String>(json['plannedDate']),
+      title: serializer.fromJson<String>(json['title']),
+      note: serializer.fromJson<String?>(json['note']),
+      itemsJson: serializer.fromJson<String>(json['itemsJson']),
+      skippedAt: serializer.fromJson<DateTime?>(json['skippedAt']),
+      source: serializer.fromJson<String?>(json['source']),
+      importBatchId: serializer.fromJson<String?>(json['importBatchId']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'plannedDate': serializer.toJson<String>(plannedDate),
+      'title': serializer.toJson<String>(title),
+      'note': serializer.toJson<String?>(note),
+      'itemsJson': serializer.toJson<String>(itemsJson),
+      'skippedAt': serializer.toJson<DateTime?>(skippedAt),
+      'source': serializer.toJson<String?>(source),
+      'importBatchId': serializer.toJson<String?>(importBatchId),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'deletedAt': serializer.toJson<DateTime?>(deletedAt),
+    };
+  }
+
+  ScheduledWorkoutRow copyWith({
+    String? id,
+    String? plannedDate,
+    String? title,
+    Value<String?> note = const Value.absent(),
+    String? itemsJson,
+    Value<DateTime?> skippedAt = const Value.absent(),
+    Value<String?> source = const Value.absent(),
+    Value<String?> importBatchId = const Value.absent(),
+    DateTime? updatedAt,
+    Value<DateTime?> deletedAt = const Value.absent(),
+  }) => ScheduledWorkoutRow(
+    id: id ?? this.id,
+    plannedDate: plannedDate ?? this.plannedDate,
+    title: title ?? this.title,
+    note: note.present ? note.value : this.note,
+    itemsJson: itemsJson ?? this.itemsJson,
+    skippedAt: skippedAt.present ? skippedAt.value : this.skippedAt,
+    source: source.present ? source.value : this.source,
+    importBatchId: importBatchId.present
+        ? importBatchId.value
+        : this.importBatchId,
+    updatedAt: updatedAt ?? this.updatedAt,
+    deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
+  );
+  ScheduledWorkoutRow copyWithCompanion(ScheduledWorkoutsCompanion data) {
+    return ScheduledWorkoutRow(
+      id: data.id.present ? data.id.value : this.id,
+      plannedDate: data.plannedDate.present
+          ? data.plannedDate.value
+          : this.plannedDate,
+      title: data.title.present ? data.title.value : this.title,
+      note: data.note.present ? data.note.value : this.note,
+      itemsJson: data.itemsJson.present ? data.itemsJson.value : this.itemsJson,
+      skippedAt: data.skippedAt.present ? data.skippedAt.value : this.skippedAt,
+      source: data.source.present ? data.source.value : this.source,
+      importBatchId: data.importBatchId.present
+          ? data.importBatchId.value
+          : this.importBatchId,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+      deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ScheduledWorkoutRow(')
+          ..write('id: $id, ')
+          ..write('plannedDate: $plannedDate, ')
+          ..write('title: $title, ')
+          ..write('note: $note, ')
+          ..write('itemsJson: $itemsJson, ')
+          ..write('skippedAt: $skippedAt, ')
+          ..write('source: $source, ')
+          ..write('importBatchId: $importBatchId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    plannedDate,
+    title,
+    note,
+    itemsJson,
+    skippedAt,
+    source,
+    importBatchId,
+    updatedAt,
+    deletedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ScheduledWorkoutRow &&
+          other.id == this.id &&
+          other.plannedDate == this.plannedDate &&
+          other.title == this.title &&
+          other.note == this.note &&
+          other.itemsJson == this.itemsJson &&
+          other.skippedAt == this.skippedAt &&
+          other.source == this.source &&
+          other.importBatchId == this.importBatchId &&
+          other.updatedAt == this.updatedAt &&
+          other.deletedAt == this.deletedAt);
+}
+
+class ScheduledWorkoutsCompanion extends UpdateCompanion<ScheduledWorkoutRow> {
+  final Value<String> id;
+  final Value<String> plannedDate;
+  final Value<String> title;
+  final Value<String?> note;
+  final Value<String> itemsJson;
+  final Value<DateTime?> skippedAt;
+  final Value<String?> source;
+  final Value<String?> importBatchId;
+  final Value<DateTime> updatedAt;
+  final Value<DateTime?> deletedAt;
+  final Value<int> rowid;
+  const ScheduledWorkoutsCompanion({
+    this.id = const Value.absent(),
+    this.plannedDate = const Value.absent(),
+    this.title = const Value.absent(),
+    this.note = const Value.absent(),
+    this.itemsJson = const Value.absent(),
+    this.skippedAt = const Value.absent(),
+    this.source = const Value.absent(),
+    this.importBatchId = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ScheduledWorkoutsCompanion.insert({
+    required String id,
+    required String plannedDate,
+    required String title,
+    this.note = const Value.absent(),
+    this.itemsJson = const Value.absent(),
+    this.skippedAt = const Value.absent(),
+    this.source = const Value.absent(),
+    this.importBatchId = const Value.absent(),
+    required DateTime updatedAt,
+    this.deletedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       plannedDate = Value(plannedDate),
+       title = Value(title),
+       updatedAt = Value(updatedAt);
+  static Insertable<ScheduledWorkoutRow> custom({
+    Expression<String>? id,
+    Expression<String>? plannedDate,
+    Expression<String>? title,
+    Expression<String>? note,
+    Expression<String>? itemsJson,
+    Expression<DateTime>? skippedAt,
+    Expression<String>? source,
+    Expression<String>? importBatchId,
+    Expression<DateTime>? updatedAt,
+    Expression<DateTime>? deletedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (plannedDate != null) 'planned_date': plannedDate,
+      if (title != null) 'title': title,
+      if (note != null) 'note': note,
+      if (itemsJson != null) 'items_json': itemsJson,
+      if (skippedAt != null) 'skipped_at': skippedAt,
+      if (source != null) 'source': source,
+      if (importBatchId != null) 'import_batch_id': importBatchId,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (deletedAt != null) 'deleted_at': deletedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ScheduledWorkoutsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? plannedDate,
+    Value<String>? title,
+    Value<String?>? note,
+    Value<String>? itemsJson,
+    Value<DateTime?>? skippedAt,
+    Value<String?>? source,
+    Value<String?>? importBatchId,
+    Value<DateTime>? updatedAt,
+    Value<DateTime?>? deletedAt,
+    Value<int>? rowid,
+  }) {
+    return ScheduledWorkoutsCompanion(
+      id: id ?? this.id,
+      plannedDate: plannedDate ?? this.plannedDate,
+      title: title ?? this.title,
+      note: note ?? this.note,
+      itemsJson: itemsJson ?? this.itemsJson,
+      skippedAt: skippedAt ?? this.skippedAt,
+      source: source ?? this.source,
+      importBatchId: importBatchId ?? this.importBatchId,
+      updatedAt: updatedAt ?? this.updatedAt,
+      deletedAt: deletedAt ?? this.deletedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (plannedDate.present) {
+      map['planned_date'] = Variable<String>(plannedDate.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (itemsJson.present) {
+      map['items_json'] = Variable<String>(itemsJson.value);
+    }
+    if (skippedAt.present) {
+      map['skipped_at'] = Variable<DateTime>(skippedAt.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (importBatchId.present) {
+      map['import_batch_id'] = Variable<String>(importBatchId.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (deletedAt.present) {
+      map['deleted_at'] = Variable<DateTime>(deletedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ScheduledWorkoutsCompanion(')
+          ..write('id: $id, ')
+          ..write('plannedDate: $plannedDate, ')
+          ..write('title: $title, ')
+          ..write('note: $note, ')
+          ..write('itemsJson: $itemsJson, ')
+          ..write('skippedAt: $skippedAt, ')
+          ..write('source: $source, ')
+          ..write('importBatchId: $importBatchId, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('deletedAt: $deletedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -4374,6 +5214,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $BodyMeasurementsTable bodyMeasurements = $BodyMeasurementsTable(
     this,
   );
+  late final $ScheduledWorkoutsTable scheduledWorkouts =
+      $ScheduledWorkoutsTable(this);
   late final $OutboxTable outbox = $OutboxTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final Index idxExercisesDeleted = Index(
@@ -4404,6 +5246,10 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     'idx_body_measured',
     'CREATE INDEX idx_body_measured ON body_measurements (measured_at)',
   );
+  late final Index idxScheduledDate = Index(
+    'idx_scheduled_date',
+    'CREATE INDEX idx_scheduled_date ON scheduled_workouts (planned_date)',
+  );
   late final Index idxOutboxEntity = Index(
     'idx_outbox_entity',
     'CREATE UNIQUE INDEX idx_outbox_entity ON outbox (entity, entity_id)',
@@ -4418,6 +5264,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     sessionExercises,
     workoutSets,
     bodyMeasurements,
+    scheduledWorkouts,
     outbox,
     syncState,
     idxExercisesDeleted,
@@ -4427,6 +5274,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     idxSeExercise,
     idxSetsSe,
     idxBodyMeasured,
+    idxScheduledDate,
     idxOutboxEntity,
   ];
   @override
@@ -4774,6 +5622,7 @@ typedef $$SessionsTableCreateCompanionBuilder = SessionsCompanion Function({
   Value<int?> planSeq,
   Value<String?> planDayKey,
   Value<String?> importBatchId,
+  Value<String?> scheduledWorkoutId,
   Value<int> rowid,
 });
 typedef $$SessionsTableUpdateCompanionBuilder = SessionsCompanion Function({
@@ -4789,6 +5638,7 @@ typedef $$SessionsTableUpdateCompanionBuilder = SessionsCompanion Function({
   Value<int?> planSeq,
   Value<String?> planDayKey,
   Value<String?> importBatchId,
+  Value<String?> scheduledWorkoutId,
   Value<int> rowid,
 });
 
@@ -4858,6 +5708,11 @@ class $$SessionsTableFilterComposer
 
   ColumnFilters<String> get importBatchId => $composableBuilder(
     column: $table.importBatchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get scheduledWorkoutId => $composableBuilder(
+    column: $table.scheduledWorkoutId,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -4930,6 +5785,11 @@ class $$SessionsTableOrderingComposer
     column: $table.importBatchId,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get scheduledWorkoutId => $composableBuilder(
+    column: $table.scheduledWorkoutId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SessionsTableAnnotationComposer
@@ -4982,6 +5842,11 @@ class $$SessionsTableAnnotationComposer
     column: $table.importBatchId,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get scheduledWorkoutId => $composableBuilder(
+    column: $table.scheduledWorkoutId,
+    builder: (column) => column,
+  );
 }
 
 class $$SessionsTableTableManager
@@ -5027,6 +5892,7 @@ class $$SessionsTableTableManager
                 Value<int?> planSeq = const Value.absent(),
                 Value<String?> planDayKey = const Value.absent(),
                 Value<String?> importBatchId = const Value.absent(),
+                Value<String?> scheduledWorkoutId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion(
                 id: id,
@@ -5041,6 +5907,7 @@ class $$SessionsTableTableManager
                 planSeq: planSeq,
                 planDayKey: planDayKey,
                 importBatchId: importBatchId,
+                scheduledWorkoutId: scheduledWorkoutId,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5057,6 +5924,7 @@ class $$SessionsTableTableManager
                 Value<int?> planSeq = const Value.absent(),
                 Value<String?> planDayKey = const Value.absent(),
                 Value<String?> importBatchId = const Value.absent(),
+                Value<String?> scheduledWorkoutId = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionsCompanion.insert(
                 id: id,
@@ -5071,6 +5939,7 @@ class $$SessionsTableTableManager
                 planSeq: planSeq,
                 planDayKey: planDayKey,
                 importBatchId: importBatchId,
+                scheduledWorkoutId: scheduledWorkoutId,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -5426,6 +6295,9 @@ typedef $$WorkoutSetsTableCreateCompanionBuilder =
       Value<int?> targetReps,
       Value<double?> targetWeightKg,
       Value<bool> isAmrap,
+      Value<int?> targetRepsMax,
+      Value<int?> targetRir,
+      Value<int?> targetRestSec,
       Value<int> rowid,
     });
 typedef $$WorkoutSetsTableUpdateCompanionBuilder =
@@ -5451,6 +6323,9 @@ typedef $$WorkoutSetsTableUpdateCompanionBuilder =
       Value<int?> targetReps,
       Value<double?> targetWeightKg,
       Value<bool> isAmrap,
+      Value<int?> targetRepsMax,
+      Value<int?> targetRir,
+      Value<int?> targetRestSec,
       Value<int> rowid,
     });
 
@@ -5565,6 +6440,21 @@ class $$WorkoutSetsTableFilterComposer
 
   ColumnFilters<bool> get isAmrap => $composableBuilder(
     column: $table.isAmrap,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get targetRepsMax => $composableBuilder(
+    column: $table.targetRepsMax,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get targetRir => $composableBuilder(
+    column: $table.targetRir,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get targetRestSec => $composableBuilder(
+    column: $table.targetRestSec,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -5682,6 +6572,21 @@ class $$WorkoutSetsTableOrderingComposer
     column: $table.isAmrap,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get targetRepsMax => $composableBuilder(
+    column: $table.targetRepsMax,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get targetRir => $composableBuilder(
+    column: $table.targetRir,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get targetRestSec => $composableBuilder(
+    column: $table.targetRestSec,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$WorkoutSetsTableAnnotationComposer
@@ -5769,6 +6674,19 @@ class $$WorkoutSetsTableAnnotationComposer
 
   GeneratedColumn<bool> get isAmrap =>
       $composableBuilder(column: $table.isAmrap, builder: (column) => column);
+
+  GeneratedColumn<int> get targetRepsMax => $composableBuilder(
+    column: $table.targetRepsMax,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get targetRir =>
+      $composableBuilder(column: $table.targetRir, builder: (column) => column);
+
+  GeneratedColumn<int> get targetRestSec => $composableBuilder(
+    column: $table.targetRestSec,
+    builder: (column) => column,
+  );
 }
 
 class $$WorkoutSetsTableTableManager
@@ -5823,6 +6741,9 @@ class $$WorkoutSetsTableTableManager
                 Value<int?> targetReps = const Value.absent(),
                 Value<double?> targetWeightKg = const Value.absent(),
                 Value<bool> isAmrap = const Value.absent(),
+                Value<int?> targetRepsMax = const Value.absent(),
+                Value<int?> targetRir = const Value.absent(),
+                Value<int?> targetRestSec = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkoutSetsCompanion(
                 id: id,
@@ -5846,6 +6767,9 @@ class $$WorkoutSetsTableTableManager
                 targetReps: targetReps,
                 targetWeightKg: targetWeightKg,
                 isAmrap: isAmrap,
+                targetRepsMax: targetRepsMax,
+                targetRir: targetRir,
+                targetRestSec: targetRestSec,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -5871,6 +6795,9 @@ class $$WorkoutSetsTableTableManager
                 Value<int?> targetReps = const Value.absent(),
                 Value<double?> targetWeightKg = const Value.absent(),
                 Value<bool> isAmrap = const Value.absent(),
+                Value<int?> targetRepsMax = const Value.absent(),
+                Value<int?> targetRir = const Value.absent(),
+                Value<int?> targetRestSec = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkoutSetsCompanion.insert(
                 id: id,
@@ -5894,6 +6821,9 @@ class $$WorkoutSetsTableTableManager
                 targetReps: targetReps,
                 targetWeightKg: targetWeightKg,
                 isAmrap: isAmrap,
+                targetRepsMax: targetRepsMax,
+                targetRir: targetRir,
+                targetRestSec: targetRestSec,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -6191,6 +7121,329 @@ typedef $$BodyMeasurementsTableProcessedTableManager =
         >,
       ),
       BodyMeasurementRow,
+      PrefetchHooks Function()
+    >;
+typedef $$ScheduledWorkoutsTableCreateCompanionBuilder =
+    ScheduledWorkoutsCompanion Function({
+      required String id,
+      required String plannedDate,
+      required String title,
+      Value<String?> note,
+      Value<String> itemsJson,
+      Value<DateTime?> skippedAt,
+      Value<String?> source,
+      Value<String?> importBatchId,
+      required DateTime updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+typedef $$ScheduledWorkoutsTableUpdateCompanionBuilder =
+    ScheduledWorkoutsCompanion Function({
+      Value<String> id,
+      Value<String> plannedDate,
+      Value<String> title,
+      Value<String?> note,
+      Value<String> itemsJson,
+      Value<DateTime?> skippedAt,
+      Value<String?> source,
+      Value<String?> importBatchId,
+      Value<DateTime> updatedAt,
+      Value<DateTime?> deletedAt,
+      Value<int> rowid,
+    });
+
+class $$ScheduledWorkoutsTableFilterComposer
+    extends Composer<_$AppDatabase, $ScheduledWorkoutsTable> {
+  $$ScheduledWorkoutsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get plannedDate => $composableBuilder(
+    column: $table.plannedDate,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get itemsJson => $composableBuilder(
+    column: $table.itemsJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get skippedAt => $composableBuilder(
+    column: $table.skippedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get importBatchId => $composableBuilder(
+    column: $table.importBatchId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ScheduledWorkoutsTableOrderingComposer
+    extends Composer<_$AppDatabase, $ScheduledWorkoutsTable> {
+  $$ScheduledWorkoutsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get plannedDate => $composableBuilder(
+    column: $table.plannedDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get itemsJson => $composableBuilder(
+    column: $table.itemsJson,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get skippedAt => $composableBuilder(
+    column: $table.skippedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get importBatchId => $composableBuilder(
+    column: $table.importBatchId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deletedAt => $composableBuilder(
+    column: $table.deletedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ScheduledWorkoutsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ScheduledWorkoutsTable> {
+  $$ScheduledWorkoutsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get plannedDate => $composableBuilder(
+    column: $table.plannedDate,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get itemsJson =>
+      $composableBuilder(column: $table.itemsJson, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get skippedAt =>
+      $composableBuilder(column: $table.skippedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<String> get importBatchId => $composableBuilder(
+    column: $table.importBatchId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deletedAt =>
+      $composableBuilder(column: $table.deletedAt, builder: (column) => column);
+}
+
+class $$ScheduledWorkoutsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ScheduledWorkoutsTable,
+          ScheduledWorkoutRow,
+          $$ScheduledWorkoutsTableFilterComposer,
+          $$ScheduledWorkoutsTableOrderingComposer,
+          $$ScheduledWorkoutsTableAnnotationComposer,
+          $$ScheduledWorkoutsTableCreateCompanionBuilder,
+          $$ScheduledWorkoutsTableUpdateCompanionBuilder,
+          (
+            ScheduledWorkoutRow,
+            BaseReferences<
+              _$AppDatabase,
+              $ScheduledWorkoutsTable,
+              ScheduledWorkoutRow
+            >,
+          ),
+          ScheduledWorkoutRow,
+          PrefetchHooks Function()
+        > {
+  $$ScheduledWorkoutsTableTableManager(
+    _$AppDatabase db,
+    $ScheduledWorkoutsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ScheduledWorkoutsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ScheduledWorkoutsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ScheduledWorkoutsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> plannedDate = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<String> itemsJson = const Value.absent(),
+                Value<DateTime?> skippedAt = const Value.absent(),
+                Value<String?> source = const Value.absent(),
+                Value<String?> importBatchId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ScheduledWorkoutsCompanion(
+                id: id,
+                plannedDate: plannedDate,
+                title: title,
+                note: note,
+                itemsJson: itemsJson,
+                skippedAt: skippedAt,
+                source: source,
+                importBatchId: importBatchId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String plannedDate,
+                required String title,
+                Value<String?> note = const Value.absent(),
+                Value<String> itemsJson = const Value.absent(),
+                Value<DateTime?> skippedAt = const Value.absent(),
+                Value<String?> source = const Value.absent(),
+                Value<String?> importBatchId = const Value.absent(),
+                required DateTime updatedAt,
+                Value<DateTime?> deletedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ScheduledWorkoutsCompanion.insert(
+                id: id,
+                plannedDate: plannedDate,
+                title: title,
+                note: note,
+                itemsJson: itemsJson,
+                skippedAt: skippedAt,
+                source: source,
+                importBatchId: importBatchId,
+                updatedAt: updatedAt,
+                deletedAt: deletedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ScheduledWorkoutsTable, ScheduledWorkoutRow>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $ScheduledWorkoutsTable,
+                    ScheduledWorkoutRow
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ScheduledWorkoutsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ScheduledWorkoutsTable,
+      ScheduledWorkoutRow,
+      $$ScheduledWorkoutsTableFilterComposer,
+      $$ScheduledWorkoutsTableOrderingComposer,
+      $$ScheduledWorkoutsTableAnnotationComposer,
+      $$ScheduledWorkoutsTableCreateCompanionBuilder,
+      $$ScheduledWorkoutsTableUpdateCompanionBuilder,
+      (
+        ScheduledWorkoutRow,
+        BaseReferences<
+          _$AppDatabase,
+          $ScheduledWorkoutsTable,
+          ScheduledWorkoutRow
+        >,
+      ),
+      ScheduledWorkoutRow,
       PrefetchHooks Function()
     >;
 typedef $$OutboxTableCreateCompanionBuilder = OutboxCompanion Function({
@@ -6618,6 +7871,8 @@ class $AppDatabaseManager {
       $$WorkoutSetsTableTableManager(_db, _db.workoutSets);
   $$BodyMeasurementsTableTableManager get bodyMeasurements =>
       $$BodyMeasurementsTableTableManager(_db, _db.bodyMeasurements);
+  $$ScheduledWorkoutsTableTableManager get scheduledWorkouts =>
+      $$ScheduledWorkoutsTableTableManager(_db, _db.scheduledWorkouts);
   $$OutboxTableTableManager get outbox =>
       $$OutboxTableTableManager(_db, _db.outbox);
   $$SyncStateTableTableManager get syncState =>

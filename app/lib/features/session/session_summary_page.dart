@@ -65,10 +65,10 @@ class SessionSummaryPage extends ConsumerWidget {
       ].fold(0.0, (a, b) => a + b);
       final misses = <({String name, int sets, int reps, int target})>[];
       for (final se in session.exercises) {
-        if (exerciseVerdict(se) != ExerciseVerdict.failure) continue;
+        if (exerciseVerdict(session, se) != ExerciseVerdict.failure) continue;
         final failed = [
           for (final s in se.sets)
-            if (isJudged(se, s) && (!s.isCompleted || (s.reps ?? 0) < s.targetReps!)) s,
+            if (isJudged(session, se, s) && (!s.isCompleted || (s.reps ?? 0) < s.targetReps!)) s,
         ];
         if (failed.isEmpty) continue;
         failed.sort((a, b) => ((a.reps ?? 0) - a.targetReps!).compareTo((b.reps ?? 0) - b.targetReps!));
