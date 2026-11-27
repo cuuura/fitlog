@@ -64,3 +64,5 @@ Claude·ChatGPT·Gemini가 사람 개입 없이 연결할 수 있게 MCP 인증 
 - 도구 입력은 import 스키마 검증을 그대로 거친다. 사용자 id는 토큰에서만 정한다(입력으로 받지 않음)
 - 도구 설명·응답에 다른 사용자 데이터나 서버 내부 정보를 넣지 않는다
 - 모든 MCP 호출을 `ai_tool_call` 로그(연결, 도구, 결과 코드, 소요 시간)로 남긴다. 입력 본문은 남기지 않는다
+
+> v1.0 추가: 도구 `schedule_workout`, `list_scheduled_workouts`, `skip_scheduled_workout`과 `request_deletion` entity `scheduled_workout`은 `../v1.0/scheduled-workout.md` §9.

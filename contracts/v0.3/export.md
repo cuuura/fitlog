@@ -20,3 +20,5 @@ date,weight_kg,source
 ```
 - 덤벨 `weight_kg`는 한쪽 무게(헤더 그대로). 빈 값은 빈 칸
 - Strong·Hevy 가져오기(DAT-3)는 v1.2
+
+> v1.0 추가: JSON에 `scheduledWorkouts`와 세션 `scheduledWorkoutId`. `../v1.0/scheduled-workout.md` §8.
