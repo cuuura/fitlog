@@ -1,0 +1,1698 @@
+{
+  "schemaVersion": 1,
+  "name": "12주 물결 3티어",
+  "description": "주 4일(벤치·스쿼트·오버헤드 프레스·데드리프트) 12주로, T1은 주마다 세트·반복·퍼센트(80~95%)가 바뀌는 물결이고 T2는 중강도 보조 메인, T3는 가벼운 보조를 10~12회 범위로 한다. T1·T2의 TM에는 해당 종목의 현재 1RM 추정치를 넣고, 12주가 끝나면 TM이 오르며 + 세트 목표에 못 미친 종목은 대신 5% 내려간다. 원래 T3는 주차 합계 반복 수로 무게를 정하지만 반복 범위 더블 프로그레션으로 근사했고, 11주는 T1만 하는 마무리 주이며 12주의 95% 단일 세트는 1RM 테스트의 근사다(테스트 뒤 TM 조정은 직접). 흔히 'GZCL The Rippler'로 알려진 구성을 참고했습니다.",
+  "tmPercent": 1.0,
+  "roundingKg": 2.5,
+  "cycleWeeks": 12,
+  "lifts": {
+    "bench": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000003"
+      }
+    },
+    "bench_t2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000004"
+      }
+    },
+    "squat": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000001"
+      }
+    },
+    "squat_t2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000002"
+      }
+    },
+    "ohp": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000009"
+      }
+    },
+    "ohp_t2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000016"
+      }
+    },
+    "deadlift": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000006"
+      }
+    },
+    "deadlift_t2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000007"
+      }
+    },
+    "pulldown": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000028"
+      }
+    },
+    "pushdown": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000002d"
+      }
+    },
+    "leg_press": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000025"
+      }
+    },
+    "leg_curl": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000027"
+      }
+    },
+    "lateral": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000017"
+      }
+    },
+    "face_pull": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000002e"
+      }
+    },
+    "cable_row": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000029"
+      }
+    },
+    "calf": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000002f"
+      }
+    }
+  },
+  "progression": {
+    "bench": {
+      "type": "CYCLE",
+      "incrementKg": 2.5,
+      "deloadPercent": 0.05
+    },
+    "bench_t2": {
+      "type": "CYCLE",
+      "incrementKg": 2.5,
+      "deloadPercent": 0.05
+    },
+    "squat": {
+      "type": "CYCLE",
+      "incrementKg": 5,
+      "deloadPercent": 0.05
+    },
+    "squat_t2": {
+      "type": "CYCLE",
+      "incrementKg": 5,
+      "deloadPercent": 0.05
+    },
+    "ohp": {
+      "type": "CYCLE",
+      "incrementKg": 2.5,
+      "deloadPercent": 0.05
+    },
+    "ohp_t2": {
+      "type": "CYCLE",
+      "incrementKg": 2.5,
+      "deloadPercent": 0.05
+    },
+    "deadlift": {
+      "type": "CYCLE",
+      "incrementKg": 5,
+      "deloadPercent": 0.05
+    },
+    "deadlift_t2": {
+      "type": "CYCLE",
+      "incrementKg": 5,
+      "deloadPercent": 0.05
+    },
+    "pulldown": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "pushdown": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "leg_press": {
+      "type": "DOUBLE",
+      "incrementKg": 5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "leg_curl": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "lateral": {
+      "type": "DOUBLE",
+      "incrementKg": 1,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "face_pull": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "cable_row": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "calf": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    }
+  },
+  "days": [
+    {
+      "key": "D1",
+      "name": "벤치 + 인클라인",
+      "exercises": [
+        {
+          "lift": "bench",
+          "restSec": 180,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.8
+              },
+              "weekly": [
+                {
+                  "count": 3,
+                  "reps": 5,
+                  "value": 0.8
+                },
+                {
+                  "count": 3,
+                  "reps": 3,
+                  "value": 0.85
+                },
+                {
+                  "count": 3,
+                  "reps": 4,
+                  "value": 0.825
+                },
+                {
+                  "count": 5,
+                  "reps": 2,
+                  "value": 0.875
+                },
+                {
+                  "count": 2,
+                  "reps": 4,
+                  "value": 0.85
+                },
+                {
+                  "count": 4,
+                  "reps": 2,
+                  "value": 0.9
+                },
+                {
+                  "count": 3,
+                  "reps": 3,
+                  "value": 0.875
+                },
+                {
+                  "count": 8,
+                  "reps": 1,
+                  "value": 0.925
+                },
+                {
+                  "count": 2,
+                  "reps": 2,
+                  "value": 0.9
+                },
+                {
+                  "count": 1,
+                  "reps": 1,
+                  "value": 0.95
+                },
+                {
+                  "count": 3,
+                  "reps": 2,
+                  "value": 0.85
+                },
+                {
+                  "count": 1,
+                  "reps": 1,
+                  "value": 0.95
+                }
+              ]
+            },
+            {
+              "count": 1,
+              "reps": 3,
+              "amrap": true,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              },
+              "weekly": [
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 3,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 1,
+                  "amrap": true,
+                  "value": 0.925
+                },
+                {
+                  "count": 1,
+                  "reps": 2,
+                  "amrap": true,
+                  "value": 0.9
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 2,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "lift": "bench_t2",
+          "restSec": 120,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.68
+              },
+              "weekly": [
+                {
+                  "count": 5,
+                  "reps": 6,
+                  "value": 0.68
+                },
+                {
+                  "count": 5,
+                  "reps": 5,
+                  "value": 0.72
+                },
+                {
+                  "count": 4,
+                  "reps": 4,
+                  "value": 0.76
+                },
+                {
+                  "count": 4,
+                  "reps": 6,
+                  "value": 0.7
+                },
+                {
+                  "count": 4,
+                  "reps": 5,
+                  "value": 0.74
+                },
+                {
+                  "count": 3,
+                  "reps": 4,
+                  "value": 0.78
+                },
+                {
+                  "count": 3,
+                  "reps": 6,
+                  "value": 0.72
+                },
+                {
+                  "count": 3,
+                  "reps": 5,
+                  "value": 0.76
+                },
+                {
+                  "count": 2,
+                  "reps": 4,
+                  "value": 0.8
+                },
+                {
+                  "count": 4,
+                  "reps": 3,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            },
+            {
+              "count": 1,
+              "reps": 4,
+              "amrap": true,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.76
+              },
+              "weekly": [
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.76
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.78
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.8
+                },
+                {
+                  "count": 1,
+                  "reps": 3,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "lift": "pulldown",
+          "restSec": 75,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 10,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              },
+              "weekly": [
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 2
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "lift": "pushdown",
+          "restSec": 75,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 10,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              },
+              "weekly": [
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 2
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "D2",
+      "name": "스쿼트 + 프런트",
+      "exercises": [
+        {
+          "lift": "squat",
+          "restSec": 180,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.8
+              },
+              "weekly": [
+                {
+                  "count": 3,
+                  "reps": 5,
+                  "value": 0.8
+                },
+                {
+                  "count": 3,
+                  "reps": 3,
+                  "value": 0.85
+                },
+                {
+                  "count": 3,
+                  "reps": 4,
+                  "value": 0.825
+                },
+                {
+                  "count": 5,
+                  "reps": 2,
+                  "value": 0.875
+                },
+                {
+                  "count": 2,
+                  "reps": 4,
+                  "value": 0.85
+                },
+                {
+                  "count": 4,
+                  "reps": 2,
+                  "value": 0.9
+                },
+                {
+                  "count": 3,
+                  "reps": 3,
+                  "value": 0.875
+                },
+                {
+                  "count": 8,
+                  "reps": 1,
+                  "value": 0.925
+                },
+                {
+                  "count": 2,
+                  "reps": 2,
+                  "value": 0.9
+                },
+                {
+                  "count": 1,
+                  "reps": 1,
+                  "value": 0.95
+                },
+                {
+                  "count": 3,
+                  "reps": 2,
+                  "value": 0.85
+                },
+                {
+                  "count": 1,
+                  "reps": 1,
+                  "value": 0.95
+                }
+              ]
+            },
+            {
+              "count": 1,
+              "reps": 3,
+              "amrap": true,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              },
+              "weekly": [
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 3,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 1,
+                  "amrap": true,
+                  "value": 0.925
+                },
+                {
+                  "count": 1,
+                  "reps": 2,
+                  "amrap": true,
+                  "value": 0.9
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 2,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "lift": "squat_t2",
+          "restSec": 120,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.68
+              },
+              "weekly": [
+                {
+                  "count": 5,
+                  "reps": 6,
+                  "value": 0.68
+                },
+                {
+                  "count": 5,
+                  "reps": 5,
+                  "value": 0.72
+                },
+                {
+                  "count": 4,
+                  "reps": 4,
+                  "value": 0.76
+                },
+                {
+                  "count": 4,
+                  "reps": 6,
+                  "value": 0.7
+                },
+                {
+                  "count": 4,
+                  "reps": 5,
+                  "value": 0.74
+                },
+                {
+                  "count": 3,
+                  "reps": 4,
+                  "value": 0.78
+                },
+                {
+                  "count": 3,
+                  "reps": 6,
+                  "value": 0.72
+                },
+                {
+                  "count": 3,
+                  "reps": 5,
+                  "value": 0.76
+                },
+                {
+                  "count": 2,
+                  "reps": 4,
+                  "value": 0.8
+                },
+                {
+                  "count": 4,
+                  "reps": 3,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            },
+            {
+              "count": 1,
+              "reps": 4,
+              "amrap": true,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.76
+              },
+              "weekly": [
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.76
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.78
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.8
+                },
+                {
+                  "count": 1,
+                  "reps": 3,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "lift": "leg_press",
+          "restSec": 75,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 10,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              },
+              "weekly": [
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 2
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "lift": "leg_curl",
+          "restSec": 75,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 10,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              },
+              "weekly": [
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 2
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "D3",
+      "name": "오버헤드 프레스 + 덤벨",
+      "exercises": [
+        {
+          "lift": "ohp",
+          "restSec": 180,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.8
+              },
+              "weekly": [
+                {
+                  "count": 3,
+                  "reps": 5,
+                  "value": 0.8
+                },
+                {
+                  "count": 3,
+                  "reps": 3,
+                  "value": 0.85
+                },
+                {
+                  "count": 3,
+                  "reps": 4,
+                  "value": 0.825
+                },
+                {
+                  "count": 5,
+                  "reps": 2,
+                  "value": 0.875
+                },
+                {
+                  "count": 2,
+                  "reps": 4,
+                  "value": 0.85
+                },
+                {
+                  "count": 4,
+                  "reps": 2,
+                  "value": 0.9
+                },
+                {
+                  "count": 3,
+                  "reps": 3,
+                  "value": 0.875
+                },
+                {
+                  "count": 8,
+                  "reps": 1,
+                  "value": 0.925
+                },
+                {
+                  "count": 2,
+                  "reps": 2,
+                  "value": 0.9
+                },
+                {
+                  "count": 1,
+                  "reps": 1,
+                  "value": 0.95
+                },
+                {
+                  "count": 3,
+                  "reps": 2,
+                  "value": 0.85
+                },
+                {
+                  "count": 1,
+                  "reps": 1,
+                  "value": 0.95
+                }
+              ]
+            },
+            {
+              "count": 1,
+              "reps": 3,
+              "amrap": true,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              },
+              "weekly": [
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 3,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 1,
+                  "amrap": true,
+                  "value": 0.925
+                },
+                {
+                  "count": 1,
+                  "reps": 2,
+                  "amrap": true,
+                  "value": 0.9
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 2,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "lift": "ohp_t2",
+          "restSec": 120,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.68
+              },
+              "weekly": [
+                {
+                  "count": 5,
+                  "reps": 6,
+                  "value": 0.68
+                },
+                {
+                  "count": 5,
+                  "reps": 5,
+                  "value": 0.72
+                },
+                {
+                  "count": 4,
+                  "reps": 4,
+                  "value": 0.76
+                },
+                {
+                  "count": 4,
+                  "reps": 6,
+                  "value": 0.7
+                },
+                {
+                  "count": 4,
+                  "reps": 5,
+                  "value": 0.74
+                },
+                {
+                  "count": 3,
+                  "reps": 4,
+                  "value": 0.78
+                },
+                {
+                  "count": 3,
+                  "reps": 6,
+                  "value": 0.72
+                },
+                {
+                  "count": 3,
+                  "reps": 5,
+                  "value": 0.76
+                },
+                {
+                  "count": 2,
+                  "reps": 4,
+                  "value": 0.8
+                },
+                {
+                  "count": 4,
+                  "reps": 3,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            },
+            {
+              "count": 1,
+              "reps": 4,
+              "amrap": true,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.76
+              },
+              "weekly": [
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.76
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.78
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.8
+                },
+                {
+                  "count": 1,
+                  "reps": 3,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "lift": "lateral",
+          "restSec": 75,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 10,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              },
+              "weekly": [
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 2
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "lift": "face_pull",
+          "restSec": 75,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 10,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              },
+              "weekly": [
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 2
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "D4",
+      "name": "데드리프트 + RDL",
+      "exercises": [
+        {
+          "lift": "deadlift",
+          "restSec": 180,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.8
+              },
+              "weekly": [
+                {
+                  "count": 3,
+                  "reps": 5,
+                  "value": 0.8
+                },
+                {
+                  "count": 3,
+                  "reps": 3,
+                  "value": 0.85
+                },
+                {
+                  "count": 3,
+                  "reps": 4,
+                  "value": 0.825
+                },
+                {
+                  "count": 5,
+                  "reps": 2,
+                  "value": 0.875
+                },
+                {
+                  "count": 2,
+                  "reps": 4,
+                  "value": 0.85
+                },
+                {
+                  "count": 4,
+                  "reps": 2,
+                  "value": 0.9
+                },
+                {
+                  "count": 3,
+                  "reps": 3,
+                  "value": 0.875
+                },
+                {
+                  "count": 8,
+                  "reps": 1,
+                  "value": 0.925
+                },
+                {
+                  "count": 2,
+                  "reps": 2,
+                  "value": 0.9
+                },
+                {
+                  "count": 1,
+                  "reps": 1,
+                  "value": 0.95
+                },
+                {
+                  "count": 3,
+                  "reps": 2,
+                  "value": 0.85
+                },
+                {
+                  "count": 1,
+                  "reps": 1,
+                  "value": 0.95
+                }
+              ]
+            },
+            {
+              "count": 1,
+              "reps": 3,
+              "amrap": true,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              },
+              "weekly": [
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 3,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 1,
+                  "amrap": true,
+                  "value": 0.925
+                },
+                {
+                  "count": 1,
+                  "reps": 2,
+                  "amrap": true,
+                  "value": 0.9
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 2,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "lift": "deadlift_t2",
+          "restSec": 120,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.68
+              },
+              "weekly": [
+                {
+                  "count": 5,
+                  "reps": 6,
+                  "value": 0.68
+                },
+                {
+                  "count": 5,
+                  "reps": 5,
+                  "value": 0.72
+                },
+                {
+                  "count": 4,
+                  "reps": 4,
+                  "value": 0.76
+                },
+                {
+                  "count": 4,
+                  "reps": 6,
+                  "value": 0.7
+                },
+                {
+                  "count": 4,
+                  "reps": 5,
+                  "value": 0.74
+                },
+                {
+                  "count": 3,
+                  "reps": 4,
+                  "value": 0.78
+                },
+                {
+                  "count": 3,
+                  "reps": 6,
+                  "value": 0.72
+                },
+                {
+                  "count": 3,
+                  "reps": 5,
+                  "value": 0.76
+                },
+                {
+                  "count": 2,
+                  "reps": 4,
+                  "value": 0.8
+                },
+                {
+                  "count": 4,
+                  "reps": 3,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            },
+            {
+              "count": 1,
+              "reps": 4,
+              "amrap": true,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.76
+              },
+              "weekly": [
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.76
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.78
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "count": 1,
+                  "reps": 4,
+                  "amrap": true,
+                  "value": 0.8
+                },
+                {
+                  "count": 1,
+                  "reps": 3,
+                  "amrap": true,
+                  "value": 0.85
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "lift": "cable_row",
+          "restSec": 75,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 10,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              },
+              "weekly": [
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 2
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "lift": "calf",
+          "restSec": 75,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 10,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              },
+              "weekly": [
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 5
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 4
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 3
+                },
+                {
+                  "count": 2
+                },
+                {
+                  "skip": true
+                },
+                {
+                  "skip": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
