@@ -123,6 +123,14 @@ private val OAuthTrace = createApplicationPlugin("OAuthTrace") {
         q["redirect_uri"]?.let { parts += "redirect_host=" + runCatching { java.net.URI(it).host }.getOrNull() }
         q["scope"]?.let { parts += "scope=" + it.take(80) }
         q["resource"]?.let { parts += "resource=" + it.take(120) }
+        q["client_id"]?.takeIf { com.fitlog.oauth.isCimdClientId(it) }?.let {
+            parts += "cimd=1"
+            parts += "cimd_host=" + runCatching { java.net.URI(it).host }.getOrNull()
+        }
+        q["client_id"]?.takeIf { com.fitlog.oauth.isCimdClientId(it) }?.let {
+            parts += "cimd=1"
+            parts += "cimd_host=" + runCatching { java.net.URI(it).host }.getOrNull()
+        }
         q["code_challenge_method"]?.let { parts += "ccm=$it" }
         q["response_type"]?.let { parts += "rt=$it" }
         q["error"]?.let { parts += "error=" + it.take(60) }

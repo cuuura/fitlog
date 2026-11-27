@@ -744,10 +744,10 @@ def plan_to_session(plan, tz="Asia/Seoul", instance_id=None, started=None):
         for si, s in enumerate(e["sets"]):
             t = t + timedelta(minutes=3)
             sets.append({"id": str(uuid.uuid4()), "position": si, "isWarmup": s.get("isWarmup", False),
-                         "weightKg": s["targetWeightKg"], "reps": s["targetReps"],
+                         "weightKg": s.get("targetWeightKg"), "reps": s["targetReps"],
                          "completedAt": t.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
                          "plannedSetKey": s["plannedSetKey"], "targetReps": s["targetReps"],
-                         "targetWeightKg": s["targetWeightKg"], "isAmrap": s["isAmrap"]})
+                         "targetWeightKg": s.get("targetWeightKg"), "isAmrap": s["isAmrap"]})
         exs.append({"id": str(uuid.uuid4()), "exerciseId": e["exerciseId"], "position": ei, "liftKey": e["key"],
                     "accessory": e["accessory"], "sets": sets})
     return {"id": str(uuid.uuid4()), "startedAt": started.strftime("%Y-%m-%dT%H:%M:%S.000Z"),
@@ -827,7 +827,7 @@ def c_app_flow(R):
         expect_status(r, 201, "working 없이 시작(DOUBLE 은 선택)")
         p0 = api(R, "GET", f"/v1/program-instances/{iid}/plan?count=1", tok()).json()[0]
         sets0 = p0["exercises"][0]["sets"]
-        expect(all(x["targetWeightKg"] is None and x["targetReps"] == 8 and x.get("targetRepsMax") == 12 and x.get("restSec") == 90 for x in sets0),
+        expect(all(x.get("targetWeightKg") is None and x["targetReps"] == 8 and x.get("targetRepsMax") == 12 and x.get("restSec") == 90 for x in sets0),
                f"첫 계획에 무게 없음·8~12·휴식 90 기대: {sets0}")
         s = plan_to_session(p0, instance_id=iid)
         for e in s["exercises"]:
@@ -837,7 +837,7 @@ def c_app_flow(R):
         inst = api(R, "GET", f"/v1/program-instances/{iid}", tok()).json()
         expect(inst["state"]["working"].get("press") == 40.0, f"첫 기록의 최소 무게로 working 확정 기대: {inst['state']['working']}")
         p1 = api(R, "GET", f"/v1/program-instances/{iid}/plan?count=1", tok()).json()[0]
-        expect(all(x["targetWeightKg"] == 40.0 for x in p1["exercises"][0]["sets"]), "다음 계획 무게가 40 이어야 함")
+        expect(all(x.get("targetWeightKg") == 40.0 for x in p1["exercises"][0]["sets"]), "다음 계획 무게가 40 이어야 함")
     R.run("app.double_progression_without_start_weight", double_progression)
 
     def sync_flow():

@@ -13,3 +13,10 @@ fun interface GoogleIdTokenVerifier {
 fun interface GoogleCodeExchanger {
     fun exchange(code: String, redirectUri: String): String?
 }
+
+/** CIMD(Client ID Metadata Document) 가져오기. 문서 본문(JSON 문자열)을 돌려주고, 실패하면 [CimdFetchException] */
+fun interface ClientMetadataFetcher {
+    fun fetch(url: String): String
+}
+
+class CimdFetchException(message: String) : Exception(message)

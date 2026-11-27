@@ -69,6 +69,8 @@ data class AppConfig(
     val passwordLogin: PasswordLoginConfig = PasswordLoginConfig(),
     /** /health/mcp-trace 노출 여부(env MCP_TRACE). null 이면 비밀번호 로그인이 켜진 테스트 서버에서만 켠다 */
     val mcpTrace: Boolean? = null,
+    /** null 이면 oauth 패키지의 실제 구현(JDK HttpClient, SSRF 방어 포함). 테스트에서 가짜 주입용 */
+    val cimdFetcher: ClientMetadataFetcher? = null,
 ) {
     /** /mcp 요청 추적 기록을 쌓고 /health/mcp-trace 로 보여줄지 */
     val mcpTraceEnabled: Boolean get() = mcpTrace ?: passwordLogin.enabled
