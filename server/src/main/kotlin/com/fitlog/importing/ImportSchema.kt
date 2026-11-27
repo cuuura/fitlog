@@ -1,6 +1,10 @@
 package com.fitlog.importing
 
 import com.fitlog.core.ErrorDetail
+import com.fitlog.scheduled.ScheduledItem
+import com.fitlog.scheduled.ScheduledSet
+import com.fitlog.scheduled.ScheduledWorkout
+import com.fitlog.scheduled.validateScheduled
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -50,7 +54,14 @@ internal class PSessionEx(val ptr: String, val ref: PExRef, val note: String?, v
 
 internal class PSession(
     val ptr: String, val id: UUID?, val startedAt: Instant, val endedAt: Instant?, val tz: String?, val note: String?,
-    val instanceId: UUID?, val planSeq: Int?, val exercises: List<PSessionEx>,
+    val instanceId: UUID?, val planSeq: Int?, val exercises: List<PSessionEx>, val scheduledWorkoutId: UUID? = null,
+)
+
+internal class PSchedItem(val ptr: String, val ref: PExRef, val note: String?, val restSec: Int?, val sets: List<ScheduledSet>)
+
+internal class PScheduled(
+    val ptr: String, val id: UUID?, val plannedDate: LocalDate, val title: String, val note: String?, val tz: String?,
+    val items: List<PSchedItem>,
 )
 
 internal class PBody(val ptr: String, val id: UUID?, val measuredAt: Instant, val weightKg: Double)
@@ -62,6 +73,7 @@ internal class ParsedBundle(
     val starts: List<PStart>,
     val sessions: List<PSession>,
     val bodies: List<PBody>,
+    val scheduled: List<PScheduled> = emptyList(),
 )
 
 internal val EXERCISE_TYPE_NAMES = listOf("BARBELL", "DUMBBELL", "MACHINE", "BODYWEIGHT", "BAND", "CARDIO")
@@ -82,6 +94,7 @@ internal object ImportSchema {
     const val MAX_SETS_TOTAL = 5000
     const val MAX_EXERCISES = 100
     const val MAX_BODIES = 1000
+    const val MAX_SCHEDULED = 30
 
     fun parse(root: JsonElement, errors: MutableList<ErrorDetail>): ParsedBundle = Run(errors).bundle(root)
 }
@@ -202,7 +215,7 @@ private class Run(val errors: MutableList<ErrorDetail>) {
 
     fun bundle(root: JsonElement): ParsedBundle {
         val o = obj(root, "") ?: return ParsedBundle(null, emptyList(), emptyList(), emptyList(), emptyList(), emptyList())
-        keys(o, "", setOf("schemaVersion", "note", "exercises", "programs", "startPrograms", "sessions", "bodyMeasurements"), setOf("schemaVersion"))
+        keys(o, "", setOf("schemaVersion", "note", "exercises", "programs", "startPrograms", "sessions", "bodyMeasurements", "scheduledWorkouts"), setOf("schemaVersion"))
         if ("schemaVersion" in o) {
             val b = decimal(o["schemaVersion"])
             if (b == null || b.compareTo(BigDecimal.ONE) != 0) err("/schemaVersion", "must be 1")
@@ -213,9 +226,10 @@ private class Run(val errors: MutableList<ErrorDetail>) {
         val starts = arr(o, "startPrograms", "", 0, ImportSchema.MAX_STARTS)?.mapIndexedNotNull { i, el -> start(el, "/startPrograms/$i") }.orEmpty()
         val sessions = arr(o, "sessions", "", 0, ImportSchema.MAX_SESSIONS)?.mapIndexedNotNull { i, el -> session(el, "/sessions/$i") }.orEmpty()
         val bodies = arr(o, "bodyMeasurements", "", 0, ImportSchema.MAX_BODIES)?.mapIndexedNotNull { i, el -> body(el, "/bodyMeasurements/$i") }.orEmpty()
+        val scheduled = arr(o, "scheduledWorkouts", "", 0, ImportSchema.MAX_SCHEDULED)?.mapIndexedNotNull { i, el -> scheduled(el, "/scheduledWorkouts/$i") }.orEmpty()
         val sets = sessions.sumOf { s -> s.exercises.sumOf { it.sets.size } }
         if (sets > ImportSchema.MAX_SETS_TOTAL) err("/sessions", "too many sets (max ${ImportSchema.MAX_SETS_TOTAL} per bundle)")
-        return ParsedBundle(note, exercises, programs, starts, sessions, bodies)
+        return ParsedBundle(note, exercises, programs, starts, sessions, bodies, scheduled)
     }
 
     fun exercise(el: JsonElement, path: String): PExercise? {
@@ -319,7 +333,7 @@ private class Run(val errors: MutableList<ErrorDetail>) {
     fun session(el: JsonElement, path: String): PSession? {
         val o = obj(el, path) ?: return null
         val before = errors.size
-        keys(o, path, setOf("id", "startedAt", "endedAt", "tz", "note", "program", "exercises"), setOf("startedAt", "exercises"))
+        keys(o, path, setOf("id", "startedAt", "endedAt", "tz", "note", "program", "exercises", "scheduledWorkoutId"), setOf("startedAt", "exercises"))
         val id = uuid(o, "id", path)
         val started = dateTime(o, "startedAt", path)
         val ended = dateTime(o, "endedAt", path)
@@ -336,9 +350,10 @@ private class Run(val errors: MutableList<ErrorDetail>) {
                 planSeq = int(po, "planSeq", pp, min = 0)
             }
         }
+        val scheduledId = uuid(o, "scheduledWorkoutId", path)
         val exs = arr(o, "exercises", path, 1, 30)?.mapIndexedNotNull { i, e -> sessionEx(e, "$path/exercises/$i") }.orEmpty()
         if (errors.size > before || started == null) return null
-        return PSession(path, id, started, ended, tz, note, instanceId, planSeq, exs)
+        return PSession(path, id, started, ended, tz, note, instanceId, planSeq, exs, scheduledId)
     }
 
     private fun sessionEx(el: JsonElement, path: String): PSessionEx? {
@@ -361,6 +376,66 @@ private class Run(val errors: MutableList<ErrorDetail>) {
         val sets = arr(o, "sets", path, 1, 50)?.mapIndexedNotNull { i, s -> set(s, "$path/sets/$i") }.orEmpty()
         if (errors.size > before || ref == null) return null
         return PSessionEx(path, ref!!, note, sets)
+    }
+
+    fun scheduledSet(el: JsonElement, path: String): ScheduledSet? {
+        val o = obj(el, path) ?: return null
+        val before = errors.size
+        keys(o, path, setOf("isWarmup", "targetWeightKg", "targetReps", "targetRepsMax", "targetRir", "targetRpe", "targetDurationSec"), emptySet())
+        val warm = bool(o, "isWarmup", path) ?: false
+        val w = num(o, "targetWeightKg", path, min = 0.0)
+        val reps = int(o, "targetReps", path, min = 0)
+        val max = int(o, "targetRepsMax", path, min = 0)
+        val rir = int(o, "targetRir", path, 0, 10)
+        val rpe = num(o, "targetRpe", path, min = 1.0, max = 10.0)
+        if (rpe != null && (rpe * 2) % 1.0 != 0.0) err("$path/targetRpe", "must be a multiple of 0.5")
+        val dur = int(o, "targetDurationSec", path, min = 0)
+        if (errors.size > before) return null
+        return ScheduledSet(warm, w, reps, max, rir, rpe, dur)
+    }
+
+    private fun scheduledItem(el: JsonElement, path: String): PSchedItem? {
+        val o = obj(el, path) ?: return null
+        val before = errors.size
+        keys(o, path, setOf("exercise", "note", "restSec", "sets"), setOf("exercise", "sets"))
+        var ref: PExRef? = null
+        o["exercise"]?.let { e ->
+            val ep = "$path/exercise"
+            obj(e, ep)?.let { eo ->
+                val k = eo.keys.toSet()
+                when {
+                    k == setOf("id") -> uuid(eo, "id", ep)?.let { ref = PExRef.ById(it) }
+                    k == setOf("name") -> str(eo, "name", ep, 1)?.let { ref = PExRef.ByName(it) }
+                    else -> err(ep, "must have exactly one of 'id' or 'name'")
+                }
+            }
+        }
+        val note = str(o, "note", path)
+        val rest = int(o, "restSec", path, 0, 3600)
+        val sets = arr(o, "sets", path, 1, 50)?.mapIndexedNotNull { i, s -> scheduledSet(s, "$path/sets/$i") }.orEmpty()
+        if (errors.size > before || ref == null) return null
+        return PSchedItem(path, ref!!, note, rest, sets)
+    }
+
+    fun scheduled(el: JsonElement, path: String): PScheduled? {
+        val o = obj(el, path) ?: return null
+        val before = errors.size
+        keys(o, path, setOf("id", "plannedDate", "title", "note", "tz", "items"), setOf("plannedDate", "title", "items"))
+        val id = uuid(o, "id", path)
+        val date = date(o, "plannedDate", path)
+        val title = str(o, "title", path, 1, 100)
+        val note = str(o, "note", path, 0, 1000)
+        val tz = str(o, "tz", path)
+        val items = arr(o, "items", path, 1, 30)?.mapIndexedNotNull { i, e -> scheduledItem(e, "$path/items/$i") }.orEmpty()
+        if (errors.size > before || date == null || title == null) return null
+        // 공용 검증(예: targetRepsMax 는 targetReps 이상이어야 한다). 종목 id 는 아직 모르므로 자리값을 쓴다
+        val probe = ScheduledWorkout(
+            id = UUID(0, 0), plannedDate = date.toString(), title = title, note = note,
+            items = items.map { ScheduledItem(UUID(0, 0), it.note, it.restSec, it.sets) },
+        )
+        validateScheduled(probe, path).forEach { (p, m) -> err(p, m) }
+        if (errors.size > before) return null
+        return PScheduled(path, id, date, title.trim(), note, tz, items)
     }
 
     fun body(el: JsonElement, path: String): PBody? {
