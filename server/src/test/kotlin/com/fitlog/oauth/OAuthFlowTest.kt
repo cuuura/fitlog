@@ -46,7 +46,7 @@ class OAuthFlowTest {
             assertEquals(listOf("code"), j["response_types_supported"]!!.jsonArray.map { it.jsonPrimitive.content })
             assertEquals(listOf("authorization_code", "refresh_token"), j["grant_types_supported"]!!.jsonArray.map { it.jsonPrimitive.content })
             assertEquals(listOf("S256"), j["code_challenge_methods_supported"]!!.jsonArray.map { it.jsonPrimitive.content })
-            assertEquals(listOf("none"), j["token_endpoint_auth_methods_supported"]!!.jsonArray.map { it.jsonPrimitive.content })
+            assertEquals(listOf("none", "client_secret_post", "client_secret_basic"), j["token_endpoint_auth_methods_supported"]!!.jsonArray.map { it.jsonPrimitive.content })
             assertEquals(listOf("fitlog.read", "fitlog.write"), j["scopes_supported"]!!.jsonArray.map { it.jsonPrimitive.content })
         }
     }
@@ -66,7 +66,10 @@ class OAuthFlowTest {
         assertEquals(listOf("authorization_code", "refresh_token"), j["grant_types"]!!.jsonArray.map { it.jsonPrimitive.content })
         assertEquals(listOf("code"), j["response_types"]!!.jsonArray.map { it.jsonPrimitive.content })
 
-        assertEquals(HttpStatusCode.BadRequest, reg("""{"redirect_uris":["https://a.test/cb"]}""").status)
+        // client_name 은 선택: 없으면 기본 이름
+        val noName = reg("""{"redirect_uris":["https://a.test/cb"]}""")
+        assertEquals(HttpStatusCode.Created, noName.status)
+        assertEquals("AI 앱", noName.json()["client_name"]!!.jsonPrimitive.content)
         assertEquals(HttpStatusCode.BadRequest, reg("""{"client_name":"x"}""").status)
         assertEquals(HttpStatusCode.BadRequest, reg("""{"client_name":"x","redirect_uris":[]}""").status)
         val http = reg("""{"client_name":"x","redirect_uris":["http://evil.example/cb"]}""")
@@ -74,8 +77,10 @@ class OAuthFlowTest {
         assertEquals("invalid_redirect_uri", http.json()["error"]!!.jsonPrimitive.content)
         assertEquals(HttpStatusCode.BadRequest, reg("""{"client_name":"x","redirect_uris":["myapp://cb"]}""").status)
         val confidential = reg("""{"client_name":"x","redirect_uris":["https://a.test/cb"],"token_endpoint_auth_method":"client_secret_basic"}""")
-        assertEquals(HttpStatusCode.BadRequest, confidential.status)
-        assertEquals("invalid_client_metadata", confidential.json()["error"]!!.jsonPrimitive.content)
+        // 비밀값 방식 등록도 받는다(ChatGPT 등). 비밀값을 돌려주되 토큰 교환은 PKCE 로 보호
+        assertEquals(HttpStatusCode.Created, confidential.status)
+        assertEquals("client_secret_basic", confidential.json()["token_endpoint_auth_method"]!!.jsonPrimitive.content)
+        assertTrue(confidential.json()["client_secret"]!!.jsonPrimitive.content.isNotEmpty())
         assertEquals(HttpStatusCode.BadRequest, reg("not json").status)
     }
 
@@ -109,7 +114,6 @@ class OAuthFlowTest {
         assertEquals("invalid_request" to "xyz", err(authorizeUrl(cid, ch, method = "plain")))
         assertEquals("invalid_request" to "xyz", err(authorizeUrl(cid, ch, method = null)))
         assertEquals("invalid_target" to "xyz", err(authorizeUrl(cid, ch, resource = "https://other.test/mcp")))
-        assertEquals("invalid_scope" to "xyz", err(authorizeUrl(cid, ch, scope = "admin")))
         assertEquals("unsupported_response_type" to "xyz", err(authorizeUrl(cid, ch).replace("response_type=code", "response_type=token")))
         // resource 가 맞으면 Google 로 간다
         val good = c.get(authorizeUrl(cid, ch, resource = "$TEST_BASE/mcp"))

@@ -82,7 +82,8 @@ private fun parseScopes(raw: String?): List<String>? {
     val req = raw?.split(' ', '+')?.filter { it.isNotBlank() }.orEmpty()
     if (req.isEmpty()) return SUPPORTED_SCOPES
     val known = req.filter { it in SUPPORTED_SCOPES }
-    if (known.isEmpty()) return null
+    // 모르는 범위(openid 등)만 요청한 클라이언트도 막지 않고 기본 범위로 진행한다. 실제 부여는 동의 화면에서 정한다
+    if (known.isEmpty()) return SUPPORTED_SCOPES
     return (listOf(SCOPE_READ) + known).distinct() // 쓰기는 읽기를 포함한다
 }
 
@@ -130,7 +131,9 @@ fun Route.oauthRoutes(config: AppConfig) {
         putJsonArray("response_types_supported") { add(JsonPrimitive("code")) }
         putJsonArray("grant_types_supported") { add(JsonPrimitive("authorization_code")); add(JsonPrimitive("refresh_token")) }
         putJsonArray("code_challenge_methods_supported") { add(JsonPrimitive("S256")) }
-        putJsonArray("token_endpoint_auth_methods_supported") { add(JsonPrimitive("none")) }
+        putJsonArray("token_endpoint_auth_methods_supported") {
+            listOf("none", "client_secret_post", "client_secret_basic").forEach { add(JsonPrimitive(it)) }
+        }
         putJsonArray("scopes_supported") { SUPPORTED_SCOPES.forEach { add(JsonPrimitive(it)) } }
     }
     for (p in listOf("/.well-known/oauth-protected-resource", "/.well-known/oauth-protected-resource/{path...}")) {
@@ -148,10 +151,9 @@ fun Route.oauthRoutes(config: AppConfig) {
             null
         }
         if (body == null) return@post call.oauthError(HttpStatusCode.BadRequest, "invalid_client_metadata", "body must be a JSON object")
-        val name = (body["client_name"] as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim().orEmpty()
-        if (name.isEmpty() || name.length > 100) {
-            return@post call.oauthError(HttpStatusCode.BadRequest, "invalid_client_metadata", "client_name is required (1..100 chars)")
-        }
+        // client_name 은 선택(RFC 7591). 없으면 기본 이름, 길면 자른다
+        val name = (body["client_name"] as? JsonPrimitive)?.takeIf { it.isString }?.content?.trim()
+            ?.takeIf { it.isNotEmpty() }?.take(100) ?: "AI 앱"
         val uris = (body["redirect_uris"] as? JsonArray)?.map { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content }
         if (uris.isNullOrEmpty() || uris.size > 10 || uris.any { it == null || !validRedirectUri(it) }) {
             return@post call.oauthError(
@@ -159,10 +161,10 @@ fun Route.oauthRoutes(config: AppConfig) {
                 "redirect_uris must be 1..10 URIs: https, or http on localhost/127.0.0.1, without fragment",
             )
         }
-        val method = (body["token_endpoint_auth_method"] as? JsonPrimitive)?.contentOrNull
-        if (method != null && method != "none") {
-            return@post call.oauthError(HttpStatusCode.BadRequest, "invalid_client_metadata", "only public clients (token_endpoint_auth_method=none) are supported")
-        }
+        // 일부 클라이언트(ChatGPT 등)는 client_secret_post/basic 으로 등록한다. 거절하면 연결이 아예 안 되므로
+        // 비밀값을 발급해 돌려주되, 보호는 PKCE·등록된 redirect_uri 로 하고 토큰 엔드포인트에서 비밀값은 검사하지 않는다
+        val requestedMethod = (body["token_endpoint_auth_method"] as? JsonPrimitive)?.contentOrNull
+        val method = if (requestedMethod == "client_secret_post" || requestedMethod == "client_secret_basic") requestedMethod else "none"
         val clientId = newSecret("fitlog_").take(40)
         val now = Times.now()
         dbQuery {
@@ -181,7 +183,11 @@ fun Route.oauthRoutes(config: AppConfig) {
                 put("client_id_issued_at", now.epochSecond)
                 put("client_name", name)
                 putJsonArray("redirect_uris") { uris.filterNotNull().distinct().forEach { add(JsonPrimitive(it)) } }
-                put("token_endpoint_auth_method", "none")
+                put("token_endpoint_auth_method", method)
+                if (method != "none") {
+                    put("client_secret", newSecret("fitlogs_"))
+                    put("client_secret_expires_at", 0)
+                }
                 putJsonArray("grant_types") { add(JsonPrimitive("authorization_code")); add(JsonPrimitive("refresh_token")) }
                 putJsonArray("response_types") { add(JsonPrimitive("code")) }
             },
