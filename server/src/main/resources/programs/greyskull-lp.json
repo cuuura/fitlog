@@ -1,0 +1,250 @@
+{
+  "schemaVersion": 1,
+  "name": "초보 AMRAP 선형 A/B",
+  "description": "A/B를 번갈아 주 3회, 메인 종목은 5·5회 두 세트에 마지막 세트를 최대 반복(5회 이상)으로 합니다. 마지막 세트가 5회 이상이면 매 회차 증량(상체 +1.25kg, 하체 +2.5kg)하고 10회 이상이면 두 배로 올리며, 5회 미만이면 10% 낮춥니다. 판정은 마지막 AMRAP 세트만 보므로 앞 두 세트 실패는 반영되지 않고, 앱에서는 트레이닝 맥스 칸이 곧 작업 무게입니다. 흔히 '그레이스컬 LP'로 알려진 구성을 참고했습니다.",
+  "tmPercent": 0.8,
+  "workingPercent": 0.8,
+  "roundingKg": 1.25,
+  "lifts": {
+    "ohp": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000009"
+      }
+    },
+    "chin": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000003d"
+      }
+    },
+    "squat": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000001"
+      }
+    },
+    "bench": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000003"
+      }
+    },
+    "row": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000000a"
+      }
+    },
+    "deadlift": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000006"
+      }
+    }
+  },
+  "progression": {
+    "ohp": {
+      "type": "AMRAP_TABLE",
+      "applyAt": "SESSION",
+      "failuresBeforeDeload": 1,
+      "deloadPercent": 0.1,
+      "table": [
+        {
+          "minReps": 0,
+          "maxReps": 4,
+          "incrementKg": 0
+        },
+        {
+          "minReps": 5,
+          "maxReps": 9,
+          "incrementKg": 1.25
+        },
+        {
+          "minReps": 10,
+          "incrementKg": 2.5
+        }
+      ]
+    },
+    "bench": {
+      "type": "AMRAP_TABLE",
+      "applyAt": "SESSION",
+      "failuresBeforeDeload": 1,
+      "deloadPercent": 0.1,
+      "table": [
+        {
+          "minReps": 0,
+          "maxReps": 4,
+          "incrementKg": 0
+        },
+        {
+          "minReps": 5,
+          "maxReps": 9,
+          "incrementKg": 1.25
+        },
+        {
+          "minReps": 10,
+          "incrementKg": 2.5
+        }
+      ]
+    },
+    "squat": {
+      "type": "AMRAP_TABLE",
+      "applyAt": "SESSION",
+      "failuresBeforeDeload": 1,
+      "deloadPercent": 0.1,
+      "table": [
+        {
+          "minReps": 0,
+          "maxReps": 4,
+          "incrementKg": 0
+        },
+        {
+          "minReps": 5,
+          "maxReps": 9,
+          "incrementKg": 2.5
+        },
+        {
+          "minReps": 10,
+          "incrementKg": 5.0
+        }
+      ]
+    },
+    "deadlift": {
+      "type": "AMRAP_TABLE",
+      "applyAt": "SESSION",
+      "failuresBeforeDeload": 1,
+      "deloadPercent": 0.1,
+      "table": [
+        {
+          "minReps": 0,
+          "maxReps": 4,
+          "incrementKg": 0
+        },
+        {
+          "minReps": 5,
+          "maxReps": 9,
+          "incrementKg": 2.5
+        },
+        {
+          "minReps": 10,
+          "incrementKg": 5.0
+        }
+      ]
+    }
+  },
+  "days": [
+    {
+      "key": "A",
+      "name": "Workout A",
+      "exercises": [
+        {
+          "lift": "ohp",
+          "sets": [
+            {
+              "count": 2,
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              },
+              "amrap": true
+            }
+          ]
+        },
+        {
+          "lift": "chin",
+          "sets": [
+            {
+              "count": 3,
+              "reps": 5,
+              "load": {
+                "type": "BODYWEIGHT"
+              }
+            }
+          ],
+          "accessory": true
+        },
+        {
+          "lift": "squat",
+          "sets": [
+            {
+              "count": 2,
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              },
+              "amrap": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "B",
+      "name": "Workout B",
+      "exercises": [
+        {
+          "lift": "bench",
+          "sets": [
+            {
+              "count": 2,
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              },
+              "amrap": true
+            }
+          ]
+        },
+        {
+          "lift": "row",
+          "sets": [
+            {
+              "count": 3,
+              "reps": 5,
+              "load": {
+                "type": "NONE"
+              }
+            }
+          ],
+          "accessory": true
+        },
+        {
+          "lift": "deadlift",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 1.0
+              },
+              "amrap": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

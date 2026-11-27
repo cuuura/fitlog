@@ -1,0 +1,920 @@
+{
+  "schemaVersion": 1,
+  "name": "AMRAP 볼륨 웨이브 6일",
+  "description": "주 6회. 5일 구성에 토요일 스쿼트·스모 볼륨일(스쿼트 8x3, 스모 6x3)을 더한 스쿼트 중심 변형이며, 스쿼트 증량 판정은 화요일 1+ 세트로만 한다. 볼륨일 세트는 AMRAP 없이 정해진 횟수만 수행한다. 흔히 'nSuns 5/3/1 LP 6일'로 알려진 구성을 참고했습니다.",
+  "tmPercent": 0.9,
+  "roundingKg": 2.5,
+  "lifts": {
+    "bench": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000003"
+      }
+    },
+    "ohp": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000009"
+      }
+    },
+    "squat": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000001"
+      }
+    },
+    "deadlift": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000006"
+      }
+    },
+    "sumo": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000008"
+      },
+      "tmFrom": "deadlift"
+    },
+    "cgbp": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000000e"
+      },
+      "tmFrom": "bench"
+    },
+    "front_squat": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000002"
+      },
+      "tmFrom": "squat"
+    },
+    "incline": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000004"
+      },
+      "tmFrom": "bench"
+    }
+  },
+  "progression": {
+    "bench": {
+      "type": "AMRAP_TABLE",
+      "table": [
+        {
+          "minReps": 0,
+          "maxReps": 1,
+          "incrementKg": 0
+        },
+        {
+          "minReps": 2,
+          "maxReps": 3,
+          "incrementKg": 2.5
+        },
+        {
+          "minReps": 4,
+          "maxReps": 5,
+          "incrementKg": 2.5
+        },
+        {
+          "minReps": 6,
+          "incrementKg": 5
+        }
+      ]
+    },
+    "ohp": {
+      "type": "AMRAP_TABLE",
+      "table": [
+        {
+          "minReps": 0,
+          "maxReps": 1,
+          "incrementKg": 0
+        },
+        {
+          "minReps": 2,
+          "maxReps": 3,
+          "incrementKg": 2.5
+        },
+        {
+          "minReps": 4,
+          "maxReps": 5,
+          "incrementKg": 2.5
+        },
+        {
+          "minReps": 6,
+          "incrementKg": 5
+        }
+      ]
+    },
+    "squat": {
+      "type": "AMRAP_TABLE",
+      "table": [
+        {
+          "minReps": 0,
+          "maxReps": 1,
+          "incrementKg": 0
+        },
+        {
+          "minReps": 2,
+          "maxReps": 3,
+          "incrementKg": 2.5
+        },
+        {
+          "minReps": 4,
+          "maxReps": 5,
+          "incrementKg": 5
+        },
+        {
+          "minReps": 6,
+          "incrementKg": 7.5
+        }
+      ]
+    },
+    "deadlift": {
+      "type": "AMRAP_TABLE",
+      "table": [
+        {
+          "minReps": 0,
+          "maxReps": 1,
+          "incrementKg": 0
+        },
+        {
+          "minReps": 2,
+          "maxReps": 3,
+          "incrementKg": 2.5
+        },
+        {
+          "minReps": 4,
+          "maxReps": 5,
+          "incrementKg": 5
+        },
+        {
+          "minReps": 6,
+          "incrementKg": 7.5
+        }
+      ]
+    }
+  },
+  "days": [
+    {
+      "key": "D1",
+      "name": "벤치 볼륨 / OHP",
+      "weekday": "MON",
+      "exercises": [
+        {
+          "lift": "bench",
+          "countsForProgression": false,
+          "sets": [
+            {
+              "reps": 8,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.65
+              }
+            },
+            {
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.75
+              }
+            },
+            {
+              "reps": 4,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              }
+            },
+            {
+              "reps": 4,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              }
+            },
+            {
+              "reps": 4,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.8
+              }
+            },
+            {
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.75
+              }
+            },
+            {
+              "reps": 7,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7
+              }
+            },
+            {
+              "reps": 8,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.65
+              },
+              "amrap": true
+            }
+          ]
+        },
+        {
+          "lift": "ohp",
+          "countsForProgression": false,
+          "sets": [
+            {
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.5
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7
+              }
+            },
+            {
+              "reps": 7,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7
+              }
+            },
+            {
+              "reps": 4,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7
+              }
+            },
+            {
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7
+              }
+            },
+            {
+              "reps": 8,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "D2",
+      "name": "스쿼트 / 스모 데드리프트",
+      "weekday": "TUE",
+      "exercises": [
+        {
+          "lift": "squat",
+          "amrapSet": 2,
+          "sets": [
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.75
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              }
+            },
+            {
+              "reps": 1,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.95
+              },
+              "amrap": true
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.9
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.8
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.75
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.65
+              },
+              "amrap": true
+            }
+          ]
+        },
+        {
+          "lift": "sumo",
+          "accessory": true,
+          "sets": [
+            {
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.5,
+                "of": "deadlift"
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "deadlift"
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7,
+                "of": "deadlift"
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7,
+                "of": "deadlift"
+              }
+            },
+            {
+              "reps": 7,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7,
+                "of": "deadlift"
+              }
+            },
+            {
+              "reps": 4,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7,
+                "of": "deadlift"
+              }
+            },
+            {
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7,
+                "of": "deadlift"
+              }
+            },
+            {
+              "reps": 8,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7,
+                "of": "deadlift"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "D3",
+      "name": "OHP / 인클라인 벤치",
+      "weekday": "WED",
+      "exercises": [
+        {
+          "lift": "ohp",
+          "amrapSet": 2,
+          "sets": [
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.75
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              }
+            },
+            {
+              "reps": 1,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.95
+              },
+              "amrap": true
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.9
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.8
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.75
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.65
+              },
+              "amrap": true
+            }
+          ]
+        },
+        {
+          "lift": "incline",
+          "accessory": true,
+          "sets": [
+            {
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.4,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.5,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 7,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 4,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 8,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "bench"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "D4",
+      "name": "데드리프트 / 프런트 스쿼트",
+      "weekday": "THU",
+      "exercises": [
+        {
+          "lift": "deadlift",
+          "amrapSet": 2,
+          "sets": [
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.75
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              }
+            },
+            {
+              "reps": 1,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.95
+              },
+              "amrap": true
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.9
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.8
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.75
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.65
+              },
+              "amrap": true
+            }
+          ]
+        },
+        {
+          "lift": "front_squat",
+          "accessory": true,
+          "sets": [
+            {
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.35,
+                "of": "squat"
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.45,
+                "of": "squat"
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.55,
+                "of": "squat"
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.55,
+                "of": "squat"
+              }
+            },
+            {
+              "reps": 7,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.55,
+                "of": "squat"
+              }
+            },
+            {
+              "reps": 4,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.55,
+                "of": "squat"
+              }
+            },
+            {
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.55,
+                "of": "squat"
+              }
+            },
+            {
+              "reps": 8,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.55,
+                "of": "squat"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "D5",
+      "name": "벤치 1+ / 클로즈그립",
+      "weekday": "FRI",
+      "exercises": [
+        {
+          "lift": "bench",
+          "amrapSet": 2,
+          "sets": [
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.75
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              }
+            },
+            {
+              "reps": 1,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.95
+              },
+              "amrap": true
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.9
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.85
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.8
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.75
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.7
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.65
+              },
+              "amrap": true
+            }
+          ]
+        },
+        {
+          "lift": "cgbp",
+          "accessory": true,
+          "sets": [
+            {
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.4,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.5,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 5,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 7,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 4,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 6,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "bench"
+              }
+            },
+            {
+              "reps": 8,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.6,
+                "of": "bench"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "D6",
+      "name": "스쿼트 볼륨 / 스모 볼륨",
+      "weekday": "SAT",
+      "exercises": [
+        {
+          "lift": "squat",
+          "countsForProgression": false,
+          "sets": [
+            {
+              "count": 8,
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.8
+              }
+            }
+          ]
+        },
+        {
+          "lift": "sumo",
+          "accessory": true,
+          "sets": [
+            {
+              "count": 6,
+              "reps": 3,
+              "load": {
+                "type": "PERCENT_TM",
+                "value": 0.62,
+                "of": "deadlift"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

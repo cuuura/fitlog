@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "name": "StrongLifts 5x5",
-  "description": "A/B를 번갈아 주 3회. 모든 세트 성공 시 +2.5kg(데드리프트 +5kg), 3회 연속 실패 시 10% 디로드.",
+  "name": "초보 5x5 A/B",
+  "description": "A/B를 번갈아 주 3회. 모든 세트 성공 시 +2.5kg(데드리프트 +5kg), 3회 연속 실패 시 10% 디로드. 흔히 'StrongLifts 5x5'로 알려진 구성을 참고했습니다.",
   "workingPercent": 0.8,
   "roundingKg": 2.5,
   "lifts": {

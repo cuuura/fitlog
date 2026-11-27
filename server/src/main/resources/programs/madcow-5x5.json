@@ -1,0 +1,498 @@
+{
+  "schemaVersion": 1,
+  "name": "주간 램프 5x5 3일",
+  "description": "월·수·금 3일 구성으로 가벼운 세트에서 정점 세트까지 끌어올립니다. 월요일은 5세트 램프의 정점이 작업 무게이고, 수요일은 가벼운 날, 금요일은 4세트 램프 뒤 약간 더 무거운 3회 정점과 8회 백오프 한 세트입니다. 증량은 금요일 판정(수요일에만 하는 오버헤드 프레스·데드리프트는 수요일)에서만 하며, 원래는 주당 약 2.5% 증가지만 여기서는 +2.5kg 고정입니다. 흔히 '매드카우 5x5'로 알려진 구성을 참고했습니다.",
+  "workingPercent": 0.85,
+  "roundingKg": 2.5,
+  "lifts": {
+    "squat": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000001"
+      }
+    },
+    "bench": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000003"
+      }
+    },
+    "row": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000000a"
+      }
+    },
+    "ohp": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000009"
+      }
+    },
+    "deadlift": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000006"
+      }
+    }
+  },
+  "progression": {
+    "squat": {
+      "type": "LINEAR",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 2,
+      "deloadPercent": 0.1
+    },
+    "bench": {
+      "type": "LINEAR",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 2,
+      "deloadPercent": 0.1
+    },
+    "row": {
+      "type": "LINEAR",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 2,
+      "deloadPercent": 0.1
+    },
+    "ohp": {
+      "type": "LINEAR",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 2,
+      "deloadPercent": 0.1
+    },
+    "deadlift": {
+      "type": "LINEAR",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 2,
+      "deloadPercent": 0.1
+    }
+  },
+  "days": [
+    {
+      "key": "MON",
+      "name": "월 - 중강도",
+      "weekday": "MON",
+      "exercises": [
+        {
+          "lift": "squat",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.5
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.625
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.875
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 1.0
+              }
+            }
+          ],
+          "countsForProgression": false
+        },
+        {
+          "lift": "bench",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.5
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.625
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.875
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 1.0
+              }
+            }
+          ],
+          "countsForProgression": false
+        },
+        {
+          "lift": "row",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.5
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.625
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.875
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 1.0
+              }
+            }
+          ],
+          "countsForProgression": false
+        }
+      ]
+    },
+    {
+      "key": "WED",
+      "name": "수 - 가벼운 날",
+      "weekday": "WED",
+      "exercises": [
+        {
+          "lift": "squat",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.5
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.625
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            }
+          ],
+          "countsForProgression": false
+        },
+        {
+          "lift": "ohp",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.625
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.875
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 1.0
+              }
+            }
+          ]
+        },
+        {
+          "lift": "deadlift",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.625
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.875
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 1.0
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "FRI",
+      "name": "금 - 강도일",
+      "weekday": "FRI",
+      "exercises": [
+        {
+          "lift": "squat",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.5
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.625
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.875
+              }
+            },
+            {
+              "count": 1,
+              "reps": 3,
+              "load": {
+                "type": "WORKING",
+                "value": 1.025
+              }
+            },
+            {
+              "count": 1,
+              "reps": 8,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            }
+          ]
+        },
+        {
+          "lift": "bench",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.5
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.625
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.875
+              }
+            },
+            {
+              "count": 1,
+              "reps": 3,
+              "load": {
+                "type": "WORKING",
+                "value": 1.025
+              }
+            },
+            {
+              "count": 1,
+              "reps": 8,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            }
+          ]
+        },
+        {
+          "lift": "row",
+          "sets": [
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.5
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.625
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            },
+            {
+              "count": 1,
+              "reps": 5,
+              "load": {
+                "type": "WORKING",
+                "value": 0.875
+              }
+            },
+            {
+              "count": 1,
+              "reps": 3,
+              "load": {
+                "type": "WORKING",
+                "value": 1.025
+              }
+            },
+            {
+              "count": 1,
+              "reps": 8,
+              "load": {
+                "type": "WORKING",
+                "value": 0.75
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
