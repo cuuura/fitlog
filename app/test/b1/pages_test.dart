@@ -72,6 +72,24 @@ void main() {
       expect(container.read(authControllerProvider), AuthStatus.signedIn);
     });
 
+    testWidgets('기록 후에도 서버가 동의를 요구하면 오류 표시', (tester) async {
+      final a = FakeAdapter((o) {
+        if (o.path == '/v1/me/consents') return json({'kind': 'TERMS', 'version': 'v', 'granted': true}, 201);
+        return json(meJson(required: ['TERMS', 'PRIVACY', 'HEALTH_DATA']));
+      });
+      final container = authContainer(
+        adapter: a,
+        extra: [authControllerProvider.overrideWith(() => FixedAuth(AuthStatus.needsConsent))],
+      );
+      await tester.pumpWidget(containerApp(container, const ConsentPage()));
+      await tester.tap(find.byKey(const Key('consentAll')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('consentContinue')));
+      await tester.pumpAndSettle();
+      expect(container.read(authControllerProvider), AuthStatus.needsConsent);
+      expect(find.byKey(const Key('consentError')), findsOneWidget);
+    });
+
     testWidgets('모두 동의 체크로 한번에 선택', (tester) async {
       final container = authContainer(
         adapter: FakeAdapter((o) => json(meJson())),

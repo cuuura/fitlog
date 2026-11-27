@@ -35,6 +35,8 @@ class _ConsentPageState extends ConsumerState<ConsentPage> {
     });
     try {
       await ref.read(authControllerProvider.notifier).acceptConsents(AppConfig.consentVersion);
+      // 기록은 됐는데 서버가 여전히 동의를 요구하면(버전 불일치 등) 조용히 머물지 말고 오류를 보인다.
+      if (mounted && ref.read(authControllerProvider) == AuthStatus.needsConsent) setState(() => _failed = true);
     } catch (_) {
       if (mounted) setState(() => _failed = true);
     } finally {

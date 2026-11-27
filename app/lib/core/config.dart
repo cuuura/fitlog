@@ -7,5 +7,6 @@ abstract final class AppConfig {
   static const googleServerClientId = String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID');
 
   /// 동의 문서 버전(ACC-6). 문서가 바뀌면 올린다.
-  static const consentVersion = '2026-11-26';
+  /// 서버 CURRENT_CONSENT_VERSION(server/.../account/AccountRoutes.kt)과 같아야 한다. 다르면 동의해도 계속 동의 화면에 남는다.
+  static const consentVersion = '2026-11-01';
 }
