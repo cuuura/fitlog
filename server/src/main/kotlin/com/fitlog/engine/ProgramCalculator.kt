@@ -8,6 +8,9 @@ interface ProgramCalculator {
     /** 이 프로그램이 시작할 때 필요한 입력: 키 → TM 또는 WORKING (tmFrom·of 를 따라 실제 상태 키로 푼 결과) */
     fun requiredInputs(program: ProgramDefinition): Map<String, Needs>
 
+    /** requiredInputs 중 시작 때 비워둘 수 있는 키(DOUBLE 규칙의 working) */
+    fun optionalInputs(program: ProgramDefinition): Set<String> = emptySet()
+
     /** 사용자 입력으로 초기 상태를 만든다. 필요한 키가 빠지면 IllegalArgumentException(메시지에 키) */
     fun initialState(program: ProgramDefinition, tm: Map<String, Double>, working: Map<String, Double>): ProgramState
 

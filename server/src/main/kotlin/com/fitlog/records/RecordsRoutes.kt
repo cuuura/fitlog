@@ -94,6 +94,8 @@ data class SuggestItem(
     val oneRmKg: Double? = null,
     val oneRmSource: String? = null,
     val suggestedKg: Double? = null,
+    /** true 면 시작 때 비워둘 수 있는 키(DOUBLE 규칙). 아니면 생략 */
+    val optional: Boolean? = null,
 )
 
 // ---------------------------------------------------------------- 내부 도구
@@ -293,6 +295,7 @@ fun Route.recordsRoutes(config: AppConfig) {
             }.singleOrNull() ?: notFound("program not found")
             val def = AppJson.decodeFromString<ProgramDefinition>(row[Programs.definition])
             val inputs = ProgramEngine.requiredInputs(def)
+            val optionalKeys = ProgramEngine.optionalInputs(def)
             val formula = userFormula(uid)
             val exerciseIds = inputs.keys.mapNotNull { k -> def.lifts[k]?.exercise?.id?.let { runCatching { UUID.fromString(it) }.getOrNull() } }.distinct()
             val since = Times.now().minus(ESTIMATE_DAYS, ChronoUnit.DAYS)
@@ -315,6 +318,7 @@ fun Route.recordsRoutes(config: AppConfig) {
                         else -> null
                     },
                     suggestedKg = oneRm?.let { BigDecimal.valueOf(it).multiply(BigDecimal.valueOf(percent)).setScale(2, RoundingMode.HALF_UP).toDouble() },
+                    optional = if (key in optionalKeys) true else null,
                 )
             }
         }

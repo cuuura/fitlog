@@ -1,0 +1,225 @@
+{
+  "schemaVersion": 1,
+  "name": "초보 전신 3일",
+  "description": "주 3회 A/B를 번갈아 하는 전신 루틴으로, 하체·밀기·당기기 기본 종목을 3세트 8~12회로 하고 코어를 한 가지 더한다. 모든 세트가 상한(12회)을 채우면 다음 회차에 무게를 올리고, 하한(8회)에 못 미치는 일이 반복되면 무게를 낮춘다. 시작 무게는 비워 두면 첫 운동 기록으로 정해진다.",
+  "category": "BODYBUILDING",
+  "roundingKg": 1.25,
+  "lifts": {
+    "squat": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000001"
+      }
+    },
+    "bench": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000003"
+      }
+    },
+    "pulldown": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000028"
+      }
+    },
+    "crunch": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000042"
+      }
+    },
+    "rdl": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000007"
+      }
+    },
+    "ohp": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000009"
+      }
+    },
+    "row": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000029"
+      }
+    },
+    "leg_raise": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000046"
+      }
+    }
+  },
+  "progression": {
+    "squat": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "bench": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "pulldown": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "rdl": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "ohp": {
+      "type": "DOUBLE",
+      "incrementKg": 1.25,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "row": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "crunch": {
+      "type": "DOUBLE",
+      "incrementKg": 0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "leg_raise": {
+      "type": "DOUBLE",
+      "incrementKg": 0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    }
+  },
+  "days": [
+    {
+      "key": "A",
+      "name": "전신 A",
+      "exercises": [
+        {
+          "lift": "squat",
+          "restSec": 150,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "bench",
+          "restSec": 120,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "pulldown",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "crunch",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 12,
+              "repsMax": 20,
+              "load": {
+                "type": "BODYWEIGHT"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "B",
+      "name": "전신 B",
+      "exercises": [
+        {
+          "lift": "rdl",
+          "restSec": 150,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "ohp",
+          "restSec": 120,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "row",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "leg_raise",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 10,
+              "repsMax": 15,
+              "load": {
+                "type": "BODYWEIGHT"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

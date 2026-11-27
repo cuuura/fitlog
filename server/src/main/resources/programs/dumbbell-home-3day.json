@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 1,
+  "name": "덤벨 홈트 전신 3일",
+  "description": "덤벨과 맨몸만으로 주 3회 A/B를 번갈아 하는 전신 루틴이다. 덤벨 종목은 8~12회(또는 10~15회) 범위로 하고 모든 세트가 상한을 채우면 다음 회차에 무게를 올린다. 푸시업·크런치 같은 맨몸 종목은 무게를 올리지 않고 반복 범위만 기록하며, 상한을 채우면 더 어려운 변형을 직접 고른다.",
+  "category": "BODYWEIGHT",
+  "roundingKg": 1,
+  "lifts": {
+    "goblet": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000001e"
+      }
+    },
+    "db_press": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000013"
+      }
+    },
+    "db_row": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000015"
+      }
+    },
+    "curl": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000019"
+      }
+    },
+    "crunch": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000042"
+      }
+    },
+    "db_rdl": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000022"
+      }
+    },
+    "split": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000001d"
+      }
+    },
+    "db_ohp": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000016"
+      }
+    },
+    "pushup": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000003f"
+      }
+    },
+    "pullover": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000024"
+      }
+    },
+    "lateral": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000017"
+      }
+    }
+  },
+  "progression": {
+    "goblet": {
+      "type": "DOUBLE",
+      "incrementKg": 2,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "db_press": {
+      "type": "DOUBLE",
+      "incrementKg": 2,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "db_row": {
+      "type": "DOUBLE",
+      "incrementKg": 2,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "curl": {
+      "type": "DOUBLE",
+      "incrementKg": 1,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "db_rdl": {
+      "type": "DOUBLE",
+      "incrementKg": 2,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "split": {
+      "type": "DOUBLE",
+      "incrementKg": 2,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "db_ohp": {
+      "type": "DOUBLE",
+      "incrementKg": 1,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "pullover": {
+      "type": "DOUBLE",
+      "incrementKg": 2,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "lateral": {
+      "type": "DOUBLE",
+      "incrementKg": 1,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "crunch": {
+      "type": "DOUBLE",
+      "incrementKg": 0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "pushup": {
+      "type": "DOUBLE",
+      "incrementKg": 0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    }
+  },
+  "days": [
+    {
+      "key": "A",
+      "name": "전신 A",
+      "exercises": [
+        {
+          "lift": "goblet",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "db_press",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "db_row",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "curl",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 2,
+              "reps": 10,
+              "repsMax": 15,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "crunch",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 12,
+              "repsMax": 20,
+              "load": {
+                "type": "BODYWEIGHT"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "B",
+      "name": "전신 B",
+      "exercises": [
+        {
+          "lift": "db_rdl",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "split",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "db_ohp",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "pushup",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 20,
+              "load": {
+                "type": "BODYWEIGHT"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "pullover",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 10,
+              "repsMax": 15,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "lateral",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 12,
+              "repsMax": 15,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

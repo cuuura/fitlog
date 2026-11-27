@@ -592,7 +592,8 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
                     val needs = ProgramEngine.requiredInputs(def)
                     val tm = sp.tm.toMutableMap()
                     val working = sp.working.toMutableMap()
-                    fun missing() = needs.filter { (k, n) -> if (n == Needs.TM) k !in tm else k !in working }
+                    val optionalKeys = ProgramEngine.optionalInputs(def)
+                    fun missing() = needs.filter { (k, n) -> k !in optionalKeys && (if (n == Needs.TM) k !in tm else k !in working) }
                     var skip = false
                     if (missing().isNotEmpty()) {
                         val sugg = suggestValues(def, missing())

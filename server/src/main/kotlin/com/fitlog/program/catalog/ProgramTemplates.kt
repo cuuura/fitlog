@@ -16,7 +16,7 @@ import org.jetbrains.exposed.sql.update
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** 기본 템플릿 13종. 순서·id 는 고정이다(앱·인스턴스가 참조). 새 템플릿은 뒤에 추가 */
+/** 기본 템플릿 20종. 순서·id 는 고정이다(앱·인스턴스가 참조). 새 템플릿은 뒤에 추가 */
 object ProgramTemplates {
     data class Template(val key: String, val id: UUID)
 
@@ -36,6 +36,13 @@ object ProgramTemplates {
         Template("novice-3x5-ab", tid(11)),
         Template("greyskull-lp", tid(12)),
         Template("madcow-5x5", tid(13)),
+        Template("reddit-ppl-6day", tid(14)),
+        Template("ppl-3day", tid(15)),
+        Template("upper-lower-4day", tid(16)),
+        Template("phul-4day", tid(17)),
+        Template("fullbody-3day-beginner", tid(18)),
+        Template("dumbbell-home-3day", tid(19)),
+        Template("rippler-12week", tid(20)),
     )
 
     fun idOf(key: String): UUID = all.first { it.key == key }.id

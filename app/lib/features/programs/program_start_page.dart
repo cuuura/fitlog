@@ -84,7 +84,7 @@ class _StartFormState extends ConsumerState<_StartForm> {
     return Units.fromDisplay(v, ref.read(settingsProvider).weightUnit);
   }
 
-  bool get _complete => widget.view.suggestions.every((s) => _valueKg(s) != null);
+  bool get _complete => widget.view.suggestions.every((s) => s.optional || _valueKg(s) != null);
 
   Future<void> _pickDate() async {
     final d = await showDatePicker(
@@ -111,7 +111,9 @@ class _StartFormState extends ConsumerState<_StartForm> {
     final tm = <String, double>{};
     final working = <String, double>{};
     for (final s in widget.view.suggestions) {
-      (s.needs == SuggestNeeds.TM ? tm : working)[s.key] = _valueKg(s)!;
+      final v = _valueKg(s);
+      if (v == null) continue; // optional 빈칸은 요청에서 뺀다
+      (s.needs == SuggestNeeds.TM ? tm : working)[s.key] = v;
     }
     final l = AppLocalizations.of(context);
     setState(() => _busy = true);
@@ -251,7 +253,9 @@ class _StartFormState extends ConsumerState<_StartForm> {
                             suffixText: unitText,
                             errorText: _errorsFor(s).isNotEmpty
                                 ? _errorsFor(s).join('\n')
-                                : (_submitted && _valueKg(s) == null ? l.programStartRequired : null),
+                                : (_submitted && !s.optional && _valueKg(s) == null ? l.programStartRequired : null),
+                            helperText: s.optional ? l.progStartOptionalHint : null,
+                            helperMaxLines: 2,
                             border: const OutlineInputBorder(),
                           ),
                         ),

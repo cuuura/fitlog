@@ -29,7 +29,7 @@ class TemplatesValidTest {
 
     @Test
     fun all_templates_pass_validation() {
-        assertEquals(13, ProgramTemplates.all.size)
+        assertEquals(20, ProgramTemplates.all.size)
         for (t in ProgramTemplates.all) {
             val r = validate(t.key)
             assertTrue(r is ValidationResult.Valid, "${t.key}: ${(r as? ValidationResult.Invalid)?.errors}")
@@ -49,7 +49,7 @@ class TemplatesValidTest {
     fun template_ids_are_fixed() {
         val ids = ProgramTemplates.all.map { it.id.toString() }
         assertEquals(
-            (1..13).map { "019b76da-5000-7000-8000-%012x".format(it) },
+            (1..20).map { "019b76da-5000-7000-8000-%012x".format(it) },
             ids,
         )
         assertEquals(
@@ -57,6 +57,7 @@ class TemplatesValidTest {
                 "stronglifts-5x5", "nsuns-4day", "wendler-531-bbb", "gzclp", "texas-method",
                 "nsuns-5day", "nsuns-6day", "wendler-531-bbs", "wendler-531-fsl", "wendler-531-beginners",
                 "novice-3x5-ab", "greyskull-lp", "madcow-5x5",
+                "reddit-ppl-6day", "ppl-3day", "upper-lower-4day", "phul-4day", "fullbody-3day-beginner", "dumbbell-home-3day", "rippler-12week",
             ),
             ProgramTemplates.all.map { it.key },
         )

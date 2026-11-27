@@ -64,6 +64,8 @@ String planCellText(WorkoutSet s, WeightUnit unit) {
 }
 
 /// 목표 횟수: "12" 또는 범위 "12~15".
+String repsRangeText(int reps, int? max) => _repsRange(reps, max);
+
 String _repsRange(int reps, int? max) => max == null || max <= reps ? '$reps' : '$reps~$max';
 
 /// 예정 운동 세트 목표 한 줄: "80kg × 12~15 · RIR 3". 목표가 하나도 없으면 null.

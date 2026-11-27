@@ -1,0 +1,612 @@
+{
+  "schemaVersion": 1,
+  "name": "근력·근비대 상하체 4일",
+  "description": "주 4일 상체 근력, 하체 근력, 상체 근비대, 하체 근비대 순으로 합니다. 근력일 메인은 3~5회 범위, 근비대일은 8~12회와 10~15회 범위이며, 모든 세트가 상한을 채우면 증량하는 더블 프로그레션입니다. 근력일 메인도 선형 증량 대신 이 규칙으로 근사했고, 시작 무게는 비워 둘 수 있습니다. 흔히 'PHUL'로 알려진 구성을 참고했습니다.",
+  "category": "POWERBUILDING",
+  "roundingKg": 2.5,
+  "lifts": {
+    "bench": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000003"
+      }
+    },
+    "incline_db": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000014"
+      }
+    },
+    "row": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000000a"
+      }
+    },
+    "pulldown": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000028"
+      }
+    },
+    "ohp": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000009"
+      }
+    },
+    "curl": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000000c"
+      }
+    },
+    "skull": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000012"
+      }
+    },
+    "squat": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000001"
+      }
+    },
+    "deadlift": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000006"
+      }
+    },
+    "leg_press": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000025"
+      }
+    },
+    "leg_curl_p": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000027"
+      }
+    },
+    "calf": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000002f"
+      }
+    },
+    "incline_bb": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000004"
+      }
+    },
+    "fly": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000020"
+      }
+    },
+    "cable_row": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000029"
+      }
+    },
+    "db_row": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000015"
+      }
+    },
+    "lateral": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000017"
+      }
+    },
+    "incline_curl": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000001b"
+      }
+    },
+    "tri_ext": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000038"
+      }
+    },
+    "front_squat": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000002"
+      }
+    },
+    "lunge": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000000f"
+      }
+    },
+    "leg_ext": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000026"
+      }
+    },
+    "leg_curl_h": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000027"
+      }
+    }
+  },
+  "progression": {
+    "bench": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "incline_db": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "row": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "pulldown": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "ohp": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "curl": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "skull": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "squat": {
+      "type": "DOUBLE",
+      "incrementKg": 5.0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "deadlift": {
+      "type": "DOUBLE",
+      "incrementKg": 5.0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "leg_press": {
+      "type": "DOUBLE",
+      "incrementKg": 5.0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "leg_curl_p": {
+      "type": "DOUBLE",
+      "incrementKg": 5.0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "calf": {
+      "type": "DOUBLE",
+      "incrementKg": 5.0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "incline_bb": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "fly": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "cable_row": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "db_row": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "lateral": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "incline_curl": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "tri_ext": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "front_squat": {
+      "type": "DOUBLE",
+      "incrementKg": 5.0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "lunge": {
+      "type": "DOUBLE",
+      "incrementKg": 5.0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "leg_ext": {
+      "type": "DOUBLE",
+      "incrementKg": 5.0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "leg_curl_h": {
+      "type": "DOUBLE",
+      "incrementKg": 5.0,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    }
+  },
+  "days": [
+    {
+      "key": "UPPER_POWER",
+      "name": "상체 근력",
+      "exercises": [
+        {
+          "lift": "bench",
+          "restSec": 180,
+          "sets": [
+            {
+              "count": 4,
+              "reps": 3,
+              "repsMax": 5,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "incline_db",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 6,
+              "repsMax": 10,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "row",
+          "restSec": 180,
+          "sets": [
+            {
+              "count": 4,
+              "reps": 3,
+              "repsMax": 5,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "pulldown",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 6,
+              "repsMax": 10,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "ohp",
+          "restSec": 120,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 5,
+              "repsMax": 8,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "curl",
+          "restSec": 75,
+          "sets": [
+            {
+              "count": 2,
+              "reps": 6,
+              "repsMax": 10,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "skull",
+          "restSec": 75,
+          "sets": [
+            {
+              "count": 2,
+              "reps": 6,
+              "repsMax": 10,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "LOWER_POWER",
+      "name": "하체 근력",
+      "exercises": [
+        {
+          "lift": "squat",
+          "restSec": 180,
+          "sets": [
+            {
+              "count": 4,
+              "reps": 3,
+              "repsMax": 5,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "deadlift",
+          "restSec": 180,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 3,
+              "repsMax": 5,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "leg_press",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 10,
+              "repsMax": 15,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "leg_curl_p",
+          "restSec": 75,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 6,
+              "repsMax": 10,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "calf",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 4,
+              "reps": 6,
+              "repsMax": 10,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "UPPER_HYPER",
+      "name": "상체 근비대",
+      "exercises": [
+        {
+          "lift": "incline_bb",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "fly",
+          "restSec": 75,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "cable_row",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "db_row",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "lateral",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "incline_curl",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "tri_ext",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "LOWER_HYPER",
+      "name": "하체 근비대",
+      "exercises": [
+        {
+          "lift": "front_squat",
+          "restSec": 120,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "lunge",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "leg_ext",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 10,
+              "repsMax": 15,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "leg_curl_h",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 10,
+              "repsMax": 15,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

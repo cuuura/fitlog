@@ -43,6 +43,7 @@ class OAuthFlowTest {
             assertEquals("$TEST_BASE/oauth/authorize", j["authorization_endpoint"]!!.jsonPrimitive.content)
             assertEquals("$TEST_BASE/oauth/token", j["token_endpoint"]!!.jsonPrimitive.content)
             assertEquals("$TEST_BASE/oauth/register", j["registration_endpoint"]!!.jsonPrimitive.content)
+            assertEquals("true", j["client_id_metadata_document_supported"]!!.jsonPrimitive.content)
             assertEquals(listOf("code"), j["response_types_supported"]!!.jsonArray.map { it.jsonPrimitive.content })
             assertEquals(listOf("authorization_code", "refresh_token"), j["grant_types_supported"]!!.jsonArray.map { it.jsonPrimitive.content })
             assertEquals(listOf("S256"), j["code_challenge_methods_supported"]!!.jsonArray.map { it.jsonPrimitive.content })

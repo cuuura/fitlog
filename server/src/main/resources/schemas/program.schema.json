@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://fitlog.app/schemas/program/v1.json",
   "title": "Fitlog Program",
-  "description": "프로그램 정의. 템플릿·사용자 프로그램·AI 입력이 모두 이 형식. 의미는 engine.md 참고.",
+  "description": "프로그램 정의. 템플릿·사용자 프로그램·AI 입력이 모두 이 형식. 의미는 engine.md 참고. v1.1: repsMax·restSec·weekly(count/addKg/skip/repsMax)·DOUBLE 추가(contracts/v1.1/program-ext.md).",
   "type": "object",
   "required": [
     "schemaVersion",
@@ -278,9 +278,42 @@
                 "type": "number",
                 "exclusiveMinimum": 0,
                 "maximum": 1.5
+              },
+              "repsMax": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              },
+              "count": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 20,
+                "description": "그 주 이 세트 정의의 반복 수"
+              },
+              "addKg": {
+                "type": "number",
+                "minimum": -500,
+                "maximum": 500,
+                "description": "그 주 계산 무게에 더하는 kg(반올림 전, 기준 무게 대비)"
+              },
+              "skip": {
+                "type": "boolean",
+                "description": "true면 그 주 이 세트 정의를 뺀다"
               }
             }
           }
+        },
+        "repsMax": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100,
+          "description": "반복 범위 상한. 있으면 reps는 하한(repsMax >= reps). amrap과 같이 쓸 수 없음"
+        },
+        "restSec": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600,
+          "description": "이 세트 뒤 목표 휴식(초)"
         }
       }
     },
@@ -318,6 +351,12 @@
           "type": "boolean",
           "default": true,
           "description": "false면 이 회차의 이 종목은 증량 판정에 쓰지 않음(같은 키가 주에 여러 번 나올 때)"
+        },
+        "restSec": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600,
+          "description": "이 종목 세트의 기본 휴식(초). 세트 값이 우선"
         }
       }
     },
@@ -516,6 +555,34 @@
               "default": 0.15
             }
           }
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "incrementKg"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "DOUBLE"
+            },
+            "incrementKg": {
+              "type": "number"
+            },
+            "failuresBeforeDeload": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 3
+            },
+            "deloadPercent": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 0.5,
+              "default": 0.1
+            }
+          },
+          "description": "더블 프로그레션: 판정 세트가 모두 repsMax 이상이면 working += incrementKg, 하한 미달이면 실패. 시작 working 선택"
         },
         {
           "type": "object",

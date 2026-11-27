@@ -85,6 +85,23 @@ class Wave531VariantsTest {
     }
 
     @Test
+    fun deload_week_has_no_accessories_but_keeps_three_main_sets() {
+        for (k in listOf("wendler-531-bbb") + keys) {
+            val p = def(k)
+            val s0 = start(p)
+            for (week in 1..4) {
+                for (day in ProgramEngine.plan(p, s0.copy(week = week), p.days.size)) {
+                    val acc = day.exercises.filter { it.accessory }
+                    val mains = day.exercises.filter { !it.accessory }
+                    assertTrue(mains.isNotEmpty() && mains.all { it.sets.size == 3 }, "$k ${day.dayKey} week$week main sets")
+                    if (week == 4) assertTrue(acc.isEmpty(), "$k ${day.dayKey} week4 accessories ${acc.map { it.key }}")
+                    else assertTrue(acc.isNotEmpty(), "$k ${day.dayKey} week$week accessories")
+                }
+            }
+        }
+    }
+
+    @Test
     fun one_cycle_all_success_raises_tm() {
         for (k in keys) {
             val p = def(k)

@@ -169,7 +169,9 @@ private fun Transaction.startInstance(engine: ProgramCalculator, uid: UUID, body
     (body.tm.entries + body.working.entries).forEach { (k, v) ->
         if (!v.isFinite() || v < 0 || v > 9999.99) validation("weight must be between 0 and 9999.99", "tm.$k")
     }
+    val optionalKeys = engine.optionalInputs(def)
     engine.requiredInputs(def).forEach { (key, need) ->
+        if (key in optionalKeys) return@forEach
         when (need) {
             Needs.TM -> if (key !in body.tm) validation("tm.$key is required", "tm.$key")
             Needs.WORKING -> if (key !in body.working) validation("working.$key is required", "working.$key")

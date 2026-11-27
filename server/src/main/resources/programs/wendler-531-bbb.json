@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "name": "4주 웨이브 + 5x10 보조",
-  "description": "4주 사이클(5 / 3 / 1 / 디로드)에 5x10 @50% 보조를 더한다. 사이클이 끝나면 TM이 상체 +2.5kg, 하체 +5kg 오른다. 마지막 AMRAP 세트가 목표에 못 미치면 TM을 낮춘다. 흔히 '5/3/1 Boring But Big'로 알려진 구성을 참고했습니다.",
+  "description": "4주 사이클(5 / 3 / 1 / 디로드)에 5x10 @50% 보조를 더하고 디로드 주에는 보조를 뺀다. 사이클이 끝나면 TM이 상체 +2.5kg, 하체 +5kg 오른다. 마지막 AMRAP 세트가 목표에 못 미치면 TM을 낮춘다. 흔히 '5/3/1 Boring But Big'로 알려진 구성을 참고했습니다.",
   "category": "POWERBUILDING",
   "tmPercent": 0.9,
   "roundingKg": 2.5,
@@ -149,7 +149,15 @@
               "load": {
                 "type": "PERCENT_TM",
                 "value": 0.5
-              }
+              },
+              "weekly": [
+                {},
+                {},
+                {},
+                {
+                  "skip": true
+                }
+              ]
             }
           ]
         }
@@ -257,7 +265,15 @@
               "load": {
                 "type": "PERCENT_TM",
                 "value": 0.5
-              }
+              },
+              "weekly": [
+                {},
+                {},
+                {},
+                {
+                  "skip": true
+                }
+              ]
             }
           ]
         }
@@ -365,7 +381,15 @@
               "load": {
                 "type": "PERCENT_TM",
                 "value": 0.5
-              }
+              },
+              "weekly": [
+                {},
+                {},
+                {},
+                {
+                  "skip": true
+                }
+              ]
             }
           ]
         }
@@ -473,7 +497,15 @@
               "load": {
                 "type": "PERCENT_TM",
                 "value": 0.5
-              }
+              },
+              "weekly": [
+                {},
+                {},
+                {},
+                {
+                  "skip": true
+                }
+              ]
             }
           ]
         }

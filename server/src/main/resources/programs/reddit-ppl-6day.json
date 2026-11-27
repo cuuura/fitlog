@@ -1,0 +1,925 @@
+{
+  "schemaVersion": 1,
+  "name": "PPL 6일 선형 + 범위 보조",
+  "description": "밀기·당기기·하체를 주 6일 돌리며, 메인(데드리프트 1x5+, 로우·벤치프레스·오버헤드 프레스 4x5+1x5+, 스쿼트 2x5+1x5+)은 매 회차 선형으로 올리고(상체·스쿼트 +2.5kg, 데드리프트 +5kg) 3회 연속 실패하면 10% 낮춥니다. 보조는 8~12회(일부 15~20회) 범위에서 모든 세트가 상한이면 무게를 올리는 더블 프로그레션이며 시작 무게는 비워도 됩니다. 스쿼트는 하체 두 날 모두 하되 첫 날만 증량을 판정하고, 보조 슈퍼세트는 연속 세트로 풀었습니다. 흔히 'Reddit PPL'로 알려진 구성을 참고했습니다.",
+  "category": "POWERBUILDING",
+  "workingPercent": 0.8,
+  "roundingKg": 2.5,
+  "lifts": {
+    "deadlift": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000006"
+      }
+    },
+    "pulldown": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000028"
+      }
+    },
+    "cablerow": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000029"
+      }
+    },
+    "face": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000002e"
+      }
+    },
+    "hammer": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000001a"
+      }
+    },
+    "curl": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000019"
+      }
+    },
+    "bench": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000003"
+      }
+    },
+    "ohp_vol": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000009"
+      }
+    },
+    "incline": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000014"
+      }
+    },
+    "pushdown": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000002d"
+      }
+    },
+    "overext": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000038"
+      }
+    },
+    "lat": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000017"
+      }
+    },
+    "squat": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000001"
+      }
+    },
+    "rdl": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000007"
+      }
+    },
+    "legpress": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000025"
+      }
+    },
+    "legcurl": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000027"
+      }
+    },
+    "calf": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000002f"
+      }
+    },
+    "row": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000000a"
+      }
+    },
+    "pulldown2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000028"
+      }
+    },
+    "cablerow2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000029"
+      }
+    },
+    "face2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000002e"
+      }
+    },
+    "hammer2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000001a"
+      }
+    },
+    "curl2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000019"
+      }
+    },
+    "ohp": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000009"
+      }
+    },
+    "bench_vol": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000003"
+      }
+    },
+    "incline2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000014"
+      }
+    },
+    "pushdown2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000002d"
+      }
+    },
+    "overext2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000038"
+      }
+    },
+    "lat2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000017"
+      }
+    },
+    "rdl2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000007"
+      }
+    },
+    "legpress2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000025"
+      }
+    },
+    "legcurl2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-000000000027"
+      }
+    },
+    "calf2": {
+      "exercise": {
+        "id": "019b76da-4000-7000-8000-00000000002f"
+      }
+    }
+  },
+  "progression": {
+    "deadlift": {
+      "type": "LINEAR",
+      "incrementKg": 5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "pulldown": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "cablerow": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "face": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "hammer": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "curl": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "bench": {
+      "type": "LINEAR",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "ohp_vol": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "incline": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "pushdown": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "overext": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "lat": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "squat": {
+      "type": "LINEAR",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "rdl": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "legpress": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "legcurl": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "calf": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "row": {
+      "type": "LINEAR",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "pulldown2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "cablerow2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "face2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "hammer2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "curl2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "ohp": {
+      "type": "LINEAR",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "bench_vol": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "incline2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "pushdown2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "overext2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "lat2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "rdl2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "legpress2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "legcurl2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    },
+    "calf2": {
+      "type": "DOUBLE",
+      "incrementKg": 2.5,
+      "failuresBeforeDeload": 3,
+      "deloadPercent": 0.1
+    }
+  },
+  "days": [
+    {
+      "key": "PULL1",
+      "name": "당기기 (데드리프트)",
+      "weekday": "MON",
+      "exercises": [
+        {
+          "lift": "deadlift",
+          "restSec": 150,
+          "sets": [
+            {
+              "reps": 5,
+              "amrap": true,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "pulldown",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "cablerow",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "face",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 15,
+              "repsMax": 20,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "hammer",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 4,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "curl",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 4,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "PUSH1",
+      "name": "밀기 (벤치프레스)",
+      "weekday": "TUE",
+      "exercises": [
+        {
+          "lift": "bench",
+          "restSec": 150,
+          "sets": [
+            {
+              "count": 4,
+              "reps": 5,
+              "load": {
+                "type": "WORKING"
+              }
+            },
+            {
+              "reps": 5,
+              "amrap": true,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "ohp_vol",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "incline",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "pushdown",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "overext",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "lat",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 6,
+              "reps": 15,
+              "repsMax": 20,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "LEGS1",
+      "name": "하체 1",
+      "weekday": "WED",
+      "exercises": [
+        {
+          "lift": "squat",
+          "restSec": 150,
+          "sets": [
+            {
+              "count": 2,
+              "reps": 5,
+              "load": {
+                "type": "WORKING"
+              }
+            },
+            {
+              "reps": 5,
+              "amrap": true,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "rdl",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "legpress",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "legcurl",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "calf",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "PULL2",
+      "name": "당기기 (바벨 로우)",
+      "weekday": "THU",
+      "exercises": [
+        {
+          "lift": "row",
+          "restSec": 150,
+          "sets": [
+            {
+              "count": 4,
+              "reps": 5,
+              "load": {
+                "type": "WORKING"
+              }
+            },
+            {
+              "reps": 5,
+              "amrap": true,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "pulldown2",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "cablerow2",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "face2",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 15,
+              "repsMax": 20,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "hammer2",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 4,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "curl2",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 4,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "PUSH2",
+      "name": "밀기 (오버헤드 프레스)",
+      "weekday": "FRI",
+      "exercises": [
+        {
+          "lift": "ohp",
+          "restSec": 150,
+          "sets": [
+            {
+              "count": 4,
+              "reps": 5,
+              "load": {
+                "type": "WORKING"
+              }
+            },
+            {
+              "reps": 5,
+              "amrap": true,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "bench_vol",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "incline2",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "pushdown2",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "overext2",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "lat2",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 6,
+              "reps": 15,
+              "repsMax": 20,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "LEGS2",
+      "name": "하체 2",
+      "weekday": "SAT",
+      "exercises": [
+        {
+          "lift": "squat",
+          "restSec": 150,
+          "sets": [
+            {
+              "count": 2,
+              "reps": 5,
+              "load": {
+                "type": "WORKING"
+              }
+            },
+            {
+              "reps": 5,
+              "amrap": true,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ],
+          "countsForProgression": false
+        },
+        {
+          "lift": "rdl2",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "legpress2",
+          "restSec": 90,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "legcurl2",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 3,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        },
+        {
+          "lift": "calf2",
+          "restSec": 60,
+          "sets": [
+            {
+              "count": 5,
+              "reps": 8,
+              "repsMax": 12,
+              "load": {
+                "type": "WORKING"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -51,8 +51,10 @@ import java.util.UUID
 
 private class ClientRow(val id: UUID, val clientId: String, val name: String, val redirectUris: List<String>)
 
-private suspend fun findClient(clientId: String?): ClientRow? {
+/** client_id 로 클라이언트 조회. CIMD(https URL) 면 문서를 확인·upsert 한 뒤 읽는다(실패 시 [CimdException]) */
+private suspend fun findClient(cimd: CimdResolver, clientId: String?): ClientRow? {
     if (clientId.isNullOrEmpty()) return null
+    if (isCimdClientId(clientId)) cimd.resolve(clientId)
     return dbQuery {
         OAuthClients.selectAll().where { OAuthClients.clientId eq clientId }.singleOrNull()?.let {
             ClientRow(it[OAuthClients.id], it[OAuthClients.clientId], it[OAuthClients.clientName], it[OAuthClients.redirectUris])
@@ -89,7 +91,7 @@ private fun parseScopes(raw: String?): List<String>? {
     return (listOf(SCOPE_READ) + known).distinct() // 쓰기는 읽기를 포함한다
 }
 
-private fun validRedirectUri(s: String): Boolean {
+internal fun validRedirectUri(s: String): Boolean {
     val u = runCatching { URI(s) }.getOrNull() ?: return false
     if (u.fragment != null || u.host.isNullOrEmpty() || u.userInfo != null) return false
     return when (u.scheme) {
@@ -118,6 +120,13 @@ fun Route.oauthRoutes(config: AppConfig) {
     val verifier: GoogleIdTokenVerifier by lazy {
         config.googleVerifier ?: GoogleIdTokenVerifierImpl(listOfNotNull(config.googleWebClientId) + config.googleClientIds)
     }
+    val cimd = CimdResolver(config)
+    /** 인가 이후 단계(로그인·동의)용: CIMD 실패는 "없는 클라이언트"로 본다 */
+    suspend fun findClientOrNull(id: String?): ClientRow? = try {
+        findClient(cimd, id)
+    } catch (e: CimdException) {
+        null
+    }
     val exchanger by lazy {
         config.googleCodeExchanger
             ?: GoogleCodeExchangerImpl(config.googleWebClientId.orEmpty(), config.googleWebClientSecret.orEmpty())
@@ -136,6 +145,7 @@ fun Route.oauthRoutes(config: AppConfig) {
         put("authorization_endpoint", "$base/oauth/authorize")
         put("token_endpoint", "$base/oauth/token")
         put("registration_endpoint", "$base/oauth/register")
+        put("client_id_metadata_document_supported", true)
         putJsonArray("response_types_supported") { add(JsonPrimitive("code")) }
         putJsonArray("grant_types_supported") { add(JsonPrimitive("authorization_code")); add(JsonPrimitive("refresh_token")) }
         putJsonArray("code_challenge_methods_supported") { add(JsonPrimitive("S256")) }
@@ -209,7 +219,11 @@ fun Route.oauthRoutes(config: AppConfig) {
     // ---------------------------------------------------------------- 인가 엔드포인트
     get("/oauth/authorize") {
         val q = call.request.queryParameters
-        val client = findClient(q["client_id"])
+        val client = try {
+            findClient(cimd, q["client_id"])
+        } catch (e: CimdException) {
+            return@get call.html(HttpStatusCode.BadRequest, OAuthPages.error("잘못된 요청", "클라이언트 메타데이터 문서를 확인하지 못했습니다: ${e.message}"))
+        }
         val redirectUri = q["redirect_uri"]
         if (client == null) return@get call.html(HttpStatusCode.BadRequest, OAuthPages.error("잘못된 요청", "등록되지 않은 클라이언트입니다."))
         if (redirectUri == null || redirectUri !in client.redirectUris) {
@@ -269,7 +283,7 @@ fun Route.oauthRoutes(config: AppConfig) {
         if (!config.passwordLogin.enabled) {
             return@post call.html(HttpStatusCode.NotFound, OAuthPages.error("로그인을 사용할 수 없음", "이 서버는 아이디·비밀번호 로그인을 사용하지 않습니다."))
         }
-        val client = findClient(st["cid"])
+        val client = findClientOrNull(st["cid"])
             ?: return@post call.html(HttpStatusCode.BadRequest, OAuthPages.error("잘못된 요청", "등록되지 않은 클라이언트입니다."))
         val username = params["username"].orEmpty()
         val password = params["password"].orEmpty()
@@ -315,7 +329,7 @@ fun Route.oauthRoutes(config: AppConfig) {
         if (q["error"] != null || code.isNullOrEmpty()) {
             return@get call.respondRedirect(appendQuery(redirectUri, mapOf("error" to "access_denied", "state" to clientState)))
         }
-        val client = findClient(st["cid"])
+        val client = findClientOrNull(st["cid"])
             ?: return@get call.html(HttpStatusCode.BadRequest, OAuthPages.error("잘못된 요청", "등록되지 않은 클라이언트입니다."))
         val identity = withContext(Dispatchers.IO) {
             val idToken = exchanger.exchange(code, googleCallback) ?: return@withContext null
@@ -366,7 +380,7 @@ fun Route.oauthRoutes(config: AppConfig) {
             ?: return@post call.html(HttpStatusCode.BadRequest, OAuthPages.error("잘못된 요청", "동의 요청이 만료되었거나 올바르지 않습니다. 처음부터 다시 시도해 주세요."))
         val redirectUri = f.getValue("ru")
         val clientState = f["st"]?.ifEmpty { null }
-        val client = findClient(f["cid"])
+        val client = findClientOrNull(f["cid"])
             ?: return@post call.html(HttpStatusCode.BadRequest, OAuthPages.error("잘못된 요청", "등록되지 않은 클라이언트입니다."))
         if (redirectUri !in client.redirectUris) {
             return@post call.html(HttpStatusCode.BadRequest, OAuthPages.error("잘못된 요청", "redirect_uri 가 등록된 값과 다릅니다."))
@@ -427,6 +441,13 @@ fun Route.oauthRoutes(config: AppConfig) {
             return@post call.oauthError(HttpStatusCode.BadRequest, "invalid_target", "resource must be ${config.mcpUrl()}")
         }
         val clientIdParam = p["client_id"]
+        if (isCimdClientId(clientIdParam)) {
+            try {
+                cimd.resolve(clientIdParam!!)
+            } catch (e: CimdException) {
+                return@post call.oauthError(HttpStatusCode.BadRequest, "invalid_client", e.message ?: "invalid client metadata document")
+            }
+        }
         val result: TokenResult = when (p["grant_type"]) {
             "authorization_code" -> {
                 val code = p["code"]

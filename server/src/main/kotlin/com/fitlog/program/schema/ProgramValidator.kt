@@ -268,7 +268,7 @@ private class Run(val resolver: ExerciseResolver) {
         return out
     }
 
-    private val ruleTypes = listOf("LINEAR", "AMRAP_TABLE", "CYCLE", "STAGES", "NONE")
+    private val ruleTypes = listOf("LINEAR", "AMRAP_TABLE", "CYCLE", "STAGES", "DOUBLE", "NONE")
 
     fun rule(el: JsonElement, path: String): Rule? {
         val o = obj(el, path) ?: return null
@@ -294,6 +294,14 @@ private class Run(val resolver: ExerciseResolver) {
                 return if (ok) {
                     Rule.AmrapTable(rows!!.filterNotNull(), applyAt?.let { ApplyAt.valueOf(it) } ?: ApplyAt.WEEK_END, f ?: 2, d ?: 0.1)
                 } else null
+            }
+            "DOUBLE" -> {
+                checkKeys(o, path, setOf("type", "incrementKg", "failuresBeforeDeload", "deloadPercent"), setOf("type", "incrementKg"))
+                val inc = num(o, "incrementKg", path)
+                val f = int(o, "failuresBeforeDeload", path, min = 1)
+                val d = num(o, "deloadPercent", path, 0.0, 0.5)
+                val ok = inc != null && (!o.containsKey("failuresBeforeDeload") || f != null) && (!o.containsKey("deloadPercent") || d != null)
+                return if (ok) Rule.Double(inc!!, f ?: 3, d ?: 0.1) else null
             }
             "CYCLE" -> {
                 checkKeys(o, path, setOf("type", "incrementKg", "deloadPercent"), setOf("type", "incrementKg"))
@@ -355,17 +363,27 @@ private class Run(val resolver: ExerciseResolver) {
         val weekday = enum(o, "weekday", path, WEEKDAYS)
         val exs = arr(o, "exercises", path, 1, 20)?.mapIndexed { i, e -> dayExercise(e, "$path/exercises/$i") }
         val ok = key != null && name != null && exs != null && exs.all { it != null } && (!o.containsKey("weekday") || weekday != null)
+        if (exs != null && exs.all { it != null }) {
+            val dayExs = exs.filterNotNull()
+            val weeks = dayExs.maxOf { de -> de.sets.maxOf { it.weekly?.size ?: 0 } }
+            for (wi in 0 until weeks) {
+                if (dayExs.all { de -> de.sets.all { it.weekly?.getOrNull(wi)?.skip == true } }) {
+                    err("$path/exercises", "every exercise of this day is skipped in week ${wi + 1}")
+                }
+            }
+        }
         return if (ok) Day(key!!, name!!, weekday, exs!!.filterNotNull()) else null
     }
 
     fun dayExercise(el: JsonElement, path: String): DayExercise? {
         val o = obj(el, path) ?: return null
-        checkKeys(o, path, setOf("lift", "accessory", "amrapSet", "sets", "countsForProgression"), setOf("lift", "sets"))
+        checkKeys(o, path, setOf("lift", "accessory", "amrapSet", "sets", "countsForProgression", "restSec"), setOf("lift", "sets"))
         val lift = str(o, "lift", path)
         if (lift != null && lift !in liftKeys) err("$path/lift", "'$lift' is not a key in lifts")
         val accessory = bool(o, "accessory", path)
         val counts = bool(o, "countsForProgression", path)
         val amrapSet = int(o, "amrapSet", path, min = 0)
+        val restSec = int(o, "restSec", path, 0, 3600)
         val sets = arr(o, "sets", path, 1, 30)?.mapIndexed { i, s -> set(s, "$path/sets/$i", lift, i, path) }
         val allSets = sets != null && sets.all { it != null }
         if (amrapSet != null && allSets) {
@@ -373,17 +391,20 @@ private class Run(val resolver: ExerciseResolver) {
             if (amrapSet >= total) err("$path/amrapSet", "must be less than the expanded set count ($total)")
         }
         val ok = lift != null && allSets && (!o.containsKey("accessory") || accessory != null) &&
-            (!o.containsKey("countsForProgression") || counts != null) && (!o.containsKey("amrapSet") || amrapSet != null)
-        return if (ok) DayExercise(lift!!, accessory ?: false, amrapSet, sets!!.filterNotNull(), counts ?: true) else null
+            (!o.containsKey("countsForProgression") || counts != null) && (!o.containsKey("amrapSet") || amrapSet != null) &&
+            (!o.containsKey("restSec") || restSec != null)
+        return if (ok) DayExercise(lift!!, accessory ?: false, amrapSet, sets!!.filterNotNull(), counts ?: true, restSec) else null
     }
 
     fun set(el: JsonElement, path: String, lift: String?, index: Int, exPath: String): SetSpec? {
         val o = obj(el, path) ?: return null
-        checkKeys(o, path, setOf("count", "reps", "amrap", "warmup", "load", "weekly"), setOf("reps", "load"))
+        checkKeys(o, path, setOf("count", "reps", "amrap", "warmup", "load", "weekly", "repsMax", "restSec"), setOf("reps", "load"))
         val count = int(o, "count", path, 1, 20)
         val reps = int(o, "reps", path, 0, 100)
         val amrap = bool(o, "amrap", path)
         val warmup = bool(o, "warmup", path)
+        val repsMax = int(o, "repsMax", path, 1, 100)
+        val restSec = int(o, "restSec", path, 0, 3600)
         val load = o["load"]?.let { load(it, "$path/load") }
         val weekly = arr(o, "weekly", path)?.let { a ->
             val cw = cycleWeeks
@@ -392,9 +413,24 @@ private class Run(val resolver: ExerciseResolver) {
         }
         val ok = reps != null && load != null && (!o.containsKey("count") || count != null) &&
             (!o.containsKey("amrap") || amrap != null) && (!o.containsKey("warmup") || warmup != null) &&
-            (weekly == null || weekly.all { it != null })
+            (weekly == null || weekly.all { it != null }) &&
+            (!o.containsKey("repsMax") || repsMax != null) && (!o.containsKey("restSec") || restSec != null)
         if (!ok) return null
-        val spec = SetSpec(count ?: 1, reps!!, amrap ?: false, warmup ?: false, load!!, weekly?.filterNotNull())
+        if (repsMax != null) {
+            if (repsMax < reps!!) err("$path/repsMax", "must be at least reps ($reps)")
+            if (amrap == true) err("$path/repsMax", "cannot be used together with amrap")
+        }
+        weekly?.forEachIndexed { i, w ->
+            if (w == null || (w.reps == null && w.repsMax == null && w.amrap == null)) return@forEachIndexed
+            val er = w.reps ?: reps!!
+            val em = w.repsMax ?: repsMax
+            val ea = w.amrap ?: (amrap ?: false)
+            if (em != null && em < er) err("$path/weekly/$i/${if (w.repsMax != null) "repsMax" else "reps"}", "repsMax ($em) must be at least reps ($er) in this week")
+            if (em != null && ea && !(repsMax != null && amrap == true && w.amrap == null)) {
+                err("$path/weekly/$i/${if (w.repsMax != null) "repsMax" else "amrap"}", "repsMax cannot be used together with amrap in this week")
+            }
+        }
+        val spec = SetSpec(count ?: 1, reps!!, amrap ?: false, warmup ?: false, load!!, weekly?.filterNotNull(), repsMax, restSec)
         if (lift != null) {
             val anyAmrap = spec.amrap || spec.weekly?.any { it.amrap == true } == true
             setInfos += SetInfo(exPath, lift, index, anyAmrap, spec.load, spec.warmup)
@@ -404,13 +440,19 @@ private class Run(val resolver: ExerciseResolver) {
 
     fun weeklyOverride(el: JsonElement, path: String): WeeklyOverride? {
         val o = obj(el, path) ?: return null
-        checkKeys(o, path, setOf("reps", "amrap", "value"), emptySet())
+        checkKeys(o, path, setOf("reps", "amrap", "value", "repsMax", "count", "addKg", "skip"), emptySet())
         val reps = int(o, "reps", path, 0)
         val amrap = bool(o, "amrap", path)
         val value = num(o, "value", path, exclMin = 0.0, max = 1.5)
+        val repsMax = int(o, "repsMax", path, 1, 100)
+        val count = int(o, "count", path, 1, 20)
+        val addKg = num(o, "addKg", path, -500.0, 500.0)
+        val skip = bool(o, "skip", path)
         val ok = (!o.containsKey("reps") || reps != null) && (!o.containsKey("amrap") || amrap != null) &&
-            (!o.containsKey("value") || value != null)
-        return if (ok) WeeklyOverride(reps, amrap, value) else null
+            (!o.containsKey("value") || value != null) && (!o.containsKey("repsMax") || repsMax != null) &&
+            (!o.containsKey("count") || count != null) && (!o.containsKey("addKg") || addKg != null) &&
+            (!o.containsKey("skip") || skip != null)
+        return if (ok) WeeklyOverride(reps, amrap, value, repsMax, count, addKg, skip) else null
     }
 
     private val loadTypes = listOf("PERCENT_TM", "WORKING", "FIXED", "BODYWEIGHT", "NONE")
@@ -469,6 +511,13 @@ private class Run(val resolver: ExerciseResolver) {
                     for (s in setInfos) {
                         if (s.lift == key && !s.warmup && s.load !is Load.Working) {
                             err("${s.exPath}/sets/${s.index}/load", "sets of a STAGES lift ('$key') must use a WORKING load")
+                        }
+                    }
+                }
+                is Rule.Double -> {
+                    for (s in setInfos) {
+                        if (s.lift == key && s.load is Load.PercentTm) {
+                            err("${s.exPath}/sets/${s.index}/load", "sets of a DOUBLE lift ('$key') must not use a PERCENT_TM load")
                         }
                     }
                 }

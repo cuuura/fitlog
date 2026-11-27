@@ -357,6 +357,8 @@ class DriftSessionRepository extends _DriftBase implements SessionRepository {
               targetReps: ps.targetReps,
               targetWeightKg: ps.targetWeightKg,
               isAmrap: ps.isAmrap,
+              targetRepsMax: ps.targetRepsMax,
+              targetRestSec: ps.restSec,
             );
             await db.into(db.workoutSets).insert(setCompanion(set, sessionExerciseId: seId, updatedAt: at));
             await _enqSet(await (db.select(db.workoutSets)..where((t) => t.id.equals(set.id))).getSingle());

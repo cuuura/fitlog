@@ -14,6 +14,10 @@ import java.util.ArrayDeque
  */
 internal class McpTraceRow(val httpMethod: String) {
     val at: Instant = Instant.now()
+    /** /mcp 가 아닌 OAuth·메타데이터 요청일 때 경로 */
+    var path: String? = null
+    /** OAuth 요청의 진단용 값(파라미터 이름·redirect_uri 호스트·scope 등, 비밀 값 제외) */
+    var detail: String? = null
     var rpcMethod: String = "-"
     var tool: String? = null
     var status: Int? = null
@@ -33,6 +37,8 @@ internal class McpTraceRow(val httpMethod: String) {
     fun toJson(): JsonObject = buildJsonObject {
         put("at", at.toString())
         put("httpMethod", httpMethod)
+        path?.let { put("path", it) }
+        detail?.let { put("detail", it) }
         put("rpcMethod", rpcMethod)
         tool?.let { put("tool", it) }
         status?.let { put("status", it) }
@@ -49,11 +55,17 @@ internal class McpTraceRow(val httpMethod: String) {
     }
 
     fun logLine(): String =
-        "mcp http=$httpMethod rpc=$rpcMethod tool=${tool ?: "-"} status=${status ?: "-"} rpcError=${rpcError ?: "-"} " +
+        "mcp http=$httpMethod path=${path ?: "/mcp"} detail=${detail ?: "-"} rpc=$rpcMethod tool=${tool ?: "-"} status=${status ?: "-"} rpcError=${rpcError ?: "-"} " +
             "toolError=${toolError ?: "-"} client=${client ?: "-"} ua=${userAgent ?: "-"} accept=${accept ?: "-"} " +
             "proto=${protocolVersion ?: "-"} sid=${if (sessionPresent) "present" else "none"}/${sessionVerified ?: "-"} " +
             "auth=${if (authPresent) "present" else "none"}/${if (authenticated) "ok" else "no"}"
 }
+
+private val TRACE_BUFFER_KEY = io.ktor.util.AttributeKey<McpTraceBuffer>("fitlog.mcpTraceBuffer")
+
+/** /mcp 와 OAuth·메타데이터 요청을 함께 담는 애플리케이션 단위 추적 버퍼 */
+internal fun io.ktor.server.application.Application.mcpTraceBuffer(): McpTraceBuffer =
+    attributes.computeIfAbsent(TRACE_BUFFER_KEY) { McpTraceBuffer(200) }
 
 /** 최근 N건 링 버퍼 */
 internal class McpTraceBuffer(private val capacity: Int = 100) {
