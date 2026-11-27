@@ -1878,5 +1878,8 @@
   "calendarViewCalendar": "달력",
   "calendarOpenHint": "달력 보기",
   "calendarSessionSummary": "{exercises}종목 · {sets}세트 · {volume}",
-  "@calendarSessionSummary": {"placeholders": {"exercises": {"type": "int"}, "sets": {"type": "int"}, "volume": {"type": "String"}}}
+  "@calendarSessionSummary": {"placeholders": {"exercises": {"type": "int"}, "sets": {"type": "int"}, "volume": {"type": "String"}}},
+  "sessionErrLoadFailed": "세션을 불러오지 못했어요",
+  "sessionErrRetry": "다시 시도",
+  "sessionErrHome": "홈으로"
 }

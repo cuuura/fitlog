@@ -145,6 +145,34 @@ class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
       }
       return const Scaffold(body: SizedBox.shrink());
     }
+    if (session == null && async.hasError) {
+      return Scaffold(
+        appBar: AppBar(title: Text(l.sessionTitle)),
+        body: Center(
+          key: const Key('session-error'),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(l.sessionErrLoadFailed, textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                FilledButton(
+                  key: const Key('session-retry'),
+                  onPressed: () => ref.invalidate(activeSessionProvider),
+                  child: Text(l.sessionErrRetry),
+                ),
+                TextButton(
+                  key: const Key('session-error-home'),
+                  onPressed: () => context.go(Routes.home),
+                  child: Text(l.sessionErrHome),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
     if (session == null)
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
@@ -419,7 +447,7 @@ class _ExerciseCard extends ConsumerWidget {
         .watch(
           lastSetsProvider((exerciseId: se.exerciseId, sessionId: session.id)),
         )
-        .value;
+        .whenOrNull(data: (v) => v); // 오류는 "이전 기록 없음"으로 본다(로그는 provider에서).
     final unit = ref.watch(settingsProvider).weightUnit;
     final pastDay = session.isProgram && session.planDayKey != null
         ? ref
@@ -430,7 +458,7 @@ class _ExerciseCard extends ConsumerWidget {
                   sessionId: session.id,
                 )),
               )
-              .value
+              .whenOrNull(data: (v) => v)
         : null;
     final pastSe = pastDay?.exercises
         .where(

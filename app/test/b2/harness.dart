@@ -89,9 +89,12 @@ class Harness {
   late final PlanCache planCache;
   late final ProviderContainer container;
 
+  /// 테스트가 세션 저장소를 바꿔 끼울 수 있게 하는 지점.
+  SessionRepository get sessionRepo => sessions;
+
   List<Override> get overrides => [
     exerciseRepositoryProvider.overrideWithValue(exercises),
-    sessionRepositoryProvider.overrideWithValue(sessions),
+    sessionRepositoryProvider.overrideWithValue(sessionRepo),
     programRepositoryProvider.overrideWithValue(programs),
     planCacheProvider.overrideWithValue(planCache),
     deletionRequestRepositoryProvider.overrideWithValue(

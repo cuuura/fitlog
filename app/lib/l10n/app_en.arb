@@ -1806,5 +1806,8 @@
   "calendarViewCalendar": "Calendar",
   "calendarOpenHint": "Open calendar",
   "calendarSessionSummary": "{exercises} exercises · {sets} sets · {volume}",
-  "@calendarSessionSummary": {"placeholders": {"exercises": {"type": "int"}, "sets": {"type": "int"}, "volume": {"type": "String"}}}
+  "@calendarSessionSummary": {"placeholders": {"exercises": {"type": "int"}, "sets": {"type": "int"}, "volume": {"type": "String"}}},
+  "sessionErrLoadFailed": "Could not load the session",
+  "sessionErrRetry": "Try again",
+  "sessionErrHome": "Go home"
 }

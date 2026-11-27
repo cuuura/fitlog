@@ -1,6 +1,7 @@
 // B2 소유. 세션 기록 화면이 쓰는 Provider와 컨트롤러. 저장소 호출은 여기서만 한다.
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 
@@ -42,10 +43,15 @@ final lastSetsProvider =
     FutureProvider.family<LastSets?, ({String exerciseId, String sessionId})>((
       ref,
       k,
-    ) {
-      return ref
-          .watch(sessionRepositoryProvider)
-          .lastSetsFor(k.exerciseId, excludeSessionId: k.sessionId);
+    ) async {
+      try {
+        return await ref
+            .watch(sessionRepositoryProvider)
+            .lastSetsFor(k.exerciseId, excludeSessionId: k.sessionId);
+      } catch (e, st) {
+        debugPrint('lastSetsProvider failed: $e\n$st');
+        rethrow; // 호출부는 오류를 "이전 기록 없음"으로 취급한다.
+      }
     });
 
 /// 활성 인스턴스와 다음 회차(계획 캐시 기준). 홈 "오늘 할 운동".
@@ -58,15 +64,20 @@ final lastDaySessionProvider =
     FutureProvider.family<
       Session?,
       ({String instanceId, String dayKey, String sessionId})
-    >(
-      (ref, k) => ref
-          .watch(sessionRepositoryProvider)
-          .lastSessionForDay(
-            k.instanceId,
-            k.dayKey,
-            excludeSessionId: k.sessionId,
-          ),
-    );
+    >((ref, k) async {
+      try {
+        return await ref
+            .watch(sessionRepositoryProvider)
+            .lastSessionForDay(
+              k.instanceId,
+              k.dayKey,
+              excludeSessionId: k.sessionId,
+            );
+      } catch (e, st) {
+        debugPrint('lastDaySessionProvider failed: $e\n$st');
+        rethrow; // 호출부는 오류를 "이전 기록 없음"으로 취급한다.
+      }
+    });
 
 /// 시작한 회차의 표시 이름(프로그램·dayName·주차). 앱을 다시 켜면 사라지고 화면이 캐시·dayKey로 대신한다.
 class PlanLabel {
