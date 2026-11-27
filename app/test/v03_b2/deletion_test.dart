@@ -16,16 +16,17 @@ void main() {
       delReq('d2', h.now, status: DeletionStatus.APPROVED, label: '끝난 요청'),
     ]);
     await h.pump(tester, Routes.deletionRequests);
-    expect(find.text('2026-11-20 세션'), findsOneWidget);
+    expect(find.text('Claude가 2026-11-20 세션 삭제를 요청했어요'), findsOneWidget);
     expect(find.text('세션'), findsOneWidget);
-    expect(find.text('요청한 AI: Claude'), findsOneWidget);
+    expect(find.text('AI는 승인 없이 지울 수 없어요.'), findsOneWidget);
+    expect(find.text('삭제 승인'), findsOneWidget);
     expect(find.text('사유: 중복된 기록'), findsOneWidget);
     expect(find.text('만료까지 5시간 30분'), findsOneWidget);
     expect(find.text('끝난 요청'), findsNothing);
 
     await tester.tap(find.byKey(const Key('deletion-tab-done')));
     await tester.pumpAndSettle();
-    expect(find.text('끝난 요청'), findsOneWidget);
+    expect(find.text('Claude가 끝난 요청 삭제를 요청했어요'), findsOneWidget);
     expect(find.text('승인됨'), findsOneWidget);
     expect(find.byKey(const Key('deletion-approve-d2')), findsNothing);
   });

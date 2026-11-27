@@ -16,6 +16,8 @@ import '../features/export/export_page.dart';
 import '../features/importing/import_page.dart';
 import '../features/history/history_page.dart';
 import '../features/history/session_edit_page.dart';
+import '../features/me/me_page.dart';
+import '../features/shell/app_shell.dart';
 import '../features/programs/instance_detail_page.dart';
 import '../features/programs/program_detail_page.dart';
 import '../features/programs/program_start_page.dart';
@@ -60,37 +62,55 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Routes.splash, builder: (_, _) => const SplashPage()),
       GoRoute(path: Routes.login, builder: (_, _) => const LoginPage()),
       GoRoute(path: Routes.consent, builder: (_, _) => const ConsentPage()),
-      GoRoute(path: Routes.home, builder: (_, _) => const HomePage()),
       GoRoute(path: Routes.session, builder: (_, _) => const ActiveSessionPage()),
       GoRoute(path: Routes.pickExercise, builder: (_, _) => const ExercisePickerPage()),
-      GoRoute(path: '/sessions/:id', builder: (_, s) => SessionDetailPage(sessionId: s.pathParameters['id']!)),
-      GoRoute(path: Routes.settings, builder: (_, _) => const SettingsPage()),
-      GoRoute(path: Routes.profile, builder: (_, _) => const ProfilePage()),
-      GoRoute(path: Routes.body, builder: (_, _) => const BodyWeightPage()),
-      // v0.2
-      GoRoute(path: Routes.programs, builder: (_, _) => const ProgramsPage()),
-      GoRoute(path: '/programs/:id', builder: (_, s) => ProgramDetailPage(programId: s.pathParameters['id']!)),
-      GoRoute(path: '/programs/:id/start', builder: (_, s) => ProgramStartPage(programId: s.pathParameters['id']!)),
-      GoRoute(path: '/instances/:id', builder: (_, s) => InstanceDetailPage(instanceId: s.pathParameters['id']!)),
-      GoRoute(path: Routes.history, builder: (_, _) => const HistoryPage()),
-      GoRoute(path: '/sessions/:id/edit', builder: (_, s) => SessionEditPage(sessionId: s.pathParameters['id']!)),
-      GoRoute(path: '/sessions/:id/summary', builder: (_, s) => SessionSummaryPage(sessionId: s.pathParameters['id']!)),
-      GoRoute(
-          path: '/exercises/:id/records', builder: (_, s) => ExerciseRecordsPage(exerciseId: s.pathParameters['id']!)),
-      // v0.3
-      GoRoute(path: Routes.ai, builder: (_, _) => const AiHubPage()),
-      GoRoute(path: Routes.importJson, builder: (_, _) => const ImportPage()),
-      GoRoute(path: Routes.aiHistory, builder: (_, _) => const AiHistoryPage()),
-      GoRoute(path: '/ai/history/:id', builder: (_, s) => AiHistoryDetailPage(batchId: s.pathParameters['id']!)),
-      GoRoute(path: Routes.deletionRequests, builder: (_, _) => const DeletionRequestsPage()),
-      GoRoute(path: Routes.aiConnect, builder: (_, _) => const AiConnectPage()),
-      GoRoute(path: Routes.export, builder: (_, _) => const ExportPage()),
-      // v1.0
-      GoRoute(
-          path: '/exercises/:id/progress', builder: (_, s) => ExerciseProgressPage(exerciseId: s.pathParameters['id']!)),
-      GoRoute(
-          path: '/sessions/:id/comparison',
-          builder: (_, s) => SessionComparisonPage(sessionId: s.pathParameters['id']!)),
+      // 하단 내비가 보이는 화면들. 하위 화면은 속한 탭 아래에 둔다.
+      StatefulShellRoute.indexedStack(
+        builder: (_, _, shell) => AppShell(navigationShell: shell),
+        branches: [
+          StatefulShellBranch(routes: [
+            GoRoute(path: Routes.home, builder: (_, _) => const HomePage()),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: Routes.history, builder: (_, _) => const HistoryPage()),
+            GoRoute(path: '/sessions/:id', builder: (_, s) => SessionDetailPage(sessionId: s.pathParameters['id']!)),
+            GoRoute(path: '/sessions/:id/edit', builder: (_, s) => SessionEditPage(sessionId: s.pathParameters['id']!)),
+            GoRoute(
+                path: '/sessions/:id/summary',
+                builder: (_, s) => SessionSummaryPage(sessionId: s.pathParameters['id']!)),
+            GoRoute(
+                path: '/sessions/:id/comparison',
+                builder: (_, s) => SessionComparisonPage(sessionId: s.pathParameters['id']!)),
+            GoRoute(
+                path: '/exercises/:id/records',
+                builder: (_, s) => ExerciseRecordsPage(exerciseId: s.pathParameters['id']!)),
+            GoRoute(
+                path: '/exercises/:id/progress',
+                builder: (_, s) => ExerciseProgressPage(exerciseId: s.pathParameters['id']!)),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: Routes.programs, builder: (_, _) => const ProgramsPage()),
+            GoRoute(path: '/programs/:id', builder: (_, s) => ProgramDetailPage(programId: s.pathParameters['id']!)),
+            GoRoute(
+                path: '/programs/:id/start',
+                builder: (_, s) => ProgramStartPage(programId: s.pathParameters['id']!)),
+            GoRoute(path: '/instances/:id', builder: (_, s) => InstanceDetailPage(instanceId: s.pathParameters['id']!)),
+          ]),
+          StatefulShellBranch(routes: [
+            GoRoute(path: Routes.me, builder: (_, _) => const MePage()),
+            GoRoute(path: Routes.settings, builder: (_, _) => const SettingsPage()),
+            GoRoute(path: Routes.profile, builder: (_, _) => const ProfilePage()),
+            GoRoute(path: Routes.body, builder: (_, _) => const BodyWeightPage()),
+            GoRoute(path: Routes.ai, builder: (_, _) => const AiHubPage()),
+            GoRoute(path: Routes.importJson, builder: (_, _) => const ImportPage()),
+            GoRoute(path: Routes.aiHistory, builder: (_, _) => const AiHistoryPage()),
+            GoRoute(path: '/ai/history/:id', builder: (_, s) => AiHistoryDetailPage(batchId: s.pathParameters['id']!)),
+            GoRoute(path: Routes.deletionRequests, builder: (_, _) => const DeletionRequestsPage()),
+            GoRoute(path: Routes.aiConnect, builder: (_, _) => const AiConnectPage()),
+            GoRoute(path: Routes.export, builder: (_, _) => const ExportPage()),
+          ]),
+        ],
+      ),
     ],
   );
 });

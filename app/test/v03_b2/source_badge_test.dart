@@ -106,7 +106,7 @@ void main() {
       definition: {'name': '내 프로그램', 'days': []},
     );
     await h.pump(tester, Routes.programs);
-    await tester.tap(find.widgetWithText(Tab, '프로그램'));
+    await tester.tap(find.text('내 프로그램'));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('source-p-ai')), findsOneWidget);
     expect(find.byKey(const Key('source-p-mine')), findsNothing);

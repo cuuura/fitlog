@@ -5,8 +5,10 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../core/api/ai_dto.dart';
 import '../../core/routes.dart';
+import '../../core/theme.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../ai_connect/ai_avatar.dart';
 import '../programs/program_common.dart' show ErrorRetry;
 import 'ai_labels.dart';
 
@@ -108,6 +110,7 @@ class _AiHistoryPageState extends ConsumerState<AiHistoryPage> {
             for (final b in _items)
               ListTile(
                 key: Key('ai-batch-${b.id}'),
+                leading: AiAvatar(b.clientName ?? 'AI'),
                 title: Text(
                   [
                     aiDateTime(b.createdAt),
@@ -121,6 +124,7 @@ class _AiHistoryPageState extends ConsumerState<AiHistoryPage> {
                     ? Chip(
                         key: Key('ai-batch-reverted-${b.id}'),
                         label: Text(l.aiHistoryReverted),
+                        backgroundColor: AppColors.of(context).aiSoft,
                         visualDensity: VisualDensity.compact,
                       )
                     : const Icon(Icons.chevron_right),

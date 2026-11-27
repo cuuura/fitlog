@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/api/dto.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
+import '../../core/theme.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
 import '../source_badge/source_badge.dart';
@@ -74,6 +75,7 @@ class SessionDetailPage extends ConsumerWidget {
             '${s.endedAt == null ? '' : ' - ${formatClock(sessionLocalTime(s.endedAt!, s.tz))}'}'
             ' · ${l.sessionVolume(formatVolume(sessionVolumeKg(s), unit))}',
             key: const Key('detail-header'),
+            style: TextStyle(color: AppColors.of(context).fg2),
           ),
           if (s.source != null && s.source != SessionSource.APP)
             Align(
@@ -109,7 +111,7 @@ class SessionDetailPage extends ConsumerWidget {
                     const SizedBox(height: 4),
                     if (se.sets.isEmpty) Text(l.sessionNoSets),
                     for (var i = 0; i < se.sets.length; i++)
-                      _line(l, se.sets[i], i, exercises[se.exerciseId]?.type ?? ExerciseType.BARBELL, unit),
+                      _line(context, l, se.sets[i], i, exercises[se.exerciseId]?.type ?? ExerciseType.BARBELL, unit),
                   ],
                 ),
               ),
@@ -119,7 +121,8 @@ class SessionDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _line(AppLocalizations l, WorkoutSet w, int i, ExerciseType type, WeightUnit unit) {
+  Widget _line(BuildContext context, AppLocalizations l, WorkoutSet w, int i, ExerciseType type, WeightUnit unit) {
+    final c = AppColors.of(context);
     final extra = [
       if (type == ExerciseType.DUMBBELL) l.sessionPerSide,
       if (w.rpe != null) '${l.sessionRpe} ${w.rpe}',
@@ -127,9 +130,22 @@ class SessionDetailPage extends ConsumerWidget {
       if (w.note != null) w.note!,
     ].join(' · ');
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Text(
-        '${w.isWarmup ? l.sessionWarmupShort : i + 1}  ${formatSetBrief(w, type, unit)}${extra.isEmpty ? '' : '  ($extra)'}',
+      padding: const EdgeInsets.symmetric(vertical: 3),
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 8,
+        runSpacing: 2,
+        children: [
+          SizedBox(
+            width: 28,
+            child: Text(
+              '${w.isWarmup ? l.sessionWarmupShort : i + 1}',
+              style: AppNum.table(context, color: c.fg2),
+            ),
+          ),
+          Text(formatSetBrief(w, type, unit), style: AppNum.style(context, 20)),
+          if (extra.isNotEmpty) Text(extra, style: TextStyle(fontSize: 12, color: c.fg2)),
+        ],
       ),
     );
   }

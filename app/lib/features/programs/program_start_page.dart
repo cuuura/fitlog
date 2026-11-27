@@ -11,6 +11,7 @@ import '../../core/clock.dart';
 import '../../core/ids.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
+import '../../core/theme.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -153,92 +154,175 @@ class _StartFormState extends ConsumerState<_StartForm> {
     final def = widget.view.program.definition;
     final fixedOk = programHasWeekdays(def);
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     final unmatched = [
       for (final d in _details)
         if (!widget.view.suggestions.any((s) => d.path.endsWith('/${s.key}'))) d,
     ];
 
     Widget basis(SuggestItem s) {
-      final text = s.oneRmKg == null || s.oneRmSource == null
-          ? (s.suggestedKg == null ? l.programStartNoBasis : null)
-          : (s.oneRmSource == OneRmSource.MEASURED
-                ? l.programStartMeasured(Units.format(s.oneRmKg!, unit))
-                : l.programStartEstimated(Units.format(s.oneRmKg!, unit)));
-      return text == null ? const SizedBox.shrink() : Text(text, style: theme.textTheme.bodySmall);
+      final rm = s.oneRmKg;
+      final src = s.oneRmSource;
+      if (rm == null || src == null) {
+        return s.suggestedKg == null ? Text(l.programStartNoBasis, style: theme.textTheme.bodySmall) : const SizedBox.shrink();
+      }
+      final measured = src == OneRmSource.MEASURED;
+      final tm = s.suggestedKg;
+      final String text;
+      if (tm == null) {
+        text = measured ? l.programStartMeasured(Units.format(rm, unit)) : l.programStartEstimated(Units.format(rm, unit));
+      } else if (s.needs == SuggestNeeds.TM) {
+        final pct = (tm / rm * 100).round();
+        text = measured
+            ? l.progStartBasisMeasured(Units.format(rm, unit), Units.format(tm, unit), pct)
+            : l.progStartBasisEstimated(Units.format(rm, unit), Units.format(tm, unit), pct);
+      } else {
+        text = measured
+            ? l.progStartBasisWorkingMeasured(Units.format(rm, unit), Units.format(tm, unit))
+            : l.progStartBasisWorkingEstimated(Units.format(rm, unit), Units.format(tm, unit));
+      }
+      return Text(text, style: theme.textTheme.bodySmall?.copyWith(color: colors.fg2));
     }
 
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Text(widget.view.program.name, style: theme.textTheme.titleLarge),
-        if (widget.view.suggestions.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Text(l.programStartWeightsHeader, style: theme.textTheme.titleMedium),
-          Text(l.programStartWeightsHelp, style: theme.textTheme.bodySmall),
-          for (final s in widget.view.suggestions) ...[
-            const SizedBox(height: 12),
-            TextField(
-              key: ValueKey('start-${_id(s)}'),
-              controller: _ctrls[_id(s)],
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                labelText: l.programStartFieldLabel(
-                  '${widget.view.lifts[s.key]?.name(context) ?? s.key} · ${s.needs == SuggestNeeds.TM ? l.programStartTm : l.programStartWorking}',
-                  unitText,
-                ),
-                helper: basis(s),
-                errorText: _errorsFor(s).isNotEmpty
-                    ? _errorsFor(s).join('\n')
-                    : (_submitted && _valueKg(s) == null ? l.programStartRequired : null),
-                border: const OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ],
-        const SizedBox(height: 24),
-        Text(l.programStartDate, style: theme.textTheme.titleMedium),
-        ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: const Icon(Icons.calendar_today),
-          title: Text(formatDate(_startDate)),
-          onTap: _pickDate,
+    Widget sourceChip(SuggestItem s) {
+      final src = s.oneRmSource;
+      if (src == null) return const SizedBox.shrink();
+      final measured = src == OneRmSource.MEASURED;
+      return Container(
+        key: Key('start-source-${_id(s)}'),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: measured ? colors.accentSoft : null,
+          border: measured ? null : Border.all(color: colors.line),
+          borderRadius: BorderRadius.circular(999),
         ),
-        const SizedBox(height: 8),
-        Text(l.programStartPolicy, style: theme.textTheme.titleMedium),
-        RadioGroup<SkipPolicy>(
-          groupValue: _policy,
-          onChanged: (v) {
-            if (v != null) setState(() => _policy = v);
-          },
-          child: Column(
+        child: Text(
+          measured ? l.progStartSourceMeasured : l.progStartSourceEstimated,
+          style: theme.textTheme.labelMedium?.copyWith(color: measured ? colors.accentStrong : colors.fg2),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
             children: [
-              RadioListTile<SkipPolicy>(
-                value: SkipPolicy.SHIFT,
-                title: Text(l.programSkipShift),
-                subtitle: Text(l.programSkipShiftDesc),
+              Text(widget.view.program.name, style: theme.textTheme.titleLarge),
+              if (widget.view.suggestions.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(l.progStartTmHeader, style: theme.textTheme.titleMedium),
+                Text(l.programStartWeightsHelp, style: theme.textTheme.bodySmall?.copyWith(color: colors.fg2)),
+                for (final s in widget.view.suggestions) ...[
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: colors.line),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.view.lifts[s.key]?.name(context) ?? s.key,
+                                style: theme.textTheme.titleSmall,
+                              ),
+                            ),
+                            sourceChip(s),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        basis(s),
+                        const SizedBox(height: 10),
+                        TextField(
+                          key: ValueKey('start-${_id(s)}'),
+                          controller: _ctrls[_id(s)],
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+                          onChanged: (_) => setState(() {}),
+                          style: AppNum.medium(context),
+                          decoration: InputDecoration(
+                            labelText: s.needs == SuggestNeeds.TM ? l.progStartTmField : l.progStartWorkingField,
+                            suffixText: unitText,
+                            errorText: _errorsFor(s).isNotEmpty
+                                ? _errorsFor(s).join('\n')
+                                : (_submitted && _valueKg(s) == null ? l.programStartRequired : null),
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+              const SizedBox(height: 24),
+              Text(l.programStartDate, style: theme.textTheme.titleMedium),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.calendar_today),
+                title: Text(formatDate(_startDate)),
+                onTap: _pickDate,
               ),
-              RadioListTile<SkipPolicy>(
-                value: SkipPolicy.FIXED_DATE,
-                enabled: fixedOk,
-                title: Text(l.programSkipFixed),
-                subtitle: Text(fixedOk ? l.programSkipFixedDesc : l.programSkipFixedUnavailable),
+              const SizedBox(height: 8),
+              Text(l.programStartPolicy, style: theme.textTheme.titleMedium),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: SegmentedButton<SkipPolicy>(
+                  key: const Key('start-skip-policy'),
+                  showSelectedIcon: false,
+                  segments: [
+                    ButtonSegment(
+                      value: SkipPolicy.SHIFT,
+                      label: Text(l.progSkipShiftSeg, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                    ButtonSegment(
+                      value: SkipPolicy.FIXED_DATE,
+                      enabled: fixedOk,
+                      label: Text(l.progSkipFixedSeg, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    ),
+                  ],
+                  selected: {_policy},
+                  onSelectionChanged: (s) => setState(() => _policy = s.first),
+                ),
               ),
+              const SizedBox(height: 6),
+              Text(
+                _policy == SkipPolicy.SHIFT
+                    ? l.programSkipShiftDesc
+                    : (fixedOk ? l.programSkipFixedDesc : l.programSkipFixedUnavailable),
+                style: theme.textTheme.bodySmall?.copyWith(color: colors.fg2),
+              ),
+              if (!fixedOk && _policy == SkipPolicy.SHIFT)
+                Text(l.programSkipFixedUnavailable, style: theme.textTheme.bodySmall?.copyWith(color: colors.fg2)),
+              if (_error != null) ...[
+                const SizedBox(height: 8),
+                Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
+                for (final d in unmatched) Text('${d.path}: ${d.message}', style: TextStyle(color: theme.colorScheme.error)),
+              ],
             ],
           ),
         ),
-        if (_error != null) ...[
-          const SizedBox(height: 8),
-          Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-          for (final d in unmatched) Text('${d.path}: ${d.message}', style: TextStyle(color: theme.colorScheme.error)),
-        ],
-        const SizedBox(height: 16),
-        FilledButton(
-          onPressed: _busy || !_complete ? null : _submit,
-          child: _busy
-              ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-              : Text(l.programStartSubmit),
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                key: const Key('start-submit'),
+                onPressed: _busy || !_complete ? null : _submit,
+                child: _busy
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    : Text(l.progStartCta),
+              ),
+            ),
+          ),
         ),
       ],
     );

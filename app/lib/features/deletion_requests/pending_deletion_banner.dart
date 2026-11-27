@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/routes.dart';
+import '../../core/theme.dart';
 import '../../l10n/gen/app_localizations.dart';
 import 'deletion_providers.dart';
 
@@ -34,20 +35,33 @@ class _PendingDeletionBannerState extends ConsumerState<PendingDeletionBanner> {
     final n = ref.watch(pendingDeletionCountProvider).value ?? 0;
     if (n <= 0) return const SizedBox.shrink();
     final l = AppLocalizations.of(context);
-    final scheme = Theme.of(context).colorScheme;
+    final ai = AppColors.of(context);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: Card(
+      child: Material(
         key: const Key('home-deletion-banner'),
-        color: scheme.errorContainer,
-        child: ListTile(
-          leading: Icon(Icons.delete_sweep_outlined, color: scheme.onErrorContainer),
-          title: Text(l.deletionBanner(n), style: TextStyle(color: scheme.onErrorContainer)),
-          trailing: Icon(Icons.chevron_right, color: scheme.onErrorContainer),
+        color: ai.aiSoft,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.md),
           onTap: () async {
             await context.push(Routes.deletionRequests);
             if (mounted) ref.invalidate(pendingDeletionCountProvider);
           },
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              child: Row(
+                children: [
+                  Icon(Icons.auto_awesome, color: ai.ai, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(l.deletionBanner(n), style: TextStyle(color: ai.fg))),
+                  Icon(Icons.chevron_right, color: ai.ai),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );

@@ -1444,5 +1444,330 @@
   "homeStartFreeSecondary": "Start a free session without a plan",
   "homeStartProgramHint": "Start a program and sets and weights fill in automatically",
   "homeStartProgramAction": "Start a program",
-  "instanceStartToday": "Start today's workout"
+  "instanceStartToday": "Start today's workout",
+  "shellNavToday": "Today",
+  "shellNavHistory": "History",
+  "shellNavPrograms": "Programs",
+  "shellNavMe": "Me",
+  "shellMiniActive": "In progress · {name} {done}/{total} sets",
+  "@shellMiniActive": {"placeholders": {"name": {"type": "String"}, "done": {"type": "int"}, "total": {"type": "int"}}},
+  "shellMiniRest": "Rest {time}",
+  "@shellMiniRest": {"placeholders": {"time": {"type": "String"}}},
+  "shellMiniOpen": "Open the session in progress",
+  "syncChipOfflinePending": "Offline · {count} pending",
+  "@syncChipOfflinePending": {"placeholders": {"count": {"type": "int"}}},
+  "meTitle": "Me",
+  "meGuestName": "FitLog user",
+  "meSectionBody": "Body",
+  "meBodyLatest": "Latest weight {weight}",
+  "@meBodyLatest": {"placeholders": {"weight": {"type": "String"}}},
+  "meBodyEmpty": "No entries yet",
+  "meSectionProfile": "Profile",
+  "meProfileEmpty": "Add height, sex and birth year",
+  "meSectionAi": "AI connection",
+  "meAiSubtitle": "Connect, import, deletion requests",
+  "meAiPending": "{count} deletion requests",
+  "@meAiPending": {"placeholders": {"count": {"type": "int"}}},
+  "meSectionExport": "Export",
+  "meExportSubtitle": "Save your data as a file",
+  "meSectionSettings": "Settings",
+  "meSettingsSubtitle": "Units, rest timer, account",
+  "meHeight": "Height {value}cm",
+  "@meHeight": {"placeholders": {"value": {"type": "String"}}},
+  "meBirthYear": "Born {year}",
+  "@meBirthYear": {"placeholders": {"year": {"type": "int"}}},
+  "bodyDeltaDown": "vs last week −{value}",
+  "@bodyDeltaDown": {"placeholders": {"value": {"type": "String"}}},
+  "bodyDeltaUp": "vs last week +{value}",
+  "@bodyDeltaUp": {"placeholders": {"value": {"type": "String"}}},
+  "bodyDeltaSame": "Same as last week",
+  "bodyChartTitle": "12-week weight",
+  "bodyChartDesc": "Over 12 weeks it went from {from} to {to}.",
+  "@bodyChartDesc": {"placeholders": {"from": {"type": "String"}, "to": {"type": "String"}}},
+  "bodyMetricHeight": "Height",
+  "bodyMetricBmi": "BMI",
+  "bodyMetricFat": "Body fat",
+  "bodyMetricMuscle": "Skeletal muscle",
+  "bodySourceManual": "Manual",
+  "bodySourceHealth": "Health Connect",
+  "bodySourceComputed": "Calculated",
+  "bodyTodayWeight": "Today's weight",
+  "bodyRecordAction": "Log weight",
+  "bodyHistoryTitle": "History",
+  "homeTodayTitle": "Today",
+  "homeDateLabel": "{weekday}, {month}/{day}",
+  "@homeDateLabel": {"placeholders": {"month": {"type": "int"}, "day": {"type": "int"}, "weekday": {"type": "String"}}},
+  "homeWeekdayLong": "{day, select, mon{Monday} tue{Tuesday} wed{Wednesday} thu{Thursday} fri{Friday} sat{Saturday} other{Sunday}}",
+  "@homeWeekdayLong": {"placeholders": {"day": {"type": "String"}}},
+  "homePlanSubToday": "Week {week} · {day} · due today",
+  "@homePlanSubToday": {"placeholders": {"week": {"type": "int"}, "day": {"type": "String"}}},
+  "homePlanSubLate": "Week {week} · {day}",
+  "@homePlanSubLate": {"placeholders": {"week": {"type": "int"}, "day": {"type": "String"}}},
+  "homeChipDue": "Due",
+  "homeChipLate": "{days, plural, =1{1 day behind} other{{days} days behind}}",
+  "@homeChipLate": {"placeholders": {"days": {"type": "int"}}},
+  "homeMainMeta": "Main · {sets} sets",
+  "@homeMainMeta": {"placeholders": {"sets": {"type": "int"}}},
+  "homeAuxName": "Accessory · {name}",
+  "@homeAuxName": {"placeholders": {"name": {"type": "String"}}},
+  "homeAuxSets": "{sets} sets",
+  "@homeAuxSets": {"placeholders": {"sets": {"type": "int"}}},
+  "homeAuxSetsWeight": "{sets} sets · {weight}",
+  "@homeAuxSetsWeight": {"placeholders": {"sets": {"type": "int"}, "weight": {"type": "String"}}},
+  "homeAuxMore": "{n} more accessories",
+  "@homeAuxMore": {"placeholders": {"n": {"type": "int"}}},
+  "homeStartWorkout": "Start workout",
+  "homeStartShort": "Start",
+  "homeSkip": "Skip",
+  "homeStartFreeLink": "Start a free workout",
+  "homeRecentToday": "Today",
+  "homeRecentYesterday": "Yesterday",
+  "summaryHeading": "Workout complete",
+  "summaryVolumeUnit": "Volume ({unit})",
+  "@summaryVolumeUnit": {"placeholders": {"unit": {"type": "String"}}},
+  "summarySetsShort": "Sets",
+  "summaryPrTitle": "{name} {weight} × {reps}",
+  "@summaryPrTitle": {"placeholders": {"name": {"type": "String"}, "weight": {"type": "String"}, "reps": {"type": "int"}}},
+  "summaryPrE1rm": "Estimated 1RM {value} · new record",
+  "@summaryPrE1rm": {"placeholders": {"value": {"type": "String"}}},
+  "summaryPrWeight": "Heaviest weight · new record",
+  "summaryMissTitle": "{n} below target",
+  "@summaryMissTitle": {"placeholders": {"n": {"type": "int"}}},
+  "summaryMissItem": "{name} {sets} sets {reps}/{target}",
+  "@summaryMissItem": {"placeholders": {"name": {"type": "String"}, "sets": {"type": "int"}, "reps": {"type": "int"}, "target": {"type": "int"}}},
+  "summaryNextHeading": "Next session weights",
+  "summaryTmName": "{name} TM",
+  "@summaryTmName": {"placeholders": {"name": {"type": "String"}}},
+  "summaryTmNoChange": "No change",
+  "summaryOffline": "Next weights are calculated once you are online",
+  "summaryOfflineCount": "Next weights are calculated once you are online · {count} waiting",
+  "@summaryOfflineCount": {"placeholders": {"count": {"type": "int"}}},
+  "summaryCompare": "Compare in graph",
+  "summaryClose": "Close",
+  "progSegActive": "In progress {n}",
+  "@progSegActive": {"placeholders": {"n": {"type": "int"}}},
+  "progSegTemplates": "Templates",
+  "progSegMine": "My programs",
+  "progImportAi": "Import a program with AI",
+  "progWeekDays": "{n} days/week",
+  "@progWeekDays": {"placeholders": {"n": {"type": "int"}}},
+  "progWeekStructure": "Weekly structure",
+  "progRules": "Rules",
+  "progRuleProgression": "Progression",
+  "progRuleFail": "Failure",
+  "progRuleDeload": "Deload",
+  "progRuleRound": "Rounding",
+  "progRuleSkip": "Skipping",
+  "progRuleAmrap": "Raise the TM by your AMRAP set reps",
+  "progRuleLinear": "Add {inc} after every successful session",
+  "@progRuleLinear": {"placeholders": {"inc": {"type": "String"}}},
+  "progRuleCycle": "Add {inc} at the end of each cycle",
+  "@progRuleCycle": {"placeholders": {"inc": {"type": "String"}}},
+  "progRuleStages": "Add {inc} on success; move to the next stage on failure",
+  "@progRuleStages": {"placeholders": {"inc": {"type": "String"}}},
+  "progRuleFailDefault": "A set below its target reps counts as a failure",
+  "progRuleFailStreak": "Deload after {n} failures in a row",
+  "@progRuleFailStreak": {"placeholders": {"n": {"type": "int"}}},
+  "progRuleDeloadPct": "−{pct}%",
+  "@progRuleDeloadPct": {"placeholders": {"pct": {"type": "int"}}},
+  "progRuleRoundKg": "Round to {value}",
+  "@progRuleRoundKg": {"placeholders": {"value": {"type": "String"}}},
+  "progRuleSkipHint": "Choose how at start",
+  "progRuleHold": "hold",
+  "progRuleReps": "{range} reps",
+  "@progRuleReps": {"placeholders": {"range": {"type": "String"}}},
+  "progSkipShiftSeg": "Shift to next day",
+  "progSkipFixedSeg": "Fixed dates",
+  "progStartTmHeader": "Starting TM",
+  "progStartSourceMeasured": "Measured",
+  "progStartSourceEstimated": "Estimated",
+  "progStartBasisMeasured": "Latest measured 1RM {rm} → TM {tm} ({pct}%)",
+  "@progStartBasisMeasured": {"placeholders": {"rm": {"type": "String"}, "tm": {"type": "String"}, "pct": {"type": "int"}}},
+  "progStartBasisEstimated": "Estimated 1RM {rm} → TM {tm} ({pct}%)",
+  "@progStartBasisEstimated": {"placeholders": {"rm": {"type": "String"}, "tm": {"type": "String"}, "pct": {"type": "int"}}},
+  "progStartBasisWorkingMeasured": "Latest measured 1RM {rm} → working {tm}",
+  "@progStartBasisWorkingMeasured": {"placeholders": {"rm": {"type": "String"}, "tm": {"type": "String"}}},
+  "progStartBasisWorkingEstimated": "Estimated 1RM {rm} → working {tm}",
+  "@progStartBasisWorkingEstimated": {"placeholders": {"rm": {"type": "String"}, "tm": {"type": "String"}}},
+  "progStartCta": "Start this program",
+  "progStartTmField": "TM",
+  "progStartWorkingField": "Work",
+  "histMonthStats": "{count} sessions · {volume}",
+  "@histMonthStats": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      },
+      "volume": {
+        "type": "String"
+      }
+    }
+  },
+  "histPlanLine": "{name} · {day} · #{seq}",
+  "@histPlanLine": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "day": {
+        "type": "String"
+      },
+      "seq": {
+        "type": "int"
+      }
+    }
+  },
+  "histMore": "+{n} more",
+  "@histMore": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "histWeekdays": "Mon,Tue,Wed,Thu,Fri,Sat,Sun",
+  "histFreeWorkout": "Free workout",
+  "cmpTitle": "Compare charts",
+  "cmpTabCompare": "Compare",
+  "cmpTabTrend": "Trend",
+  "cmpSetShort": "Set {n}",
+  "@cmpSetShort": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "cmpPrReps": "PR {n}",
+  "@cmpPrReps": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "cmpAxisReps": "Reps",
+  "cmpChartSemantics": "Reps per set. Today is filled, last time is hatched, previous PR is a dashed line with a star.",
+  "cmpLegendLast": "Last time",
+  "cmpLegendLastDate": "Last time ({date})",
+  "@cmpLegendLastDate": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "cmpLegendPrReps": "Previous PR reps",
+  "cmpColSet": "Set",
+  "cmpColLast": "Last",
+  "cmpColDiff": "Diff",
+  "cmpToday": "{date} today",
+  "@cmpToday": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "cmpTrendSemantics": "Estimated 1RM line chart. PRs are stars, the latest point is ringed.",
+  "cmpLegendE1rm": "Estimated 1RM",
+  "cmpLegendLatest": "Latest",
+  "cmpTrendRest": " · {date} {set} ({formula} estimate). {prs} PRs in the last {count} sessions.",
+  "@cmpTrendRest": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      },
+      "set": {
+        "type": "String"
+      },
+      "formula": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      },
+      "prs": {
+        "type": "int"
+      }
+    }
+  },
+  "impTitle": "Import from AI",
+  "impConfirmTitle": "Review import",
+  "impPasteLabel": "Paste JSON",
+  "impApplyAll": "Apply all",
+  "impCountPrograms": "Programs",
+  "impCountSessions": "Sessions",
+  "impCountBody": "Weights",
+  "impSaveNow": "{n} ready to save",
+  "@impSaveNow": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "impNeedCheck": "{n} need review",
+  "@impNeedCheck": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "impCheckNote": "Overlapping dates and similar names are checked by you before saving.",
+  "impShowConflicts": "Review {n} items",
+  "@impShowConflicts": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "impKeepBoth": "Keep both",
+  "impReplace": "Replace",
+  "impMapTo": "Same exercise",
+  "impCreate": "New exercise",
+  "impColExisting": "Existing",
+  "impColIncoming": "Imported",
+  "impColIncomingFrom": "Imported ({name})",
+  "@impColIncomingFrom": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "aiConnectedNever": "Connected · not used yet",
+  "aiConnectedToday": "Connected · used today",
+  "aiConnectedDaysAgo": "Connected · last used {n} days ago",
+  "@aiConnectedDaysAgo": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "aiDelSection": "AI deletion requests",
+  "aiDelRequested": "{name} asked to delete {label}",
+  "@aiDelRequested": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiDelRequestedNoName": "An AI asked to delete {label}",
+  "@aiDelRequestedNoName": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "aiDelNoSilent": "AI cannot delete anything without your approval.",
+  "aiDelApproveBtn": "Approve deletion"
 }

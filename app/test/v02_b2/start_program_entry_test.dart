@@ -98,8 +98,8 @@ void main() {
     final planY = t.getTopLeft(find.byKey(const Key('plan-card-i1'))).dy;
     final freeY = t.getTopLeft(find.byKey(const Key('home-start'))).dy;
     expect(planY, lessThan(freeY));
-    expect(find.text('오늘 운동 시작'), findsOneWidget);
-    expect(find.text('계획 없이 자유 세션 시작'), findsOneWidget);
+    expect(find.text('운동 시작'), findsOneWidget);
+    expect(find.text('자유 운동 시작'), findsOneWidget);
   });
 
   testWidgets('계획이 없으면 자유 시작이 위, 프로그램 안내가 보인다', (t) async {

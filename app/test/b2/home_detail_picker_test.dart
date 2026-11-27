@@ -43,7 +43,7 @@ void main() {
     await settle(t);
     expect(find.text('스쿼트 · 바벨'), findsOneWidget);
     expect(find.textContaining('볼륨 1000 kg'), findsOneWidget);
-    expect(find.text('W  40 kg×10'), findsOneWidget);
+    expect(find.text('40 kg×10'), findsOneWidget);
 
     await t.tap(find.byKey(const Key('detail-delete')));
     await settle(t);
@@ -53,12 +53,13 @@ void main() {
     expect(find.text('아직 기록이 없어요'), findsOneWidget);
   });
 
-  testWidgets('홈에서 설정 진입', (t) async {
+  testWidgets('홈 앱바에는 오늘 제목만 있고 이동 아이콘은 탭/나 화면으로 옮겨졌다', (t) async {
     final h = Harness();
     await h.pump(t);
-    await t.tap(find.byKey(const Key('home-settings')));
-    await settle(t);
-    expect(find.text('settings-page'), findsOneWidget);
+    expect(find.text('오늘'), findsWidgets);
+    for (final k in ['home-programs', 'home-history', 'home-body', 'home-profile', 'home-settings']) {
+      expect(find.byKey(Key(k)), findsNothing);
+    }
     expect(Routes.settings, '/settings');
   });
 

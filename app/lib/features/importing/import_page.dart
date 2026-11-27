@@ -12,9 +12,12 @@ import '../../core/api/dto.dart';
 import '../../core/clock.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
+import '../../core/theme.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../ai_connect/ai_avatar.dart';
 import '../session/session_controller.dart' show deviceTimezoneProvider;
+import '../sync_status/sync_status_indicator.dart';
 import 'conflict_card.dart';
 import 'import_controller.dart';
 import 'import_logic.dart';
@@ -45,6 +48,22 @@ class _ImportPageState extends ConsumerState<ImportPage> {
   /// 큰 파일 내용. 있으면 입력칸 대신 이것을 쓴다.
   String? _fileText;
   String? _inputError;
+
+  @override
+  void initState() {
+    super.initState();
+    _text.addListener(() {
+      if (mounted) setState(() {});
+    });
+  }
+
+  /// 입력칸 내용이 올바른 JSON 객체면 종류별 개수(목업 11번 요약 칸). 아니면 null.
+  Map<String, Object?>? get _parsedBundle {
+    final raw = _fileText ?? _text.text;
+    if (raw.trim().isEmpty) return null;
+    final r = parseBundle(raw);
+    return r is BundleParsed ? r.bundle : null;
+  }
 
   @override
   void dispose() {
@@ -139,7 +158,10 @@ class _ImportPageState extends ConsumerState<ImportPage> {
     final l = AppLocalizations.of(context);
     final s = ref.watch(importControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(l.importTitle)),
+      appBar: AppBar(
+        title: Text(s.step == ImportStep.preview ? l.impConfirmTitle : l.impTitle),
+        actions: const [SyncStatusIndicator(), SizedBox(width: 8)],
+      ),
       body: switch (s.step) {
         ImportStep.input => _input(l, s),
         ImportStep.working => _working(l, s),
@@ -174,8 +196,20 @@ class _ImportPageState extends ConsumerState<ImportPage> {
             controller: _text,
             minLines: 8,
             maxLines: 14,
-            style: const TextStyle(fontFamily: 'monospace', fontSize: 13),
-            decoration: InputDecoration(hintText: l.importPasteHint, border: const OutlineInputBorder()),
+            spellCheckConfiguration: const SpellCheckConfiguration.disabled(),
+            style: const TextStyle(fontFamily: 'monospace', fontSize: 12, height: 1.5),
+            decoration: InputDecoration(
+              labelText: l.impPasteLabel,
+              alignLabelWithHint: true,
+              floatingLabelBehavior: FloatingLabelBehavior.always,
+              hintText: l.importPasteHint,
+              filled: true,
+              fillColor: AppColors.of(context).surface2,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppRadius.md),
+                borderSide: BorderSide(color: AppColors.of(context).line),
+              ),
+            ),
           ),
         const SizedBox(height: 8),
         Wrap(
@@ -198,14 +232,18 @@ class _ImportPageState extends ConsumerState<ImportPage> {
         ),
         const SizedBox(height: 16),
         Text(l.importClientLabel, style: theme.textTheme.titleSmall),
+        const SizedBox(height: 4),
         Wrap(
           spacing: 8,
+          runSpacing: 4,
           children: [
             for (final n in importClientNames)
               ChoiceChip(
                 key: ValueKey('import-client-$n'),
+                avatar: n == '기타' ? null : AiAvatar(n, size: 24),
                 label: Text(_clientLabel(l, n)),
                 selected: _client == n,
+                materialTapTargetSize: MaterialTapTargetSize.padded,
                 onSelected: (_) => setState(() => _client = n),
               ),
           ],
@@ -217,6 +255,7 @@ class _ImportPageState extends ConsumerState<ImportPage> {
           icon: const Icon(Icons.copy),
           label: Text(l.importCopyPrompt),
         ),
+        if (_parsedBundle case final b?) _CountsPanel(key: const ValueKey('import-local-counts'), counts: bundleCounts(b)),
         if (_inputError != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),
@@ -301,12 +340,26 @@ String _statusLabel(AppLocalizations l, String status, int n) => switch (status)
   _ => '$status $n',
 };
 
-class _PreviewView extends ConsumerWidget {
+class _PreviewView extends ConsumerStatefulWidget {
   final ImportState state;
   const _PreviewView({required this.state});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_PreviewView> createState() => _PreviewViewState();
+}
+
+class _PreviewViewState extends ConsumerState<_PreviewView> {
+  final _conflictsKey = GlobalKey();
+
+  void _showConflicts() {
+    final c = _conflictsKey.currentContext;
+    if (c != null) Scrollable.ensureVisible(c, duration: const Duration(milliseconds: 250), alignment: 0.05);
+  }
+
+  ImportState get state => widget.state;
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final ctrl = ref.read(importControllerProvider.notifier);
@@ -328,6 +381,14 @@ class _PreviewView extends ConsumerWidget {
                 Text(l.importChunkInfo(state.total)),
                 const SizedBox(height: 8),
               ],
+              _CountsPanel(
+                key: const ValueKey('import-preview-counts'),
+                counts: previewCounts(p.counts),
+                saveNow: previewSaveNow(p.counts),
+                needCheck: conflicts.length,
+                onShowConflicts: conflicts.isEmpty ? null : _showConflicts,
+              ),
+              const SizedBox(height: 12),
               Text(l.importPreviewTitle, style: theme.textTheme.titleMedium),
               const SizedBox(height: 4),
               for (final e in p.counts.entries)
@@ -345,6 +406,7 @@ class _PreviewView extends ConsumerWidget {
                 Text(l.importNoConflicts, key: const ValueKey('import-no-conflicts'))
               else ...[
                 Row(
+                  key: _conflictsKey,
                   children: [
                     Expanded(child: Text(l.importConflictsTitle(conflicts.length), style: theme.textTheme.titleMedium)),
                     TextButton(
@@ -358,6 +420,8 @@ class _PreviewView extends ConsumerWidget {
                   ConflictCard(
                     key: ValueKey(c.conflictId),
                     conflict: c,
+                    incoming: incomingAt(state.chunks.isEmpty ? null : state.chunks[state.index], c.path),
+                    clientName: state.clientName,
                     resolution: state.resolutions[c.conflictId],
                     unit: unit,
                     onChanged: (r) => ctrl.setResolution(c.conflictId, r),
@@ -393,7 +457,7 @@ class _PreviewView extends ConsumerWidget {
                   child: FilledButton(
                     key: const ValueKey('import-save'),
                     onPressed: state.canSave ? ctrl.save : null,
-                    child: Text(state.saving ? l.importSaving : l.importSave),
+                    child: Text(state.saving ? l.importSaving : (conflicts.isEmpty ? l.importSave : l.impApplyAll)),
                   ),
                 ),
               ],
@@ -470,6 +534,121 @@ class _ResultView extends StatelessWidget {
           child: Text(l.importDone),
         ),
       ],
+    );
+  }
+}
+
+/// 종류별 개수(입력 단계, 붙여 넣은 JSON 기준).
+({int programs, int sessions, int body}) bundleCounts(Map<String, Object?> b) {
+  int n(String k) => b[k] is List ? (b[k] as List).length : 0;
+  return (programs: n('programs'), sessions: n('sessions'), body: n('bodyMeasurements'));
+}
+
+/// 서버 미리보기 counts에서 종류별 합(상태 무관).
+({int programs, int sessions, int body}) previewCounts(Map<String, Map<String, int>> counts) {
+  int sum(String k) => (counts[k] ?? const {}).values.fold(0, (a, b) => a + b);
+  return (programs: sum('programs'), sessions: sum('sessions'), body: sum('bodyMeasurements'));
+}
+
+/// 바로 저장되는 건수: 새로(NEW) 만들어지는 항목 합.
+int previewSaveNow(Map<String, Map<String, int>> counts) =>
+    counts.values.fold(0, (a, m) => a + (m['NEW'] ?? 0));
+
+/// JSON 포인터(/sessions/0)로 묶음에서 항목을 찾는다. 객체가 아니면 null.
+Map<String, Object?>? incomingAt(Map<String, Object?>? bundle, String pointer) {
+  if (bundle == null || !pointer.startsWith('/')) return null;
+  Object? cur = bundle;
+  for (final raw in pointer.substring(1).split('/')) {
+    final seg = raw.replaceAll('~1', '/').replaceAll('~0', '~');
+    if (cur is Map) {
+      cur = cur[seg];
+    } else if (cur is List) {
+      final i = int.tryParse(seg);
+      cur = i == null || i < 0 || i >= cur.length ? null : cur[i];
+    } else {
+      return null;
+    }
+  }
+  return cur is Map ? cur.cast<String, Object?>() : null;
+}
+
+/// 목업 11번 요약 칸: 큰 숫자 3개 + (미리보기 후) "바로 저장 N건 · 확인 필요 M건".
+class _CountsPanel extends StatelessWidget {
+  const _CountsPanel({super.key, required this.counts, this.saveNow, this.needCheck, this.onShowConflicts});
+  final ({int programs, int sessions, int body}) counts;
+  final int? saveNow;
+  final int? needCheck;
+  final VoidCallback? onShowConflicts;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final c = AppColors.of(context);
+    Widget cell(int n, String label, Key key) => Expanded(
+      child: Column(
+        children: [
+          Text('$n', key: key, style: AppNum.style(context, 32)),
+          Text(label, style: TextStyle(fontSize: 12, color: c.fg2)),
+        ],
+      ),
+    );
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: c.line),
+        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              cell(counts.programs, l.impCountPrograms, const Key('count-big-programs')),
+              cell(counts.sessions, l.impCountSessions, const Key('count-big-sessions')),
+              cell(counts.body, l.impCountBody, const Key('count-big-body')),
+            ],
+          ),
+          if (saveNow != null && needCheck != null) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              children: [
+                Chip(
+                  key: const Key('chip-save-now'),
+                  avatar: Icon(Icons.check, size: 16, color: c.accentStrong),
+                  label: Text(l.impSaveNow(saveNow!), style: TextStyle(color: c.accentStrong, fontWeight: FontWeight.w600)),
+                  backgroundColor: c.accentSoft,
+                ),
+                if (needCheck! > 0)
+                  Chip(
+                    key: const Key('chip-need-check'),
+                    avatar: Icon(Icons.warning_amber_rounded, size: 16, color: c.warn),
+                    label: Text(l.impNeedCheck(needCheck!), style: const TextStyle(fontWeight: FontWeight.w600)),
+                    backgroundColor: c.warnSoft,
+                  ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(l.impCheckNote, style: TextStyle(fontSize: 12, color: c.fg2)),
+            ),
+            if (onShowConflicts != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    key: const Key('import-show-conflicts'),
+                    onPressed: onShowConflicts,
+                    child: Text(l.impShowConflicts(needCheck!)),
+                  ),
+                ),
+              ),
+          ],
+        ],
+      ),
     );
   }
 }

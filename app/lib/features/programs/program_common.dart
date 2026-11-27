@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/api/api_client.dart';
 import '../../core/api/dto.dart';
 import '../../core/api/program_dto.dart';
+import '../../core/units.dart';
 import '../../domain/repositories.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
@@ -144,3 +145,72 @@ Future<bool> confirmDialog(
 
 /// 입력한 숫자(소수점 쉼표 허용). 비었거나 잘못되면 null.
 double? parseNumber(String s) => double.tryParse(s.trim().replaceAll(',', '.'));
+
+/// 프로그램 정의의 progression 맵. lift 키 → 규칙(JSON 맵).
+Map<String, Map<String, Object?>> programProgressions(Map<String, Object?> def) => {
+  for (final e in ((def['progression'] as Map?) ?? const {}).entries)
+    e.key as String: (e.value as Map).cast<String, Object?>(),
+};
+
+/// 규칙 화면 한 줄(아이콘·제목·설명·선택 표).
+class RuleEntry {
+  const RuleEntry(this.icon, this.title, this.body, {this.table = const []});
+  final IconData icon;
+  final String title;
+  final String body;
+
+  /// 증량 표: (구간 라벨, 증감 라벨).
+  final List<(String, String)> table;
+}
+
+/// 정의에서 읽을 수 있는 규칙만 만든다. 정의에 없는 규칙(예: 디로드 −%)은 넣지 않는다.
+List<RuleEntry> programRuleEntries(AppLocalizations l, Map<String, Object?> def, WeightUnit unit) {
+  String kg(num v) => Units.format(v.toDouble(), unit);
+  String signed(num v) => v == 0 ? l.progRuleHold : '+${Units.format(v.toDouble(), unit, withUnit: false)}';
+  final prog = programProgressions(def);
+  final out = <RuleEntry>[];
+  final seen = <String>{};
+  var failStreak = 0;
+  num? deloadPct;
+  for (final r in prog.values) {
+    final type = r['type'] as String?;
+    final inc = r['incrementKg'] as num?;
+    if (r['failuresBeforeDeload'] is num) failStreak = (r['failuresBeforeDeload'] as num).toInt();
+    deloadPct ??= r['deloadPercent'] as num?;
+    if (type == null || !seen.add(type)) continue;
+    switch (type) {
+      case 'AMRAP_TABLE':
+        final rows = <(String, String)>[];
+        for (final row in (r['table'] as List? ?? const [])) {
+          final m = (row as Map).cast<String, Object?>();
+          final min = (m['minReps'] as num).toInt();
+          final max = (m['maxReps'] as num?)?.toInt();
+          final range = max == null ? '$min+' : (min == max ? '$min' : '$min–$max');
+          rows.add((l.progRuleReps(range), signed(m['incrementKg'] as num)));
+        }
+        out.add(RuleEntry(Icons.trending_up, l.progRuleProgression, l.progRuleAmrap, table: rows));
+      case 'LINEAR':
+        out.add(RuleEntry(Icons.trending_up, l.progRuleProgression, l.progRuleLinear(inc == null ? '' : kg(inc))));
+      case 'CYCLE':
+        out.add(RuleEntry(Icons.trending_up, l.progRuleProgression, l.progRuleCycle(inc == null ? '' : kg(inc))));
+      case 'STAGES':
+        out.add(RuleEntry(Icons.trending_up, l.progRuleProgression, l.progRuleStages(inc == null ? '' : kg(inc))));
+    }
+  }
+  out.add(
+    RuleEntry(
+      Icons.error_outline,
+      l.progRuleFail,
+      failStreak > 0 ? l.progRuleFailStreak(failStreak) : l.progRuleFailDefault,
+    ),
+  );
+  if (deloadPct != null) {
+    out.add(RuleEntry(Icons.trending_down, l.progRuleDeload, l.progRuleDeloadPct((deloadPct * 100).round())));
+  }
+  final rounding = def['roundingKg'] as num?;
+  if (rounding != null) out.add(RuleEntry(Icons.straighten, l.progRuleRound, l.progRuleRoundKg(kg(rounding))));
+  out.add(
+    RuleEntry(Icons.skip_next, l.progRuleSkip, '${l.progSkipShiftSeg} / ${l.progSkipFixedSeg} · ${l.progRuleSkipHint}'),
+  );
+  return out;
+}

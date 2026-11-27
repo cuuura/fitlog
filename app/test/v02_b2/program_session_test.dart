@@ -83,10 +83,12 @@ void main() {
       expect(find.byKey(const Key('plan-card-i1')), findsOneWidget);
       expect(find.text('GZCLP'), findsOneWidget);
       expect(find.textContaining('데이 A'), findsOneWidget);
-      expect(find.text('스쿼트 100 kg'), findsOneWidget);
+      expect(find.text('스쿼트'), findsOneWidget);
+      expect(find.byKey(const Key('plan-main-weight-i1')), findsOneWidget);
+      expect(find.textContaining('100'), findsWidgets);
       expect(find.byKey(const Key('plan-estimated-i1')), findsNothing);
-      expect(find.byKey(const Key('home-programs')), findsOneWidget);
-      expect(find.byKey(const Key('home-history')), findsOneWidget);
+      expect(find.byKey(const Key('home-programs')), findsNothing);
+      expect(find.byKey(const Key('home-history')), findsNothing);
 
       await t.tap(find.byKey(const Key('plan-start-i1')));
       await settle(t);
@@ -173,11 +175,10 @@ void main() {
       expect(find.byKey(const Key('summary-sets')), findsOneWidget);
       // 완료한 세트 2개(워밍업 없음), 볼륨 95*5 + 100*3
       expect(t.widget<Text>(find.byKey(const Key('summary-sets'))).data, '2');
-      expect(find.text('775 kg'), findsOneWidget);
+      expect(t.widget<Text>(find.byKey(const Key('summary-volume'))).data, '775');
       // 종목 판정: 스쿼트는 실패, 보조운동은 판정 없음
-      expect(find.byKey(Key('result-${se.id}')), findsOneWidget);
-      expect(find.text('실패'), findsOneWidget);
-      expect(find.byKey(Key('result-${s.exercises[1].id}')), findsNothing);
+      expect(find.byKey(const Key('summary-miss')), findsOneWidget);
+      expect(find.textContaining('목표 미달 1건'), findsOneWidget);
       // 다음 회차
       expect(find.byKey(const Key('summary-next')), findsOneWidget);
       expect(find.text('데이 A · 3주차'), findsOneWidget);
@@ -189,7 +190,7 @@ void main() {
     },
   );
 
-  testWidgets('예상(확정 아님) 계획이면 요약에 "연결되면 계산됩니다"', (t) async {
+  testWidgets('예상(확정 아님) 계획이면 요약에 "연결되면 계산돼요"', (t) async {
     final h = Harness();
     await setup(h, plans: [planOf(2, 100, confirmed: false)]);
     await h.pump(t);
@@ -201,7 +202,7 @@ void main() {
     await t.tap(find.byKey(const Key('end-confirm')));
     await settle(t, 12);
     expect(find.byKey(const Key('summary-next-pending')), findsOneWidget);
-    expect(find.text('연결되면 계산됩니다'), findsOneWidget);
+    expect(find.text('다음 무게는 연결되면 계산돼요'), findsOneWidget);
   });
 
   testWidgets('무게 없는 계획 세트는 지난 기록 무게로 채운다', (t) async {

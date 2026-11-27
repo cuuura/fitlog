@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
+import '../../core/theme.dart';
 import '../../data/providers.dart';
 import '../../domain/repositories.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -21,7 +22,10 @@ String _formatLocal(DateTime t) {
   return '${d.year}-${two(d.month)}-${two(d.day)} ${two(d.hour)}:${two(d.minute)}';
 }
 
-/// 동기화 상태 아이콘. 탭하면 [showSyncStatusSheet].
+String _chipText(AppLocalizations l, SyncStatus s) =>
+    s.phase == SyncPhase.offline && s.pending > 0 ? l.syncChipOfflinePending(s.pending) : _statusText(l, s);
+
+/// 앱바 오른쪽 동기화 칩(목업): 상태 점 + 짧은 문구. 탭하면 [showSyncStatusSheet].
 class SyncStatusIndicator extends ConsumerWidget {
   const SyncStatusIndicator({super.key});
 
@@ -29,30 +33,54 @@ class SyncStatusIndicator extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final s = ref.watch(syncStatusProvider).value ?? const SyncStatus();
-    final scheme = Theme.of(context).colorScheme;
-    final Widget icon;
+    final c = AppColors.of(context);
+    final Widget mark;
     if (s.phase == SyncPhase.syncing) {
-      icon = const SizedBox(
+      mark = const SizedBox(
         key: Key('sync-icon-syncing'),
-        width: 20,
-        height: 20,
+        width: 12,
+        height: 12,
         child: CircularProgressIndicator(strokeWidth: 2),
       );
     } else {
-      final (IconData data, String key, Color? color) = switch (s.phase) {
-        SyncPhase.offline => (Icons.cloud_off_outlined, 'offline', null),
-        SyncPhase.error => (Icons.error_outline, 'error', scheme.error),
-        _ => s.pending > 0
-            ? (Icons.cloud_upload_outlined, 'pending', null)
-            : (Icons.cloud_done_outlined, 'done', null),
+      final (IconData data, String key, Color color) = switch (s.phase) {
+        SyncPhase.offline => (Icons.cloud_off_outlined, 'offline', c.fg2),
+        SyncPhase.error => (Icons.error_outline, 'error', c.fail),
+        _ => s.pending > 0 ? (Icons.cloud_upload_outlined, 'pending', c.warn) : (Icons.circle, 'done', c.accent),
       };
-      icon = Icon(data, key: Key('sync-icon-$key'), color: color);
+      mark = Icon(data, key: Key('sync-icon-$key'), size: data == Icons.circle ? 8 : 14, color: color);
     }
-    return IconButton(
-      key: const Key('sync-indicator'),
-      tooltip: _statusText(l, s),
-      icon: icon,
-      onPressed: () => showSyncStatusSheet(context),
+    return Tooltip(
+      message: _statusText(l, s),
+      child: Semantics(
+        button: true,
+        label: _chipText(l, s),
+        excludeSemantics: true,
+        child: InkWell(
+          key: const Key('sync-indicator'),
+          borderRadius: BorderRadius.circular(24),
+          onTap: () => showSyncStatusSheet(context),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+            child: Center(
+              child: Container(
+                margin: const EdgeInsetsDirectional.only(end: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(color: c.surface3, borderRadius: BorderRadius.circular(24)),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    mark,
+                    const SizedBox(width: 6),
+                    Text(_chipText(l, s),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: c.fg)),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

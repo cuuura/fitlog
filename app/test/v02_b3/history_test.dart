@@ -55,7 +55,12 @@ void main() {
     expect(find.byKey(Key('history-${free.id}')), findsOneWidget);
     expect(find.byKey(Key('history-${old.id}')), findsOneWidget);
     expect(find.byKey(Key('history-${active.id}')), findsNothing);
-    expect(find.text('1종목 · 1세트 · 500 kg'), findsOneWidget);
+    // 월 머리말(불러온 범위 기준): 세션 수·볼륨 합. 행: 종목 요약과 큰 볼륨 숫자.
+    expect(find.byKey(const Key('month-stats-2026-11')), findsOneWidget);
+    expect(find.text('세션 2회 · 1,500kg'), findsOneWidget); // 11월: 자유(500) + 프로그램 계획 세트(1,000) // 11월: 자유(500) + 프로그램(0)
+    expect(find.text('500'), findsOneWidget);
+    expect(find.text('스쿼트'), findsWidgets);
+    expect(find.text('자유 운동'), findsWidgets);
 
     expect(find.byKey(Key('badge-${prog.id}')), findsOneWidget);
     expect(find.text('프로그램 A · 4회차'), findsOneWidget);

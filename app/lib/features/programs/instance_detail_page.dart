@@ -9,6 +9,7 @@ import '../../core/api/program_dto.dart';
 import '../../core/ids.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
+import '../../core/theme.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -276,30 +277,45 @@ class _Body extends ConsumerWidget {
           ),
         const SizedBox(height: 16),
         Text(l.instanceSkipPolicy, style: theme.textTheme.titleMedium),
-        RadioGroup<SkipPolicy>(
-          groupValue: inst.skipPolicy,
-          onChanged: (p) {
-            if (p == null || p == inst.skipPolicy) return;
-            run(() async {
-              await ref.read(programRepositoryProvider).patchInstance(inst.id, InstancePatch(skipPolicy: p));
-            });
-          },
-          child: Column(
-            children: [
-              RadioListTile<SkipPolicy>(
+        const SizedBox(height: 8),
+        SizedBox(
+          width: double.infinity,
+          child: SegmentedButton<SkipPolicy>(
+            key: const Key('instance-skip-policy'),
+            showSelectedIcon: false,
+            segments: [
+              ButtonSegment(
                 value: SkipPolicy.SHIFT,
-                title: Text(l.programSkipShift),
-                subtitle: Text(l.programSkipShiftDesc),
+                label: Text(l.progSkipShiftSeg, maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
-              RadioListTile<SkipPolicy>(
+              ButtonSegment(
                 value: SkipPolicy.FIXED_DATE,
                 enabled: fixedOk,
-                title: Text(l.programSkipFixed),
-                subtitle: Text(fixedOk ? l.programSkipFixedDesc : l.programSkipFixedUnavailable),
+                label: Text(l.progSkipFixedSeg, maxLines: 1, overflow: TextOverflow.ellipsis),
               ),
             ],
+            selected: {inst.skipPolicy},
+            onSelectionChanged: (s) {
+              final p = s.first;
+              if (p == inst.skipPolicy) return;
+              run(() async {
+                await ref.read(programRepositoryProvider).patchInstance(inst.id, InstancePatch(skipPolicy: p));
+              });
+            },
           ),
         ),
+        const SizedBox(height: 6),
+        Text(
+          inst.skipPolicy == SkipPolicy.SHIFT
+              ? l.programSkipShiftDesc
+              : (fixedOk ? l.programSkipFixedDesc : l.programSkipFixedUnavailable),
+          style: theme.textTheme.bodySmall?.copyWith(color: AppColors.of(context).fg2),
+        ),
+        if (!fixedOk)
+          Text(
+            l.programSkipFixedUnavailable,
+            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.of(context).fg2),
+          ),
         const SizedBox(height: 16),
         Text(l.instanceWeights, style: theme.textTheme.titleMedium),
         for (final k in {...st.tm.keys, ...st.working.keys})
@@ -307,10 +323,13 @@ class _Body extends ConsumerWidget {
             dense: true,
             contentPadding: EdgeInsets.zero,
             title: Text(_liftName(context, k)),
-            subtitle: Text([
-              if (st.tm[k] != null) l.instanceTmLabel(Units.format(st.tm[k]!, unit)),
-              if (st.working[k] != null) l.instanceWorkingLabel(Units.format(st.working[k]!, unit)),
-            ].join(' · ')),
+            subtitle: Text(
+              [
+                if (st.tm[k] != null) l.instanceTmLabel(Units.format(st.tm[k]!, unit)),
+                if (st.working[k] != null) l.instanceWorkingLabel(Units.format(st.working[k]!, unit)),
+              ].join(' · '),
+              style: AppNum.table(context),
+            ),
           ),
         Align(
           alignment: Alignment.centerLeft,

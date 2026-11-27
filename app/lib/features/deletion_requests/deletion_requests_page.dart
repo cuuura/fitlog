@@ -5,9 +5,11 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/api/ai_dto.dart';
 import '../../core/api/api_client.dart';
 import '../../core/clock.dart';
+import '../../core/theme.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../ai_history/ai_labels.dart';
+import '../ai_connect/ai_avatar.dart';
 import '../programs/program_common.dart' show ErrorRetry;
 import '../session/active_session_page.dart' show confirmDialog;
 import 'deletion_providers.dart';
@@ -121,7 +123,10 @@ class _DeletionRequestsPageState extends ConsumerState<DeletionRequestsPage> {
       return ListView(
         key: Key(pending ? 'deletion-list-pending' : 'deletion-list-done'),
         padding: const EdgeInsets.all(12),
-        children: [for (final r in items) _tile(context, l, r, now)],
+        children: [
+          if (pending) _Sep(l.aiDelSection),
+          for (final r in items) _tile(context, l, r, now),
+        ],
       );
     }
 
@@ -161,45 +166,93 @@ class _DeletionRequestsPageState extends ConsumerState<DeletionRequestsPage> {
       DeletionStatus.REJECTED => l.deletionStatusRejected,
       DeletionStatus.EXPIRED => l.deletionStatusExpired,
     };
-    return Card(
+    final c = AppColors.of(context);
+    final who = r.clientName;
+    final label = r.label ?? aiEntityLabel(l, r.entity);
+    // 삭제는 가장 무거운 행동이라 AI 출처(파랑) 카드로 따로 구분하고, 승인은 테두리 버튼으로.
+    return Container(
       key: Key('deletion-${r.id}'),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(r.label ?? r.entityId, style: theme.textTheme.titleMedium),
-            Text(aiEntityLabel(l, r.entity), style: theme.textTheme.bodySmall),
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(color: c.aiSoft, borderRadius: BorderRadius.circular(AppRadius.md)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (who != null) ...[AiAvatar(who, size: 28), const SizedBox(width: 8)] else
+                Icon(Icons.auto_awesome, size: 20, color: c.ai),
+              Expanded(
+                child: Text(
+                  who == null ? l.aiDelRequestedNoName(label) : l.aiDelRequested(who, label),
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.35),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(aiEntityLabel(l, r.entity), style: theme.textTheme.bodySmall?.copyWith(color: c.fg2)),
+          if (r.reason != null) Text(l.deletionReason(r.reason!), style: const TextStyle(fontSize: 14)),
+          Text(l.deletionRequestedAt(aiDateTime(r.createdAt)), style: theme.textTheme.bodySmall?.copyWith(color: c.fg2)),
+          Text(statusText, key: Key('deletion-status-${r.id}'), style: theme.textTheme.bodySmall?.copyWith(color: c.fg2)),
+          if (pending) ...[
             const SizedBox(height: 8),
-            if (r.clientName != null) Text(l.deletionRequestedBy(r.clientName!)),
-            if (r.reason != null) Text(l.deletionReason(r.reason!)),
-            Text(l.deletionRequestedAt(aiDateTime(r.createdAt))),
-            Text(statusText, key: Key('deletion-status-${r.id}')),
-            if (pending) ...[
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
+            Text(l.aiDelNoSilent, key: Key('deletion-note-${r.id}'), style: const TextStyle(fontSize: 14)),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    key: Key('deletion-approve-${r.id}'),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.surface,
+                      foregroundColor: c.fail,
+                      side: BorderSide(color: c.fail),
+                    ),
+                    icon: const Icon(Icons.delete_outline, size: 20),
+                    onPressed: _busyId != null || expired ? null : () => _decide(r, approve: true),
+                    label: Text(l.aiDelApproveBtn),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
                     key: Key('deletion-reject-${r.id}'),
+                    style: OutlinedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.surface,
+                      foregroundColor: c.fg,
+                    ),
                     onPressed: _busyId != null || expired ? null : () => _decide(r, approve: false),
                     child: Text(l.deletionReject),
                   ),
-                  const SizedBox(width: 8),
-                  FilledButton(
-                    key: Key('deletion-approve-${r.id}'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: theme.colorScheme.error,
-                      foregroundColor: theme.colorScheme.onError,
-                    ),
-                    onPressed: _busyId != null || expired ? null : () => _decide(r, approve: true),
-                    child: Text(l.deletionApprove),
-                  ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ],
-        ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Sep extends StatelessWidget {
+  const _Sep(this.text);
+  final String text;
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 6),
+      child: Row(
+        children: [
+          Expanded(child: Divider(color: c.line)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(text, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: c.fg2)),
+          ),
+          Expanded(child: Divider(color: c.line)),
+        ],
       ),
     );
   }

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/routes.dart';
+import '../../core/theme.dart';
 import '../../l10n/gen/app_localizations.dart';
 
 /// [source]는 SessionSource·ProgramSource·MeasurementSource 등 이름이 AI_JSON·AI_MCP·IMPORT인 enum(또는 null).
@@ -23,13 +24,24 @@ class SourceBadge extends StatelessWidget {
     };
     if (spec == null) return const SizedBox.shrink();
     final id = importBatchId;
-    final label = Text(spec.$1);
-    final icon = Icon(spec.$2, size: 16);
+    // 목업 톤: AI 출처는 항상 파란(ai) 배지. 색만이 아니라 반짝임 아이콘과 문구가 같이 간다.
+    final c = AppColors.of(context);
+    final label = Text(spec.$1, style: TextStyle(color: c.ai, fontSize: 12, fontWeight: FontWeight.w600));
+    final icon = Icon(spec.$2, size: 16, color: c.ai);
     return id == null
-        ? Chip(avatar: icon, label: label, visualDensity: VisualDensity.compact, padding: EdgeInsets.zero)
+        ? Chip(
+            avatar: icon,
+            label: label,
+            backgroundColor: c.aiSoft,
+            side: BorderSide.none,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+          )
         : ActionChip(
             avatar: icon,
             label: label,
+            backgroundColor: c.aiSoft,
+            side: BorderSide.none,
             visualDensity: VisualDensity.compact,
             padding: EdgeInsets.zero,
             onPressed: () => context.push(Routes.aiHistoryDetail(id)),

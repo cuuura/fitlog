@@ -216,25 +216,32 @@ void main() {
       expect(find.textContaining('2주차'), findsOneWidget);
       expect(find.textContaining('다음: Workout B'), findsOneWidget);
 
-      await tester.tap(find.text('프로그램').last);
+      expect(find.text('진행 중 1'), findsOneWidget);
+      await tester.tap(find.text('템플릿'));
       await tester.pumpAndSettle();
-      expect(find.text('템플릿'), findsOneWidget);
       expect(find.text('내 프로그램'), findsOneWidget);
       expect(find.text('템플릿 5x5'), findsOneWidget);
+      expect(find.text('내 루틴'), findsNothing);
+      expect(find.byIcon(Icons.delete_outline), findsNothing);
+      expect(find.byKey(const Key('programs-import-ai')), findsOneWidget);
+      await tester.tap(find.text('내 프로그램'));
+      await tester.pumpAndSettle();
       expect(find.text('내 루틴'), findsOneWidget);
       // 내 프로그램에만 삭제 버튼이 있다
       expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+      await tester.tap(find.text('템플릿'));
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text('템플릿 5x5'));
       await tester.pumpAndSettle();
-      expect(find.text('Workout A · 월'), findsOneWidget);
+      expect(find.text('월'), findsOneWidget);
     });
 
     testWidgets('오프라인이면 안내와 다시 시도', (tester) async {
       final env = _Env();
       env.programs.listError = const ApiException(code: 'NETWORK', message: 'x');
       await env.pump(tester, Routes.programs);
-      await tester.tap(find.text('프로그램').last);
+      await tester.tap(find.text('템플릿'));
       await tester.pumpAndSettle();
       expect(find.textContaining('서버에 연결할 수 없어요'), findsOneWidget);
       env.programs.listError = null;
@@ -246,7 +253,7 @@ void main() {
     testWidgets('내 프로그램 삭제는 확인 후', (tester) async {
       final env = _Env();
       await env.pump(tester, Routes.programs);
-      await tester.tap(find.text('프로그램').last);
+      await tester.tap(find.text('내 프로그램'));
       await tester.pumpAndSettle();
       await tester.tap(find.byIcon(Icons.delete_outline));
       await tester.pumpAndSettle();
@@ -262,11 +269,11 @@ void main() {
     final env = _Env();
     await env.pump(tester, Routes.programDetail('p-tpl'));
     expect(find.text('템플릿 5x5 설명'), findsOneWidget);
-    expect(find.text('Workout A · 월'), findsOneWidget);
-    expect(find.text('스쿼트  5×5'), findsOneWidget);
-    expect(find.text('벤치프레스  8,6,4,4,4,8+'), findsOneWidget);
-    expect(find.text('스쿼트  3×5'), findsOneWidget);
-    await tester.tap(find.text('시작'));
+    expect(find.text('월'), findsOneWidget);
+    expect(find.textContaining('스쿼트  5×5'), findsOneWidget);
+    expect(find.textContaining('벤치프레스  8,6,4,4,4,8+'), findsOneWidget);
+    expect(find.textContaining('스쿼트  3×5'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('program-start')));
     await tester.pumpAndSettle();
     expect(find.text('프로그램 시작'), findsOneWidget);
   });
@@ -276,9 +283,9 @@ void main() {
       final env = _Env();
       await env.pump(tester, Routes.programStart('p-tpl'));
       expect(find.widgetWithText(TextField, '100'), findsOneWidget);
-      expect(find.textContaining('측정한 1RM 120 kg'), findsOneWidget);
+      expect(find.textContaining('최근 측정 1RM 120 kg'), findsOneWidget);
       expect(find.textContaining('직접 입력'), findsOneWidget);
-      FilledButton btn() => tester.widget<FilledButton>(find.widgetWithText(FilledButton, '시작하기'));
+      FilledButton btn() => tester.widget<FilledButton>(find.widgetWithText(FilledButton, '이 프로그램 시작'));
       expect(btn().onPressed, isNull);
       await tester.enterText(find.byKey(const ValueKey('start-WORKING:bench')), '60');
       await tester.pump();
@@ -290,7 +297,7 @@ void main() {
       await env.pump(tester, Routes.programStart('p-tpl'));
       await tester.enterText(find.byKey(const ValueKey('start-WORKING:bench')), '60');
       await tester.pump();
-      await tester.tap(find.text('시작하기'));
+      await tester.tap(find.text('이 프로그램 시작'));
       await tester.pumpAndSettle();
       final i = env.programs.instances.values.single;
       expect(i.state.tm, {'squat': 100});
@@ -308,7 +315,7 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('start-TM:squat')), '225');
       await tester.enterText(find.byKey(const ValueKey('start-WORKING:bench')), '135');
       await tester.pump();
-      await tester.tap(find.text('시작하기'));
+      await tester.tap(find.text('이 프로그램 시작'));
       await tester.pumpAndSettle();
       final i = env.programs.instances.values.single;
       expect(i.state.tm['squat'], closeTo(102.06, 0.001));
@@ -317,10 +324,10 @@ void main() {
 
     testWidgets('요일이 없는 프로그램은 FIXED_DATE 비활성, 있으면 선택 가능', (tester) async {
       bool fixedEnabled() => tester
-          .widget<RadioListTile<SkipPolicy>>(
-            find.byWidgetPredicate((w) => w is RadioListTile<SkipPolicy> && w.value == SkipPolicy.FIXED_DATE),
-          )
-          .enabled ?? true;
+          .widget<SegmentedButton<SkipPolicy>>(find.byKey(const Key('start-skip-policy')))
+          .segments
+          .firstWhere((s) => s.value == SkipPolicy.FIXED_DATE)
+          .enabled;
       final env = _Env();
       await env.pump(tester, Routes.programStart('p-noday'));
       expect(fixedEnabled(), isFalse);
@@ -330,9 +337,9 @@ void main() {
       await env2.pump(tester, Routes.programStart('p-tpl'));
       expect(fixedEnabled(), isTrue);
       await tester.enterText(find.byKey(const ValueKey('start-WORKING:bench')), '60');
-      await tester.tap(find.text('요일 고정'));
+      await tester.tap(find.text('날짜 고정'));
       await tester.pump();
-      await tester.tap(find.text('시작하기'));
+      await tester.tap(find.text('이 프로그램 시작'));
       await tester.pumpAndSettle();
       expect(env2.programs.instances.values.single.skipPolicy, SkipPolicy.FIXED_DATE);
     });
@@ -348,7 +355,7 @@ void main() {
       await env.pump(tester, Routes.programStart('p-tpl'));
       await tester.enterText(find.byKey(const ValueKey('start-WORKING:bench')), '1');
       await tester.pump();
-      await tester.tap(find.text('시작하기'));
+      await tester.tap(find.text('이 프로그램 시작'));
       await tester.pumpAndSettle();
       expect(find.text('너무 가벼워요'), findsOneWidget);
       expect(env.programs.instances, isEmpty);

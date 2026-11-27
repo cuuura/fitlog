@@ -6,25 +6,85 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/api/program_dto.dart';
 import '../../core/routes.dart';
 import '../../data/providers.dart';
+import '../../core/theme.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../source_badge/source_badge.dart';
+import '../sync_status/sync_status_indicator.dart';
 import 'program_common.dart';
 import 'programs_providers.dart';
 
-class ProgramsPage extends ConsumerWidget {
+enum _Seg { active, templates, mine }
+
+class ProgramsPage extends ConsumerStatefulWidget {
   const ProgramsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ProgramsPage> createState() => _ProgramsPageState();
+}
+
+class _ProgramsPageState extends ConsumerState<ProgramsPage> {
+  _Seg _seg = _Seg.active;
+
+  @override
+  Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(l.programsTitle),
-          bottom: TabBar(tabs: [Tab(text: l.programsTabActive), Tab(text: l.programsTabPrograms)]),
-        ),
-        body: const TabBarView(children: [_ActiveTab(), _ProgramsTab()]),
+    final ai = AppColors.of(context).ai;
+    final activeCount = ref.watch(instanceListProvider).value?.length ?? 0;
+    return Scaffold(
+      appBar: AppBar(title: Text(l.programsTitle), actions: const [SyncStatusIndicator(), SizedBox(width: 8)]),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+            child: SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<_Seg>(
+                key: const Key('programs-segments'),
+                showSelectedIcon: false,
+                segments: [
+                  ButtonSegment(
+                    value: _Seg.active,
+                    label: Text(l.progSegActive(activeCount), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
+                  ButtonSegment(
+                    value: _Seg.templates,
+                    label: Text(l.progSegTemplates, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
+                  ButtonSegment(
+                    value: _Seg.mine,
+                    label: Text(l.progSegMine, maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
+                ],
+                selected: {_seg},
+                onSelectionChanged: (s) => setState(() => _seg = s.first),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+            child: SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                key: const Key('programs-import-ai'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: ai,
+                  side: BorderSide(color: ai),
+                  minimumSize: const Size(48, 48),
+                ),
+                onPressed: () => context.push(Routes.importJson),
+                icon: const Icon(Icons.auto_awesome),
+                label: Text(l.progImportAi),
+              ),
+            ),
+          ),
+          Expanded(
+            child: switch (_seg) {
+              _Seg.active => const _ActiveTab(),
+              _Seg.templates => const _ProgramsTab(builtIn: true),
+              _Seg.mine => const _ProgramsTab(builtIn: false),
+            },
+          ),
+        ],
       ),
     );
   }
@@ -37,6 +97,7 @@ class _ActiveTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final async = ref.watch(instanceListProvider);
+    final c = AppColors.of(context);
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => ErrorRetry(error: e, onRetry: () => ref.invalidate(instanceListProvider)),
@@ -49,20 +110,22 @@ class _ActiveTab extends ConsumerWidget {
         return RefreshIndicator(
           onRefresh: () => ref.refresh(instanceListProvider.future),
           child: ListView(
+            padding: const EdgeInsets.all(16),
             children: [
               for (final i in list)
-                ListTile(
-                  title: Text(i.name),
-                  subtitle: Text([
+                _ProgramCard(
+                  key: Key('instance-${i.id}'),
+                  title: i.name,
+                  meta: [
                     statusLabel(l, i.status),
                     if (i.state.week != null) l.instanceProgress(i.state.week!, i.state.cycle ?? 1),
                     if (i.next != null) l.instanceNextLabel(i.next!.dayName),
-                  ].join(' · ')),
-                  trailing: const Icon(Icons.chevron_right),
+                  ].join(' · '),
                   onTap: () async {
                     await context.push(Routes.instanceDetail(i.id));
                     ref.invalidate(instanceListProvider);
                   },
+                  trailing: Icon(Icons.chevron_right, color: c.fg2),
                 ),
             ],
           ),
@@ -73,7 +136,8 @@ class _ActiveTab extends ConsumerWidget {
 }
 
 class _ProgramsTab extends ConsumerWidget {
-  const _ProgramsTab();
+  const _ProgramsTab({required this.builtIn});
+  final bool builtIn;
 
   Future<void> _delete(BuildContext context, WidgetRef ref, ProgramSummary p) async {
     final l = AppLocalizations.of(context);
@@ -98,25 +162,22 @@ class _ProgramsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final async = ref.watch(programListProvider);
+    final c = AppColors.of(context);
     return async.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => ErrorRetry(error: e, onRetry: () => ref.invalidate(programListProvider)),
       data: (list) {
-        final templates = [for (final p in list) if (p.builtIn) p];
-        final mine = [for (final p in list) if (!p.builtIn) p];
-        Widget tile(ProgramSummary p) => ListTile(
-          title: Row(
-            children: [
-              Flexible(child: Text(p.name)),
-              if (p.source == ProgramSource.AI_JSON || p.source == ProgramSource.AI_MCP) ...[
-                const SizedBox(width: 8),
-                SourceBadge(key: Key('source-${p.id}'), source: p.source, importBatchId: p.importBatchId),
-              ],
-            ],
-          ),
-          subtitle: Text([l.programDayCount(p.dayCount), if (p.description != null) p.description!].join(' · '), maxLines: 2, overflow: TextOverflow.ellipsis),
+        final shown = [for (final p in list) if (p.builtIn == builtIn) p];
+        Widget tile(ProgramSummary p) => _ProgramCard(
+          key: Key('program-${p.id}'),
+          title: p.name,
+          badge: p.source == ProgramSource.AI_JSON || p.source == ProgramSource.AI_MCP
+              ? SourceBadge(key: Key('source-${p.id}'), source: p.source, importBatchId: p.importBatchId)
+              : null,
+          meta: l.progWeekDays(p.dayCount),
+          description: p.description,
           trailing: p.builtIn
-              ? const Icon(Icons.chevron_right)
+              ? Icon(Icons.chevron_right, color: c.fg2)
               : IconButton(
                   tooltip: l.programDeleteAction,
                   icon: const Icon(Icons.delete_outline),
@@ -127,12 +188,8 @@ class _ProgramsTab extends ConsumerWidget {
         return RefreshIndicator(
           onRefresh: () => ref.refresh(programListProvider.future),
           child: ListView(
-            children: [
-              if (templates.isNotEmpty) _Header(l.programTemplates),
-              for (final p in templates) tile(p),
-              if (mine.isNotEmpty) _Header(l.programMine),
-              for (final p in mine) tile(p),
-            ],
+            padding: const EdgeInsets.all(16),
+            children: [for (final p in shown) tile(p)],
           ),
         );
       },
@@ -140,12 +197,73 @@ class _ProgramsTab extends ConsumerWidget {
   }
 }
 
-class _Header extends StatelessWidget {
-  const _Header(this.text);
-  final String text;
+class _ProgramCard extends StatelessWidget {
+  const _ProgramCard({
+    super.key,
+    required this.title,
+    required this.meta,
+    required this.onTap,
+    required this.trailing,
+    this.badge,
+    this.description,
+  });
+  final String title;
+  final String meta;
+  final String? description;
+  final Widget? badge;
+  final Widget trailing;
+  final VoidCallback onTap;
+
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-    child: Text(text, style: Theme.of(context).textTheme.titleSmall),
-  );
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: Theme.of(context).colorScheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          side: BorderSide(color: c.line),
+        ),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 64),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(child: Text(title, style: text.titleSmall)),
+                            if (badge != null) ...[const SizedBox(width: 8), badge!],
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(meta, style: text.bodySmall?.copyWith(color: c.fg2)),
+                        if (description != null)
+                          Text(
+                            description!,
+                            style: text.bodySmall?.copyWith(color: c.fg2),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  trailing,
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

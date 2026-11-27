@@ -63,7 +63,7 @@ void main() {
     await t.tap(find.byKey(const Key('end-confirm')));
     await settle(t, 12);
     expect(find.byKey(const Key('summary-done')), findsOneWidget);
-    expect(find.text('500 kg'), findsWidgets);
+    expect(t.widget<Text>(find.byKey(const Key('summary-volume'))).data, '500');
 
     await t.tap(find.byKey(const Key('summary-done')));
     await settle(t);
@@ -88,7 +88,8 @@ void main() {
     await e.pump(t);
 
     expect(find.byKey(const Key('plan-card-i1')), findsOneWidget);
-    expect(find.text('스쿼트 100 kg'), findsOneWidget);
+    expect(find.text('스쿼트'), findsOneWidget);
+    expect(find.byKey(const Key('plan-main-weight-i1')), findsOneWidget);
     await t.tap(find.byKey(const Key('plan-start-i1')));
     await settle(t);
 
@@ -150,7 +151,7 @@ void main() {
     );
     await e.pump(t);
 
-    await t.tap(find.byKey(const Key('home-history')));
+    await t.tap(find.byKey(const Key('nav-history')));
     await settle(t);
     expect(find.byKey(const Key('history-list')), findsOneWidget);
     await t.tap(find.byKey(Key('history-${s.id}')));
@@ -167,7 +168,9 @@ void main() {
   testWidgets('설정 화면 열기 -> 다시 홈 (DSN 없는 빌드는 오류 보고 토글이 보이지 않는다)', (t) async {
     final e = AppEnv();
     await e.pump(t);
-    await t.tap(find.byKey(const Key('home-settings')));
+    await t.tap(find.byKey(const Key('nav-me')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('me-settings')));
     await settle(t);
     expect(find.byKey(const Key('unitToggle')), findsOneWidget);
     expect(find.byKey(const Key('crashReport')), findsNothing);

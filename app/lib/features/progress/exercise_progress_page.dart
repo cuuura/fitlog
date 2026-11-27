@@ -1,4 +1,4 @@
-// B1 소유(v1.0). STA-4 종목 추이 꺾은선.
+// STA-4 종목 추이 꺾은선. PR 점은 호박색 별, 가장 최근 점은 고리로 강조(목업 6번 톤).
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,12 +9,14 @@ import '../../core/api/stats_dto.dart';
 import '../../core/clock.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
+import '../../core/theme.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
 import '../session/session_controller.dart' show exerciseMapProvider;
 import '../session/session_format.dart';
+import 'compare_charts.dart' show starPath;
 import 'progress_logic.dart';
 
 typedef ProgressKey = ({String exerciseId, ProgressPeriod period});
@@ -153,8 +155,9 @@ class _ExerciseProgressPageState extends ConsumerState<ExerciseProgressPage> {
       );
     }
     final theme = Theme.of(context);
-    final normal = theme.colorScheme.primary;
-    final prColor = theme.colorScheme.tertiary;
+    final ac = AppColors.of(context);
+    final normal = ac.accentStrong;
+    final prColor = ac.pr;
     final isVolume = _metric == ProgressMetric.volume;
     double disp(double kg) => Units.toDisplay(kg, unit);
     String fmt(double kg) => Units.format(kg, unit);
@@ -229,8 +232,8 @@ class _ExerciseProgressPageState extends ConsumerState<ExerciseProgressPage> {
                   if (bestKg != null)
                     HorizontalLine(
                       y: disp(bestKg),
-                      color: theme.colorScheme.outline,
-                      strokeWidth: 1.5,
+                      color: prColor,
+                      strokeWidth: 2,
                       dashArray: [6, 4],
                       label: HorizontalLineLabel(
                         show: true,
@@ -260,15 +263,16 @@ class _ExerciseProgressPageState extends ConsumerState<ExerciseProgressPage> {
                 LineChartBarData(
                   spots: [for (final p in points) FlSpot(p.index.toDouble(), disp(p.yKg))],
                   color: normal,
-                  barWidth: 2,
+                  barWidth: 2.5,
                   isCurved: false,
                   dotData: FlDotData(
-                    getDotPainter: (spot, _, _, i) => FlDotCirclePainter(
-                      radius: points[i].isPr ? 6 : 4,
-                      color: points[i].isPr ? prColor : normal,
-                      strokeWidth: 1.5,
-                      strokeColor: theme.colorScheme.surface,
-                    ),
+                    getDotPainter: (spot, _, _, i) => points[i].isPr
+                        ? _StarDot(color: prColor, outline: theme.colorScheme.surface, ring: i == points.length - 1 ? normal : null)
+                        : _RingDot(
+                            fill: theme.colorScheme.surface,
+                            stroke: normal,
+                            ring: i == points.length - 1,
+                          ),
                   ),
                 ),
               ],
@@ -281,16 +285,16 @@ class _ExerciseProgressPageState extends ConsumerState<ExerciseProgressPage> {
           runSpacing: 4,
           children: [
             _LegendDot(color: normal, label: l.progressLegendNormal),
-            if (!isVolume && hasPr) _LegendDot(color: prColor, label: l.progressLegendPr),
-            if (bestKg != null) _LegendDash(color: theme.colorScheme.outline, label: l.progressLegendBest),
+            if (!isVolume && hasPr) _LegendStar(color: prColor, label: l.progressLegendPr),
+            if (bestKg != null) _LegendDash(color: prColor, label: l.progressLegendBest),
           ],
         ),
         const SizedBox(height: 16),
         Card(
           key: const Key('progress-selected'),
           child: ListTile(
-            title: Text(describe(sel)),
-            leading: sel.isPr ? Icon(Icons.emoji_events, color: prColor) : null,
+            title: Text(describe(sel), style: AppNum.style(context, 18)),
+            leading: sel.isPr ? Icon(Icons.star_rounded, color: prColor) : null,
             trailing: TextButton(
               key: const Key('progress-open-session'),
               onPressed: () => context.push(Routes.sessionDetail(sel.sessionId)),
@@ -351,4 +355,98 @@ class _DashPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_DashPainter old) => old.color != color;
+}
+
+class _LegendStar extends StatelessWidget {
+  const _LegendStar({required this.color, required this.label});
+  final Color color;
+  final String label;
+  @override
+  Widget build(BuildContext context) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Icon(Icons.star_rounded, size: 16, color: color),
+      const SizedBox(width: 6),
+      Text(label, style: Theme.of(context).textTheme.bodySmall),
+    ],
+  );
+}
+
+/// 일반 점: 속이 빈 동그라미. [ring]이면 가장 최근 점으로 바깥 고리를 더한다.
+class _RingDot extends FlDotPainter {
+  const _RingDot({required this.fill, required this.stroke, required this.ring});
+  final Color fill, stroke;
+  final bool ring;
+
+  @override
+  void draw(Canvas canvas, FlSpot spot, Offset o) {
+    canvas.drawCircle(o, 4, Paint()..color = fill);
+    canvas.drawCircle(
+      o,
+      4,
+      Paint()
+        ..color = stroke
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2,
+    );
+    if (ring) {
+      canvas.drawCircle(
+        o,
+        11,
+        Paint()
+          ..color = stroke
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+  }
+
+  @override
+  Size getSize(FlSpot spot) => const Size(22, 22);
+  @override
+  Color get mainColor => stroke;
+  @override
+  FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) => b;
+  @override
+  List<Object?> get props => [fill, stroke, ring];
+}
+
+/// PR 점: 호박색 별. 색만이 아니라 모양으로도 구분한다.
+class _StarDot extends FlDotPainter {
+  const _StarDot({required this.color, required this.outline, this.ring});
+  final Color color, outline;
+  final Color? ring;
+
+  @override
+  void draw(Canvas canvas, FlSpot spot, Offset o) {
+    final star = starPath(o, 9);
+    canvas.drawPath(star, Paint()..color = color);
+    canvas.drawPath(
+      star,
+      Paint()
+        ..color = outline
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2
+        ..strokeJoin = StrokeJoin.round,
+    );
+    if (ring != null) {
+      canvas.drawCircle(
+        o,
+        13,
+        Paint()
+          ..color = ring!
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+  }
+
+  @override
+  Size getSize(FlSpot spot) => const Size(22, 22);
+  @override
+  Color get mainColor => color;
+  @override
+  FlDotPainter lerp(FlDotPainter a, FlDotPainter b, double t) => b;
+  @override
+  List<Object?> get props => [color, outline, ring];
 }

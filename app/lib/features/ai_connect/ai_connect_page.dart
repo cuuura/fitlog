@@ -1,11 +1,14 @@
 import 'package:fitlog/core/api/ai_dto.dart';
 import 'package:fitlog/core/auth/auth_controller.dart';
+import 'package:fitlog/core/theme.dart';
 import 'package:fitlog/data/providers.dart';
 import 'package:fitlog/l10n/gen/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
+
+import 'ai_avatar.dart';
 
 final _mcpInfoProvider = FutureProvider.autoDispose<McpInfo>(
   (ref) => ref.watch(aiConnectionRepositoryProvider).mcpInfo(),
@@ -58,7 +61,7 @@ class AiConnectPage extends ConsumerWidget {
               ),
             Text(l.aiConnectUrlLabel, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 4),
-            SelectableText(i.mcpUrl, style: Theme.of(context).textTheme.titleMedium),
+            SelectableText(i.mcpUrl, style: const TextStyle(fontFamily: 'monospace', fontSize: 14)),
             const SizedBox(height: 8),
             Align(
               alignment: Alignment.centerLeft,
@@ -70,7 +73,7 @@ class AiConnectPage extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Card(
-              child: ListTile(leading: const Icon(Icons.shield_outlined), title: Text(l.aiConnectPermission)),
+              child: ListTile(leading: Icon(Icons.shield_outlined, color: AppColors.of(context).ai), title: Text(l.aiConnectPermission)),
             ),
             const SizedBox(height: 16),
             Text(l.aiConnectGuides, style: Theme.of(context).textTheme.titleMedium),
@@ -194,6 +197,7 @@ class _ConnectionTile extends ConsumerWidget {
         : l.aiConnectLastUsed(fmt.format(conn.lastUsedAt!.toLocal()));
     return Card(
       child: ListTile(
+        leading: AiAvatar(conn.clientName),
         title: Text(conn.clientName),
         subtitle: Text('$perm\n${l.aiConnectCreated(fmt.format(conn.createdAt.toLocal()))}\n$used'),
         isThreeLine: true,

@@ -52,8 +52,10 @@ void main() {
     expect(find.descendant(of: find.byKey(const Key('records-latest-measured')), matching: find.text('150 kg')), findsOneWidget);
 
     expect(find.byKey(const Key('reps-row-1')), findsOneWidget);
-    expect(find.text('145 kg · 2026-11-10'), findsOneWidget);
-    expect(find.text('130 kg · 2026-11-09'), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('reps-row-1')), matching: find.text('145 kg')), findsOneWidget);
+    expect(find.text(' · 2026-11-10'), findsOneWidget);
+    expect(find.text('130 kg'), findsOneWidget);
+    expect(find.text(' · 2026-11-09'), findsOneWidget);
     expect(find.text('-'), findsNWidgets(8));
   });
 

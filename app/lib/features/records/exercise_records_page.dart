@@ -10,6 +10,7 @@ import '../../core/clock.dart';
 import '../../core/ids.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
+import '../../core/theme.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -93,11 +94,18 @@ class ExerciseRecordsPage extends ConsumerWidget {
     String point(RecordPoint p) =>
         l.recordsPoint(Units.format(p.weightKg, unit), p.reps, formatDate(p.achievedAt.toLocal()));
 
-    Widget stat(String key, String title, String? value, {String? sub}) => ListTile(
+    final c = AppColors.of(context);
+    // PR(최고 무게·추정 1RM)은 호박색 별과 함께, 숫자는 AppNum.
+    Widget stat(String key, String title, String? value, {String? sub, bool pr = false}) => ListTile(
       key: Key(key),
+      minTileHeight: 64,
+      leading: pr ? Icon(Icons.star_rounded, color: c.pr, size: 28) : const SizedBox(width: 28),
       title: Text(title),
-      subtitle: sub == null ? null : Text(sub),
-      trailing: Text(value ?? l.recordsNone, style: theme.textTheme.titleMedium),
+      subtitle: sub == null ? null : Text(sub, style: TextStyle(color: c.fg2)),
+      trailing: Text(
+        value ?? l.recordsNone,
+        style: value == null ? theme.textTheme.titleMedium : AppNum.medium(context, color: pr ? c.pr : null),
+      ),
     );
 
     Widget error() => Padding(
@@ -132,6 +140,7 @@ class ExerciseRecordsPage extends ConsumerWidget {
           sub: r.bestWeight == null
               ? null
               : '${l.recordsRepsValue(r.bestWeight!.reps)} · ${formatDate(r.bestWeight!.achievedAt.toLocal())}',
+          pr: r.bestWeight != null,
         ),
         stat(
           'records-best-e1rm',
@@ -140,6 +149,7 @@ class ExerciseRecordsPage extends ConsumerWidget {
           sub: r.bestE1rm == null
               ? l.recordsFormulaUsed(formulaLabel(l, r.formula))
               : '${point(r.bestE1rm!)} · ${l.recordsFormulaUsed(formulaLabel(l, r.formula))}',
+          pr: r.bestE1rm?.e1rmKg != null,
         ),
         stat(
           'records-latest-measured',
@@ -149,7 +159,7 @@ class ExerciseRecordsPage extends ConsumerWidget {
         ),
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 4),
-          child: Text(l.recordsByReps, style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary)),
+          child: Text(l.recordsByReps, style: theme.textTheme.titleSmall?.copyWith(color: c.accentStrong)),
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -164,11 +174,19 @@ class ExerciseRecordsPage extends ConsumerWidget {
                     children: [
                       SizedBox(width: 72, child: Text(l.recordsRepsValue(reps))),
                       Expanded(
-                        child: Text(
-                          byReps[reps] == null
-                              ? '-'
-                              : '${Units.format(byReps[reps]!.weightKg, unit)} · ${formatDate(byReps[reps]!.achievedAt.toLocal())}',
-                        ),
+                        child: byReps[reps] == null
+                            ? Text('-', style: TextStyle(color: c.fg2))
+                            : Row(
+                                children: [
+                                  Icon(Icons.star_rounded, size: 16, color: c.pr),
+                                  const SizedBox(width: 4),
+                                  Text(Units.format(byReps[reps]!.weightKg, unit), style: AppNum.style(context, 20)),
+                                  Text(
+                                    ' · ${formatDate(byReps[reps]!.achievedAt.toLocal())}',
+                                    style: TextStyle(color: c.fg2, fontSize: 13),
+                                  ),
+                                ],
+                              ),
                       ),
                     ],
                   ),
@@ -187,7 +205,7 @@ class ExerciseRecordsPage extends ConsumerWidget {
             Expanded(
               child: Text(
                 l.recordsOneRmSection,
-                style: theme.textTheme.titleSmall?.copyWith(color: theme.colorScheme.primary),
+                style: theme.textTheme.titleSmall?.copyWith(color: c.accentStrong),
               ),
             ),
             TextButton.icon(
@@ -208,7 +226,7 @@ class ExerciseRecordsPage extends ConsumerWidget {
         children.add(
           ListTile(
             key: Key('onerm-${m.id}'),
-            title: Text(Units.format(m.weightKg, unit)),
+            title: Text(Units.format(m.weightKg, unit), style: AppNum.medium(context)),
             subtitle: Text([formatDate(m.measuredAt.toLocal()), if (m.note != null) m.note!].join(' · ')),
             trailing: IconButton(
               key: Key('onerm-delete-${m.id}'),

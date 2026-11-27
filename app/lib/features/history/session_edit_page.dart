@@ -10,6 +10,7 @@ import '../../core/clock.dart';
 import '../../core/ids.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
+import '../../core/theme.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -168,12 +169,12 @@ class _SessionEditPageState extends ConsumerState<SessionEditPage> {
           if (s.isProgram)
             Card(
               key: const Key('edit-program-notice'),
-              color: theme.colorScheme.secondaryContainer,
+              color: AppColors.of(context).warnSoft,
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline),
+                    Icon(Icons.info_outline, color: AppColors.of(context).warn),
                     const SizedBox(width: 12),
                     Expanded(child: Text(l.historyEditProgramNotice)),
                   ],
@@ -184,7 +185,7 @@ class _SessionEditPageState extends ConsumerState<SessionEditPage> {
             key: const Key('edit-start'),
             contentPadding: EdgeInsets.zero,
             title: Text(l.historyEditStart),
-            trailing: Text('${formatDate(startLocal)} ${formatClock(startLocal)}'),
+            trailing: Text('${formatDate(startLocal)} ${formatClock(startLocal)}', style: AppNum.table(context)),
             onTap: () => _editTime(s, start: true),
           ),
           if (s.endedAt != null)
@@ -194,7 +195,7 @@ class _SessionEditPageState extends ConsumerState<SessionEditPage> {
               title: Text(l.historyEditEnd),
               trailing: Builder(builder: (_) {
                 final e = sessionLocalTime(s.endedAt!, s.tz);
-                return Text('${formatDate(e)} ${formatClock(e)}');
+                return Text('${formatDate(e)} ${formatClock(e)}', style: AppNum.table(context));
               }),
               onTap: () => _editTime(s, start: false),
             ),
@@ -383,7 +384,11 @@ class _EditSetRowState extends State<_EditSetRow> {
                 width: 28,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 12),
-                  child: Text(w.isWarmup ? l.sessionWarmupShort : '${widget.index + 1}', textAlign: TextAlign.center),
+                  child: Text(
+                    w.isWarmup ? l.sessionWarmupShort : '${widget.index + 1}',
+                    textAlign: TextAlign.center,
+                    style: AppNum.table(context, color: AppColors.of(context).fg2),
+                  ),
                 ),
               ),
               const SizedBox(width: 4),
@@ -394,6 +399,7 @@ class _EditSetRowState extends State<_EditSetRow> {
                   keyboardType: TextInputType.numberWithOptions(decimal: true, signed: _bodyweight),
                   inputFormatters: [FilteringTextInputFormatter.allow(RegExp(_bodyweight ? r'[-0-9.,]' : r'[0-9.,]'))],
                   textAlign: TextAlign.center,
+                  style: AppNum.style(context, 20),
                   onChanged: (_) => _commit(),
                   decoration: InputDecoration(
                     isDense: true,
@@ -411,6 +417,7 @@ class _EditSetRowState extends State<_EditSetRow> {
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   textAlign: TextAlign.center,
+                  style: AppNum.style(context, 20),
                   onChanged: (_) => _commit(),
                   decoration: InputDecoration(
                     isDense: true,

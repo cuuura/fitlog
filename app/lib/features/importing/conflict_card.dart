@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/api/ai_dto.dart';
 import '../../core/api/dto.dart';
 import '../../core/routes.dart';
+import '../../core/theme.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -26,10 +27,10 @@ String conflictCodeLabel(AppLocalizations l, ConflictCode? c) => switch (c) {
 
 String resolutionActionLabel(AppLocalizations l, ResolutionAction a) => switch (a) {
   ResolutionAction.SKIP => l.importActionSkip,
-  ResolutionAction.KEEP_BOTH => l.importActionKeepBoth,
-  ResolutionAction.REPLACE => l.importActionReplace,
-  ResolutionAction.MAP_TO => l.importActionMapTo,
-  ResolutionAction.CREATE => l.importActionCreate,
+  ResolutionAction.KEEP_BOTH => l.impKeepBoth,
+  ResolutionAction.REPLACE => l.impReplace,
+  ResolutionAction.MAP_TO => l.impMapTo,
+  ResolutionAction.CREATE => l.impCreate,
   ResolutionAction.UNLINK => l.importActionUnlink,
   ResolutionAction.SET => l.importActionSet,
 };
@@ -38,12 +39,20 @@ String _show(Object? v) => v is Map || v is List ? jsonEncode(v) : '$v';
 
 class ConflictCard extends ConsumerStatefulWidget {
   final Conflict conflict;
+
+  /// 가져온 쪽의 해당 항목(묶음에서 conflict.path로 찾은 값). 없으면 오른쪽 열을 그리지 않는다.
+  final Map<String, Object?>? incoming;
+
+  /// 가져온 AI 이름(열 제목 "가져온 값 (Claude)").
+  final String? clientName;
   final Resolution? resolution;
   final WeightUnit unit;
   final void Function(Resolution?) onChanged;
   const ConflictCard({
     super.key,
     required this.conflict,
+    this.incoming,
+    this.clientName,
     required this.resolution,
     required this.unit,
     required this.onChanged,
@@ -106,13 +115,36 @@ class _ConflictCardState extends ConsumerState<ConflictCard> {
     widget.onChanged(Resolution(ResolutionAction.MAP_TO, exerciseId: id));
   }
 
+  Widget _col(BuildContext context, String title, Map<String, Object?> data, {Key? key}) {
+    final colors = AppColors.of(context);
+    return Container(
+      key: key,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(color: colors.surface2, borderRadius: BorderRadius.circular(AppRadius.sm)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 2),
+          for (final e in data.entries.take(6))
+            Text('${e.key}: ${_show(e.value)}', style: TextStyle(fontSize: 12, color: colors.fg2)),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
+    final colors = AppColors.of(context);
     final resolved = widget.resolution != null;
     final actions = c.allowed;
     final existing = c.existing;
+    final incoming = widget.incoming;
+    final hasExisting = existing != null && existing.isNotEmpty;
+    final hasIncoming = incoming != null && incoming.isNotEmpty;
+    final who = widget.clientName;
     return Card(
       key: ValueKey('conflict-${c.conflictId}'),
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -122,43 +154,59 @@ class _ConflictCardState extends ConsumerState<ConflictCard> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(
-                  resolved ? Icons.check_circle : Icons.error_outline,
+                  resolved ? Icons.check_circle : Icons.warning_amber_rounded,
                   size: 20,
-                  color: resolved ? theme.colorScheme.primary : theme.colorScheme.error,
+                  color: resolved ? colors.accent : colors.warn,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     c.code == null ? c.message : conflictCodeLabel(l, c.code),
-                    style: theme.textTheme.titleSmall,
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, height: 1.35),
                   ),
                 ),
               ],
             ),
-            if (c.code != null && c.message.isNotEmpty) Text(c.message),
+            if (c.code != null && c.message.isNotEmpty) Text(c.message, style: TextStyle(color: colors.fg2, fontSize: 13)),
             if (c.path.isNotEmpty)
-              Text(c.path, style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.outline)),
-            if (existing != null && existing.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Text(l.importExisting, style: theme.textTheme.labelMedium),
-              for (final e in existing.entries.take(6)) Text('${e.key}: ${_show(e.value)}', style: theme.textTheme.bodySmall),
+              Text(c.path, style: theme.textTheme.bodySmall?.copyWith(color: colors.fg2)),
+            if (hasExisting || hasIncoming) ...[
+              const SizedBox(height: 8),
+              // 기존 / 가져온 값을 두 열로 나란히.
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (hasExisting) Expanded(child: _col(context, l.impColExisting, existing, key: Key('existing-${c.conflictId}'))),
+                  if (hasExisting && hasIncoming) const SizedBox(width: 8),
+                  if (hasIncoming)
+                    Expanded(
+                      child: _col(
+                        context,
+                        who == null || who.isEmpty ? l.impColIncoming : l.impColIncomingFrom(who),
+                        incoming,
+                        key: Key('incoming-${c.conflictId}'),
+                      ),
+                    ),
+                ],
+              ),
             ],
-            RadioGroup<ResolutionAction>(
-              groupValue: _selected,
-              onChanged: (v) {
-                if (v != null) _choose(v);
-              },
-              child: Column(
+            const SizedBox(height: 10),
+            // 선택지를 세그먼트처럼 한 줄로(라디오 의미). 각 칸 48dp 이상.
+            Semantics(
+              container: true,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   for (final a in actions)
-                    RadioListTile<ResolutionAction>(
+                    _ActionSeg(
                       key: ValueKey('action-${c.conflictId}-${a.name}'),
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      value: a,
-                      title: Text(resolutionActionLabel(l, a)),
+                      label: resolutionActionLabel(l, a),
+                      selected: _selected == a,
+                      onTap: () => _choose(a),
                       subtitle: _subtitle(l, a),
                     ),
                 ],
@@ -166,8 +214,11 @@ class _ConflictCardState extends ConsumerState<ConflictCard> {
             ),
             if (_selected == ResolutionAction.REPLACE)
               Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: Text(c.code == ConflictCode.ID_EXISTS ? l.importReplaceWarningPermanent : l.importReplaceWarning, style: TextStyle(color: theme.colorScheme.error)),
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  c.code == ConflictCode.ID_EXISTS ? l.importReplaceWarningPermanent : l.importReplaceWarning,
+                  style: TextStyle(color: colors.fail, fontSize: 13),
+                ),
               ),
             if (_selected == ResolutionAction.MAP_TO) _mapTo(l),
           ],
@@ -422,6 +473,65 @@ class _SetSheetState extends State<_SetSheet> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// 해결 선택 칸. 선택되면 accent 채움 + 체크 아이콘(색만으로 구분하지 않는다).
+class _ActionSeg extends StatelessWidget {
+  const _ActionSeg({super.key, required this.label, required this.selected, required this.onTap, this.subtitle});
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Widget? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = AppColors.of(context);
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: Material(
+        color: selected ? c.accentSoft : Colors.transparent,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          side: BorderSide(color: selected ? c.accent : c.line, width: selected ? 1.5 : 1),
+        ),
+        child: InkWell(
+          customBorder: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+          onTap: onTap,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (selected) ...[Icon(Icons.check, size: 18, color: c.accentStrong), const SizedBox(width: 4)],
+                  Flexible(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          label,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: selected ? c.accentStrong : c.fg,
+                          ),
+                        ),
+                        if (subtitle != null)
+                          DefaultTextStyle.merge(style: TextStyle(fontSize: 12, color: c.fg2), child: subtitle!),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

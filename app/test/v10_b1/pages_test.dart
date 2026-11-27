@@ -257,22 +257,81 @@ void main() {
       expect(find.byKey(const Key('pr-weight-ex-squat')), findsOneWidget);
       expect(find.byKey(const Key('pr-e1rm-ex-squat')), findsOneWidget);
       expect(find.byKey(const Key('first-ex-squat')), findsNothing);
-      expect(find.text('지난 같은 세션'), findsWidgets);
-      expect(find.text('이전 PR'), findsOneWidget);
-      expect(find.text('세트 1'), findsOneWidget);
-      expect(find.text('100×5'), findsWidgets);
+      // 범례: 오늘 / 지난번 (날짜) / 이전 PR 횟수
+      expect(find.textContaining('지난번 ('), findsOneWidget);
+      expect(find.text('이전 PR 횟수'), findsOneWidget);
+      expect(find.byKey(const Key('compare-chart-ex-squat')), findsOneWidget);
+      // 표: 세트 번호·오늘×지난번·차이, 오늘 105×5는 이전 최고(100)를 넘어 PR 별
+      expect(find.byKey(const Key('compare-sets-ex-squat')), findsOneWidget);
       expect(find.text('105×5'), findsOneWidget);
-      expect(find.text('세트 2'), findsOneWidget);
-      expect(find.text('-'), findsOneWidget); // 지난 세션엔 2세트가 없음
+      expect(find.text('100×5'), findsWidgets);
+      expect(find.byKey(const Key('pr-ex-squat-1')), findsOneWidget);
+      expect(find.byKey(const Key('pr-ex-squat-2')), findsNothing); // 100은 이전 최고와 같고 횟수도 같다
+      expect(find.text('0'), findsOneWidget); // 1세트 횟수 차이 0
+      expect(find.text('-'), findsNWidgets(2)); // 지난 세션엔 2세트가 없음(지난번·차이)
     });
 
-    testWidgets('볼륨 지표에서는 이전 PR 막대가 없다', (tester) async {
+    testWidgets('지난번보다 횟수가 적은 세트는 경고 아이콘, 많으면 +', (tester) async {
+      final h = Harness();
+      h.stats.comparisonBySession['s1'] = SessionComparison(
+        sessionId: 's1',
+        formula: 'EPLEY',
+        exercises: [
+          ExerciseComparison(
+            exerciseId: 'ex-squat',
+            current: snap(100, 117, 800, const [SnapSet(100, 4), SnapSet(100, 6)]),
+            previous: snap(100, 117, 900, const [SnapSet(100, 5), SnapSet(100, 5)]),
+            bestWeight: rp(100),
+          ),
+        ],
+      );
+      await h.pump(tester, '/sessions/s1/comparison');
+      expect(find.byKey(const Key('fail-ex-squat-1')), findsOneWidget);
+      expect(find.byKey(const Key('fail-ex-squat-2')), findsNothing);
+      expect(find.text('\u22121'), findsOneWidget);
+      expect(find.text('+1'), findsOneWidget);
+    });
+
+    testWidgets('세그먼트로 추이를 열면 추정 1RM 꺾은선과 요약 문장', (tester) async {
       final h = Harness();
       h.stats.comparisonBySession['s1'] = SessionComparison(sessionId: 's1', formula: 'EPLEY', exercises: [cmp()]);
+      h.stats.progressByExercise['ex-squat'] = ExerciseProgress(
+        exerciseId: 'ex-squat',
+        formula: 'EPLEY',
+        points: [pp(1, 100, e1rm: 117), pp(10, 105, e1rm: 123, wPr: true, ePr: true), pp(20, 102, e1rm: 120)],
+      );
       await h.pump(tester, '/sessions/s1/comparison');
-      await tester.tap(find.text('볼륨'));
+      expect(find.byKey(const Key('trend-chart')), findsNothing);
+      await tester.tap(find.text('추이'));
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text('이전 PR'), findsNothing);
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byKey(const Key('trend-chart')), findsOneWidget);
+      expect(find.byKey(const Key('compare-chart-ex-squat')), findsNothing);
+      expect(find.textContaining('최근 3회 중 PR 1번'), findsOneWidget);
+      expect(find.textContaining('Epley 추정'), findsOneWidget);
+      await tester.tap(find.text('회차 비교'));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byKey(const Key('compare-chart-ex-squat')), findsOneWidget);
+    });
+
+    testWidgets('종목 칩으로 종목을 바꾼다', (tester) async {
+      final h = Harness();
+      ExerciseComparison of(String id) => ExerciseComparison(
+        exerciseId: id,
+        current: snap(100, 117, 500, const [SnapSet(100, 5)]),
+        previous: snap(95, 110, 475, const [SnapSet(95, 5)]),
+      );
+      h.stats.comparisonBySession['s1'] = SessionComparison(
+        sessionId: 's1',
+        formula: 'EPLEY',
+        exercises: [of('ex-squat'), of('ex-other')],
+      );
+      await h.pump(tester, '/sessions/s1/comparison');
+      expect(find.byKey(const Key('compare-card-ex-squat')), findsOneWidget);
+      expect(find.byKey(const Key('compare-card-ex-other')), findsNothing);
+      await tester.tap(find.byKey(const Key('compare-chip-ex-other')));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byKey(const Key('compare-card-ex-other')), findsOneWidget);
     });
 
     testWidgets('이전 기록 없음: 첫 기록, PR 배지 없음', (tester) async {

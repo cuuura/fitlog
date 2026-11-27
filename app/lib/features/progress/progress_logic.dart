@@ -144,3 +144,43 @@ List<SetRow> setRows(ExerciseComparison c) {
 
 /// 이 종목 비교에서 보여 줄 PR 배지.
 ({bool weight, bool e1rm}) prBadges(ExerciseComparison c) => (weight: c.isWeightPr, e1rm: c.isE1rmPr);
+
+/// 세트 번호별 오늘/지난번 비교 한 줄(목업 6번 표).
+class SetCmp {
+  final int number;
+  final SnapSet? today;
+  final SnapSet? previous;
+
+  /// 오늘 횟수 − 지난번 횟수. 어느 쪽이든 없으면 null.
+  final int? diffReps;
+
+  /// 오늘 횟수가 지난번보다 적다(아이콘+숫자로 알린다).
+  final bool fail;
+
+  /// 이 세트가 이전 최고 무게(또는 같은 무게의 최고 횟수)를 넘었다.
+  final bool pr;
+  const SetCmp(this.number, this.today, this.previous, this.diffReps, this.fail, this.pr);
+}
+
+List<SetCmp> setComparisons(ExerciseComparison c) {
+  final best = c.bestWeight;
+  return [
+    for (final r in setRows(c))
+      SetCmp(
+        r.number,
+        r.today,
+        r.previous,
+        r.today != null && r.previous != null ? r.today!.reps - r.previous!.reps : null,
+        r.today != null && r.previous != null && r.today!.reps < r.previous!.reps,
+        r.today != null &&
+            best != null &&
+            (r.today!.weightKg > best.weightKg || (r.today!.weightKg == best.weightKg && r.today!.reps > best.reps)),
+      ),
+  ];
+}
+
+/// 추이 탭: 추정 1RM이 있는 점의 최근 [n]개(오래된 것부터).
+List<ChartPoint> recentE1rmPoints(List<ProgressPoint> points, {int n = 12}) {
+  final all = chartPoints(points, ProgressMetric.e1rm);
+  return all.length <= n ? all : all.sublist(all.length - n);
+}
