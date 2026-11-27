@@ -67,7 +67,12 @@ data class AppConfig(
     val maxBodyBytes: Long = 5L * 1024 * 1024,
     /** 테스트용 아이디·비밀번호 로그인(contracts/v1.0/auth-password.md). 기본 꺼짐 */
     val passwordLogin: PasswordLoginConfig = PasswordLoginConfig(),
+    /** /health/mcp-trace 노출 여부(env MCP_TRACE). null 이면 비밀번호 로그인이 켜진 테스트 서버에서만 켠다 */
+    val mcpTrace: Boolean? = null,
 ) {
+    /** /mcp 요청 추적 기록을 쌓고 /health/mcp-trace 로 보여줄지 */
+    val mcpTraceEnabled: Boolean get() = mcpTrace ?: passwordLogin.enabled
+
     val engine: com.fitlog.engine.ProgramCalculator get() = calculator ?: com.fitlog.engine.ProgramEngine
     val importer: com.fitlog.importing.Importer get() = importerOverride ?: com.fitlog.importing.ImportPipeline
 
@@ -108,6 +113,7 @@ data class AppConfig(
                 enabled = env.v("PASSWORD_LOGIN_ENABLED")?.toBoolean() ?: false,
                 signupCode = env.v("PASSWORD_SIGNUP_CODE"),
             ),
+            mcpTrace = env.v("MCP_TRACE")?.toBoolean(),
         ).also { require(it.jwt.secret.length >= 32) { "JWT_SECRET must be at least 32 characters" } }
     }
 }

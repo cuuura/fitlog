@@ -43,6 +43,7 @@ EXPECTED_READ_TOOLS = [
     "list_program_instances", "get_plan", "list_sessions", "get_session", "get_exercise_records",
     "get_exercise_progress", "get_training_summary", "get_body_measurements", "list_deletion_requests",
     "list_scheduled_workouts",
+    "search", "fetch",  # OpenAI(ChatGPT) 커넥터 호환 읽기 도구
 ]
 EXPECTED_WRITE_TOOLS = [
     "import_bundle", "create_program", "start_program", "log_session", "log_body_weight",
@@ -303,7 +304,7 @@ def server_consent_version():
 def server_tool_names():
     d = os.path.join(ROOT, "server", "src", "main", "kotlin", "com", "fitlog", "mcp")
     names = []
-    for f in ("McpTools.kt", "McpWriteTools.kt"):
+    for f in ("McpTools.kt", "McpWriteTools.kt", "McpCompatTools.kt"):
         p = os.path.join(d, f)
         if not os.path.exists(p):
             return None
@@ -1116,9 +1117,9 @@ def mcp_protocol(R):
         sid = R.need("mcp_sid")
         t = a["access"]
         r = mcp_rpc(R, t, "tools/list", {}, sid="not-a-valid-session")
-        expect(r.status == 404, f"모르는 세션 ID 는 404(클라이언트가 재-initialize) 기대, 실제 {r.status}: {r.text[:200]}")
+        expect(r.status == 200 and "tools" in r.json().get("result", {}), f"모르는 세션 ID 도 처리(200) 기대, 실제 {r.status}: {r.text[:200]}")
         r = mcp_rpc(R, t, "tools/list", {})
-        expect(r.status == 400, f"세션 헤더 없는 tools/list 는 400 기대, 실제 {r.status}")
+        expect(r.status == 200 and "tools" in r.json().get("result", {}), f"세션 헤더 없는 tools/list 도 처리(200) 기대, 실제 {r.status}")
         r = mcp_rpc(R, t, "ping", {}, sid=sid)
         expect(r.status == 200 and r.json().get("result") == {}, f"ping: {r.status} {r.text[:100]}")
         r = mcp_rpc(R, t, "no/such/method", {}, sid=sid)
@@ -1127,13 +1128,28 @@ def mcp_protocol(R):
         expect(r.status == 400 and r.json().get("error", {}).get("code") == -32700, f"깨진 JSON 은 400/-32700: {r.status} {r.text[:200]}")
         g = R.http.get("/mcp", headers={"Authorization": f"Bearer {t}", "Accept": "text/event-stream"})
         expect(g.status == 405, f"GET /mcp 는 405 기대, 실제 {g.status}")
-        # 세션 닫기(DELETE) 뒤에는 그 세션이 거절된다
+        # 세션 닫기(DELETE) 뒤에도 같은 세션 ID 는 계속 처리된다(인증은 Bearer 토큰)
         s2, _ = mcp_init(R, t)
         d = R.http.request("DELETE", "/mcp", headers={"Authorization": f"Bearer {t}", "Mcp-Session-Id": s2})
         expect(d.status in (200, 204), f"DELETE /mcp 기대 200/204, 실제 {d.status}")
         r = mcp_rpc(R, t, "tools/list", {}, sid=s2)
-        expect(r.status == 404, f"닫은 세션은 404 기대, 실제 {r.status}")
+        expect(r.status == 200 and "tools" in r.json().get("result", {}), f"닫은 세션도 처리(200) 기대, 실제 {r.status}")
     R.run("mcp.session_and_jsonrpc_edge_cases", session_edge)
+
+    def trace():
+        g = R.http.get("/health/mcp-trace")
+        if g.status == 404:
+            return "추적 꺼짐(404) - MCP_TRACE=true 또는 비밀번호 로그인 서버에서만 점검"
+        expect(g.status == 200, f"/health/mcp-trace 기대 200, 실제 {g.status}")
+        rows = g.json().get("entries", [])
+        methods = {e.get("rpcMethod") for e in rows}
+        expect({"initialize", "tools/list"} <= methods, f"추적에 initialize/tools/list 행이 없음: {sorted(m for m in methods if m)}")
+        init = next(e for e in rows if e.get("rpcMethod") == "initialize")
+        expect(init.get("client") and init.get("authenticated") is True, f"initialize 행에 client/authenticated 없음: {init}")
+        txt = g.text
+        expect(a["access"] not in txt, "추적 응답에 액세스 토큰이 들어 있음")
+        return f"{len(rows)}행"
+    R.run("mcp.trace_endpoint_shows_requests", trace)
 
 
 def schema_bad_args(schema):
@@ -1182,6 +1198,8 @@ def build_call_cases(R, cc):
     cases["get_training_summary"] = lambda: {"from": (datetime.now(timezone.utc) - timedelta(days=90)).strftime("%Y-%m-%d"), "to": today}
     cases["get_body_measurements"] = lambda: {"from": "2020-01-01", "to": "2099-12-31"}
     cases["list_deletion_requests"] = lambda: {"status": "PENDING"}
+    cases["search"] = lambda: {"query": "스쿼트"}
+    cases["fetch"] = lambda: {"id": f"session:{cc.session_id}"}
     cases["import_bundle"] = lambda: {"bundle": {"schemaVersion": 1, "note": "e2e", "bodyMeasurements": [
         {"measuredAt": (datetime.now(timezone.utc) - timedelta(days=20)).strftime("%Y-%m-%dT%H:%M:%SZ"), "weightKg": 81.2}]}}
     cases["create_program"] = lambda: {"definition": cc.new_definition}
@@ -1209,7 +1227,7 @@ CALL_ORDER = ["get_profile", "search_exercises", "list_programs", "get_program",
               "create_exercise", "start_program", "list_program_instances", "get_plan", "adjust_program_instance",
               "log_session", "log_body_weight", "import_bundle", "schedule_workout", "list_scheduled_workouts",
               "skip_scheduled_workout", "list_sessions", "get_session", "get_exercise_records",
-              "get_exercise_progress", "get_training_summary", "get_body_measurements", "request_deletion", "list_deletion_requests"]
+              "get_exercise_progress", "get_training_summary", "get_body_measurements", "request_deletion", "list_deletion_requests", "search", "fetch"]
 
 
 def mcp_tools(R):

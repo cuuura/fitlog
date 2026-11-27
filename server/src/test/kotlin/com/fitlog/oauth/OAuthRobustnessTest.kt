@@ -109,13 +109,13 @@ class OAuthRobustnessTest {
     }
 
     @Test
-    fun unknown_session_gets_404_and_valid_one_works() = a2Test {
+    fun unknown_session_is_served_like_a_valid_one() = a2Test {
         val c = plainClient()
         val conn = c.connect()
         val sid = c.mcpInit(conn.access)
         assertEquals(HttpStatusCode.OK, c.mcpPost(conn.access, sid, """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""").status)
         val res = c.mcpPost(conn.access, "garbage", """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""")
-        assertEquals(HttpStatusCode.NotFound, res.status)
+        assertEquals(HttpStatusCode.OK, res.status)
     }
 
     @Test
