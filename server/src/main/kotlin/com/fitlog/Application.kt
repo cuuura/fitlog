@@ -10,6 +10,7 @@ import com.fitlog.importing.publicSchemaRoutes
 import com.fitlog.mcp.mcpRoutes
 import com.fitlog.oauth.oauthRoutes
 import com.fitlog.body.bodyRoutes
+import com.fitlog.scheduled.scheduledRoutes
 import com.fitlog.core.AppConfig
 import com.fitlog.core.Database
 import com.fitlog.core.installCore
@@ -79,6 +80,7 @@ fun Application.module(config: AppConfig) {
                     exerciseRoutes(config)
                     sessionRoutes(config)
                     bodyRoutes(config)
+                    scheduledRoutes(config)
                     syncRoutes(config)
                     // v0.2
                     programRoutes(config)

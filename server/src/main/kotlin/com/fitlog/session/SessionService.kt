@@ -76,13 +76,21 @@ internal fun Transaction.putSession(userId: UUID, id: UUID, body: Session, engin
     }
 
     checkProgramLink(userId, id, body.programInstanceId, body.planSeq)
+    body.scheduledWorkoutId?.let {
+        if (!scheduledExists(userId, it)) validation("unknown scheduled workout", "scheduledWorkoutId")
+        if (scheduledLinkTaken(id, it)) {
+            throw com.fitlog.core.ApiException(
+                com.fitlog.core.ErrorCode.CONFLICT, "another session is already linked to this scheduled workout", "scheduledWorkoutId",
+            )
+        }
+    }
     val previousInstance = if (existing != null) existing[WorkoutSessions.programInstanceId] else null
 
     // ---- 쓰기 ----
     val now = Times.now()
     upsertSessionRow(
         userId, id, body.startedAt, body.endedAt, body.tz, body.note, now,
-        body.programInstanceId, body.planSeq, body.planDayKey,
+        body.programInstanceId, body.planSeq, body.planDayKey, body.scheduledWorkoutId,
     )
     body.exercises.forEach { ex ->
         upsertSessionExerciseRow(ex.id, id, ex.exerciseId, ex.position, ex.note, now, ex.liftKey, ex.accessory)

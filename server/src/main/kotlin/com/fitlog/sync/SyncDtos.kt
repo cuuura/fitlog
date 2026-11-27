@@ -10,7 +10,7 @@ import kotlinx.serialization.json.JsonObject
 import java.time.Instant
 import java.util.UUID
 
-/** entity: exercise | workout_session | session_exercise | workout_set | body_measurement, op: UPSERT | DELETE */
+/** entity: exercise | workout_session | session_exercise | workout_set | body_measurement | scheduled_workout, op: UPSERT | DELETE */
 @Serializable
 data class Change(
     val entity: String,
@@ -51,6 +51,7 @@ internal data class SessionPayload(
     val programInstanceId: UUID? = null,
     val planSeq: Int? = null,
     val planDayKey: String? = null,
+    val scheduledWorkoutId: UUID? = null,
 )
 
 @Serializable

@@ -37,6 +37,9 @@ internal fun checkSet(s: WorkoutSet, type: String?, path: String): WorkoutSet {
     s.rir?.let { if (it < 0 || it > 10) bad("rir", "rir must be between 0 and 10") }
     s.restSec?.let { if (it < 0) bad("restSec", "restSec must be >= 0") }
     s.targetReps?.let { if (it < 0) bad("targetReps", "targetReps must be >= 0") }
+    s.targetRepsMax?.let { if (it < 0) bad("targetRepsMax", "targetRepsMax must be >= 0") }
+    s.targetRir?.let { if (it < 0 || it > 10) bad("targetRir", "targetRir must be between 0 and 10") }
+    s.targetRestSec?.let { if (it < 0 || it > 3600) bad("targetRestSec", "targetRestSec must be between 0 and 3600") }
     s.targetWeightKg?.let { if (!it.isFinite() || it < 0 || it > 9999.99) bad("targetWeightKg", "targetWeightKg must be between 0 and 9999.99") }
     if (s.completedAt != null && type != null) {
         val required: List<Pair<String, Any?>> = when (type) {

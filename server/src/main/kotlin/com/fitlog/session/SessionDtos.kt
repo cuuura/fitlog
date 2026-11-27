@@ -30,6 +30,10 @@ data class WorkoutSet(
     val targetReps: Int? = null,
     val targetWeightKg: Double? = null,
     val isAmrap: Boolean = false,
+    // v1.0 예정 운동 목표(모두 선택)
+    val targetRepsMax: Int? = null,
+    val targetRir: Int? = null,
+    val targetRestSec: Int? = null,
 )
 
 @Serializable
@@ -60,6 +64,8 @@ data class Session(
     val planDayKey: String? = null,
     /** readOnly (v0.3): 가져오기 묶음으로 만들었으면 그 id, 아니면 생략 */
     val importBatchId: UUID? = null,
+    /** v1.0: 이 세션이 시작한 예정 운동(scheduled_workout) */
+    val scheduledWorkoutId: UUID? = null,
 )
 
 @Serializable

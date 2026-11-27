@@ -6,7 +6,9 @@ import com.fitlog.core.BodyMeasurements
 import com.fitlog.core.Exercises
 import com.fitlog.core.ProgramInstances
 import com.fitlog.core.Programs
+import com.fitlog.core.ScheduledWorkouts
 import com.fitlog.core.SessionExercises
+import com.fitlog.scheduled.decodeItems
 import com.fitlog.core.Times
 import com.fitlog.core.WorkoutSessions
 import com.fitlog.core.WorkoutSets
@@ -132,6 +134,10 @@ private fun Transaction.buildBundle(uid: UUID, exportedAt: Instant): JsonObject 
         .where { (BodyMeasurements.userId eq uid) and BodyMeasurements.deletedAt.isNull() }
         .orderBy(BodyMeasurements.measuredAt).toList()
 
+    val scheduled = ScheduledWorkouts.selectAll()
+        .where { (ScheduledWorkouts.userId eq uid) and ScheduledWorkouts.deletedAt.isNull() }
+        .orderBy(ScheduledWorkouts.plannedDate to SortOrder.ASC, ScheduledWorkouts.createdAt to SortOrder.ASC).toList()
+
     return buildJsonObject {
         put("schemaVersion", 1)
         put("note", "app=fitlog exportedAt=${Times.format(exportedAt)}")
@@ -181,6 +187,7 @@ private fun Transaction.buildBundle(uid: UUID, exportedAt: Instant): JsonObject 
                     s[WorkoutSessions.endedAt]?.let { put("endedAt", Times.format(it)) }
                     put("tz", s[WorkoutSessions.tz])
                     s[WorkoutSessions.note]?.let { put("note", it) }
+                    s[WorkoutSessions.scheduledWorkoutId]?.let { put("scheduledWorkoutId", it.toString()) }
                     val inst = s[WorkoutSessions.programInstanceId]
                     val planSeq = s[WorkoutSessions.planSeq]
                     if (inst != null && planSeq != null && inst in instanceIds) {
@@ -198,6 +205,33 @@ private fun Transaction.buildBundle(uid: UUID, exportedAt: Instant): JsonObject 
                     }
                 })
             }
+        }
+        // 예정 운동이 없으면 키를 생략한다(이전 형식과 같게 유지)
+        if (scheduled.isNotEmpty()) putJsonArray("scheduledWorkouts") {
+            for (w in scheduled) add(buildJsonObject {
+                put("id", w[ScheduledWorkouts.id].toString())
+                put("plannedDate", w[ScheduledWorkouts.plannedDate].toString())
+                put("title", w[ScheduledWorkouts.title])
+                w[ScheduledWorkouts.note]?.let { put("note", it) }
+                putJsonArray("items") {
+                    for (item in decodeItems(w[ScheduledWorkouts.items])) add(buildJsonObject {
+                        putJsonObject("exercise") { put("id", item.exerciseId.toString()) }
+                        item.note?.let { n -> put("note", n) }
+                        item.restSec?.let { r -> put("restSec", r) }
+                        putJsonArray("sets") {
+                            for (s in item.sets) add(buildJsonObject {
+                                put("isWarmup", s.isWarmup)
+                                s.targetWeightKg?.let { v -> put("targetWeightKg", v) }
+                                s.targetReps?.let { v -> put("targetReps", v) }
+                                s.targetRepsMax?.let { v -> put("targetRepsMax", v) }
+                                s.targetRir?.let { v -> put("targetRir", v) }
+                                s.targetRpe?.let { v -> put("targetRpe", v) }
+                                s.targetDurationSec?.let { v -> put("targetDurationSec", v) }
+                            })
+                        }
+                    })
+                }
+            })
         }
         putJsonArray("bodyMeasurements") {
             for (b in bodies) add(buildJsonObject {

@@ -54,6 +54,9 @@ internal fun ResultRow.toWorkoutSet() = WorkoutSet(
     targetReps = this[WorkoutSets.targetReps],
     targetWeightKg = this[WorkoutSets.targetWeightKg]?.toDouble(),
     isAmrap = this[WorkoutSets.isAmrap],
+    targetRepsMax = this[WorkoutSets.targetRepsMax],
+    targetRir = this[WorkoutSets.targetRir],
+    targetRestSec = this[WorkoutSets.targetRestSec],
 )
 
 /** 삭제되지 않은 내 세션 전체(종목·세트 포함). 없으면 null */
@@ -93,6 +96,7 @@ internal fun Transaction.loadSession(userId: UUID, id: UUID): Session? {
         planSeq = s[WorkoutSessions.planSeq],
         planDayKey = s[WorkoutSessions.planDayKey],
         importBatchId = s[WorkoutSessions.importBatchId],
+        scheduledWorkoutId = s[WorkoutSessions.scheduledWorkoutId],
     )
 }
 
@@ -101,6 +105,7 @@ internal fun Transaction.loadSession(userId: UUID, id: UUID): Session? {
 internal fun Transaction.upsertSessionRow(
     userId: UUID, id: UUID, startedAt: Instant, endedAt: Instant?, tz: String, note: String?, at: Instant,
     programInstanceId: UUID? = null, planSeq: Int? = null, planDayKey: String? = null,
+    scheduledWorkoutId: UUID? = null,
 ) {
     fun fill(b: UpdateBuilder<*>) {
         b[WorkoutSessions.startedAt] = startedAt
@@ -110,6 +115,7 @@ internal fun Transaction.upsertSessionRow(
         b[WorkoutSessions.programInstanceId] = programInstanceId
         b[WorkoutSessions.planSeq] = planSeq
         b[WorkoutSessions.planDayKey] = planDayKey
+        b[WorkoutSessions.scheduledWorkoutId] = scheduledWorkoutId
         b[WorkoutSessions.updatedAt] = at
         b[WorkoutSessions.deletedAt] = null
         b[WorkoutSessions.serverSeq] = ChangeSeq.next
@@ -166,6 +172,9 @@ internal fun Transaction.upsertSetRow(sessionExerciseId: UUID, s: WorkoutSet, at
         b[WorkoutSets.targetReps] = s.targetReps
         b[WorkoutSets.targetWeightKg] = s.targetWeightKg?.let(::bd2)
         b[WorkoutSets.isAmrap] = s.isAmrap
+        b[WorkoutSets.targetRepsMax] = s.targetRepsMax
+        b[WorkoutSets.targetRir] = s.targetRir
+        b[WorkoutSets.targetRestSec] = s.targetRestSec
         b[WorkoutSets.updatedAt] = at
         b[WorkoutSets.deletedAt] = null
         b[WorkoutSets.serverSeq] = ChangeSeq.next
@@ -267,3 +276,17 @@ internal fun Transaction.checkProgramLink(
         }
     }
 }
+
+/** 내 예정 운동 행이 있는가(삭제된 것도 포함: 예정을 지워도 연결된 세션은 남는다) */
+internal fun Transaction.scheduledExists(userId: UUID, id: UUID): Boolean =
+    com.fitlog.core.ScheduledWorkouts.select(com.fitlog.core.ScheduledWorkouts.id)
+        .where { (com.fitlog.core.ScheduledWorkouts.id eq id) and (com.fitlog.core.ScheduledWorkouts.userId eq userId) }
+        .any()
+
+/** 이 예정에 이 세션 말고 살아 있는 세션이 이미 연결돼 있는가 */
+internal fun Transaction.scheduledLinkTaken(sessionId: UUID, scheduledId: UUID): Boolean =
+    WorkoutSessions.select(WorkoutSessions.id)
+        .where {
+            (WorkoutSessions.scheduledWorkoutId eq scheduledId) and WorkoutSessions.deletedAt.isNull() and
+                (WorkoutSessions.id neq sessionId)
+        }.any()
