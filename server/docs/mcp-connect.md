@@ -157,3 +157,7 @@ Gemini CLI의 인증 명령과 설정 키는 버전에 따라 다를 수 있으�
 | 로그인 페이지가 "Google 웹 로그인이 설정되지 않았습니다" | `GOOGLE_WEB_CLIENT_ID` 환경변수 |
 | 도구는 보이는데 쓰기가 "권한 없음" | 동의 화면에서 쓰기 허용을 껐다. 커넥터를 끊고 다시 연결해 허용 |
 | 터널 주소가 바뀜 | `PUBLIC_BASE_URL`, Google 리디렉션 URI, AI 쪽 커넥터 URL을 모두 새 주소로 |
+
+## 연결 문제 진단 (테스트 서버)
+
+비밀번호 로그인이 켜진 서버(또는 `MCP_TRACE=true`)에서는 `<PUBLIC_BASE_URL>/health/mcp-trace` 가 최근 MCP·OAuth·메타데이터 요청 200건을 보여 준다(경로, 상태 코드, User-Agent, 파라미터 이름, redirect 호스트, scope 등. 토큰·비밀번호·코드 값은 남기지 않음). AI 쪽에서 "연결하지 못했습니다"가 나오면 바로 열어 어느 단계(`/.well-known/*` → `/oauth/register` → `/oauth/authorize` → `/oauth/token` → `/mcp`)에서 멈췄는지 본다. 서버가 재시작되면 기록은 비워진다.
