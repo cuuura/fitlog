@@ -37,9 +37,12 @@ import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.put
 import org.jetbrains.exposed.sql.insert
 import org.slf4j.LoggerFactory
+import io.ktor.util.AttributeKey
 import java.util.ArrayDeque
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+
+private val TRACE_KEY = AttributeKey<McpTraceRow>("fitlog.mcpTrace")
 
 private val log = LoggerFactory.getLogger("com.fitlog.mcp")
 
@@ -121,20 +124,56 @@ private fun errorText(e: ApiException): String = buildString {
 /** A2 소유 (v0.3). 등록 위치: 루트(/mcp), 자체 OAuth 토큰 인증. 사양 2025-06-18 Streamable HTTP(JSON 응답만) */
 fun Route.mcpRoutes(config: AppConfig) {
     // 세션 ID 는 서명된 토큰(연결 ID 포함)이라 서버가 재시작·재배포돼도(무료 호스팅은 자주 잠든다) 그대로 통한다.
-    // 메모리 맵은 DELETE 로 닫은 세션을 거절하는 데만 쓴다
-    val closedSessions = ConcurrentHashMap<String, Long>()
+    // 인증은 전적으로 Bearer 토큰이 한다. 세션 ID 는 보안 경계가 아니므로, 없거나 검증에 실패한(예전 연결용·DELETE 로 닫은 것)
+    // 세션도 거절하지 않고 처리한다(ChatGPT 등 세션을 제대로 안 다루는 클라이언트 대응). 검증 결과는 로그·추적에만 남긴다
     val sessionSecret = config.jwt.secret
     fun sessionValid(sid: String, connectionId: UUID): Boolean {
-        if (closedSessions.containsKey(sid)) return false
         val v = Signer.verify(sessionSecret, "mcpsid", sid) ?: return false
         return v["cid"] == connectionId.toString()
+    }
+    val trace = McpTraceBuffer(100)
+    val clients = ClientNames()
+    val traceEnabled = config.mcpTraceEnabled
+
+    fun beginTrace(call: ApplicationCall): McpTraceRow {
+        val tr = McpTraceRow(call.request.local.method.value)
+        tr.userAgent = truncateUa(call.request.header(HttpHeaders.UserAgent))
+        tr.accept = truncateUa(call.request.header(HttpHeaders.Accept))
+        tr.protocolVersion = truncateUa(call.request.header("MCP-Protocol-Version"))
+        tr.authPresent = call.request.header(HttpHeaders.Authorization) != null
+        tr.sessionPresent = call.request.header("Mcp-Session-Id") != null
+        call.attributes.put(TRACE_KEY, tr)
+        return tr
+    }
+
+    fun finishTrace(call: ApplicationCall, tr: McpTraceRow) {
+        tr.status = call.response.status()?.value
+        log.info(tr.logLine())
+        if (traceEnabled) trace.add(tr)
+    }
+
+    /** 세션 헤더를 점검한다. 통과하지 못해도 요청은 처리한다 */
+    fun checkSession(call: ApplicationCall, tr: McpTraceRow, connectionId: UUID): String? {
+        val sid = call.request.header("Mcp-Session-Id") ?: return null
+        val ok = sessionValid(sid, connectionId)
+        tr.sessionVerified = ok
+        if (!ok) log.info("stale or unknown MCP session accepted (rpc={}, ua={})", tr.rpcMethod, tr.userAgent ?: "-")
+        return sid
     }
     val callLimiter = SlidingWindow(60, 60_000)
     val writeLimiter = SlidingWindow(20, 60_000)
     val metadataUrl = "${config.publicBaseUrl}/.well-known/oauth-protected-resource"
 
-    suspend fun ApplicationCall.rpc(status: HttpStatusCode, body: JsonElement) =
+    suspend fun ApplicationCall.rpc(status: HttpStatusCode, body: JsonElement) {
+        val tr = attributes.getOrNull(TRACE_KEY)
+        if (tr != null && body is JsonObject) {
+            val err = body["error"] as? JsonObject
+            tr.rpcError = (err?.get("code") as? JsonPrimitive)?.contentOrNull?.toIntOrNull()
+            val res = body["result"] as? JsonObject
+            if (tr.tool != null && res != null) tr.toolError = (res["isError"] as? JsonPrimitive)?.contentOrNull?.toBooleanStrictOrNull()
+        }
         respondText(body.toString(), ContentType.Application.Json, status)
+    }
 
     suspend fun ApplicationCall.unauthorized() {
         // 토큰을 보냈는데 거절된 경우(만료·폐기)는 error="invalid_token" 을 붙여 클라이언트가 갱신하게 한다(RFC 6750)
@@ -180,10 +219,11 @@ fun Route.mcpRoutes(config: AppConfig) {
         put("isError", isError)
     }
 
-    suspend fun callTool(config: AppConfig, p: McpPrincipal, id: JsonElement?, params: JsonObject?): JsonObject {
+    suspend fun callTool(config: AppConfig, p: McpPrincipal, id: JsonElement?, params: JsonObject?, tr: McpTraceRow): JsonObject {
         val startNs = System.nanoTime()
         val name = (params?.get("name") as? JsonPrimitive)?.takeIf { it.isString }?.content
             ?: return rpcError(id, ERR_INVALID_PARAMS, "params.name is required")
+        tr.tool = name.take(64)
         val tool = TOOLS_BY_NAME[name] ?: return rpcError(id, ERR_INVALID_PARAMS, "Unknown tool: $name")
         val argsEl = params["arguments"]
         if (argsEl != null && argsEl !is JsonObject && argsEl !is JsonNull) {
@@ -222,7 +262,10 @@ fun Route.mcpRoutes(config: AppConfig) {
     route("/mcp") {
         post {
             val call = this.call
+            val tr = beginTrace(call)
+            try {
             val principal = authenticate(call) ?: return@post call.unauthorized()
+            tr.authenticated = true
 
             val body = try {
                 Json.parseToJsonElement(call.receiveText())
@@ -242,6 +285,7 @@ fun Route.mcpRoutes(config: AppConfig) {
                 }
                 return@post call.rpc(HttpStatusCode.BadRequest, rpcError(msg["id"], ERR_INVALID_REQUEST, "method is required"))
             }
+            tr.rpcMethod = method.take(64)
             val id = msg["id"]?.takeIf { it !is JsonNull }
             val params = msg["params"] as? JsonObject
 
@@ -249,12 +293,14 @@ fun Route.mcpRoutes(config: AppConfig) {
                 if (id == null) return@post call.rpc(HttpStatusCode.BadRequest, rpcError(null, ERR_INVALID_REQUEST, "initialize must be a request"))
                 val asked = (params?.get("protocolVersion") as? JsonPrimitive)?.contentOrNull
                 val version = if (asked in SUPPORTED_PROTOCOLS) asked!! else LATEST_PROTOCOL
+                tr.client = clientLabel(params)
                 val sid = Signer.sign(
                     sessionSecret, "mcpsid",
                     mapOf("cid" to principal.connectionId.toString(), "n" to UUID.randomUUID().toString()),
                     30L * 24 * 3600,
                 )
                 call.response.header("Mcp-Session-Id", sid)
+                tr.client?.let { clients.put(sid, it) }
                 return@post call.rpc(
                     HttpStatusCode.OK,
                     rpcResult(id, buildJsonObject {
@@ -266,38 +312,47 @@ fun Route.mcpRoutes(config: AppConfig) {
                 )
             }
 
-            // initialize 이후 요청은 세션 헤더가 필요하다. 모르는 세션은 404(클라이언트가 다시 initialize)
-            val sid = call.request.header("Mcp-Session-Id")
-                ?: return@post call.rpc(HttpStatusCode.BadRequest, rpcError(id, ERR_INVALID_REQUEST, "Mcp-Session-Id header is required"))
-            if (!sessionValid(sid, principal.connectionId)) {
-                return@post call.rpc(HttpStatusCode.NotFound, rpcError(id, ERR_INVALID_REQUEST, "Unknown session; send initialize again"))
-            }
+            // 세션 헤더는 없거나 틀려도 처리한다(상태 없는 서버, 사양상 허용)
+            checkSession(call, tr, principal.connectionId)?.let { tr.client = clients.get(it) }
 
             if (id == null) return@post call.respondText("", status = HttpStatusCode.Accepted) // 알림
             when (method) {
                 "ping" -> call.rpc(HttpStatusCode.OK, rpcResult(id, buildJsonObject { }))
                 "tools/list" -> call.rpc(HttpStatusCode.OK, rpcResult(id, buildJsonObject { put("tools", TOOLS_LIST) }))
-                "tools/call" -> call.rpc(HttpStatusCode.OK, callTool(config, principal, id, params))
+                "tools/call" -> call.rpc(HttpStatusCode.OK, callTool(config, principal, id, params, tr))
                 else -> call.rpc(HttpStatusCode.OK, rpcError(id, ERR_METHOD_NOT_FOUND, "Method not found: $method"))
+            }
+            } finally {
+                finishTrace(call, tr)
             }
         }
 
         // 서버가 먼저 보내는 SSE 스트림은 지원하지 않는다
         get {
+            val tr = beginTrace(call)
             call.response.header(HttpHeaders.Allow, "POST, DELETE")
             call.respondText("", status = HttpStatusCode.MethodNotAllowed)
+            finishTrace(call, tr)
         }
 
         delete {
-            val principal = authenticate(call) ?: return@delete call.unauthorized()
-            val sid = call.request.header("Mcp-Session-Id")
-            if (sid != null && sessionValid(sid, principal.connectionId)) {
-                if (closedSessions.size > 50_000) closedSessions.clear()
-                closedSessions[sid] = System.currentTimeMillis()
-                call.respondText("", status = HttpStatusCode.OK)
-            } else {
-                call.respondText("", status = HttpStatusCode.NotFound)
+            val tr = beginTrace(call)
+            try {
+                val principal = authenticate(call) ?: return@delete call.unauthorized()
+                tr.authenticated = true
+                tr.rpcMethod = "DELETE"
+                val sid = checkSession(call, tr, principal.connectionId)
+                // 세션은 서버에 상태가 없어 닫아도 이후 요청이 거절되지 않는다. 검증되는 세션만 200
+                call.respondText("", status = if (sid != null && tr.sessionVerified == true) HttpStatusCode.OK else HttpStatusCode.NotFound)
+            } finally {
+                finishTrace(call, tr)
             }
         }
+    }
+
+    // 진단용 추적 기록. 꺼져 있으면 없는 것처럼 404
+    get("/health/mcp-trace") {
+        if (!traceEnabled) return@get call.respondText("", status = HttpStatusCode.NotFound)
+        call.respondText(trace.json().toString(), ContentType.Application.Json)
     }
 }

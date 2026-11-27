@@ -4,6 +4,8 @@
 - MCP 사양 **2025-06-18**, **Streamable HTTP** 전송, 경로 `POST/GET /mcp` (같은 서버 프로세스, API와 같은 호스트)
 - 도구(tools)만 제공한다. resources·prompts는 v0.3에서 없음. 단, 서버 `instructions`에 단위(kg)·시간대·충돌 규칙 요약을 넣는다
 - 응답 텍스트는 사람이 읽을 요약 한 줄 + `structuredContent`(JSON). 출력 스키마(`outputSchema`)를 도구마다 선언
+- 세션: `initialize` 가 `Mcp-Session-Id`(서명 토큰)를 주지만 **보안 경계가 아니다**(인증은 Bearer 토큰). 세션 헤더가 없거나, 검증에 실패한(다른 연결·만료·DELETE 로 닫은) 세션이어도 요청을 그대로 처리한다(상태 없는 서버). 서버는 이를 INFO 로그로만 남긴다. `DELETE /mcp`: 검증되는 세션이면 200, 아니면 404
+- 진단: `GET /health/mcp-trace`(env `MCP_TRACE=true`, 비밀번호 로그인 서버는 기본 켜짐, 꺼지면 404)가 최근 100건 /mcp 요청의 메서드·도구 이름·상태·클라이언트(User-Agent, clientInfo)·세션/인증 여부를 보여준다. 토큰·id·인자·결과는 없다
 - 호출 한도: 토큰당 분당 60회, 쓰기 도구는 분당 20회(429 → MCP 에러 `RATE_LIMITED`)
 
 ## 2. 인증 (OAuth 2.1)
@@ -38,6 +40,8 @@ Claude·ChatGPT·Gemini가 사람 개입 없이 연결할 수 있게 MCP 인증 
 | `get_training_summary` | `from`, `to` | 종목별 세트 수·볼륨·최고 무게·최고 추정 1RM, 주 단위 운동 횟수 |
 | `get_body_measurements` | `from?`, `to?` | 체중 기록 |
 | `list_deletion_requests` | `status?` | 이 연결이 만든 삭제 요청과 상태 |
+| `search` | `query` | OpenAI(ChatGPT) 커넥터 호환. 종목·세션(날짜/종목)·프로그램·인스턴스 검색. `{results:[{id,title,url}]}`(id 는 `session:`/`exercise:`/`program:`/`instance:` + uuid). content 텍스트도 같은 JSON 문자열 |
+| `fetch` | `id` | search 의 id 로 `{id,title,text,url,metadata}`(읽기 좋은 요약). content 텍스트는 JSON 문자열. 모르는 id 는 도구 오류 |
 
 ### 쓰기 (`fitlog.write`) — 모두 `import.md` 파이프라인을 거친다
 | 도구 | 입력 | 동작 |
