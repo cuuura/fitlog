@@ -77,9 +77,15 @@ fun parseIntegrityResponse(body: String): IntegrityVerdict {
 class GoogleIntegrityVerifier(private val cfg: IntegrityConfig) : IntegrityVerifier {
     private val http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(2)).build()
     private val credentials: GoogleCredentials by lazy {
-        val path = cfg.credentialsPath ?: error("PLAY_INTEGRITY_CREDENTIALS not configured")
-        FileInputStream(path).use { GoogleCredentials.fromStream(it) }
-            .createScoped("https://www.googleapis.com/auth/playintegrity")
+        val json = cfg.credentialsJson
+        val base = if (json != null) {
+            json.byteInputStream().use { GoogleCredentials.fromStream(it) }
+        } else {
+            val path = cfg.credentialsPath
+                ?: error("PLAY_INTEGRITY_CREDENTIALS or PLAY_INTEGRITY_CREDENTIALS_JSON not configured")
+            FileInputStream(path).use { GoogleCredentials.fromStream(it) }
+        }
+        base.createScoped("https://www.googleapis.com/auth/playintegrity")
     }
 
     override suspend fun decode(token: String): IntegrityVerdict = withContext(Dispatchers.IO) {

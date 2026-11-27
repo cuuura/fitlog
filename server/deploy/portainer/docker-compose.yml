@@ -1,0 +1,92 @@
+# fitlog 서버 — Portainer "Repository(Git)" 스택용 compose (빌드 없음, ghcr.io 이미지 사용)
+#   Portainer: Stacks → Add stack → Repository
+#     URL: https://github.com/cuuura/fitlog   Reference: refs/heads/main
+#     Compose path: server/deploy/portainer/docker-compose.yml
+#     Environment variables: server/deploy/portainer/stack.env.example 내용을 붙여넣고 값 수정
+#   재배포: 스택 → "Pull and redeploy" (Re-pull image 켜기). 웹훅은 쓰지 않는다.
+# Portainer 저장소 스택에는 .env 파일이 없으므로 모든 값을 ${VAR:-기본값} 으로 받는다.
+# 자세한 절차: server/docs/ops.md "Portainer(GitHub 저장소 스택)"
+
+name: fitlog
+
+services:
+  db:
+    image: postgres:${POSTGRES_VERSION:-16}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-fitlog}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      POSTGRES_DB: ${DB_NAME:-fitlog}
+    volumes:
+      # 절대 경로(/srv/fitlog/db)면 호스트 폴더 바인드 마운트, 이름이면 도커 볼륨
+      - ${DB_DATA_DIR:-fitlog_pgdata}:/var/lib/postgresql/data
+    # 필요할 때만 DB 를 호스트에 연다 (기본은 비공개)
+    # ports:
+    #   - "${DB_BIND_ADDR:-127.0.0.1}:${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  server:
+    image: ${FITLOG_SERVER_IMAGE:-ghcr.io/cuuura/fitlog-server}:${FITLOG_IMAGE_TAG:-latest}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      HOST: ${HOST:-0.0.0.0}
+      PORT: ${PORT:-8080}
+      JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError}
+      DB_URL: jdbc:postgresql://db:5432/${DB_NAME:-fitlog}
+      DB_USER: ${DB_USER:-fitlog}
+      DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET is required (32+ chars)}
+      GOOGLE_CLIENT_IDS: ${GOOGLE_CLIENT_IDS:-}
+      PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
+      GOOGLE_WEB_CLIENT_ID: ${GOOGLE_WEB_CLIENT_ID:-}
+      GOOGLE_WEB_CLIENT_SECRET: ${GOOGLE_WEB_CLIENT_SECRET:-}
+      CONTACT_EMAIL: ${CONTACT_EMAIL:-}
+      POLICY_EFFECTIVE_DATE: ${POLICY_EFFECTIVE_DATE:-}
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      INTEGRITY_MODE: ${INTEGRITY_MODE:-off}
+      INTEGRITY_PACKAGE_NAMES: ${INTEGRITY_PACKAGE_NAMES:-}
+      PLAY_INTEGRITY_CREDENTIALS_JSON: ${PLAY_INTEGRITY_CREDENTIALS_JSON:-}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      RATE_LIMIT_AUTH_PER_MIN: ${RATE_LIMIT_AUTH_PER_MIN:-}
+      RATE_LIMIT_API_PER_MIN: ${RATE_LIMIT_API_PER_MIN:-}
+      RATE_LIMIT_EXPORT_PER_10MIN: ${RATE_LIMIT_EXPORT_PER_10MIN:-}
+      RATE_LIMIT_MCP_PER_MIN: ${RATE_LIMIT_MCP_PER_MIN:-}
+      TRUST_PROXY: ${TRUST_PROXY:-false}
+      MAX_BODY_BYTES: ${MAX_BODY_BYTES:-}
+    ports:
+      # 호스트 BIND_ADDR:SERVER_PORT → 컨테이너 PORT
+      - "${BIND_ADDR:-0.0.0.0}:${SERVER_PORT:-8080}:${PORT:-8080}"
+    stop_grace_period: 40s
+
+  backup:
+    image: ${FITLOG_BACKUP_IMAGE:-ghcr.io/cuuura/fitlog-backup}:${FITLOG_IMAGE_TAG:-latest}
+    pull_policy: always
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: ${DB_USER:-fitlog}
+      PGPASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      PGDATABASE: ${DB_NAME:-fitlog}
+      BACKUP_DIR: /backups
+      BACKUP_RETENTION_DAYS: ${BACKUP_RETENTION_DAYS:-30}
+      BACKUP_HOUR_UTC: ${BACKUP_HOUR_UTC:-3}
+      BACKUP_UPLOAD_CMD: ${BACKUP_UPLOAD_CMD:-}
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
+    volumes:
+      # 절대 경로(/srv/fitlog/backups)면 호스트 폴더 바인드 마운트, 이름이면 도커 볼륨
+      - ${BACKUP_DIR:-fitlog_backups}:/backups
+
+volumes:
+  fitlog_pgdata:
+  fitlog_backups:

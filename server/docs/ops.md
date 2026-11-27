@@ -97,3 +97,21 @@ k6 run -e BASE_URL=https://fit.example.com -e ACCESS_TOKEN=<액세스 토큰> se
 - `.env` 는 커밋하지 않는다(`.gitignore` 에 있음). DB 포트는 외부에 열지 않는다(compose 에서 `db` 는 포트 공개 없음).
 - 공개 페이지(`/privacy`, `/account-deletion`)는 CSP `default-src 'none'`, `nosniff`, `no-referrer` 헤더와 1시간 캐시로 나간다.
 - 요청 본문은 `Content-Length` 가 `MAX_BODY_BYTES` 를 넘으면 읽지 않고 413 으로 거절한다.
+
+## 9. Portainer(GitHub 저장소 스택)
+
+Portainer 가 이 GitHub 저장소의 compose 파일을 직접 읽어 배포한다. 웹훅은 쓰지 않고, 새 이미지나 compose 변경은 **Pull and redeploy** 버튼으로 반영한다. 파일: `server/deploy/portainer/docker-compose.yml`(빌드 없이 ghcr.io 이미지 사용), 변수 예시: `server/deploy/portainer/stack.env.example`.
+
+1. **레지스트리**: 패키지가 비공개면 Portainer → Registries → Add registry → GitHub/Custom 에서 `ghcr.io`, 사용자 = GitHub 계정, 비밀번호 = PAT(`read:packages`). 패키지를 공개로 바꾸면 생략 가능.
+2. **스택 만들기**: Stacks → Add stack → **Repository**
+   - Repository URL: `https://github.com/cuuura/fitlog` (비공개 저장소면 Authentication 켜고 PAT 입력)
+   - Repository reference: `refs/heads/main`
+   - Compose path: `server/deploy/portainer/docker-compose.yml`
+   - Environment variables → Advanced mode: `stack.env.example` 내용을 붙여넣고 `DB_PASSWORD`, `JWT_SECRET`(32자 이상), `PUBLIC_BASE_URL`, `GOOGLE_CLIENT_IDS` 등을 채운다. Portainer 저장소 스택에는 `.env` 파일이 없으므로 모든 설정은 이 변수로만 들어간다.
+3. **재배포**: 스택 → **Pull and redeploy**, **Re-pull image** 켜기. main 푸시로 Actions 가 새 `latest`(및 커밋 SHA) 이미지를 올린 뒤, 또는 compose 파일이 바뀌었을 때 누른다. 서버·백업 서비스는 `pull_policy: always` 이다. 선택: Portainer 의 GitOps updates(Polling)를 켜면 주기적으로 저장소 변경을 확인하지만 웹훅은 필요 없다. 이미지 변경만 있는 경우는 버튼을 직접 누른다. 롤백은 `FITLOG_IMAGE_TAG` 를 이전 커밋 SHA 로 바꿔 재배포.
+4. **리슨 주소·포트**: 컨테이너 안 `HOST`/`PORT`, 호스트 쪽 `BIND_ADDR`/`SERVER_PORT` 로 바꾼다(`BIND_ADDR:SERVER_PORT → PORT`). 같은 호스트에 다른 서비스가 8080 을 쓰면 `SERVER_PORT` 만 바꾼다.
+5. **호스트 저장 경로**: `DB_DATA_DIR`, `BACKUP_DIR` 에 절대 경로(예: `/srv/fitlog/db`, `/srv/fitlog/backups`)를 주면 그 폴더가 바인드 마운트된다. 폴더는 호스트에 미리 만들어 둔다(DB 폴더는 postgres 가 쓸 수 있어야 한다). 비워 두면 도커 볼륨 `fitlog_pgdata`, `fitlog_backups` 를 쓴다. 상대 경로는 쓰지 않는다.
+6. **리버스 프록시**: 이 스택에는 Caddy 가 없다. 호스트의 기존 리버스 프록시(nginx, Traefik, Nginx Proxy Manager 등)가 HTTPS 를 받아 `SERVER_PORT` 로 넘기게 하고, `TRUST_PROXY=true`, `BIND_ADDR=127.0.0.1`(프록시가 같은 호스트일 때), `PUBLIC_BASE_URL=https://…` 를 설정한다. 직접 노출이면 `TRUST_PROXY=false`.
+7. **Play Integrity**: 서비스 계정 JSON 파일을 마운트하지 말고 `PLAY_INTEGRITY_CREDENTIALS_JSON` 에 JSON 내용을 한 줄로 넣는다.
+
+빈 값(`KEY=`)은 설정하지 않은 것과 같이 서버 기본값이 쓰인다.

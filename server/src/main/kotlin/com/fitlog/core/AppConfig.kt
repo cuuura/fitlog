@@ -1,5 +1,8 @@
 package com.fitlog.core
 
+/** 빈 문자열은 설정되지 않은 것으로 본다(compose 의 `${VAR:-}` 기본값 대응) */
+fun Map<String, String>.v(k: String): String? = this[k]?.takeIf { it.isNotBlank() }
+
 data class DbConfig(val url: String, val user: String, val password: String, val maxPool: Int = 10)
 
 data class JwtConfig(
@@ -12,6 +15,8 @@ data class JwtConfig(
 
 data class AppConfig(
     val port: Int,
+    /** 바인드 주소(env HOST). 기본 모든 인터페이스 */
+    val host: String = "0.0.0.0",
     val db: DbConfig,
     val jwt: JwtConfig,
     /** Google OAuth 클라이언트 ID 목록(Android/Web). ID 토큰 audience 검증에 쓴다 */
@@ -47,27 +52,28 @@ data class AppConfig(
 
     companion object {
         fun fromEnv(env: Map<String, String> = System.getenv()): AppConfig = AppConfig(
-            port = env["PORT"]?.toInt() ?: 8080,
+            port = env.v("PORT")?.toInt() ?: 8080,
+            host = env.v("HOST") ?: "0.0.0.0",
             db = DbConfig(
-                url = env["DB_URL"] ?: "jdbc:postgresql://localhost:5432/fitlog",
-                user = env["DB_USER"] ?: "fitlog",
-                password = env["DB_PASSWORD"] ?: "fitlog",
+                url = env.v("DB_URL") ?: "jdbc:postgresql://localhost:5432/fitlog",
+                user = env.v("DB_USER") ?: "fitlog",
+                password = env.v("DB_PASSWORD") ?: "fitlog",
             ),
-            jwt = JwtConfig(secret = env["JWT_SECRET"] ?: error("JWT_SECRET is required")),
-            googleClientIds = env["GOOGLE_CLIENT_IDS"]?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+            jwt = JwtConfig(secret = env.v("JWT_SECRET") ?: error("JWT_SECRET is required")),
+            googleClientIds = env.v("GOOGLE_CLIENT_IDS")?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
                 ?: emptyList(),
-            publicBaseUrl = (env["PUBLIC_BASE_URL"] ?: "http://localhost:8080").trimEnd('/'),
-            googleWebClientId = env["GOOGLE_WEB_CLIENT_ID"],
-            googleWebClientSecret = env["GOOGLE_WEB_CLIENT_SECRET"],
+            publicBaseUrl = (env.v("PUBLIC_BASE_URL") ?: "http://localhost:8080").trimEnd('/'),
+            googleWebClientId = env.v("GOOGLE_WEB_CLIENT_ID"),
+            googleWebClientSecret = env.v("GOOGLE_WEB_CLIENT_SECRET"),
             rateLimits = RateLimitConfig.fromEnv(env),
-            trustProxy = env["TRUST_PROXY"]?.toBoolean() ?: false,
+            trustProxy = env.v("TRUST_PROXY")?.toBoolean() ?: false,
             integrity = IntegrityConfig.fromEnv(env),
             site = SiteConfig(
-                contactEmail = env["CONTACT_EMAIL"] ?: "privacy@example.invalid",
-                effectiveDate = env["POLICY_EFFECTIVE_DATE"] ?: "2026-12-01",
-                backupRetentionDays = env["BACKUP_RETENTION_DAYS"]?.toInt() ?: 30,
+                contactEmail = env.v("CONTACT_EMAIL") ?: "privacy@example.invalid",
+                effectiveDate = env.v("POLICY_EFFECTIVE_DATE") ?: "2026-12-01",
+                backupRetentionDays = env.v("BACKUP_RETENTION_DAYS")?.toInt() ?: 30,
             ),
-            maxBodyBytes = env["MAX_BODY_BYTES"]?.toLong() ?: (5L * 1024 * 1024),
+            maxBodyBytes = env.v("MAX_BODY_BYTES")?.toLong() ?: (5L * 1024 * 1024),
         ).also { require(it.jwt.secret.length >= 32) { "JWT_SECRET must be at least 32 characters" } }
     }
 }
@@ -82,11 +88,11 @@ data class RateLimitConfig(
 ) {
     companion object {
         fun fromEnv(env: Map<String, String>) = RateLimitConfig(
-            enabled = env["RATE_LIMIT_ENABLED"]?.toBoolean() ?: true,
-            authPerMinute = env["RATE_LIMIT_AUTH_PER_MIN"]?.toInt() ?: 20,
-            apiPerMinute = env["RATE_LIMIT_API_PER_MIN"]?.toInt() ?: 300,
-            exportPer10Minutes = env["RATE_LIMIT_EXPORT_PER_10MIN"]?.toInt() ?: 5,
-            mcpPerMinute = env["RATE_LIMIT_MCP_PER_MIN"]?.toInt() ?: 120,
+            enabled = env.v("RATE_LIMIT_ENABLED")?.toBoolean() ?: true,
+            authPerMinute = env.v("RATE_LIMIT_AUTH_PER_MIN")?.toInt() ?: 20,
+            apiPerMinute = env.v("RATE_LIMIT_API_PER_MIN")?.toInt() ?: 300,
+            exportPer10Minutes = env.v("RATE_LIMIT_EXPORT_PER_10MIN")?.toInt() ?: 5,
+            mcpPerMinute = env.v("RATE_LIMIT_MCP_PER_MIN")?.toInt() ?: 120,
         )
     }
 }
@@ -99,15 +105,18 @@ data class IntegrityConfig(
     val packageNames: List<String> = listOf("com.fitlog.fitlog"),
     /** 서비스 계정 JSON 파일 경로(decodeIntegrityToken 호출용) */
     val credentialsPath: String? = null,
+    /** 서비스 계정 JSON 내용(파일 마운트 없이 env 로 주입). 있으면 credentialsPath 보다 우선 */
+    val credentialsJson: String? = null,
     /** 토큰 발급 시각 허용 오차 */
     val maxAgeSec: Long = 600,
 ) {
     companion object {
         fun fromEnv(env: Map<String, String>) = IntegrityConfig(
-            mode = env["INTEGRITY_MODE"]?.let { IntegrityMode.valueOf(it.uppercase()) } ?: IntegrityMode.OFF,
-            packageNames = env["INTEGRITY_PACKAGE_NAMES"]?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
+            mode = env.v("INTEGRITY_MODE")?.let { IntegrityMode.valueOf(it.uppercase()) } ?: IntegrityMode.OFF,
+            packageNames = env.v("INTEGRITY_PACKAGE_NAMES")?.split(',')?.map { it.trim() }?.filter { it.isNotEmpty() }
                 ?: listOf("com.fitlog.fitlog"),
-            credentialsPath = env["PLAY_INTEGRITY_CREDENTIALS"],
+            credentialsPath = env.v("PLAY_INTEGRITY_CREDENTIALS"),
+            credentialsJson = env.v("PLAY_INTEGRITY_CREDENTIALS_JSON"),
         )
     }
 }

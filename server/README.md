@@ -58,6 +58,8 @@ docker compose --profile https up -d   # 선택: Caddy 자동 HTTPS (DOMAIN, TRU
 ```
 이미지는 main 푸시 때 GitHub Actions(`.github/workflows/server-image.yml`)가 `ghcr.io/<소유자>/fitlog-server` 로 올린다. 배포·백업·복구·모니터링은 [docs/ops.md](docs/ops.md), Play 스토어 등록은 [docs/play-store.md](docs/play-store.md).
 
+Portainer 에서 GitHub 저장소 스택(빌드 없이 ghcr.io 이미지, Pull and redeploy)으로 배포하려면 `server/deploy/portainer/` 와 [docs/ops.md](docs/ops.md) 9장을 본다. 포트·리슨 주소·호스트 마운트 경로는 모두 환경 변수다.
+
 공개 페이지: `/privacy`, `/account-deletion`, 준비 상태 `/health/ready`(DB 확인). 모든 응답에 `X-Request-Id`.
 
 ## 테스트

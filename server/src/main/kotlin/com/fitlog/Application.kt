@@ -41,7 +41,10 @@ fun main() {
     val config = AppConfig.fromEnv()
     // 종료 신호(SIGTERM) 시 진행 중 요청을 최대 10초 기다리고, 30초 안에 강제 종료. 끝나면 DB 풀을 닫는다
     embeddedServer(Netty, environment = applicationEnvironment { }, configure = {
-        connector { port = config.port }
+        connector {
+            host = config.host
+            port = config.port
+        }
         shutdownGracePeriod = 10_000
         shutdownTimeout = 30_000
     }) {
