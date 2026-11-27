@@ -242,7 +242,17 @@ class SettingsPage extends ConsumerWidget {
           ),
           header(l.settingsSectionAccount),
           if (me != null)
-            ListTile(title: Text(me.email), subtitle: me.displayName == null ? null : Text(me.displayName!)),
+            ListTile(
+              key: const Key('accountTile'),
+              title: Text(me.username ?? me.email),
+              subtitle: me.isPasswordAccount
+                  ? Text(
+                      me.displayName == null
+                          ? l.authPasswordAccountLabel
+                          : '${l.authPasswordAccountLabel} · ${me.displayName}',
+                    )
+                  : (me.displayName == null ? null : Text(me.displayName!)),
+            ),
           ListTile(
             key: const Key('aiTile'),
             title: Text(l.settingsAi),

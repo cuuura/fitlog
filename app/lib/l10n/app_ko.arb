@@ -1397,5 +1397,40 @@
   "qaCrashReportDesc": "앱이 멈추면 오류 내용만 개발자에게 보내요. 기록·이메일 등 개인 정보는 보내지 않아요. 다음 실행부터 적용돼요.",
   "qaCrashReportSaveFailed": "설정을 저장하지 못했어요",
   "qaStepDecrease": "줄이기",
-  "qaStepIncrease": "늘리기"
+  "qaStepIncrease": "늘리기",
+  "authPasswordAccountLabel": "아이디 로그인",
+  "authPasswordAiNote": "AI 연결(MCP)은 Google 계정으로 로그인했을 때만 쓸 수 있어요. 아이디 로그인 계정은 사용할 수 없어요.",
+  "authPasswordDivider": "또는",
+  "authPasswordUsername": "아이디",
+  "authPasswordUsernameHelper": "3~32자, 영문·숫자·. _ -",
+  "authPasswordPassword": "비밀번호",
+  "authPasswordPasswordHelper": "8자 이상",
+  "authPasswordConfirm": "비밀번호 확인",
+  "authPasswordSignupCode": "가입 코드",
+  "authPasswordDisplayName": "표시 이름 (선택)",
+  "authPasswordShow": "비밀번호 보기",
+  "authPasswordHide": "비밀번호 숨기기",
+  "authPasswordSignIn": "아이디로 로그인",
+  "authPasswordSignUp": "가입하기",
+  "authPasswordToSignup": "처음이신가요? 가입",
+  "authPasswordToLogin": "이미 계정이 있어요. 로그인",
+  "authPasswordErrUsername": "아이디는 3~32자, 영문·숫자·. _ - 만 쓸 수 있어요.",
+  "authPasswordErrPassword": "비밀번호는 8~128자로 입력해 주세요.",
+  "authPasswordErrMismatch": "비밀번호가 서로 달라요.",
+  "authPasswordErrCode": "가입 코드를 입력해 주세요.",
+  "authPasswordBadCredentials": "아이디 또는 비밀번호가 맞지 않아요.",
+  "authPasswordLocked": "로그인을 너무 많이 실패했어요. {minutes}분 뒤에 다시 시도해 주세요.",
+  "@authPasswordLocked": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "authPasswordLockedGeneric": "로그인을 너무 많이 실패했어요. 잠시 후 다시 시도해 주세요.",
+  "authPasswordCodeWrong": "가입 코드가 맞지 않거나 지금은 가입할 수 없어요.",
+  "authPasswordTaken": "이미 사용 중인 아이디예요.",
+  "authPasswordValidationUsername": "아이디 형식이 올바르지 않아요.",
+  "authPasswordValidationPassword": "비밀번호 형식이 올바르지 않아요.",
+  "authPasswordValidation": "입력한 내용을 확인해 주세요."
 }

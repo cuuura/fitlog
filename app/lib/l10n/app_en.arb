@@ -1325,5 +1325,40 @@
   "qaCrashReportDesc": "If the app crashes, only the error details are sent to the developer. Workout data and email are never sent. Applies from the next launch.",
   "qaCrashReportSaveFailed": "Could not save the setting",
   "qaStepDecrease": "Decrease",
-  "qaStepIncrease": "Increase"
+  "qaStepIncrease": "Increase",
+  "authPasswordAccountLabel": "ID login",
+  "authPasswordAiNote": "AI connection (MCP) is only available when signed in with Google. ID login accounts cannot use it.",
+  "authPasswordDivider": "or",
+  "authPasswordUsername": "ID",
+  "authPasswordUsernameHelper": "3-32 chars: letters, digits, . _ -",
+  "authPasswordPassword": "Password",
+  "authPasswordPasswordHelper": "At least 8 characters",
+  "authPasswordConfirm": "Confirm password",
+  "authPasswordSignupCode": "Signup code",
+  "authPasswordDisplayName": "Display name (optional)",
+  "authPasswordShow": "Show password",
+  "authPasswordHide": "Hide password",
+  "authPasswordSignIn": "Sign in with ID",
+  "authPasswordSignUp": "Sign up",
+  "authPasswordToSignup": "New here? Sign up",
+  "authPasswordToLogin": "I already have an account. Sign in",
+  "authPasswordErrUsername": "ID must be 3-32 characters: letters, digits, . _ -",
+  "authPasswordErrPassword": "Password must be 8-128 characters.",
+  "authPasswordErrMismatch": "Passwords do not match.",
+  "authPasswordErrCode": "Enter the signup code.",
+  "authPasswordBadCredentials": "Wrong ID or password.",
+  "authPasswordLocked": "Too many failed attempts. Try again in {minutes} minutes.",
+  "@authPasswordLocked": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "authPasswordLockedGeneric": "Too many failed attempts. Try again later.",
+  "authPasswordCodeWrong": "Wrong signup code, or signup is currently closed.",
+  "authPasswordTaken": "That ID is already taken.",
+  "authPasswordValidationUsername": "The ID format is invalid.",
+  "authPasswordValidationPassword": "The password format is invalid.",
+  "authPasswordValidation": "Please check your input."
 }

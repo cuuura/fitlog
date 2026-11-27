@@ -1,4 +1,5 @@
 import 'package:fitlog/core/api/ai_dto.dart';
+import 'package:fitlog/core/auth/auth_controller.dart';
 import 'package:fitlog/data/providers.dart';
 import 'package:fitlog/l10n/gen/app_localizations.dart';
 import 'package:flutter/services.dart';
@@ -6,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
 
-final _mcpInfoProvider = FutureProvider.autoDispose<McpInfo>((ref) => ref.watch(aiConnectionRepositoryProvider).mcpInfo());
+final _mcpInfoProvider = FutureProvider.autoDispose<McpInfo>(
+  (ref) => ref.watch(aiConnectionRepositoryProvider).mcpInfo(),
+);
 final _connectionsProvider = FutureProvider.autoDispose<List<AiConnection>>(
   (ref) => ref.watch(aiConnectionRepositoryProvider).connections(),
 );
@@ -17,6 +20,8 @@ class AiConnectPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
+    ref.watch(authControllerProvider);
+    final isPasswordAccount = ref.read(authControllerProvider.notifier).me?.isPasswordAccount ?? false;
     final info = ref.watch(_mcpInfoProvider);
     final conns = ref.watch(_connectionsProvider);
     void retry() {
@@ -46,6 +51,11 @@ class AiConnectPage extends ConsumerWidget {
         data: (i) => ListView(
           padding: const EdgeInsets.all(16),
           children: [
+            if (isPasswordAccount)
+              Card(
+                key: const Key('aiPasswordNote'),
+                child: ListTile(leading: const Icon(Icons.info_outline), title: Text(l.authPasswordAiNote)),
+              ),
             Text(l.aiConnectUrlLabel, style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: 4),
             SelectableText(i.mcpUrl, style: Theme.of(context).textTheme.titleMedium),
@@ -69,16 +79,25 @@ class AiConnectPage extends ConsumerWidget {
               _GuideCard(
                 key: const ValueKey('guide-default'),
                 name: l.aiConnectDefaultName,
-                steps: [l.aiConnectDefaultStep1, l.aiConnectDefaultStep2, l.aiConnectDefaultStep3, l.aiConnectDefaultStep4],
+                steps: [
+                  l.aiConnectDefaultStep1,
+                  l.aiConnectDefaultStep2,
+                  l.aiConnectDefaultStep3,
+                  l.aiConnectDefaultStep4,
+                ],
                 docUrl: null,
               )
             else
-              for (final c in i.clients) _GuideCard(key: ValueKey('guide-${c.key}'), name: c.name, steps: c.steps, docUrl: c.docUrl),
+              for (final c in i.clients)
+                _GuideCard(key: ValueKey('guide-${c.key}'), name: c.name, steps: c.steps, docUrl: c.docUrl),
             const SizedBox(height: 16),
             Text(l.aiConnectConnected, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             conns.when(
-              loading: () => const Padding(padding: EdgeInsets.all(16), child: Center(child: CircularProgressIndicator())),
+              loading: () => const Padding(
+                padding: EdgeInsets.all(16),
+                child: Center(child: CircularProgressIndicator()),
+              ),
               error: (_, _) => Column(
                 children: [
                   Text(l.aiConnectLoadFailed),
@@ -87,7 +106,9 @@ class AiConnectPage extends ConsumerWidget {
               ),
               data: (list) => list.isEmpty
                   ? Text(l.aiConnectNone)
-                  : Column(children: [for (final c in list) _ConnectionTile(key: ValueKey('conn-${c.id}'), conn: c)]),
+                  : Column(
+                      children: [for (final c in list) _ConnectionTile(key: ValueKey('conn-${c.id}'), conn: c)],
+                    ),
             ),
           ],
         ),
@@ -168,7 +189,9 @@ class _ConnectionTile extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final fmt = DateFormat.yMd(Localizations.localeOf(context).toString()).add_Hm();
     final perm = conn.canWrite ? '${l.aiConnectRead}·${l.aiConnectWrite}' : l.aiConnectRead;
-    final used = conn.lastUsedAt == null ? l.aiConnectNeverUsed : l.aiConnectLastUsed(fmt.format(conn.lastUsedAt!.toLocal()));
+    final used = conn.lastUsedAt == null
+        ? l.aiConnectNeverUsed
+        : l.aiConnectLastUsed(fmt.format(conn.lastUsedAt!.toLocal()));
     return Card(
       child: ListTile(
         title: Text(conn.clientName),

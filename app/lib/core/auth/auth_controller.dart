@@ -22,12 +22,53 @@ enum AuthStatus {
 }
 
 /// 로그인 화면에 보여줄 실패 종류.
-enum AuthFailureKind { network, server, noIdToken, other }
+enum AuthFailureKind {
+  network,
+  server,
+  noIdToken,
+  other,
+
+  /// 아이디·비밀번호 로그인 전용(401).
+  badCredentials,
+
+  /// 5회 실패 잠금(429). [AuthFailure.retryAfter] 참고.
+  locked,
+
+  /// 가입 코드 틀림 또는 가입 꺼짐(403).
+  signupCodeWrong,
+
+  /// 이미 있는 아이디(409).
+  usernameTaken,
+
+  /// 400. [AuthFailure.field]는 username|password 등.
+  validation,
+}
 
 class AuthFailure implements Exception {
   final AuthFailureKind kind;
   final Object? cause;
-  const AuthFailure(this.kind, [this.cause]);
+  final Duration? retryAfter;
+  final String? field;
+  const AuthFailure(this.kind, [this.cause, this.retryAfter, this.field]);
+
+  /// 아이디·비밀번호 로그인·가입 응답을 사용자 문구 종류로 바꾼다.
+  factory AuthFailure.fromPassword(Object e) {
+    if (e is ApiException && !e.isNetwork) {
+      switch (e.statusCode) {
+        case 401:
+          return AuthFailure(AuthFailureKind.badCredentials, e);
+        case 429:
+          return AuthFailure(AuthFailureKind.locked, e, e.retryAfter);
+        case 403:
+          return AuthFailure(AuthFailureKind.signupCodeWrong, e);
+        case 409:
+          return AuthFailure(AuthFailureKind.usernameTaken, e);
+        case 400:
+          return AuthFailure(AuthFailureKind.validation, e, null, e.field);
+      }
+    }
+    return AuthFailure.from(e);
+  }
 
   factory AuthFailure.from(Object e) {
     if (e is AuthFailure) return e;
@@ -99,20 +140,46 @@ class AuthController extends Notifier<AuthStatus> {
       final idToken = await ref.read(googleIdTokenSourceProvider).fetchIdToken();
       if (idToken == null) return; // 취소
       if (idToken.isEmpty) throw const AuthFailure(AuthFailureKind.noIdToken);
-      final t = await _api.authGoogle(idToken);
-      await _store.write(StoredTokens(
+      await _completeSignIn(await _api.authGoogle(idToken));
+    } catch (e) {
+      throw AuthFailure.from(e);
+    }
+  }
+
+  /// 테스트용 아이디·비밀번호 로그인. 실패하면 [AuthFailure]를 던진다.
+  Future<void> signInWithPassword(String username, String password) async {
+    try {
+      await _completeSignIn(await _api.authPasswordLogin(username.trim(), password));
+    } catch (e) {
+      throw AuthFailure.fromPassword(e);
+    }
+  }
+
+  /// 테스트용 아이디·비밀번호 가입(가입 후 바로 로그인 상태).
+  Future<void> registerWithPassword(String username, String password, String signupCode, {String? displayName}) async {
+    try {
+      await _completeSignIn(
+        await _api.authPasswordRegister(username.trim(), password, signupCode, displayName: displayName?.trim()),
+      );
+    } catch (e) {
+      throw AuthFailure.fromPassword(e);
+    }
+  }
+
+  /// 토큰을 저장하고 내 정보·동의 상태를 읽는다(로그인 방식과 무관한 공통 흐름).
+  Future<void> _completeSignIn(AuthTokens t) async {
+    await _store.write(
+      StoredTokens(
         accessToken: t.accessToken,
         refreshToken: t.refreshToken,
         expiresAt: ref.read(clockProvider)().add(Duration(seconds: t.expiresIn)),
-      ));
-      try {
-        await _loadMe();
-      } catch (_) {
-        await _store.clear(keepUserId: true);
-        rethrow;
-      }
-    } catch (e) {
-      throw AuthFailure.from(e);
+      ),
+    );
+    try {
+      await _loadMe();
+    } catch (_) {
+      await _store.clear(keepUserId: true);
+      rethrow;
     }
   }
 

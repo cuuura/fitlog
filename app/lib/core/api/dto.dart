@@ -10,8 +10,7 @@ String? _iso(DateTime? v) => v?.toUtc().toIso8601String();
 double? _num(Object? v) => v == null ? null : (v as num).toDouble();
 
 /// null 값은 키를 빼고 내보낸다.
-Map<String, Object?> _compact(Map<String, Object?> m) =>
-    Map.fromEntries(m.entries.where((e) => e.value != null));
+Map<String, Object?> _compact(Map<String, Object?> m) => Map.fromEntries(m.entries.where((e) => e.value != null));
 
 T _enumByName<T extends Enum>(List<T> values, Object? name) =>
     values.firstWhere((e) => e.name == name, orElse: () => throw FormatException('unknown enum $name for $T'));
@@ -24,8 +23,25 @@ enum ExerciseType { BARBELL, DUMBBELL, MACHINE, BODYWEIGHT, BAND, CARDIO }
 const v01ExerciseTypes = [ExerciseType.BARBELL, ExerciseType.DUMBBELL, ExerciseType.MACHINE, ExerciseType.BODYWEIGHT];
 
 enum Muscle {
-  CHEST, BACK, LATS, TRAPS, SHOULDERS, REAR_DELTS, BICEPS, TRICEPS, FOREARMS,
-  QUADS, HAMSTRINGS, GLUTES, CALVES, ADDUCTORS, ABS, OBLIQUES, LOWER_BACK, FULL_BODY, CARDIO
+  CHEST,
+  BACK,
+  LATS,
+  TRAPS,
+  SHOULDERS,
+  REAR_DELTS,
+  BICEPS,
+  TRICEPS,
+  FOREARMS,
+  QUADS,
+  HAMSTRINGS,
+  GLUTES,
+  CALVES,
+  ADDUCTORS,
+  ABS,
+  OBLIQUES,
+  LOWER_BACK,
+  FULL_BODY,
+  CARDIO,
 }
 
 enum ConsentKind { TERMS, PRIVACY, HEALTH_DATA }
@@ -57,16 +73,42 @@ class AuthTokens {
   final String refreshToken;
   final int expiresIn;
   final bool isNewUser;
-  const AuthTokens({required this.accessToken, required this.refreshToken, required this.expiresIn, required this.isNewUser});
+  const AuthTokens({
+    required this.accessToken,
+    required this.refreshToken,
+    required this.expiresIn,
+    required this.isNewUser,
+  });
 
   factory AuthTokens.fromJson(Map<String, Object?> j) => AuthTokens(
-        accessToken: j['accessToken'] as String,
-        refreshToken: j['refreshToken'] as String,
-        expiresIn: j['expiresIn'] as int,
-        isNewUser: j['isNewUser'] as bool,
-      );
-  Map<String, Object?> toJson() =>
-      {'accessToken': accessToken, 'refreshToken': refreshToken, 'expiresIn': expiresIn, 'isNewUser': isNewUser};
+    accessToken: j['accessToken'] as String,
+    refreshToken: j['refreshToken'] as String,
+    expiresIn: j['expiresIn'] as int,
+    isNewUser: j['isNewUser'] as bool,
+  );
+  Map<String, Object?> toJson() => {
+    'accessToken': accessToken,
+    'refreshToken': refreshToken,
+    'expiresIn': expiresIn,
+    'isNewUser': isNewUser,
+  };
+}
+
+/// GET /v1/auth/methods. 로그인 화면에 무엇을 보여줄지(contracts/v1.0/auth-password.md).
+class AuthMethods {
+  final bool google;
+  final bool password;
+  final bool passwordSignup;
+  const AuthMethods({this.google = true, this.password = false, this.passwordSignup = false});
+
+  /// 조회 실패 시 기본값: Google만.
+  static const googleOnly = AuthMethods();
+
+  factory AuthMethods.fromJson(Map<String, Object?> j) => AuthMethods(
+    google: j['google'] as bool? ?? true,
+    password: j['password'] as bool? ?? false,
+    passwordSignup: j['passwordSignup'] as bool? ?? false,
+  );
 }
 
 class Me {
@@ -75,15 +117,31 @@ class Me {
   final String? displayName;
   final UserRole role;
   final List<ConsentKind> consentsRequired;
-  const Me({required this.id, required this.email, this.displayName, required this.role, required this.consentsRequired});
+  const Me({
+    required this.id,
+    required this.email,
+    this.displayName,
+    required this.role,
+    required this.consentsRequired,
+  });
 
   factory Me.fromJson(Map<String, Object?> j) => Me(
-        id: j['id'] as String,
-        email: j['email'] as String,
-        displayName: j['displayName'] as String?,
-        role: _enumByName(UserRole.values, j['role']),
-        consentsRequired: [for (final k in (j['consentsRequired'] as List? ?? const [])) _enumByName(ConsentKind.values, k)],
-      );
+    id: j['id'] as String,
+    email: j['email'] as String,
+    displayName: j['displayName'] as String?,
+    role: _enumByName(UserRole.values, j['role']),
+    consentsRequired: [
+      for (final k in (j['consentsRequired'] as List? ?? const [])) _enumByName(ConsentKind.values, k),
+    ],
+  );
+
+  static const passwordEmailSuffix = '@password.local';
+
+  /// 아이디·비밀번호 계정이면 true(email이 `<username>@password.local`).
+  bool get isPasswordAccount => email.endsWith(passwordEmailSuffix);
+
+  /// 비밀번호 계정이면 아이디, 아니면 null.
+  String? get username => isPasswordAccount ? email.substring(0, email.length - passwordEmailSuffix.length) : null;
 }
 
 class Settings {
@@ -109,27 +167,27 @@ class Settings {
   });
 
   factory Settings.fromJson(Map<String, Object?> j) => Settings(
-        weightUnit: j['weightUnit'] == null ? WeightUnit.KG : _enumByName(WeightUnit.values, j['weightUnit']),
-        defaultRestSec: j['defaultRestSec'] as int? ?? 120,
-        keepScreenOn: j['keepScreenOn'] as bool? ?? true,
-        rpeInputEnabled: j['rpeInputEnabled'] as bool? ?? true,
-        heightCm: _num(j['heightCm']),
-        sex: j['sex'] == null ? null : _enumByName(Sex.values, j['sex']),
-        birthYear: j['birthYear'] as int?,
-        e1rmFormula: j['e1rmFormula'] == null ? E1rmFormula.EPLEY : _enumByName(E1rmFormula.values, j['e1rmFormula']),
-      );
+    weightUnit: j['weightUnit'] == null ? WeightUnit.KG : _enumByName(WeightUnit.values, j['weightUnit']),
+    defaultRestSec: j['defaultRestSec'] as int? ?? 120,
+    keepScreenOn: j['keepScreenOn'] as bool? ?? true,
+    rpeInputEnabled: j['rpeInputEnabled'] as bool? ?? true,
+    heightCm: _num(j['heightCm']),
+    sex: j['sex'] == null ? null : _enumByName(Sex.values, j['sex']),
+    birthYear: j['birthYear'] as int?,
+    e1rmFormula: j['e1rmFormula'] == null ? E1rmFormula.EPLEY : _enumByName(E1rmFormula.values, j['e1rmFormula']),
+  );
 
   /// v0.2: PUT은 JSON merge-patch. heightCm·sex·birthYear는 null을 명시해서 보내야 서버에서 비워진다.
   Map<String, Object?> toJson() => {
-        'weightUnit': weightUnit.name,
-        'defaultRestSec': defaultRestSec,
-        'keepScreenOn': keepScreenOn,
-        'rpeInputEnabled': rpeInputEnabled,
-        'heightCm': heightCm,
-        'sex': sex?.name,
-        'birthYear': birthYear,
-        'e1rmFormula': e1rmFormula.name,
-      };
+    'weightUnit': weightUnit.name,
+    'defaultRestSec': defaultRestSec,
+    'keepScreenOn': keepScreenOn,
+    'rpeInputEnabled': rpeInputEnabled,
+    'heightCm': heightCm,
+    'sex': sex?.name,
+    'birthYear': birthYear,
+    'e1rmFormula': e1rmFormula.name,
+  };
 
   Settings copyWith({
     WeightUnit? weightUnit,
@@ -140,17 +198,16 @@ class Settings {
     Sex? Function()? sex,
     int? Function()? birthYear,
     E1rmFormula? e1rmFormula,
-  }) =>
-      Settings(
-        weightUnit: weightUnit ?? this.weightUnit,
-        defaultRestSec: defaultRestSec ?? this.defaultRestSec,
-        keepScreenOn: keepScreenOn ?? this.keepScreenOn,
-        rpeInputEnabled: rpeInputEnabled ?? this.rpeInputEnabled,
-        heightCm: heightCm != null ? heightCm() : this.heightCm,
-        sex: sex != null ? sex() : this.sex,
-        birthYear: birthYear != null ? birthYear() : this.birthYear,
-        e1rmFormula: e1rmFormula ?? this.e1rmFormula,
-      );
+  }) => Settings(
+    weightUnit: weightUnit ?? this.weightUnit,
+    defaultRestSec: defaultRestSec ?? this.defaultRestSec,
+    keepScreenOn: keepScreenOn ?? this.keepScreenOn,
+    rpeInputEnabled: rpeInputEnabled ?? this.rpeInputEnabled,
+    heightCm: heightCm != null ? heightCm() : this.heightCm,
+    sex: sex != null ? sex() : this.sex,
+    birthYear: birthYear != null ? birthYear() : this.birthYear,
+    e1rmFormula: e1rmFormula ?? this.e1rmFormula,
+  );
 }
 
 class ConsentInput {
@@ -165,11 +222,11 @@ class Consent extends ConsentInput {
   final DateTime? createdAt;
   const Consent({required super.kind, required super.version, required super.granted, this.createdAt});
   factory Consent.fromJson(Map<String, Object?> j) => Consent(
-        kind: _enumByName(ConsentKind.values, j['kind']),
-        version: j['version'] as String,
-        granted: j['granted'] as bool,
-        createdAt: _dt(j['createdAt']),
-      );
+    kind: _enumByName(ConsentKind.values, j['kind']),
+    version: j['version'] as String,
+    granted: j['granted'] as bool,
+    createdAt: _dt(j['createdAt']),
+  );
 }
 
 // ---------- exercise ----------
@@ -191,13 +248,13 @@ class ExerciseInput {
   });
 
   Map<String, Object?> toJson() => _compact({
-        'id': id,
-        'nameKo': nameKo,
-        'nameEn': nameEn,
-        'type': type.name,
-        'primaryMuscle': primaryMuscle.name,
-        'secondaryMuscles': [for (final m in secondaryMuscles) m.name],
-      });
+    'id': id,
+    'nameKo': nameKo,
+    'nameEn': nameEn,
+    'type': type.name,
+    'primaryMuscle': primaryMuscle.name,
+    'secondaryMuscles': [for (final m in secondaryMuscles) m.name],
+  });
 }
 
 class Exercise extends ExerciseInput {
@@ -221,17 +278,17 @@ class Exercise extends ExerciseInput {
   });
 
   factory Exercise.fromJson(Map<String, Object?> j) => Exercise(
-        id: j['id'] as String,
-        nameKo: j['nameKo'] as String,
-        nameEn: j['nameEn'] as String?,
-        type: _enumByName(ExerciseType.values, j['type']),
-        primaryMuscle: _enumByName(Muscle.values, j['primaryMuscle']),
-        secondaryMuscles: [for (final m in (j['secondaryMuscles'] as List? ?? const [])) _enumByName(Muscle.values, m)],
-        builtIn: j['builtIn'] as bool,
-        updatedAt: _dt(j['updatedAt'])!,
-        source: j['source'] == null ? null : _enumByName(SessionSource.values, j['source']),
-        importBatchId: j['importBatchId'] as String?,
-      );
+    id: j['id'] as String,
+    nameKo: j['nameKo'] as String,
+    nameEn: j['nameEn'] as String?,
+    type: _enumByName(ExerciseType.values, j['type']),
+    primaryMuscle: _enumByName(Muscle.values, j['primaryMuscle']),
+    secondaryMuscles: [for (final m in (j['secondaryMuscles'] as List? ?? const [])) _enumByName(Muscle.values, m)],
+    builtIn: j['builtIn'] as bool,
+    updatedAt: _dt(j['updatedAt'])!,
+    source: j['source'] == null ? null : _enumByName(SessionSource.values, j['source']),
+    importBatchId: j['importBatchId'] as String?,
+  );
 
   @override
   Map<String, Object?> toJson() => {...super.toJson(), 'builtIn': builtIn, 'updatedAt': _iso(updatedAt)};
@@ -287,46 +344,46 @@ class WorkoutSet {
   bool get isCompleted => completedAt != null;
 
   factory WorkoutSet.fromJson(Map<String, Object?> j) => WorkoutSet(
-        id: j['id'] as String,
-        position: j['position'] as int,
-        isWarmup: j['isWarmup'] as bool? ?? false,
-        weightKg: _num(j['weightKg']),
-        addedWeightKg: _num(j['addedWeightKg']),
-        reps: j['reps'] as int?,
-        durationSec: j['durationSec'] as int?,
-        distanceM: _num(j['distanceM']),
-        bandLevel: j['bandLevel'] as String?,
-        rpe: _num(j['rpe']),
-        rir: j['rir'] as int?,
-        restSec: j['restSec'] as int?,
-        note: j['note'] as String?,
-        completedAt: _dt(j['completedAt']),
-        plannedSetKey: j['plannedSetKey'] as String?,
-        targetReps: j['targetReps'] as int?,
-        targetWeightKg: _num(j['targetWeightKg']),
-        isAmrap: j['isAmrap'] as bool? ?? false,
-      );
+    id: j['id'] as String,
+    position: j['position'] as int,
+    isWarmup: j['isWarmup'] as bool? ?? false,
+    weightKg: _num(j['weightKg']),
+    addedWeightKg: _num(j['addedWeightKg']),
+    reps: j['reps'] as int?,
+    durationSec: j['durationSec'] as int?,
+    distanceM: _num(j['distanceM']),
+    bandLevel: j['bandLevel'] as String?,
+    rpe: _num(j['rpe']),
+    rir: j['rir'] as int?,
+    restSec: j['restSec'] as int?,
+    note: j['note'] as String?,
+    completedAt: _dt(j['completedAt']),
+    plannedSetKey: j['plannedSetKey'] as String?,
+    targetReps: j['targetReps'] as int?,
+    targetWeightKg: _num(j['targetWeightKg']),
+    isAmrap: j['isAmrap'] as bool? ?? false,
+  );
 
   Map<String, Object?> toJson() => _compact({
-        'id': id,
-        'position': position,
-        'isWarmup': isWarmup,
-        'weightKg': weightKg,
-        'addedWeightKg': addedWeightKg,
-        'reps': reps,
-        'durationSec': durationSec,
-        'distanceM': distanceM,
-        'bandLevel': bandLevel,
-        'rpe': rpe,
-        'rir': rir,
-        'restSec': restSec,
-        'note': note,
-        'completedAt': _iso(completedAt),
-        'plannedSetKey': plannedSetKey,
-        'targetReps': targetReps,
-        'targetWeightKg': targetWeightKg,
-        'isAmrap': isAmrap,
-      });
+    'id': id,
+    'position': position,
+    'isWarmup': isWarmup,
+    'weightKg': weightKg,
+    'addedWeightKg': addedWeightKg,
+    'reps': reps,
+    'durationSec': durationSec,
+    'distanceM': distanceM,
+    'bandLevel': bandLevel,
+    'rpe': rpe,
+    'rir': rir,
+    'restSec': restSec,
+    'note': note,
+    'completedAt': _iso(completedAt),
+    'plannedSetKey': plannedSetKey,
+    'targetReps': targetReps,
+    'targetWeightKg': targetWeightKg,
+    'isAmrap': isAmrap,
+  });
 
   /// nullable 필드는 `() => null`처럼 함수로 넘겨야 null로 바꿀 수 있다.
   WorkoutSet copyWith({
@@ -343,27 +400,26 @@ class WorkoutSet {
     int? Function()? restSec,
     String? Function()? note,
     DateTime? Function()? completedAt,
-  }) =>
-      WorkoutSet(
-        id: id,
-        position: position ?? this.position,
-        isWarmup: isWarmup ?? this.isWarmup,
-        weightKg: weightKg != null ? weightKg() : this.weightKg,
-        addedWeightKg: addedWeightKg != null ? addedWeightKg() : this.addedWeightKg,
-        reps: reps != null ? reps() : this.reps,
-        durationSec: durationSec != null ? durationSec() : this.durationSec,
-        distanceM: distanceM != null ? distanceM() : this.distanceM,
-        bandLevel: bandLevel != null ? bandLevel() : this.bandLevel,
-        rpe: rpe != null ? rpe() : this.rpe,
-        rir: rir != null ? rir() : this.rir,
-        restSec: restSec != null ? restSec() : this.restSec,
-        note: note != null ? note() : this.note,
-        completedAt: completedAt != null ? completedAt() : this.completedAt,
-        plannedSetKey: plannedSetKey,
-        targetReps: targetReps,
-        targetWeightKg: targetWeightKg,
-        isAmrap: isAmrap,
-      );
+  }) => WorkoutSet(
+    id: id,
+    position: position ?? this.position,
+    isWarmup: isWarmup ?? this.isWarmup,
+    weightKg: weightKg != null ? weightKg() : this.weightKg,
+    addedWeightKg: addedWeightKg != null ? addedWeightKg() : this.addedWeightKg,
+    reps: reps != null ? reps() : this.reps,
+    durationSec: durationSec != null ? durationSec() : this.durationSec,
+    distanceM: distanceM != null ? distanceM() : this.distanceM,
+    bandLevel: bandLevel != null ? bandLevel() : this.bandLevel,
+    rpe: rpe != null ? rpe() : this.rpe,
+    rir: rir != null ? rir() : this.rir,
+    restSec: restSec != null ? restSec() : this.restSec,
+    note: note != null ? note() : this.note,
+    completedAt: completedAt != null ? completedAt() : this.completedAt,
+    plannedSetKey: plannedSetKey,
+    targetReps: targetReps,
+    targetWeightKg: targetWeightKg,
+    isAmrap: isAmrap,
+  );
 }
 
 class SessionExercise {
@@ -387,23 +443,23 @@ class SessionExercise {
   });
 
   factory SessionExercise.fromJson(Map<String, Object?> j) => SessionExercise(
-        id: j['id'] as String,
-        exerciseId: j['exerciseId'] as String,
-        position: j['position'] as int,
-        note: j['note'] as String?,
-        sets: [for (final s in (j['sets'] as List? ?? const [])) WorkoutSet.fromJson((s as Map).cast())],
-        liftKey: j['liftKey'] as String?,
-        accessory: j['accessory'] as bool? ?? false,
-      );
+    id: j['id'] as String,
+    exerciseId: j['exerciseId'] as String,
+    position: j['position'] as int,
+    note: j['note'] as String?,
+    sets: [for (final s in (j['sets'] as List? ?? const [])) WorkoutSet.fromJson((s as Map).cast())],
+    liftKey: j['liftKey'] as String?,
+    accessory: j['accessory'] as bool? ?? false,
+  );
   Map<String, Object?> toJson() => _compact({
-        'id': id,
-        'exerciseId': exerciseId,
-        'position': position,
-        'note': note,
-        'liftKey': liftKey,
-        'accessory': accessory,
-        'sets': [for (final s in sets) s.toJson()],
-      });
+    'id': id,
+    'exerciseId': exerciseId,
+    'position': position,
+    'note': note,
+    'liftKey': liftKey,
+    'accessory': accessory,
+    'sets': [for (final s in sets) s.toJson()],
+  });
 }
 
 class Session {
@@ -446,32 +502,32 @@ class Session {
   bool get isActive => endedAt == null;
 
   factory Session.fromJson(Map<String, Object?> j) => Session(
-        id: j['id'] as String,
-        startedAt: _dt(j['startedAt'])!,
-        endedAt: _dt(j['endedAt']),
-        tz: j['tz'] as String,
-        note: j['note'] as String?,
-        source: j['source'] == null ? null : _enumByName(SessionSource.values, j['source']),
-        exercises: [for (final e in (j['exercises'] as List? ?? const [])) SessionExercise.fromJson((e as Map).cast())],
-        updatedAt: _dt(j['updatedAt']),
-        programInstanceId: j['programInstanceId'] as String?,
-        planSeq: j['planSeq'] as int?,
-        planDayKey: j['planDayKey'] as String?,
-        importBatchId: j['importBatchId'] as String?,
-      );
+    id: j['id'] as String,
+    startedAt: _dt(j['startedAt'])!,
+    endedAt: _dt(j['endedAt']),
+    tz: j['tz'] as String,
+    note: j['note'] as String?,
+    source: j['source'] == null ? null : _enumByName(SessionSource.values, j['source']),
+    exercises: [for (final e in (j['exercises'] as List? ?? const [])) SessionExercise.fromJson((e as Map).cast())],
+    updatedAt: _dt(j['updatedAt']),
+    programInstanceId: j['programInstanceId'] as String?,
+    planSeq: j['planSeq'] as int?,
+    planDayKey: j['planDayKey'] as String?,
+    importBatchId: j['importBatchId'] as String?,
+  );
 
   /// source, updatedAt, importBatchId는 readOnly라 보내지 않는다.
   Map<String, Object?> toJson() => _compact({
-        'id': id,
-        'startedAt': _iso(startedAt),
-        'endedAt': _iso(endedAt),
-        'tz': tz,
-        'note': note,
-        'programInstanceId': programInstanceId,
-        'planSeq': planSeq,
-        'planDayKey': planDayKey,
-        'exercises': [for (final e in exercises) e.toJson()],
-      });
+    'id': id,
+    'startedAt': _iso(startedAt),
+    'endedAt': _iso(endedAt),
+    'tz': tz,
+    'note': note,
+    'programInstanceId': programInstanceId,
+    'planSeq': planSeq,
+    'planDayKey': planDayKey,
+    'exercises': [for (final e in exercises) e.toJson()],
+  });
 }
 
 class SessionSummary {
@@ -493,14 +549,14 @@ class SessionSummary {
   });
 
   factory SessionSummary.fromJson(Map<String, Object?> j) => SessionSummary(
-        id: j['id'] as String,
-        startedAt: _dt(j['startedAt'])!,
-        endedAt: _dt(j['endedAt']),
-        tz: j['tz'] as String,
-        exerciseCount: j['exerciseCount'] as int,
-        setCount: j['setCount'] as int,
-        totalVolumeKg: _num(j['totalVolumeKg'])!,
-      );
+    id: j['id'] as String,
+    startedAt: _dt(j['startedAt'])!,
+    endedAt: _dt(j['endedAt']),
+    tz: j['tz'] as String,
+    exerciseCount: j['exerciseCount'] as int,
+    setCount: j['setCount'] as int,
+    totalVolumeKg: _num(j['totalVolumeKg'])!,
+  );
 }
 
 class LastSets {
@@ -509,10 +565,10 @@ class LastSets {
   final List<WorkoutSet> sets;
   const LastSets({required this.sessionId, required this.startedAt, required this.sets});
   factory LastSets.fromJson(Map<String, Object?> j) => LastSets(
-        sessionId: j['sessionId'] as String,
-        startedAt: _dt(j['startedAt'])!,
-        sets: [for (final s in (j['sets'] as List? ?? const [])) WorkoutSet.fromJson((s as Map).cast())],
-      );
+    sessionId: j['sessionId'] as String,
+    startedAt: _dt(j['startedAt'])!,
+    sets: [for (final s in (j['sets'] as List? ?? const [])) WorkoutSet.fromJson((s as Map).cast())],
+  );
 }
 
 // ---------- body ----------
@@ -534,13 +590,18 @@ class BodyMeasurement {
   });
 
   factory BodyMeasurement.fromJson(Map<String, Object?> j) => BodyMeasurement(
-        id: j['id'] as String,
-        measuredAt: _dt(j['measuredAt'])!,
-        weightKg: _num(j['weightKg'])!,
-        source: j['source'] == null ? MeasurementSource.MANUAL : _enumByName(MeasurementSource.values, j['source']),
-        importBatchId: j['importBatchId'] as String?,
-      );
-  Map<String, Object?> toJson() => {'id': id, 'measuredAt': _iso(measuredAt), 'weightKg': weightKg, 'source': source.name};
+    id: j['id'] as String,
+    measuredAt: _dt(j['measuredAt'])!,
+    weightKg: _num(j['weightKg'])!,
+    source: j['source'] == null ? MeasurementSource.MANUAL : _enumByName(MeasurementSource.values, j['source']),
+    importBatchId: j['importBatchId'] as String?,
+  );
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'measuredAt': _iso(measuredAt),
+    'weightKg': weightKg,
+    'source': source.name,
+  };
 }
 
 // ---------- sync ----------
@@ -564,22 +625,22 @@ class Change {
   });
 
   factory Change.fromJson(Map<String, Object?> j) => Change(
-        entity: _enumByName(SyncEntity.values, j['entity']),
-        id: j['id'] as String,
-        op: _enumByName(ChangeOp.values, j['op']),
-        parentId: j['parentId'] as String?,
-        payload: (j['payload'] as Map?)?.cast<String, Object?>(),
-        clientUpdatedAt: _dt(j['clientUpdatedAt'])!,
-        serverSeq: j['serverSeq'] as int?,
-      );
+    entity: _enumByName(SyncEntity.values, j['entity']),
+    id: j['id'] as String,
+    op: _enumByName(ChangeOp.values, j['op']),
+    parentId: j['parentId'] as String?,
+    payload: (j['payload'] as Map?)?.cast<String, Object?>(),
+    clientUpdatedAt: _dt(j['clientUpdatedAt'])!,
+    serverSeq: j['serverSeq'] as int?,
+  );
   Map<String, Object?> toJson() => _compact({
-        'entity': entity.name,
-        'id': id,
-        'op': op.name,
-        'parentId': parentId,
-        'payload': op == ChangeOp.DELETE ? null : payload,
-        'clientUpdatedAt': _iso(clientUpdatedAt),
-      });
+    'entity': entity.name,
+    'id': id,
+    'op': op.name,
+    'parentId': parentId,
+    'payload': op == ChangeOp.DELETE ? null : payload,
+    'clientUpdatedAt': _iso(clientUpdatedAt),
+  });
 }
 
 class ChangeResult {
@@ -589,11 +650,11 @@ class ChangeResult {
   final Change? server;
   const ChangeResult({required this.id, required this.status, this.code, this.server});
   factory ChangeResult.fromJson(Map<String, Object?> j) => ChangeResult(
-        id: j['id'] as String,
-        status: _enumByName(ChangeStatus.values, j['status']),
-        code: j['code'] as String?,
-        server: j['server'] == null ? null : Change.fromJson((j['server'] as Map).cast()),
-      );
+    id: j['id'] as String,
+    status: _enumByName(ChangeStatus.values, j['status']),
+    code: j['code'] as String?,
+    server: j['server'] == null ? null : Change.fromJson((j['server'] as Map).cast()),
+  );
 }
 
 class PullResult {
@@ -602,8 +663,8 @@ class PullResult {
   final bool hasMore;
   const PullResult({required this.changes, required this.nextSince, required this.hasMore});
   factory PullResult.fromJson(Map<String, Object?> j) => PullResult(
-        changes: [for (final c in (j['changes'] as List)) Change.fromJson((c as Map).cast())],
-        nextSince: j['nextSince'] as int,
-        hasMore: j['hasMore'] as bool,
-      );
+    changes: [for (final c in (j['changes'] as List)) Change.fromJson((c as Map).cast())],
+    nextSince: j['nextSince'] as int,
+    hasMore: j['hasMore'] as bool,
+  );
 }

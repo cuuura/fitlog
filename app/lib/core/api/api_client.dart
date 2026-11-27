@@ -103,6 +103,35 @@ class ApiClient {
       _map(await dio.post('/v1/auth/google', data: {'idToken': idToken}, options: await _integrityOptions(idToken))),
     ),
   );
+  Future<AuthMethods> authMethods() => _call(() async => AuthMethods.fromJson(_map(await dio.get('/v1/auth/methods'))));
+  Future<AuthTokens> authPasswordLogin(String username, String password) => _call(
+    () async => AuthTokens.fromJson(
+      _map(
+        await dio.post(
+          '/v1/auth/password/login',
+          data: {'username': username, 'password': password},
+          options: await _integrityOptions(username),
+        ),
+      ),
+    ),
+  );
+  Future<AuthTokens> authPasswordRegister(String username, String password, String signupCode, {String? displayName}) =>
+      _call(
+        () async => AuthTokens.fromJson(
+          _map(
+            await dio.post(
+              '/v1/auth/password/register',
+              data: {
+                'username': username,
+                'password': password,
+                'signupCode': signupCode,
+                if (displayName != null && displayName.isNotEmpty) 'displayName': displayName,
+              },
+              options: await _integrityOptions(username),
+            ),
+          ),
+        ),
+      );
   Future<AuthTokens> authRefresh(String refreshToken) => _call(
     () async => AuthTokens.fromJson(
       _map(
