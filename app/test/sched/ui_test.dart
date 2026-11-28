@@ -24,6 +24,18 @@ Future<void> settle(WidgetTester t, [int n = 8]) async {
   }
 }
 
+/// 손잡이를 잡고 [by]만큼 끈다(여러 번에 나눠 움직여 드래그로 인식시킨다).
+Future<void> dragHandle(WidgetTester t, Finder handle, Offset by) async {
+  final g = await t.startGesture(t.getCenter(handle));
+  await t.pump(const Duration(milliseconds: 100));
+  for (var i = 0; i < 10; i++) {
+    await g.moveBy(by / 10);
+    await t.pump(const Duration(milliseconds: 50));
+  }
+  await g.up();
+  await settle(t);
+}
+
 ScheduledWorkout sw({
   String id = 'sw1',
   String date = '2026-11-26',
@@ -299,11 +311,12 @@ void main() {
       expect(t.widget<TextField>(find.byKey(const Key('sched-rm-0-0'))).controller!.text, '15');
 
       await t.enterText(find.byKey(const Key('sched-title')), '바꾼 제목');
-      await t.ensureVisible(find.byKey(const Key('sched-down-0')));
-      await t.tap(find.byKey(const Key('sched-down-0')));
-      await settle(t);
-      await t.ensureVisible(find.byKey(const Key('sched-remove-set-1-1')));
-      await t.tap(find.byKey(const Key('sched-remove-set-1-1')));
+      expect(find.byKey(const Key('sched-up-0')), findsNothing, reason: '위/아래 버튼은 없다');
+      expect(find.byKey(const Key('sched-down-0')), findsNothing);
+      await t.ensureVisible(find.byKey(const Key('sched-handle-0')));
+      await dragHandle(t, find.byKey(const Key('sched-handle-0')), const Offset(0, 500));
+      await t.ensureVisible(find.byKey(const Key('sched-remove-set-0-1'))); // 스쿼트 = 항목 0(안정 키)
+      await t.tap(find.byKey(const Key('sched-remove-set-0-1')));
       await settle(t);
       await t.ensureVisible(find.byKey(const Key('sched-save')));
       await t.tap(find.byKey(const Key('sched-save')));

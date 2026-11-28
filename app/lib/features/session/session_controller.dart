@@ -16,6 +16,7 @@ import '../../data/providers.dart';
 import '../../domain/repositories.dart';
 import '../rest_timer/rest_timer_controller.dart';
 import 'current_set.dart' show restSecFor;
+import 'previous_match.dart';
 
 /// 기기의 IANA 시간대. 테스트에서 override 한다.
 final deviceTimezoneProvider = Provider<Future<String> Function()>((ref) {
@@ -252,7 +253,7 @@ class SessionController {
       if (prev == null || prev.isEmpty) {
         base = null;
       } else {
-        base = se.sets.length < prev.length ? prev[se.sets.length] : prev.last;
+        base = previousForNewSet(se.sets, prev);
       }
     }
     final draft = WorkoutSet(

@@ -26,6 +26,7 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.get
 import kotlinx.serialization.Serializable
 import org.jetbrains.exposed.sql.JoinType
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
@@ -241,7 +242,7 @@ fun statsComparison(uid: UUID, sessionId: UUID): SessionComparison {
 
     val exerciseIds = SessionExercises.selectAll().where {
         (SessionExercises.sessionId eq sessionId) and SessionExercises.deletedAt.isNull()
-    }.orderBy(SessionExercises.position).map { it[SessionExercises.exerciseId] }.distinct()
+    }.orderBy(SessionExercises.position to SortOrder.ASC, SessionExercises.id to SortOrder.ASC).map { it[SessionExercises.exerciseId] }.distinct()
     if (exerciseIds.isEmpty()) return SessionComparison(sessionId, formula.name, emptyList())
 
     val headKey = head.startedAt to head.id

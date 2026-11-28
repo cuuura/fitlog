@@ -293,23 +293,17 @@ class _SetRowState extends ConsumerState<SetRow> {
     bool bold = false,
   }) {
     final s = widget.set;
-    return ReorderableDragStartListener(
-      index: widget.index,
-      child: Tooltip(
-        message: l.sessionReorderHandle,
-        child: SizedBox(
-          key: Key('drag-${s.id}'),
-          width: kSetColWidth,
-          height: 40,
-          child: Center(
-            child: Text(
-              widget.label,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: failed ? scheme.error : null,
-                fontWeight: bold ? FontWeight.bold : null,
-              ),
-            ),
+    return SizedBox(
+      key: Key('drag-${s.id}'),
+      width: kSetColWidth,
+      height: 40,
+      child: Center(
+        child: Text(
+          widget.label,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: failed ? scheme.error : null,
+            fontWeight: bold ? FontWeight.bold : null,
           ),
         ),
       ),
@@ -324,13 +318,17 @@ class _SetRowState extends ConsumerState<SetRow> {
     final s = widget.set;
     final rir = _showRir ?? (s.rpe == null && s.rir != null);
     final labelId = rir ? 'rir' : 'rpe';
-    Widget chip(String text, String keySuffix, bool selected, VoidCallback onTap) =>
-        ChoiceChip(
-          key: Key('$labelId-${s.id}-$keySuffix'),
-          label: Text(text),
-          selected: selected,
-          onSelected: (_) => onTap(),
-        );
+    Widget chip(
+      String text,
+      String keySuffix,
+      bool selected,
+      VoidCallback onTap,
+    ) => ChoiceChip(
+      key: Key('$labelId-${s.id}-$keySuffix'),
+      label: Text(text),
+      selected: selected,
+      onSelected: (_) => onTap(),
+    );
     final ctrl = ref.read(sessionControllerProvider);
     final chips = rir
         ? [
@@ -425,54 +423,59 @@ class _SetRowState extends ConsumerState<SetRow> {
       alignment: Alignment.centerLeft,
       child: Text(t, key: key, style: style ?? dim, maxLines: 1),
     );
-    return InkWell(
-      key: Key('row-${s.id}'),
-      onTap: widget.onSelect,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                _numberCell(l, scheme, failed),
-                Expanded(
-                  flex: 3,
-                  child: cell(
-                    planCellText(s, unit),
-                    key: Key('plan-${s.id}'),
-                    style: cellStyle?.copyWith(color: scheme.onSurfaceVariant),
+    return ReorderableDelayedDragStartListener(
+      index: widget.index,
+      child: InkWell(
+        key: Key('row-${s.id}'),
+        onTap: widget.onSelect,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  _numberCell(l, scheme, failed),
+                  Expanded(
+                    flex: 3,
+                    child: cell(
+                      planCellText(s, unit),
+                      key: Key('plan-${s.id}'),
+                      style: cellStyle?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
                   ),
-                ),
-                Expanded(flex: 2, child: cell(wText)),
-                Expanded(
-                  flex: 2,
-                  child: cell(
-                    repsText,
-                    style: failed
-                        ? cellStyle?.copyWith(
-                            color: scheme.error,
-                            fontWeight: FontWeight.bold,
-                          )
-                        : null,
+                  Expanded(flex: 2, child: cell(wText)),
+                  Expanded(
+                    flex: 2,
+                    child: cell(
+                      repsText,
+                      style: failed
+                          ? cellStyle?.copyWith(
+                              color: scheme.error,
+                              fontWeight: FontWeight.bold,
+                            )
+                          : null,
+                    ),
                   ),
-                ),
-                _doneButton(l, scheme, failed),
-              ],
-            ),
-            if (failed || differsFromPlan(s))
-              Padding(
-                padding: const EdgeInsets.only(left: kSetColWidth, bottom: 4),
-                child: Wrap(
-                  spacing: 8,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    if (failed) _failedBadge(scheme, l, s),
-                    if (differsFromPlan(s)) _differsBadge(scheme, l, s),
-                  ],
-                ),
+                  _doneButton(l, scheme, failed),
+                ],
               ),
-          ],
+              if (failed || differsFromPlan(s))
+                Padding(
+                  padding: const EdgeInsets.only(left: kSetColWidth, bottom: 4),
+                  child: Wrap(
+                    spacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      if (failed) _failedBadge(scheme, l, s),
+                      if (differsFromPlan(s)) _differsBadge(scheme, l, s),
+                    ],
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

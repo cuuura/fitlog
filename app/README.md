@@ -64,5 +64,6 @@ flutter run --dart-define=API_BASE_URL=http://<PC의 LAN IP>:8080 \
 | 16 | (v1.0) 폰 글씨 크기 최대 + 다크 모드로 홈·세션·설정 | 글자 잘림·겹침 없음 |
 | 17 | (v1.0) 설정 → 개인정보 처리방침 | 브라우저에서 `{API_BASE_URL}/privacy`가 열림 |
 | 18 | (테스트용) 서버 `PASSWORD_LOGIN_ENABLED=true`, `PASSWORD_SIGNUP_CODE` 설정 → 로그인 화면 가입 → 로그아웃 → 아이디 로그인 | Google 없이 로그인·동의·기록 가능. 설정 계정 칸에 아이디 표시. 비밀번호 5번 틀리면 잠금 안내 |
+| 19 | 운동 중: 세트 행 길게 눌러 끌기, 운동 머리글 길게 누르기/≡ 끌기, ⇅ 버튼으로 세트 순서 시트. 지난 기록 편집·예정 운동 편집·프로그램 보조운동에서 ≡ 끌기 | 끌 때 진동, 순서가 앱 재시작·다른 기기에서도 유지. 스크롤 중 세트가 잘못 끌리지 않음 |
 
 v1.0 릴리스 준비(서명 키, Play Console, 스토어 자료, 사용자 결정 항목)는 `store/release-checklist.md`, 등록 문구는 `store/listing-ko.md`.

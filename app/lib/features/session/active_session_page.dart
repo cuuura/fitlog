@@ -9,12 +9,14 @@ import '../../core/api/dto.dart';
 import '../../core/clock.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/ui/confirm.dart';
+import '../../core/widgets/reorder.dart';
 import '../../core/routes.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
 import '../rest_timer/session_wakelock.dart';
 import 'current_set.dart';
 import 'plan_logic.dart';
+import 'previous_match.dart';
 import 'session_controller.dart';
 import 'session_dock.dart';
 import 'session_format.dart';
@@ -192,6 +194,13 @@ class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
           scrollController: _scroll,
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 96),
           buildDefaultDragHandles: false,
+          onReorderStart: (_) => reorderHaptic(),
+          proxyDecorator: reorderProxy(
+            compact: (i) => _CollapsedExerciseProxy(
+              se: session.exercises[i],
+              exercise: exercises[session.exercises[i].exerciseId],
+            ),
+          ),
           header: Column(
             children: [
               if (session.isProgram) _PlanHeader(session: session),
@@ -454,95 +463,113 @@ class _ExerciseCard extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(
-                padding: const EdgeInsets.only(left: 12, right: 4),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  name,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium,
+              ReorderableDelayedDragStartListener(
+                index: index,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 12, right: 4),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    name,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium,
+                                  ),
                                 ),
-                              ),
-                              if (se.accessory) ...[
-                                const SizedBox(width: 8),
-                                Chip(
-                                  key: Key('accessory-${se.id}'),
-                                  label: Text(l.sessionAccessoryBadge),
-                                  visualDensity: VisualDensity.compact,
-                                ),
+                                if (se.accessory) ...[
+                                  const SizedBox(width: 8),
+                                  Chip(
+                                    key: Key('accessory-${se.id}'),
+                                    label: Text(l.sessionAccessoryBadge),
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ],
                               ],
-                            ],
-                          ),
-                          Wrap(
-                            spacing: 8,
-                            children: [
+                            ),
+                            Wrap(
+                              spacing: 8,
+                              children: [
+                                Text(
+                                  typeLabel(l, type),
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                if (progress.total > 0)
+                                  Text(
+                                    l.sessionTableProgress(
+                                      progress.done,
+                                      progress.total,
+                                    ),
+                                    key: Key('progress-${se.id}'),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(
+                                          color: progress.done == progress.total
+                                              ? Theme.of(context)
+                                                    .colorScheme
+                                                    .primary
+                                              : null,
+                                        ),
+                                  ),
+                              ],
+                            ),
+                            if (pastText.isNotEmpty)
                               Text(
-                                typeLabel(l, type),
+                                l.sessionLastDay(pastText),
+                                key: Key('past-day-${se.id}'),
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
-                              if (progress.total > 0)
-                                Text(
-                                  l.sessionTableProgress(
-                                    progress.done,
-                                    progress.total,
-                                  ),
-                                  key: Key('progress-${se.id}'),
-                                  style: Theme.of(context).textTheme.labelLarge
-                                      ?.copyWith(
-                                        color: progress.done == progress.total
-                                            ? Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                            : null,
-                                      ),
-                                ),
-                            ],
-                          ),
-                          if (pastText.isNotEmpty)
-                            Text(
-                              l.sessionLastDay(pastText),
-                              key: Key('past-day-${se.id}'),
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                        ],
-                      ),
-                    ),
-                    ReorderableDragStartListener(
-                      index: index,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Icon(
-                          Icons.drag_handle,
-                          key: Key('drag-exercise-${se.id}'),
+                          ],
                         ),
                       ),
-                    ),
-                    IconButton(
-                      key: Key('remove-exercise-${se.id}'),
-                      tooltip: l.sessionRemoveExercise,
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: () async {
-                        final ok = await confirmAction(
-                          context,
-                          title: l.sessionRemoveExercise,
-                          body: l.sessionRemoveExerciseConfirm(name),
-                          action: l.commonDelete,
-                          destructive: true,
-                          confirmKey: const Key('remove-exercise-confirm'),
-                        );
-                        if (ok) await ctrl.removeExercise(se.id);
-                      },
-                    ),
-                  ],
+                      if (se.sets.length > 1)
+                        IconButton(
+                          key: Key('reorder-sets-${se.id}'),
+                          tooltip: l.sessionReorderSets,
+                          icon: const Icon(Icons.swap_vert),
+                          onPressed: () => showModalBottomSheet<void>(
+                            context: context,
+                            isScrollControlled: true,
+                            useSafeArea: true,
+                            builder: (_) =>
+                                _SetOrderSheet(seId: se.id, type: type),
+                          ),
+                        ),
+                      ReorderableDragStartListener(
+                        index: index,
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Icon(
+                            Icons.drag_handle,
+                            key: Key('drag-exercise-${se.id}'),
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        key: Key('remove-exercise-${se.id}'),
+                        tooltip: l.sessionRemoveExercise,
+                        icon: const Icon(Icons.delete_outline),
+                        onPressed: () async {
+                          final ok = await confirmAction(
+                            context,
+                            title: l.sessionRemoveExercise,
+                            body: l.sessionRemoveExerciseConfirm(name),
+                            action: l.commonDelete,
+                            destructive: true,
+                            confirmKey: const Key('remove-exercise-confirm'),
+                          );
+                          if (ok) await ctrl.removeExercise(se.id);
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Padding(
@@ -571,6 +598,7 @@ class _ExerciseCard extends ConsumerWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 buildDefaultDragHandles: false,
+                onReorderStart: (_) => reorderHaptic(),
                 itemCount: se.sets.length,
                 onReorderItem: (o, n) {
                   final ids = [for (final w in se.sets) w.id];
@@ -591,7 +619,7 @@ class _ExerciseCard extends ConsumerWidget {
                   onSelect: () => onSelect(se.sets[i].id),
                   previous: last == null || last.sets.isEmpty
                       ? null
-                      : (i < last.sets.length ? last.sets[i] : last.sets.last),
+                      : matchPreviousSet(se.sets, i, last.sets),
                 ),
               ),
               Padding(
@@ -784,6 +812,8 @@ class _Playlist extends ConsumerWidget {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 buildDefaultDragHandles: false,
+                onReorderStart: (_) => reorderHaptic(),
+                proxyDecorator: reorderProxy(),
                 itemCount: list.length,
                 onReorderItem: (o, n) {
                   final ids = [for (final e in list) e.id];
@@ -793,6 +823,105 @@ class _Playlist extends ConsumerWidget {
                 itemBuilder: (c, i) => row(i),
               ),
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 운동 카드를 끄는 동안 보이는 접힌 카드(이름 + 완료/전체 세트). 세트 목록은 숨긴다.
+class _CollapsedExerciseProxy extends StatelessWidget {
+  const _CollapsedExerciseProxy({required this.se, required this.exercise});
+  final SessionExercise se;
+  final Exercise? exercise;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final p = exerciseProgress(se);
+    final name = exercise == null
+        ? '…'
+        : exerciseDisplayName(context, exercise!);
+    return Card(
+      key: Key('reorder-proxy-${se.id}'),
+      margin: EdgeInsets.zero,
+      child: ListTile(
+        title: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis),
+        trailing: p.total > 0
+            ? Text(l.sessionTableProgress(p.done, p.total))
+            : null,
+      ),
+    );
+  }
+}
+
+/// "세트 순서 바꾸기" 시트: 그 종목의 세트만 따로 끌어 옮긴다. 세트가 많아 카드가 화면보다 길 때
+/// (카드 안 목록은 바깥 목록이 따라 스크롤되지 않는다) 쓴다. 끌 때마다 바로 저장한다.
+class _SetOrderSheet extends ConsumerWidget {
+  const _SetOrderSheet({required this.seId, required this.type});
+  final String seId;
+  final ExerciseType type;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final session = ref.watch(activeSessionProvider).value;
+    final se = session?.exercises.where((e) => e.id == seId).firstOrNull;
+    final unit = ref.watch(settingsProvider.select((s) => s.weightUnit));
+    if (se == null) return const SizedBox.shrink();
+    return SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ListTile(
+            title: Text(
+              l.sessionReorderSets,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            trailing: IconButton(
+              icon: const Icon(Icons.close),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          Flexible(
+            child: ReorderableListView.builder(
+              key: Key('set-order-list-$seId'),
+              shrinkWrap: true,
+              buildDefaultDragHandles: false,
+              onReorderStart: (_) => reorderHaptic(),
+              proxyDecorator: reorderProxy(),
+              itemCount: se.sets.length,
+              onReorderItem: (o, n) {
+                final ids = [for (final w in se.sets) w.id];
+                ids.insert(n, ids.removeAt(o));
+                ref.read(sessionControllerProvider).reorderSets(se.id, ids);
+              },
+              itemBuilder: (context, i) {
+                final w = se.sets[i];
+                return ListTile(
+                  key: ValueKey('set-order-${w.id}'),
+                  leading: SizedBox(
+                    width: kSetColWidth,
+                    child: Text(
+                      setShortLabel(l, se, w),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  title: Text(formatSetBrief(w, type, unit)),
+                  trailing: ReorderableDragStartListener(
+                    index: i,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.drag_handle,
+                        key: Key('set-order-drag-${w.id}'),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );

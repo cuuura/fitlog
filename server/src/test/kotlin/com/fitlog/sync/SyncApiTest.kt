@@ -1,5 +1,13 @@
 package com.fitlog.sync
 
+import com.fitlog.program.instance.FakeCalculator
+import com.fitlog.program.instance.fakeTest
+import com.fitlog.program.instance.getInstance
+import com.fitlog.program.instance.insertProgram
+import com.fitlog.program.instance.objOf
+import com.fitlog.program.instance.startInstance
+import com.fitlog.program.instance.testDefinition
+import com.fitlog.program.instance.workingOf
 import com.fitlog.session.arr
 import com.fitlog.session.change
 import com.fitlog.session.get
@@ -67,6 +75,74 @@ class SyncApiTest {
         val exs = s["exercises"]!!.jsonArray
         assertEquals(1, exs.size)
         assertEquals("100.0", exs[0].jsonObject["sets"]!!.jsonArray[0].str("weightKg"))
+    }
+
+    @Test
+    fun position_only_push_reorders_session_exercises_and_sets_in_get() = fitlogTest {
+        startApplication()
+        val c = jsonClient()
+        val uid = createUser()
+        val e1 = insertExercise(uid); val e2 = insertExercise(uid)
+        val sid = newId(); val se1 = newId(); val se2 = newId(); val w1 = newId(); val w2 = newId(); val w3 = newId()
+        c.push(
+            uid, sessionChange(sid, t0), seChange(se1, sid, e1, t0, 0), seChange(se2, sid, e2, t0, 1),
+            setChange(w1, se1, t0, 0), setChange(w2, se1, t0, 1), setChange(w3, se1, t0, 2),
+        )
+        fun orders(): Pair<List<String?>, List<String?>> {
+            val s = kotlinx.coroutines.runBlocking { c.getSession(uid, sid).obj() }
+            val exs = s["exercises"]!!.jsonArray.map { it.jsonObject }
+            return exs.map { it.str("id") } to exs.first { it.str("id") == se1 }["sets"]!!.jsonArray.map { it.jsonObject.str("id") }
+        }
+        assertEquals(listOf(se1, se2) to listOf(w1, w2, w3), orders())
+        // position 만 뒤집는다(종목 2개, 세트 3개)
+        val res = c.push(
+            uid,
+            seChange(se1, sid, e1, t1, 1), seChange(se2, sid, e2, t1, 0),
+            setChange(w1, se1, t1, 2), setChange(w2, se1, t1, 1), setChange(w3, se1, t1, 0),
+        ).obj().results()
+        assertTrue(res.all { it.str("status") == "applied" }, res.toString())
+        assertEquals(listOf(se2, se1) to listOf(w3, w2, w1), orders())
+    }
+
+    @Test
+    fun reordering_only_set_positions_of_a_program_session_keeps_replay_state() {
+        val fake = FakeCalculator()
+        fakeTest(fake) {
+            startApplication()
+            val c = jsonClient()
+            val uid = createUser()
+            val squat = insertExercise(null, "BARBELL"); val bench = insertExercise(uid, "DUMBBELL")
+            val programId = insertProgram(uid, testDefinition(squat, bench))
+            val inst = newId()
+            c.startInstance(uid, inst, programId)
+            val sid = newId(); val se = newId(); val w1 = newId(); val w2 = newId()
+            val day = "2026-11-02T01:00:00Z"
+            val link = ""","programInstanceId":"$inst","planSeq":1,"planDayKey":"A","endedAt":"2026-11-02T02:00:00Z""""
+            fun set(pos: Int, reps: Int) =
+                """{"position":$pos,"weightKg":100,"reps":$reps,"completedAt":"$day","plannedSetKey":"A.0.$pos","targetReps":5,"targetWeightKg":100,"isAmrap":false}"""
+            val first = c.push(
+                uid,
+                change("workout_session", sid, at = t0, payload = """{"startedAt":"$day","tz":"Asia/Seoul"$link}"""),
+                change("session_exercise", se, at = t0, parentId = sid, payload = """{"exerciseId":"$squat","position":0,"liftKey":"squat","accessory":false}"""),
+                change("workout_set", w1, at = t0, parentId = se, payload = set(0, 5)),
+                change("workout_set", w2, at = t0, parentId = se, payload = set(1, 6)),
+            ).obj().results()
+            assertTrue(first.all { it.str("status") == "applied" }, first.toString())
+            val before = c.getInstance(uid, inst).objOf()
+            assertEquals(102.5, before.workingOf("squat"))
+            // 세트 순서만 바꾼다(plannedSetKey·값은 그대로)
+            val res = c.push(
+                uid,
+                change("workout_set", w1, at = t1, parentId = se, payload = set(1, 5)),
+                change("workout_set", w2, at = t1, parentId = se, payload = set(0, 6)),
+            ).obj().results()
+            assertTrue(res.all { it.str("status") == "applied" }, res.toString())
+            val after = c.getInstance(uid, inst).objOf()
+            assertEquals(before["state"], after["state"])
+            assertEquals(before["next"], after["next"])
+            val sets = c.getSession(uid, sid).obj()["exercises"]!!.jsonArray[0].jsonObject["sets"]!!.jsonArray.map { it.jsonObject.str("id") }
+            assertEquals(listOf(w2, w1), sets)
+        }
     }
 
     @Test

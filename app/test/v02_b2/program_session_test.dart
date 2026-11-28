@@ -142,7 +142,16 @@ void main() {
       expect(extra.targetReps, isNull);
 
       // 세트 순서 변경(드래그): 추가한 세트를 맨 위로
-      await t.drag(find.byKey(Key('drag-${extra.id}')), const Offset(0, -520));
+      // (접힌 행 전체를 길게 눌러 끈다. 번호 칸 즉시 드래그는 없다.)
+      final g = await t.startGesture(
+        t.getCenter(find.byKey(Key('row-${extra.id}'))),
+      );
+      await t.pump(const Duration(milliseconds: 700));
+      await g.moveBy(const Offset(0, -20));
+      await t.pump();
+      await g.moveBy(const Offset(0, -500));
+      await t.pump();
+      await g.up();
       await settle(t);
       s = await active(h);
       expect(s.exercises.single.sets.first.id, extra.id);
@@ -175,7 +184,10 @@ void main() {
       expect(find.byKey(const Key('summary-sets')), findsOneWidget);
       // 완료한 세트 2개(워밍업 없음), 볼륨 95*5 + 100*3
       expect(t.widget<Text>(find.byKey(const Key('summary-sets'))).data, '2');
-      expect(t.widget<Text>(find.byKey(const Key('summary-volume'))).data, '775');
+      expect(
+        t.widget<Text>(find.byKey(const Key('summary-volume'))).data,
+        '775',
+      );
       // 종목 판정: 스쿼트는 실패, 보조운동은 판정 없음
       expect(find.byKey(const Key('summary-miss')), findsOneWidget);
       expect(find.textContaining('목표 미달 1건'), findsOneWidget);
@@ -289,10 +301,19 @@ void main() {
       scheduledWorkoutId: 'sw1',
     );
     ExerciseVerdict? verdict(SessionExercise e) => exerciseVerdict(prog, e);
-    expect(verdict(ex(sets: [w(5), w(6)])), ExerciseVerdict.success); // 무게를 낮춰도 횟수만
+    expect(
+      verdict(ex(sets: [w(5), w(6)])),
+      ExerciseVerdict.success,
+    ); // 무게를 낮춰도 횟수만
     expect(verdict(ex(sets: [w(5), w(4)])), ExerciseVerdict.failure);
-    expect(verdict(ex(sets: [w(5), w(5, done: false)])), ExerciseVerdict.failure);
-    expect(verdict(ex(sets: [w(5), w(1, warm: true)])), ExerciseVerdict.success);
+    expect(
+      verdict(ex(sets: [w(5), w(5, done: false)])),
+      ExerciseVerdict.failure,
+    );
+    expect(
+      verdict(ex(sets: [w(5), w(1, warm: true)])),
+      ExerciseVerdict.success,
+    );
     expect(verdict(ex(acc: true, sets: [w(1)])), isNull);
     // 예정 운동 세션은 목표가 있어도 판정하지 않는다.
     final miss = ex(sets: [w(1)]);

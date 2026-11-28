@@ -15,6 +15,7 @@ import '../../core/ui/form_sheet.dart';
 import '../../core/ui/row_menu.dart';
 import '../../core/ui/undo.dart';
 import '../../core/units.dart';
+import '../../core/widgets/reorder.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../session/current_set.dart' show repsRangeText;
@@ -34,14 +35,22 @@ class InstanceDetailPage extends ConsumerWidget {
   }
 
   /// 변경을 실행하고 계획 캐시·화면을 갱신한다. 실패하면 스낵바.
-  Future<void> _run(BuildContext context, WidgetRef ref, Future<void> Function() action) async {
+  Future<void> _run(
+    BuildContext context,
+    WidgetRef ref,
+    Future<void> Function() action,
+  ) async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     try {
       await action();
       await _refresh(ref);
     } catch (e) {
-      messenger.showSnackBar(SnackBar(content: Text(errorMessage(l, e, fallback: l.instanceActionFailed))));
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(errorMessage(l, e, fallback: l.instanceActionFailed)),
+        ),
+      );
     }
   }
 
@@ -62,8 +71,15 @@ class InstanceDetailPage extends ConsumerWidget {
       ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => ErrorRetry(error: e, onRetry: () => ref.invalidate(instanceViewProvider(instanceId))),
-        data: (v) => _Body(view: v, run: (a) => _run(context, ref, a), refresh: () => _refresh(ref)),
+        error: (e, _) => ErrorRetry(
+          error: e,
+          onRetry: () => ref.invalidate(instanceViewProvider(instanceId)),
+        ),
+        data: (v) => _Body(
+          view: v,
+          run: (a) => _run(context, ref, a),
+          refresh: () => _refresh(ref),
+        ),
       ),
     );
   }
@@ -80,7 +96,9 @@ class _InstanceMenu extends ConsumerWidget {
   Instance get inst => view.instance;
 
   Future<void> _setStatus(WidgetRef ref, InstanceStatus s) => run(() async {
-    await ref.read(programRepositoryProvider).patchInstance(inst.id, InstancePatch(status: s));
+    await ref
+        .read(programRepositoryProvider)
+        .patchInstance(inst.id, InstancePatch(status: s));
   });
 
   Future<void> _finish(BuildContext context, WidgetRef ref) async {
@@ -120,11 +138,23 @@ class _InstanceMenu extends ConsumerWidget {
       key: const Key('instance-menu'),
       items: [
         if (inst.status == InstanceStatus.ACTIVE)
-          RowMenuItem(value: _InstanceAction.pause, label: l.instancePause, key: const Key('instance-pause')),
+          RowMenuItem(
+            value: _InstanceAction.pause,
+            label: l.instancePause,
+            key: const Key('instance-pause'),
+          ),
         if (inst.status == InstanceStatus.PAUSED)
-          RowMenuItem(value: _InstanceAction.resume, label: l.instanceResume, key: const Key('instance-resume')),
+          RowMenuItem(
+            value: _InstanceAction.resume,
+            label: l.instanceResume,
+            key: const Key('instance-resume'),
+          ),
         if (inst.status != InstanceStatus.FINISHED)
-          RowMenuItem(value: _InstanceAction.finish, label: l.instanceFinish, key: const Key('instance-finish')),
+          RowMenuItem(
+            value: _InstanceAction.finish,
+            label: l.instanceFinish,
+            key: const Key('instance-finish'),
+          ),
         RowMenuItem(
           value: _InstanceAction.delete,
           label: l.instanceDelete,
@@ -152,10 +182,13 @@ class _Body extends ConsumerWidget {
 
   Instance get inst => view.instance;
 
-  String _liftName(BuildContext context, String key) => view.lifts[key]?.name(context) ?? key;
+  String _liftName(BuildContext context, String key) =>
+      view.lifts[key]?.name(context) ?? key;
 
   Future<void> _setStatus(WidgetRef ref, InstanceStatus s) => run(() async {
-    await ref.read(programRepositoryProvider).patchInstance(inst.id, InstancePatch(status: s));
+    await ref
+        .read(programRepositoryProvider)
+        .patchInstance(inst.id, InstancePatch(status: s));
   });
 
   Future<void> _skipNext(BuildContext context, WidgetRef ref) async {
@@ -166,7 +199,9 @@ class _Body extends ConsumerWidget {
     final ok = await confirmAction(
       context,
       title: l.instanceSkipConfirmTitle,
-      body: fixed ? l.instanceSkipConfirmFixed(next.dayName) : l.instanceSkipConfirmShift(next.dayName),
+      body: fixed
+          ? l.instanceSkipConfirmFixed(next.dayName)
+          : l.instanceSkipConfirmShift(next.dayName),
       action: l.instanceSkipNext,
     );
     if (!ok) return;
@@ -188,7 +223,10 @@ class _Body extends ConsumerWidget {
         save: (tm, working) async {
           await repo.patchInstance(
             inst.id,
-            InstancePatch(adjustTm: tm.isEmpty ? null : tm, adjustWorking: working.isEmpty ? null : working),
+            InstancePatch(
+              adjustTm: tm.isEmpty ? null : tm,
+              adjustWorking: working.isEmpty ? null : working,
+            ),
           );
           await refresh();
         },
@@ -198,7 +236,11 @@ class _Body extends ConsumerWidget {
 
   List<Map<String, Object?>> get _days => programDays(view.program.definition);
 
-  Future<void> _addAccessory(BuildContext context, WidgetRef ref, String dayKey) async {
+  Future<void> _addAccessory(
+    BuildContext context,
+    WidgetRef ref,
+    String dayKey,
+  ) async {
     final exerciseId = await context.push<String>(Routes.pickExercise);
     if (exerciseId == null || !context.mounted) return;
     final unit = ref.read(settingsProvider).weightUnit;
@@ -228,11 +270,18 @@ class _Body extends ConsumerWidget {
     );
   }
 
-  Future<void> _removeAccessory(BuildContext context, WidgetRef ref, Accessory a) async {
+  Future<void> _removeAccessory(
+    BuildContext context,
+    WidgetRef ref,
+    Accessory a,
+  ) async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final repo = ref.read(programRepositoryProvider);
-    final rest = [for (final x in view.accessories) if (x.id != a.id) x];
+    final rest = [
+      for (final x in view.accessories)
+        if (x.id != a.id) x,
+    ];
     // 같은 날 안에서 position을 0부터 다시 매긴다.
     final counters = <String, int>{};
     final list = [
@@ -241,7 +290,8 @@ class _Body extends ConsumerWidget {
           id: x.id,
           dayKey: x.dayKey,
           exerciseId: x.exerciseId,
-          position: counters.update(x.dayKey, (n) => n + 1, ifAbsent: () => 1) - 1,
+          position:
+              counters.update(x.dayKey, (n) => n + 1, ifAbsent: () => 1) - 1,
           sets: x.sets,
           reps: x.reps,
           weightKg: x.weightKg,
@@ -280,6 +330,50 @@ class _Body extends ConsumerWidget {
     );
   }
 
+  /// 같은 요일 안에서 보조운동을 끌어 순서를 바꾼다. 다른 요일은 그대로, 그 요일만 position 0부터 다시 매긴다.
+  Future<void> _reorderAccessory(
+    WidgetRef ref,
+    String dayKey,
+    int from,
+    int to,
+  ) async {
+    final dayList = _dayAccessories(dayKey);
+    if (from == to ||
+        from < 0 ||
+        from >= dayList.length ||
+        to < 0 ||
+        to >= dayList.length) {
+      return;
+    }
+    final moved = movedItem(dayList, from, to);
+    final list = [
+      for (final x in view.accessories)
+        if (x.dayKey != dayKey) x,
+      for (var i = 0; i < moved.length; i++)
+        Accessory(
+          id: moved[i].id,
+          dayKey: moved[i].dayKey,
+          exerciseId: moved[i].exerciseId,
+          position: i,
+          sets: moved[i].sets,
+          reps: moved[i].reps,
+          weightKg: moved[i].weightKg,
+        ),
+    ];
+    await run(() async {
+      await ref.read(programRepositoryProvider).putAccessories(inst.id, list);
+    });
+  }
+
+  List<Accessory> _dayAccessories(String dayKey) {
+    final l = [
+      for (final a in view.accessories)
+        if (a.dayKey == dayKey) a,
+    ];
+    // 정렬은 안정적이라 position이 같으면 받은 순서를 지킨다.
+    return [...l]..sort((a, b) => a.position.compareTo(b.position));
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
@@ -297,7 +391,8 @@ class _Body extends ConsumerWidget {
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Chip(label: Text(statusLabel(l, inst.status))),
-            if (st.week != null) Text(l.instanceProgress(st.week!, st.cycle ?? 1)),
+            if (st.week != null)
+              Text(l.instanceProgress(st.week!, st.cycle ?? 1)),
           ],
         ),
         const SizedBox(height: 8),
@@ -333,7 +428,11 @@ class _Body extends ConsumerWidget {
         ],
         const SizedBox(height: 24),
         Text(l.instanceNextSection, style: theme.textTheme.titleMedium),
-        if (view.plan.isEmpty) Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l.instanceNoNext)),
+        if (view.plan.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Text(l.instanceNoNext),
+          ),
         for (final w in view.plan)
           Card(
             child: Padding(
@@ -379,12 +478,20 @@ class _Body extends ConsumerWidget {
             segments: [
               ButtonSegment(
                 value: SkipPolicy.SHIFT,
-                label: Text(l.progSkipShiftSeg, maxLines: 1, overflow: TextOverflow.ellipsis),
+                label: Text(
+                  l.progSkipShiftSeg,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
               ButtonSegment(
                 value: SkipPolicy.FIXED_DATE,
                 enabled: fixedOk,
-                label: Text(l.progSkipFixedSeg, maxLines: 1, overflow: TextOverflow.ellipsis),
+                label: Text(
+                  l.progSkipFixedSeg,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
             selected: {inst.skipPolicy},
@@ -392,7 +499,9 @@ class _Body extends ConsumerWidget {
               final p = s.first;
               if (p == inst.skipPolicy) return;
               run(() async {
-                await ref.read(programRepositoryProvider).patchInstance(inst.id, InstancePatch(skipPolicy: p));
+                await ref
+                    .read(programRepositoryProvider)
+                    .patchInstance(inst.id, InstancePatch(skipPolicy: p));
               });
             },
           ),
@@ -401,13 +510,19 @@ class _Body extends ConsumerWidget {
         Text(
           inst.skipPolicy == SkipPolicy.SHIFT
               ? l.programSkipShiftDesc
-              : (fixedOk ? l.programSkipFixedDesc : l.programSkipFixedUnavailable),
-          style: theme.textTheme.bodySmall?.copyWith(color: AppColors.of(context).fg2),
+              : (fixedOk
+                    ? l.programSkipFixedDesc
+                    : l.programSkipFixedUnavailable),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: AppColors.of(context).fg2,
+          ),
         ),
         if (!fixedOk)
           Text(
             l.programSkipFixedUnavailable,
-            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.of(context).fg2),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.of(context).fg2,
+            ),
           ),
         const SizedBox(height: 16),
         Text(l.instanceWeights, style: theme.textTheme.titleMedium),
@@ -418,8 +533,10 @@ class _Body extends ConsumerWidget {
             title: Text(_liftName(context, k)),
             subtitle: Text(
               [
-                if (st.tm[k] != null) l.instanceTmLabel(Units.format(st.tm[k]!, unit)),
-                if (st.working[k] != null) l.instanceWorkingLabel(Units.format(st.working[k]!, unit)),
+                if (st.tm[k] != null)
+                  l.instanceTmLabel(Units.format(st.tm[k]!, unit)),
+                if (st.working[k] != null)
+                  l.instanceWorkingLabel(Units.format(st.working[k]!, unit)),
               ].join(' · '),
               style: AppNum.table(context),
             ),
@@ -439,32 +556,71 @@ class _Body extends ConsumerWidget {
             padding: const EdgeInsets.only(top: 8),
             child: Row(
               children: [
-                Expanded(child: Text(day['name'] as String, style: theme.textTheme.titleSmall)),
+                Expanded(
+                  child: Text(
+                    day['name'] as String,
+                    style: theme.textTheme.titleSmall,
+                  ),
+                ),
                 IconButton(
                   key: ValueKey('add-accessory-${day['key']}'),
                   tooltip: l.instanceAccessoryAdd,
                   icon: const Icon(Icons.add),
-                  onPressed: () => _addAccessory(context, ref, day['key'] as String),
+                  onPressed: () =>
+                      _addAccessory(context, ref, day['key'] as String),
                 ),
               ],
             ),
           ),
           if (!view.accessories.any((a) => a.dayKey == day['key']))
             Text(l.instanceAccessoryEmpty, style: theme.textTheme.bodySmall),
-          for (final a in view.accessories.where((a) => a.dayKey == day['key']))
-            ListTile(
-              dense: true,
-              contentPadding: EdgeInsets.zero,
-              title: Text(view.exerciseNames[a.exerciseId]?.name(context) ?? a.exerciseId),
-              subtitle: Text([
-                l.instanceAccessorySummary(a.sets, a.reps),
-                if (a.weightKg != null) Units.format(a.weightKg!, unit),
-              ].join(' · ')),
-              trailing: IconButton(
-                tooltip: l.instanceAccessoryRemove,
-                icon: const Icon(Icons.close),
-                onPressed: () => _removeAccessory(context, ref, a),
-              ),
+          if (view.accessories.any((a) => a.dayKey == day['key']))
+            ReorderableListView(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              proxyDecorator: reorderProxy(),
+              onReorderStart: (_) => reorderHaptic(),
+              onReorderItem: (o, n) =>
+                  _reorderAccessory(ref, day['key'] as String, o, n),
+              children: [
+                for (final (i, a) in _dayAccessories(
+                  day['key'] as String,
+                ).indexed)
+                  ListTile(
+                    key: ValueKey('accessory-${a.id}'),
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      view.exerciseNames[a.exerciseId]?.name(context) ??
+                          a.exerciseId,
+                    ),
+                    subtitle: Text(
+                      [
+                        l.instanceAccessorySummary(a.sets, a.reps),
+                        if (a.weightKg != null) Units.format(a.weightKg!, unit),
+                      ].join(' · '),
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          tooltip: l.instanceAccessoryRemove,
+                          icon: const Icon(Icons.close),
+                          onPressed: () => _removeAccessory(context, ref, a),
+                        ),
+                        ReorderableDragStartListener(
+                          key: ValueKey('accessory-handle-${a.id}'),
+                          index: i,
+                          child: const Padding(
+                            padding: EdgeInsets.all(8),
+                            child: Icon(Icons.drag_handle),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
             ),
         ],
       ],
@@ -473,28 +629,49 @@ class _Body extends ConsumerWidget {
 
   /// "100 kg 5×5" / "60 kg ×8, ×6". 무게가 같고 횟수가 같으면 묶는다.
   String _planSummary(PlannedExercise e, WeightUnit unit) {
-    final sets = [for (final s in e.sets) if (!s.isWarmup) s];
+    final sets = [
+      for (final s in e.sets)
+        if (!s.isWarmup) s,
+    ];
     if (sets.isEmpty) return '';
     final w0 = sets.first.targetWeightKg;
     final r0 = sets.first.targetReps;
     final m0 = sets.first.targetRepsMax;
-    final uniform = sets.every((s) => s.targetWeightKg == w0 && s.targetReps == r0 && s.targetRepsMax == m0 && !s.isAmrap);
+    final uniform = sets.every(
+      (s) =>
+          s.targetWeightKg == w0 &&
+          s.targetReps == r0 &&
+          s.targetRepsMax == m0 &&
+          !s.isAmrap,
+    );
     final weight = w0 == null ? '' : '${Units.format(w0, unit)} ';
     if (uniform) return '$weight${sets.length}×${repsRangeText(r0, m0)}';
     return sets
-        .map((s) => '${s.targetWeightKg == null ? '' : '${Units.format(s.targetWeightKg!, unit, withUnit: false)}×'}${s.isAmrap ? '${s.targetReps}+' : repsRangeText(s.targetReps, s.targetRepsMax)}')
+        .map(
+          (s) =>
+              '${s.targetWeightKg == null ? '' : '${Units.format(s.targetWeightKg!, unit, withUnit: false)}×'}${s.isAmrap ? '${s.targetReps}+' : repsRangeText(s.targetReps, s.targetRepsMax)}',
+        )
         .join(', ');
   }
 }
 
 class _AdjustSheet extends StatefulWidget {
-  const _AdjustSheet({required this.state, required this.unit, required this.nameOf, required this.save});
+  const _AdjustSheet({
+    required this.state,
+    required this.unit,
+    required this.nameOf,
+    required this.save,
+  });
   final InstanceState state;
   final WeightUnit unit;
   final String Function(String key) nameOf;
 
   /// 바뀐 값(kg)을 저장한다. 실패하면 예외를 던져 시트가 입력을 유지하게 한다.
-  final Future<void> Function(Map<String, double> tm, Map<String, double> working) save;
+  final Future<void> Function(
+    Map<String, double> tm,
+    Map<String, double> working,
+  )
+  save;
 
   @override
   State<_AdjustSheet> createState() => _AdjustSheetState();
@@ -508,10 +685,14 @@ class _AdjustSheetState extends State<_AdjustSheet> {
   void initState() {
     super.initState();
     for (final e in widget.state.tm.entries) {
-      _tm[e.key] = TextEditingController(text: Units.format(e.value, widget.unit, withUnit: false));
+      _tm[e.key] = TextEditingController(
+        text: Units.format(e.value, widget.unit, withUnit: false),
+      );
     }
     for (final e in widget.state.working.entries) {
-      _working[e.key] = TextEditingController(text: Units.format(e.value, widget.unit, withUnit: false));
+      _working[e.key] = TextEditingController(
+        text: Units.format(e.value, widget.unit, withUnit: false),
+      );
     }
   }
 
@@ -524,7 +705,10 @@ class _AdjustSheetState extends State<_AdjustSheet> {
   }
 
   /// 바뀐 값만 kg로.
-  Map<String, double> _changed(Map<String, TextEditingController> ctrls, Map<String, double> old) {
+  Map<String, double> _changed(
+    Map<String, TextEditingController> ctrls,
+    Map<String, double> old,
+  ) {
     final out = <String, double>{};
     for (final e in ctrls.entries) {
       final v = parseNumber(e.value.text);
@@ -546,23 +730,38 @@ class _AdjustSheetState extends State<_AdjustSheet> {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final unitText = widget.unit == WeightUnit.KG ? 'kg' : 'lb';
-    Widget field(String keyPrefix, String key, String label, TextEditingController c) => TextField(
+    Widget field(
+      String keyPrefix,
+      String key,
+      String label,
+      TextEditingController c,
+    ) => TextField(
       key: ValueKey('$keyPrefix-$key'),
       controller: c,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-      decoration: InputDecoration(labelText: '$label ($unitText)', border: const OutlineInputBorder()),
+      decoration: InputDecoration(
+        labelText: '$label ($unitText)',
+        border: const OutlineInputBorder(),
+      ),
     );
     return FormSheet<bool>(
       title: l.instanceAdjust,
       submitLabel: l.commonSave,
-      failureMessage: (e) => errorMessage(l, e, fallback: l.instanceActionFailed),
+      failureMessage: (e) =>
+          errorMessage(l, e, fallback: l.instanceActionFailed),
       onSubmit: _submit,
       children: [
         Text(l.instanceAdjustHelp),
-        for (final e in _tm.entries) field('adjust-tm', e.key, '${widget.nameOf(e.key)} · TM', e.value),
+        for (final e in _tm.entries)
+          field('adjust-tm', e.key, '${widget.nameOf(e.key)} · TM', e.value),
         for (final e in _working.entries)
-          field('adjust-working', e.key, '${widget.nameOf(e.key)} · ${l.programStartWorking}', e.value),
+          field(
+            'adjust-working',
+            e.key,
+            '${widget.nameOf(e.key)} · ${l.programStartWorking}',
+            e.value,
+          ),
       ],
     );
   }
@@ -616,7 +815,8 @@ class _AccessorySheetState extends State<_AccessorySheet> {
       title: l.instanceAccessoryAdd,
       submitLabel: l.commonAdd,
       enabled: valid,
-      failureMessage: (e) => errorMessage(l, e, fallback: l.instanceActionFailed),
+      failureMessage: (e) =>
+          errorMessage(l, e, fallback: l.instanceActionFailed),
       onSubmit: _submit,
       children: [
         TextField(
@@ -637,7 +837,9 @@ class _AccessorySheetState extends State<_AccessorySheet> {
           key: const ValueKey('acc-weight'),
           controller: _weight,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: InputDecoration(labelText: l.instanceAccessoryWeight(unitText)),
+          decoration: InputDecoration(
+            labelText: l.instanceAccessoryWeight(unitText),
+          ),
         ),
       ],
     );
