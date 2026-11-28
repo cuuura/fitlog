@@ -45,8 +45,11 @@ void main() {
     expect(find.textContaining('볼륨 1,000 kg'), findsOneWidget);
     expect(find.text('40 kg×10'), findsOneWidget);
 
+    await t.tap(find.byType(PopupMenuButton<String>));
+    await settle(t);
     await t.tap(find.byKey(const Key('detail-delete')));
     await settle(t);
+    expect(find.text('이 날 기록한 종목과 세트가 모두 사라져요.'), findsOneWidget);
     await t.tap(find.byKey(const Key('detail-delete-confirm')));
     await settle(t);
     expect(find.byKey(Key('home-session-${s.id}')), findsNothing);

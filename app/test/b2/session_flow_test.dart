@@ -240,6 +240,61 @@ void main() {
     expect(s.exercises.single.sets, isEmpty);
   });
 
+  testWidgets('세트를 밀어서 지우면 되돌리기로 같은 값·같은 자리에 다시 들어간다', (t) async {
+    final h = Harness();
+    await h.pump(t);
+    final s0 = await h.sessions.startSession(tz: 'Asia/Seoul');
+    final se = await h.sessions.addExercise(s0.id, squat.id);
+    final done = DateTime.utc(2026, 11, 26, 9, 5);
+    for (var i = 0; i < 3; i++) {
+      await h.sessions.addSet(
+        se.id,
+        WorkoutSet(
+          id: 'set$i',
+          position: i,
+          weightKg: 50.0 + i * 10,
+          reps: 8 + i,
+          rpe: i == 1 ? 8.5 : null,
+          rir: i == 1 ? 1 : null,
+          isWarmup: i == 1,
+          note: i == 1 ? '메모' : null,
+          completedAt: i == 1 ? done : null,
+          targetReps: i == 1 ? 10 : null,
+          targetWeightKg: i == 1 ? 62.5 : null,
+        ),
+      );
+    }
+    await settle(t);
+    await t.tap(find.byKey(const Key('home-resume')));
+    await settle(t);
+
+    await t.fling(find.byKey(const ValueKey('dismiss-set1')), const Offset(-600, 0), 2000);
+    await settle(t, 10);
+    var s = await active(h);
+    expect([for (final w in s.exercises.single.sets) w.id], ['set0', 'set2']);
+    expect(find.text('세트를 지웠어요'), findsOneWidget);
+
+    await t.tap(find.text('되돌리기'));
+    await settle(t, 10);
+    s = await active(h);
+    final sets = s.exercises.single.sets;
+    expect(sets, hasLength(3));
+    expect([for (final w in sets) w.position], [0, 1, 2]);
+    expect(sets[0].id, 'set0');
+    expect(sets[2].id, 'set2');
+    final back = sets[1];
+    expect(back.id, isNot('set1'), reason: '동기화 삭제 표시와 부딪히지 않게 새 id');
+    expect(back.weightKg, 60);
+    expect(back.reps, 9);
+    expect(back.rpe, 8.5);
+    expect(back.rir, 1);
+    expect(back.isWarmup, isTrue);
+    expect(back.note, '메모');
+    expect(back.completedAt, done);
+    expect(back.targetReps, 10);
+    expect(back.targetWeightKg, 62.5);
+  });
+
   testWidgets('RPE/RIR 설정을 끄면 입력칸이 없다', (t) async {
     final h = Harness(settings: const Settings(rpeInputEnabled: false));
     await h.pump(t);

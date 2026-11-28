@@ -11,7 +11,7 @@ import '../../l10n/gen/app_localizations.dart';
 import '../ai_history/ai_labels.dart';
 import '../ai_connect/ai_avatar.dart';
 import '../programs/program_common.dart' show ErrorRetry;
-import '../session/active_session_page.dart' show confirmDialog;
+import '../../core/ui/confirm.dart';
 import 'deletion_providers.dart';
 
 /// 만료까지 남은 시간 문구. 지났으면 "만료됨".
@@ -67,11 +67,11 @@ class _DeletionRequestsPageState extends ConsumerState<DeletionRequestsPage> {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final label = r.label ?? aiEntityLabel(l, r.entity);
-    final ok = await confirmDialog(
+    final ok = await confirmAction(
       context,
       title: approve ? l.deletionApproveTitle : l.deletionRejectTitle,
       body: approve ? l.deletionApproveBody(label) : null,
-      confirmLabel: approve ? l.deletionApprove : l.deletionReject,
+      action: approve ? l.deletionApprove : l.deletionReject,
       confirmKey: Key(approve ? 'deletion-approve-confirm' : 'deletion-reject-confirm'),
     );
     if (!ok || !mounted) return;

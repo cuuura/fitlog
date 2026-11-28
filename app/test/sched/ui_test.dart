@@ -133,8 +133,8 @@ void main() {
       await settle(t);
       await t.tap(find.byKey(const Key('sched-menu-delete-sw2')));
       await settle(t);
-      expect(find.text('예정 운동 삭제'), findsOneWidget);
-      expect(find.textContaining("'두 번째' 예정을 삭제할까요?"), findsOneWidget);
+      expect(find.text("'두 번째' 예정 삭제"), findsOneWidget);
+      expect(find.text('이미 한 운동 기록은 그대로 남아요.'), findsOneWidget);
       await t.tap(find.text('취소'));
       await settle(t);
       expect(await h.scheduled.byId('sw2'), isNotNull);
@@ -142,7 +142,7 @@ void main() {
       await settle(t);
       await t.tap(find.byKey(const Key('sched-menu-delete-sw2')));
       await settle(t);
-      await t.tap(find.widgetWithText(FilledButton, '삭제'));
+      await t.tap(find.byKey(const Key('sched-delete-confirm')));
       await settle(t);
       expect(await h.scheduled.byId('sw2'), isNull);
       expect(find.byKey(const Key('sched-card-sw2')), findsNothing);

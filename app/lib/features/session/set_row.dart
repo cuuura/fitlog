@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/api/dto.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/units.dart';
+import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
 import 'current_set.dart';
@@ -679,9 +680,7 @@ class _SetRowState extends ConsumerState<SetRow> {
                           key: Key('delete-${s.id}'),
                           icon: const Icon(Icons.delete_outline),
                           label: Text(l.sessionSetDelete),
-                          onPressed: () => ref
-                              .read(sessionControllerProvider)
-                              .deleteSet(s.id),
+                          onPressed: () => _deleteWithUndo(l),
                         ),
                       ),
                     ],
@@ -692,6 +691,17 @@ class _SetRowState extends ConsumerState<SetRow> {
           ),
         ),
       ),
+    );
+  }
+
+  void _deleteWithUndo(AppLocalizations l) {
+    deleteSetWithUndo(
+      ref.read(sessionRepositoryProvider),
+      ScaffoldMessenger.of(context),
+      l,
+      sessionId: widget.session.id,
+      se: widget.sessionExercise,
+      set: widget.set,
     );
   }
 
@@ -716,7 +726,7 @@ class _SetRowState extends ConsumerState<SetRow> {
         padding: const EdgeInsets.only(right: 16),
         child: const Icon(Icons.delete_outline),
       ),
-      onDismissed: (_) => ref.read(sessionControllerProvider).deleteSet(s.id),
+      onDismissed: (_) => _deleteWithUndo(l),
       child: failed && !widget.expanded
           ? ColoredBox(
               color: scheme.errorContainer.withValues(alpha: 0.4),

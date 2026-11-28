@@ -44,14 +44,12 @@ class ScheduledListPage extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.schedListTitle),
-        actions: [
-          IconButton(
-            key: const Key('sched-list-add'),
-            tooltip: l.schedCreateEntry,
-            onPressed: () => context.push(Routes.scheduledNew),
-            icon: const Icon(Icons.add),
-          ),
-        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        key: const Key('sched-list-add'),
+        onPressed: () => context.push(Routes.scheduledNew),
+        icon: const Icon(Icons.add),
+        label: Text(l.schedCreateEntry),
       ),
       body: all.isEmpty
           ? Center(
@@ -72,7 +70,7 @@ class ScheduledListPage extends ConsumerWidget {
               ),
             )
           : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
               children: [
                 if (upcoming.isNotEmpty) _Header(l.schedListUpcoming),
                 for (final v in upcoming) _Row(view: v, todayKey: todayKey),

@@ -47,6 +47,7 @@
   "sessionSetNote": "Set note",
   "sessionLast": "Last time: {text}",
   "sessionSetDelete": "Delete set",
+  "sessionSetDeleted": "Set deleted",
   "sessionSetMore": "More fields",
   "sessionSetComplete": "Complete set",
   "sessionNeedsReps": "Enter the reps first",
@@ -60,7 +61,15 @@
   "sessionWarmupShort": "W",
   "sessionVolume": "Volume {volume}",
   "sessionDetailTitle": "Session",
-  "sessionDetailDeleteConfirm": "Delete this session?",
+  "sessionDeleteTitle": "Delete session on {date}",
+  "@sessionDeleteTitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "sessionDeleteBody": "All exercises and sets logged that day will be removed.",
   "sessionNotFound": "Session not found",
   "sessionNoSets": "No sets",
   "exercisePickerTitle": "Choose exercise",
@@ -631,6 +640,14 @@
   "historyEditProgramNotice": "Editing recalculates the upcoming plan.",
   "historyEditAddExercise": "Add exercise",
   "historyEditRemoveExercise": "Remove exercise",
+  "historyEditRemoveExerciseTitle": "Remove {name}",
+  "@historyEditRemoveExerciseTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "historyEditRemoveExerciseConfirm": "Remove this exercise and its sets?",
   "historyEditAddSet": "Add set",
   "historyEditDeleteSet": "Delete set",
@@ -2254,15 +2271,15 @@
   "schedMenuUnskip": "Undo skip",
   "schedMenuDelete": "Delete",
   "schedMenuTooltip": "Scheduled workout menu",
-  "schedDeleteTitle": "Delete scheduled workout",
-  "schedDeleteBody": "Delete the plan '{title}'? Workouts you already logged are kept.",
-  "@schedDeleteBody": {
+  "schedDeleteTitle": "Delete plan '{title}'",
+  "@schedDeleteTitle": {
     "placeholders": {
       "title": {
         "type": "String"
       }
     }
   },
+  "schedDeleteBody": "Workouts you already logged are kept.",
   "schedActionError": "Couldn't do that. Please try again.",
   "schedStartError": "Could not start the scheduled workout",
   "schedViewAll": "View all",

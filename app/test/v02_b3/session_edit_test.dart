@@ -126,6 +126,32 @@ void main() {
     sets = (await reload(h, s.id)).exercises.single.sets;
     expect(sets.map((e) => e.id), isNot(contains(second.id)));
     expect(sets, hasLength(2));
+    expect(find.text('세트를 지웠어요'), findsOneWidget, reason: '확인창 없이 지우고 되돌리기를 보인다');
+  });
+
+  testWidgets('세트를 지운 뒤 되돌리기: 같은 값·같은 자리로 다시 들어간다', (tester) async {
+    final h = B3Harness();
+    final s = await h.finished(start, lifts: [
+      ('ex-squat', [(100.0, 5), (90.0, 8), (80.0, 10)]),
+    ]);
+    final mid = s.exercises.single.sets[1];
+    await h.pump(tester, Routes.sessionEdit(s.id));
+
+    await tester.ensureVisible(find.byKey(Key('edit-set-delete-${mid.id}')));
+    await tester.tap(find.byKey(Key('edit-set-delete-${mid.id}')));
+    await tester.pump(const Duration(milliseconds: 100));
+    expect((await reload(h, s.id)).exercises.single.sets, hasLength(2));
+
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.tap(find.text('되돌리기'));
+    await tester.pump(const Duration(milliseconds: 500));
+    final sets = (await reload(h, s.id)).exercises.single.sets;
+    expect(sets, hasLength(3));
+    expect(sets.map((e) => e.weightKg), [100, 90, 80]);
+    expect(sets.map((e) => e.reps), [5, 8, 10]);
+    expect(sets.map((e) => e.position), [0, 1, 2]);
+    expect(sets[1].completedAt, mid.completedAt);
+    expect(sets[1].id, isNot(mid.id));
   });
 
   testWidgets('종목 추가·삭제(확인)와 메모', (tester) async {
@@ -152,6 +178,8 @@ void main() {
     await tester.tap(find.byKey(Key('edit-ex-delete-${se.id}')));
     await tester.pumpAndSettle();
     expect((await reload(h, s.id)).exercises, hasLength(2), reason: '확인 전에는 지우지 않는다');
+    expect(find.text('스쿼트 삭제'), findsOneWidget);
+    expect(find.text('이 종목과 세트를 삭제할까요?'), findsOneWidget);
     await tester.tap(find.byKey(const Key('edit-confirm')));
     await tester.pumpAndSettle();
     exs = (await reload(h, s.id)).exercises;

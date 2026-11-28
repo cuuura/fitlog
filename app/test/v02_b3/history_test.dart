@@ -67,7 +67,7 @@ void main() {
     expect(find.byKey(Key('badge-${free.id}')), findsNothing);
   });
 
-  testWidgets('탭하면 상세, 메뉴·길게 누르기는 수정으로 간다', (tester) async {
+  testWidgets('탭하면 상세, ⋮ 메뉴의 수정은 수정 화면으로 간다(길게 누르기는 동작 없음)', (tester) async {
     final h = B3Harness();
     final s = await h.finished(DateTime.utc(2026, 11, 15, 12));
     await h.pump(tester, Routes.history);
@@ -88,7 +88,31 @@ void main() {
 
     await tester.longPress(find.byKey(Key('history-${s.id}')));
     await tester.pumpAndSettle();
-    expect(find.byKey(const Key('edit-start')), findsOneWidget);
+    expect(find.byKey(const Key('edit-start')), findsNothing);
+  });
+
+  testWidgets('⋮ 메뉴의 삭제: 확인창에 날짜·결과가 보이고, 취소하면 남고 확인하면 지워진다', (tester) async {
+    final h = B3Harness();
+    final s = await h.finished(DateTime.utc(2026, 11, 15, 12));
+    await h.pump(tester, Routes.history);
+
+    await tester.tap(find.byKey(Key('menu-${s.id}')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key('menu-delete-${s.id}')));
+    await tester.pumpAndSettle();
+    expect(find.text('2026-11-15 세션 삭제'), findsOneWidget);
+    expect(find.text('이 날 기록한 종목과 세트가 모두 사라져요.'), findsOneWidget);
+    await tester.tap(find.text('취소'));
+    await tester.pumpAndSettle();
+    expect(find.byKey(Key('history-${s.id}')), findsOneWidget);
+
+    await tester.tap(find.byKey(Key('menu-${s.id}')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(Key('menu-delete-${s.id}')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('confirm-ok')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(Key('history-${s.id}')), findsNothing);
   });
 
   testWidgets('빈 목록', (tester) async {

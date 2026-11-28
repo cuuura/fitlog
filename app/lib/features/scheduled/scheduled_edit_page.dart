@@ -9,6 +9,8 @@ import '../../core/clock.dart';
 import '../../core/ids.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
+import '../../core/ui/bottom_action_bar.dart';
+import '../../core/ui/unsaved_guard.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -96,9 +98,27 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
   ScheduledWorkout? _existing;
   bool _loading = true;
   bool _saving = false;
+  bool _saved = false;
+  String _initial = '';
   String? _error;
 
   bool get _isNew => widget.scheduledId == null;
+
+  /// 입력 전체를 한 줄로 요약한다. 불러온 직후 값과 다르면 고친 것으로 본다.
+  String _snapshot() => [
+    _date == null ? '' : dayKey(_date!),
+    _title.text,
+    _note.text,
+    for (final it in _items)
+      [
+        it.exerciseId,
+        it.note.text,
+        it.rest.text,
+        for (final s in it.sets) [s.warmup, s.weight.text, s.reps.text, s.repsMax.text, s.rir.text].join('\u0001'),
+      ].join('\u0002'),
+  ].join('\u0003');
+
+  bool get _dirty => !_loading && !_saved && _snapshot() != _initial;
 
   @override
   void initState() {
@@ -123,6 +143,7 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
     final today = dateOnly(ref.read(clockProvider)().toLocal());
     if (_isNew) {
       _date = (widget.initialDate == null ? null : parsePlannedDate(widget.initialDate!)) ?? today;
+      _initial = _snapshot();
       if (mounted) setState(() => _loading = false);
       return;
     }
@@ -154,6 +175,7 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
           );
         }
       }
+      _initial = _snapshot();
       _loading = false;
     });
   }
@@ -306,6 +328,7 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
     try {
       await ref.read(scheduledWorkoutRepositoryProvider).upsert(w);
       if (!mounted) return;
+      _saved = true;
       if (context.canPop()) {
         context.pop();
       } else {
@@ -345,6 +368,7 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
           TextField(
             key: const Key('sched-title'),
             controller: _title,
+            onChanged: (_) => setState(() {}),
             maxLength: 100,
             decoration: InputDecoration(labelText: l.schedFieldTitle, border: const OutlineInputBorder()),
           ),
@@ -352,6 +376,7 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
           TextField(
             key: const Key('sched-note'),
             controller: _note,
+            onChanged: (_) => setState(() {}),
             maxLength: 1000,
             maxLines: null,
             decoration: InputDecoration(labelText: l.schedFieldNote, border: const OutlineInputBorder()),
@@ -381,28 +406,41 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
             icon: const Icon(Icons.add),
             label: Text(l.schedAddExercise),
           ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                _error!,
-                key: const Key('sched-error'),
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error),
-              ),
-            ),
-          const SizedBox(height: 16),
-          FilledButton(
-            key: const Key('sched-save'),
-            onPressed: _saving ? null : _save,
-            child: Text(l.schedSave),
-          ),
         ],
       );
     }
 
-    return Scaffold(
-      appBar: AppBar(title: Text(_isNew ? l.schedEditNewTitle : l.schedEditEditTitle)),
-      body: body,
+    final editable = !_loading && (_isNew || _existing != null);
+    return UnsavedGuard(
+      dirty: _dirty,
+      child: Scaffold(
+        appBar: AppBar(title: Text(_isNew ? l.schedEditNewTitle : l.schedEditEditTitle)),
+        body: body,
+        bottomNavigationBar: editable
+            ? BottomActionBar(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (_error != null)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Text(
+                          _error!,
+                          key: const Key('sched-error'),
+                          style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error),
+                        ),
+                      ),
+                    FilledButton(
+                      key: const Key('sched-save'),
+                      onPressed: _saving ? null : _save,
+                      child: Text(l.schedSave),
+                    ),
+                  ],
+                ),
+              )
+            : null,
+      ),
     );
   }
 }
@@ -463,7 +501,7 @@ class _ItemCard extends StatelessWidget {
                   key: Key('sched-remove-$index'),
                   tooltip: l.schedRemoveExercise,
                   onPressed: onRemove,
-                  icon: const Icon(Icons.delete_outline),
+                  icon: const Icon(Icons.close),
                 ),
               ],
             ),
@@ -471,6 +509,7 @@ class _ItemCard extends StatelessWidget {
             TextField(
               key: Key('sched-rest-$index'),
               controller: item.rest,
+              onChanged: (_) => onChanged(),
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               decoration: InputDecoration(
@@ -534,6 +573,7 @@ class _SetEditor extends StatelessWidget {
       child: TextField(
         key: Key('sched-$id-$k'),
         controller: c,
+        onChanged: (_) => onChanged(),
         keyboardType: TextInputType.numberWithOptions(decimal: decimal),
         decoration: InputDecoration(isDense: true, labelText: label, border: const OutlineInputBorder()),
       ),

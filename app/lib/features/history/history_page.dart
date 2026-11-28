@@ -8,11 +8,13 @@ import '../../core/api/dto.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme.dart';
+import '../../core/ui/row_menu.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../session/session_controller.dart'
     show exerciseMapProvider, sessionByIdProvider;
+import '../session/session_detail_page.dart' show confirmDeleteSession;
 import '../session/session_format.dart';
 import '../exercise_picker/exercise_labels.dart';
 import '../source_badge/source_badge.dart';
@@ -440,7 +442,6 @@ class _SessionTile extends ConsumerWidget {
     return InkWell(
       key: Key('history-${s.id}'),
       onTap: () => context.push(Routes.sessionDetail(s.id)),
-      onLongPress: edit,
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 72),
         child: Padding(
@@ -529,19 +530,25 @@ class _SessionTile extends ConsumerWidget {
                   ),
                 ),
               ),
-              PopupMenuButton<String>(
+              RowMenu<String>(
                 key: Key('menu-${s.id}'),
                 tooltip: l.historyMenu,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 40, minHeight: 48),
-                onSelected: (_) => edit(),
-                itemBuilder: (_) => [
-                  PopupMenuItem(
-                    value: 'edit',
-                    key: Key('menu-edit-${s.id}'),
-                    child: Text(l.historyEdit),
+                items: [
+                  RowMenuItem(value: 'edit', label: l.commonEdit, key: Key('menu-edit-${s.id}')),
+                  RowMenuItem(
+                    value: 'delete',
+                    label: l.commonDelete,
+                    destructive: true,
+                    key: Key('menu-delete-${s.id}'),
                   ),
                 ],
+                onSelected: (v) {
+                  if (v == 'edit') {
+                    edit();
+                  } else {
+                    confirmDeleteSession(context, ref, sessionId: s.id, startedAt: s.startedAt, tz: s.tz);
+                  }
+                },
               ),
             ],
           ),
