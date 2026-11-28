@@ -35,6 +35,20 @@ class PendingSync implements SyncService {
   void schedule({Duration delay = const Duration(seconds: 5)}) {}
 }
 
+class _FailingBodyRepo extends MemoryBodyRepository {
+  bool failing = false;
+  Future<void> seedItem(BodyMeasurement m) async {
+    await super.add(m);
+    failing = true;
+  }
+
+  @override
+  Future<void> add(BodyMeasurement m) async {
+    if (failing) throw StateError('x');
+    return super.add(m);
+  }
+}
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
@@ -120,10 +134,15 @@ void main() {
   group('BodyWeightPage', () {
     Future<MemoryBodyRepository> pumpBody(WidgetTester tester, {WeightUnit unit = WeightUnit.KG}) async {
       final repo = MemoryBodyRepository();
-      await tester.pumpWidget(app(const BodyWeightPage(), overrides: [
-        bodyRepositoryProvider.overrideWithValue(repo),
-        settingsProvider.overrideWith(() => FixedSettings(Settings(weightUnit: unit))),
-      ]));
+      await tester.pumpWidget(
+        app(
+          const BodyWeightPage(),
+          overrides: [
+            bodyRepositoryProvider.overrideWithValue(repo),
+            settingsProvider.overrideWith(() => FixedSettings(Settings(weightUnit: unit))),
+          ],
+        ),
+      );
       await tester.pump();
       return repo;
     }
@@ -167,27 +186,185 @@ void main() {
       expect((await repo.watchMeasurements().first).single.weightKg, closeTo(69.85, 0.01));
     });
 
-    testWidgets('삭제', (tester) async {
+    Future<void> seed(WidgetTester tester, MemoryBodyRepository repo, [BodyMeasurement? m]) async {
+      await repo.add(m ?? BodyMeasurement(id: 'm1', measuredAt: DateTime.utc(2026, 1, 20, 7, 30), weightKg: 80));
+      await tester.pump();
+      await tester.pump();
+    }
+
+    testWidgets('⋮ 메뉴로 삭제하면 확인 없이 지우고 되돌리기로 새 id에 같은 값을 다시 넣는다', (tester) async {
       final repo = await pumpBody(tester);
-      await repo.add(BodyMeasurement(id: 'm1', measuredAt: DateTime.utc(2026, 1, 1), weightKg: 80));
-      await tester.pump();
-      await tester.pump();
+      await seed(
+        tester,
+        repo,
+        BodyMeasurement(
+          id: 'm1',
+          measuredAt: DateTime.utc(2026, 1, 20, 7, 30),
+          weightKg: 80,
+          source: MeasurementSource.AI_JSON,
+          importBatchId: 'b1',
+        ),
+      );
       expect(find.text('80 kg'), findsOneWidget);
-      await tester.tap(find.byIcon(Icons.delete_outline));
+      expect(find.byIcon(Icons.delete_outline), findsNothing);
+      await tester.tap(find.byKey(const Key('body-menu-m1')));
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('dialogConfirm')));
+      await tester.tap(find.byKey(const Key('body-delete')));
       await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
       expect(find.text('80 kg'), findsNothing);
+      expect(find.text('되돌리기'), findsOneWidget);
+
+      await tester.tap(find.text('되돌리기'));
+      await tester.pump();
+      await tester.pump();
+      final list = await repo.watchMeasurements().first;
+      expect(list, hasLength(1));
+      expect(list.single.id, isNot('m1'));
+      expect(list.single.weightKg, 80);
+      expect(list.single.measuredAt, DateTime.utc(2026, 1, 20, 7, 30));
+      expect(list.single.source, MeasurementSource.AI_JSON);
+      expect(list.single.importBatchId, 'b1');
+    });
+
+    testWidgets('행을 누르면 수정 시트가 열리고 무게를 고쳐 저장(같은 id, 출처·시각 유지)', (tester) async {
+      final repo = await pumpBody(tester);
+      await seed(
+        tester,
+        repo,
+        BodyMeasurement(
+          id: 'm1',
+          measuredAt: DateTime.utc(2026, 1, 20, 7, 30),
+          weightKg: 80,
+          source: MeasurementSource.IMPORT,
+          importBatchId: 'b9',
+        ),
+      );
+      await tester.tap(find.byKey(const Key('body_m1')));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(TextField, '80'), findsWidgets);
+
+      await tester.enterText(find.byKey(const Key('body-edit-weight')), '19');
+      await tester.tap(find.byKey(const Key('body-edit-save')));
+      await tester.pump();
+      expect(find.textContaining('20~400 kg'), findsOneWidget, reason: '범위 밖이면 시트 유지');
+
+      await tester.enterText(find.byKey(const Key('body-edit-weight')), '81.5');
+      await tester.tap(find.byKey(const Key('body-edit-save')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('body-edit-save')), findsNothing);
+      final m = (await repo.watchMeasurements().first).single;
+      expect(m.id, 'm1');
+      expect(m.weightKg, 81.5);
+      expect(m.measuredAt, DateTime.utc(2026, 1, 20, 7, 30));
+      expect(m.source, MeasurementSource.IMPORT);
+      expect(m.importBatchId, 'b9');
+      expect(find.text('81.5 kg'), findsOneWidget);
+    });
+
+    testWidgets('⋮ 메뉴의 수정에서 측정 날짜를 바꾸면 시각(시·분)은 그대로', (tester) async {
+      final repo = await pumpBody(tester);
+      await seed(tester, repo);
+      await tester.tap(find.byKey(const Key('body-menu-m1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('body-edit')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('body-edit-date')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('15'));
+      await tester.tap(find.text('확인'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('body-edit-save')));
+      await tester.pumpAndSettle();
+      final m = (await repo.watchMeasurements().first).single;
+      final local = m.measuredAt.toLocal();
+      final orig = DateTime.utc(2026, 1, 20, 7, 30).toLocal();
+      expect((local.year, local.month, local.day), (2026, 1, 15));
+      expect((local.hour, local.minute), (orig.hour, orig.minute));
+      expect(m.weightKg, 80);
+    });
+
+    testWidgets('저장이 실패하면 시트 안에 오류가 보이고 입력은 남는다', (tester) async {
+      final repo = _FailingBodyRepo();
+      await tester.pumpWidget(
+        app(
+          const BodyWeightPage(),
+          overrides: [
+            bodyRepositoryProvider.overrideWithValue(repo),
+            settingsProvider.overrideWith(() => FixedSettings(const Settings())),
+          ],
+        ),
+      );
+      await tester.pump();
+      await repo.seedItem(BodyMeasurement(id: 'm1', measuredAt: DateTime.utc(2026, 1, 20), weightKg: 80));
+      await tester.pump();
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('body_m1')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('body-edit-weight')), '75');
+      await tester.tap(find.byKey(const Key('body-edit-save')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sheet-error')), findsOneWidget);
+      expect(find.widgetWithText(TextField, '75'), findsOneWidget);
+    });
+
+    testWidgets('키가 없어도 키 행이 보이고, 눌러 키 시트에서 저장하면 BMI가 나온다', (tester) async {
+      final repo = await pumpBody(tester);
+      await seed(tester, repo);
+      expect(find.byKey(const Key('body-metric-height')), findsOneWidget);
+      expect(find.byKey(const Key('body-metric-bmi')), findsNothing);
+      await tester.tap(find.byKey(const Key('body-metric-height')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('profileHeight')), '180');
+      await tester.tap(find.byKey(const Key('profileSave')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('body-metric-bmi')), findsOneWidget);
+      expect(find.text('24.7'), findsOneWidget);
+    });
+
+    testWidgets('360x780 · 큰 글씨에서도 넘치지 않는다', (tester) async {
+      tester.view.physicalSize = const Size(360, 780);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      for (final scale in [1.3, 2.0]) {
+        final repo = MemoryBodyRepository();
+        await tester.pumpWidget(
+          MediaQuery(
+            data: MediaQueryData(size: const Size(360, 780), textScaler: TextScaler.linear(scale)),
+            child: app(
+              const BodyWeightPage(),
+              overrides: [
+                bodyRepositoryProvider.overrideWithValue(repo),
+                settingsProvider.overrideWith(() => FixedSettings(const Settings())),
+              ],
+            ),
+          ),
+        );
+        await tester.pump();
+        await repo.add(BodyMeasurement(id: 'm1', measuredAt: DateTime.utc(2026, 1, 20), weightKg: 80));
+        await tester.pump();
+        await tester.pump();
+        expect(tester.takeException(), isNull, reason: 'page scale $scale');
+        await tester.tap(find.byKey(const Key('body_m1')));
+        await tester.pumpAndSettle();
+        expect(tester.takeException(), isNull, reason: 'sheet scale $scale');
+        await tester.pumpWidget(const SizedBox());
+      }
     });
   });
 
   group('SettingsPage', () {
     testWidgets('스위치 변경이 설정에 반영된다', (tester) async {
-      await tester.pumpWidget(app(const SettingsPage(), overrides: [
-        authControllerProvider.overrideWith(() => FixedAuth(AuthStatus.signedOut)),
-        settingsProvider.overrideWith(() => FixedSettings(const Settings())),
-        tokenStoreProvider.overrideWithValue(MemoryTokenStore()),
-      ]));
+      await tester.pumpWidget(
+        app(
+          const SettingsPage(),
+          overrides: [
+            authControllerProvider.overrideWith(() => FixedAuth(AuthStatus.signedOut)),
+            settingsProvider.overrideWith(() => FixedSettings(const Settings())),
+            tokenStoreProvider.overrideWithValue(MemoryTokenStore()),
+          ],
+        ),
+      );
       await tester.pump();
       final sw = find.descendant(of: find.byKey(const Key('keepScreenOn')), matching: find.byType(Switch));
       expect(tester.widget<Switch>(sw).value, isTrue);
@@ -198,11 +375,14 @@ void main() {
 
     testWidgets('미동기화 변경이 있으면 로그아웃 전에 경고하고, 취소하면 유지', (tester) async {
       final a = FakeAdapter((o) => noContent());
-      final container = authContainer(adapter: a, extra: [
-        authControllerProvider.overrideWith(() => FixedAuth(AuthStatus.signedIn)),
-        settingsProvider.overrideWith(() => FixedSettings(const Settings())),
-        syncServiceProvider.overrideWithValue(PendingSync(3)),
-      ]);
+      final container = authContainer(
+        adapter: a,
+        extra: [
+          authControllerProvider.overrideWith(() => FixedAuth(AuthStatus.signedIn)),
+          settingsProvider.overrideWith(() => FixedSettings(const Settings())),
+          syncServiceProvider.overrideWithValue(PendingSync(3)),
+        ],
+      );
       await tester.pumpWidget(containerApp(container, const SettingsPage()));
       await tester.scrollUntilVisible(find.byKey(const Key('signOut')), 200, scrollable: find.byType(Scrollable).first);
       await tester.tap(find.byKey(const Key('signOut')));
@@ -213,6 +393,39 @@ void main() {
       await tester.pumpAndSettle();
       expect(container.read(authControllerProvider), AuthStatus.signedIn);
       expect(a.log, isEmpty);
+    });
+
+    testWidgets('프로필·체중·AI 진입 행은 없고(나 탭에 있음), 파괴적 확인은 윤곽선 버튼', (tester) async {
+      final container = authContainer(
+        adapter: FakeAdapter((o) => noContent()),
+        extra: [
+          authControllerProvider.overrideWith(() => FixedAuth(AuthStatus.signedIn)),
+          syncServiceProvider.overrideWithValue(PendingSync(0)),
+          settingsProvider.overrideWith(() => FixedSettings(const Settings())),
+        ],
+      );
+      await tester.pumpWidget(containerApp(container, const SettingsPage()));
+      await tester.pump();
+      expect(find.byKey(const Key('aiTile')), findsNothing);
+      expect(find.text('프로필'), findsNothing);
+      expect(find.text('체중 기록'), findsNothing);
+
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('deleteAccount')),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await tester.tap(find.byKey(const Key('deleteAccount')));
+      await tester.pumpAndSettle();
+      expect(find.byType(OutlinedButton), findsOneWidget);
+      expect(find.byKey(const Key('dialogConfirm')), findsOneWidget);
+      await tester.tap(find.text('취소'));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('signOut')));
+      await tester.pumpAndSettle();
+      expect(find.byType(OutlinedButton), findsNothing, reason: '로그아웃은 파괴적이지 않다');
+      expect(find.widgetWithText(FilledButton, '로그아웃'), findsOneWidget);
     });
   });
 }

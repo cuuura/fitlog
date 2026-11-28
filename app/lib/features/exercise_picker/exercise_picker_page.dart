@@ -4,6 +4,9 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../core/api/dto.dart';
 import '../../core/ids.dart';
+import '../../core/ui/confirm.dart';
+import '../../core/ui/form_sheet.dart';
+import '../../core/ui/row_menu.dart';
 import '../../l10n/gen/app_localizations.dart';
 import 'exercise_controller.dart';
 import 'exercise_labels.dart';
@@ -35,56 +38,27 @@ class _ExercisePickerPageState extends ConsumerState<ExercisePickerPage> {
   }
 
   Future<void> _openForm({Exercise? editing}) async {
-    final input = await showModalBottomSheet<ExerciseInput>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (_) => _CustomExerciseSheet(editing: editing),
-    );
-    if (input == null || !mounted) return;
-    final ctrl = ref.read(exerciseControllerProvider);
-    if (editing == null) {
-      final e = await ctrl.createCustom(input);
-      if (mounted) context.pop(e.id);
-    } else {
-      await ctrl.updateCustom(input);
-    }
+    final id = await showFormSheet<String>(context, builder: (_) => _CustomExerciseSheet(editing: editing));
+    if (id == null || !mounted) return;
+    if (editing == null) context.pop(id);
   }
 
-  Future<void> _longPress(Exercise e) async {
+  Future<void> _delete(Exercise e) async {
     final l = AppLocalizations.of(context);
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      builder: (c) => SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          ListTile(
-              key: const Key('custom-edit'),
-              leading: const Icon(Icons.edit_outlined),
-              title: Text(l.exerciseEdit),
-              onTap: () => Navigator.pop(c, 'edit')),
-          ListTile(
-              key: const Key('custom-delete'),
-              leading: const Icon(Icons.delete_outline),
-              title: Text(l.commonDelete),
-              onTap: () => Navigator.pop(c, 'delete')),
-        ]),
-      ),
+    final messenger = ScaffoldMessenger.of(context);
+    final ok = await confirmAction(
+      context,
+      title: l.exerciseDeleteConfirm(exerciseDisplayName(context, e)),
+      body: l.exerciseDeleteBody,
+      action: l.commonDelete,
+      destructive: true,
+      confirmKey: const Key('custom-delete-confirm'),
     );
-    if (!mounted) return;
-    if (action == 'edit') {
-      await _openForm(editing: e);
-    } else if (action == 'delete') {
-      final ok = await showDialog<bool>(
-        context: context,
-        builder: (c) => AlertDialog(
-          title: Text(l.exerciseDeleteConfirm(exerciseDisplayName(context, e))),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l.commonCancel)),
-            FilledButton(key: const Key('custom-delete-confirm'), onPressed: () => Navigator.pop(c, true), child: Text(l.commonDelete)),
-          ],
-        ),
-      );
-      if (ok == true) await ref.read(exerciseControllerProvider).deleteCustom(e.id);
+    if (!ok || !mounted) return;
+    try {
+      await ref.read(exerciseControllerProvider).deleteCustom(e.id);
+    } catch (_) {
+      messenger.showSnackBar(SnackBar(content: Text(l.commonError)));
     }
   }
 
@@ -111,7 +85,12 @@ class _ExercisePickerPageState extends ConsumerState<ExercisePickerPage> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
             child: TextField(
               key: const Key('exercise-search'),
-              decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: l.exerciseSearchHint, border: const OutlineInputBorder(), isDense: true),
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: l.exerciseSearchHint,
+                border: const OutlineInputBorder(),
+                isDense: true,
+              ),
               onChanged: (v) {
                 _query = v;
                 _reload();
@@ -169,9 +148,28 @@ class _ExercisePickerPageState extends ConsumerState<ExercisePickerPage> {
                         key: Key('exercise-${e.id}'),
                         title: Text(exerciseDisplayName(context, e)),
                         subtitle: Text('${typeLabel(l, e.type)} · ${muscleLabel(l, e.primaryMuscle)}'),
-                        trailing: e.builtIn ? null : Chip(label: Text(l.exerciseCustomBadge)),
+                        trailing: e.builtIn
+                            ? null
+                            : Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Chip(label: Text(l.exerciseCustomBadge)),
+                                  RowMenu<String>(
+                                    key: Key('exercise-menu-${e.id}'),
+                                    items: [
+                                      RowMenuItem(value: 'edit', label: l.commonEdit, key: const Key('custom-edit')),
+                                      RowMenuItem(
+                                        value: 'delete',
+                                        label: l.commonDelete,
+                                        destructive: true,
+                                        key: const Key('custom-delete'),
+                                      ),
+                                    ],
+                                    onSelected: (v) => v == 'edit' ? _openForm(editing: e) : _delete(e),
+                                  ),
+                                ],
+                              ),
                         onTap: () => context.pop(e.id),
-                        onLongPress: e.builtIn ? null : () => _longPress(e),
                       );
                     },
                   ),
@@ -182,16 +180,16 @@ class _ExercisePickerPageState extends ConsumerState<ExercisePickerPage> {
   }
 }
 
-/// 내 종목 추가/수정 시트(EXR-2). 결과는 ExerciseInput.
-class _CustomExerciseSheet extends StatefulWidget {
+/// 내 종목 추가/수정 시트(EXR-2). 저장은 시트 안에서 하고, 닫힐 때 종목 id를 돌려준다.
+class _CustomExerciseSheet extends ConsumerStatefulWidget {
   const _CustomExerciseSheet({this.editing});
   final Exercise? editing;
 
   @override
-  State<_CustomExerciseSheet> createState() => _CustomExerciseSheetState();
+  ConsumerState<_CustomExerciseSheet> createState() => _CustomExerciseSheetState();
 }
 
-class _CustomExerciseSheetState extends State<_CustomExerciseSheet> {
+class _CustomExerciseSheetState extends ConsumerState<_CustomExerciseSheet> {
   late final _nameKo = TextEditingController(text: widget.editing?.nameKo ?? '');
   late final _nameEn = TextEditingController(text: widget.editing?.nameEn ?? '');
   late ExerciseType _type = widget.editing?.type ?? ExerciseType.BARBELL;
@@ -211,92 +209,95 @@ class _CustomExerciseSheetState extends State<_CustomExerciseSheet> {
     return n.isNotEmpty && n.length <= 60;
   }
 
-  void _submit() {
+  Future<String?> _submit() async {
     if (!_nameOk || _nameEn.text.trim().length > 60) {
       setState(() => _showError = true);
-      return;
+      return null;
     }
     final en = _nameEn.text.trim();
-    Navigator.pop(
-      context,
-      ExerciseInput(
-        id: widget.editing?.id ?? newId(),
-        nameKo: _nameKo.text.trim(),
-        nameEn: en.isEmpty ? null : en,
-        type: _type,
-        primaryMuscle: _primary,
-        secondaryMuscles: _secondary.where((m) => m != _primary).toList(),
-      ),
+    final input = ExerciseInput(
+      id: widget.editing?.id ?? newId(),
+      nameKo: _nameKo.text.trim(),
+      nameEn: en.isEmpty ? null : en,
+      type: _type,
+      primaryMuscle: _primary,
+      secondaryMuscles: _secondary.where((m) => m != _primary).toList(),
     );
+    final ctrl = ref.read(exerciseControllerProvider);
+    if (widget.editing == null) {
+      final e = await ctrl.createCustom(input);
+      return e.id;
+    }
+    await ctrl.updateCustom(input);
+    return input.id;
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+    final label = Theme.of(context).textTheme.labelLarge;
+    return FormSheet<String>(
+      title: widget.editing == null ? l.exerciseAddCustom : l.exerciseEditCustom,
+      submitLabel: widget.editing == null ? l.commonAdd : l.commonSave,
+      submitKey: const Key('custom-save'),
+      onSubmit: _submit,
+      children: [
+        TextField(
+          key: const Key('custom-name-ko'),
+          controller: _nameKo,
+          maxLength: 60,
+          decoration: InputDecoration(
+            labelText: l.exerciseNameKo,
+            errorText: _showError && !_nameOk ? l.exerciseNameInvalid : null,
+          ),
+          onChanged: (_) => setState(() {}),
+        ),
+        TextField(
+          key: const Key('custom-name-en'),
+          controller: _nameEn,
+          maxLength: 60,
+          decoration: InputDecoration(labelText: l.exerciseNameEn),
+        ),
+        Text(l.exerciseTypeLabel, style: label),
+        Wrap(
+          spacing: 8,
           children: [
-            Text(widget.editing == null ? l.exerciseAddCustom : l.exerciseEditCustom, style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: 12),
-            TextField(
-              key: const Key('custom-name-ko'),
-              controller: _nameKo,
-              maxLength: 60,
-              decoration: InputDecoration(labelText: l.exerciseNameKo, errorText: _showError && !_nameOk ? l.exerciseNameInvalid : null),
-              onChanged: (_) => setState(() {}),
-            ),
-            TextField(
-              key: const Key('custom-name-en'),
-              controller: _nameEn,
-              maxLength: 60,
-              decoration: InputDecoration(labelText: l.exerciseNameEn),
-            ),
-            const SizedBox(height: 8),
-            Text(l.exerciseTypeLabel, style: Theme.of(context).textTheme.labelLarge),
-            Wrap(spacing: 8, children: [
-              for (final t in v01ExerciseTypes)
-                ChoiceChip(
-                  key: Key('custom-type-${t.name}'),
-                  label: Text(typeLabel(l, t)),
-                  selected: _type == t,
-                  onSelected: (_) => setState(() => _type = t),
-                ),
-            ]),
-            const SizedBox(height: 12),
-            Text(l.exercisePrimaryMuscle, style: Theme.of(context).textTheme.labelLarge),
-            Wrap(spacing: 8, children: [
-              for (final m in Muscle.values)
-                ChoiceChip(
-                  key: Key('custom-primary-${m.name}'),
-                  label: Text(muscleLabel(l, m)),
-                  selected: _primary == m,
-                  onSelected: (_) => setState(() => _primary = m),
-                ),
-            ]),
-            const SizedBox(height: 12),
-            Text(l.exerciseSecondaryMuscles, style: Theme.of(context).textTheme.labelLarge),
-            Wrap(spacing: 8, children: [
-              for (final m in Muscle.values.where((m) => m != _primary))
-                FilterChip(
-                  key: Key('custom-secondary-${m.name}'),
-                  label: Text(muscleLabel(l, m)),
-                  selected: _secondary.contains(m),
-                  onSelected: (v) => setState(() => v ? _secondary.add(m) : _secondary.remove(m)),
-                ),
-            ]),
-            const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: FilledButton(key: const Key('custom-save'), onPressed: _submit, child: Text(l.commonSave)),
-            ),
+            for (final t in v01ExerciseTypes)
+              ChoiceChip(
+                key: Key('custom-type-${t.name}'),
+                label: Text(typeLabel(l, t)),
+                selected: _type == t,
+                onSelected: (_) => setState(() => _type = t),
+              ),
           ],
         ),
-      ),
+        Text(l.exercisePrimaryMuscle, style: label),
+        Wrap(
+          spacing: 8,
+          children: [
+            for (final m in Muscle.values)
+              ChoiceChip(
+                key: Key('custom-primary-${m.name}'),
+                label: Text(muscleLabel(l, m)),
+                selected: _primary == m,
+                onSelected: (_) => setState(() => _primary = m),
+              ),
+          ],
+        ),
+        Text(l.exerciseSecondaryMuscles, style: label),
+        Wrap(
+          spacing: 8,
+          children: [
+            for (final m in Muscle.values.where((m) => m != _primary))
+              FilterChip(
+                key: Key('custom-secondary-${m.name}'),
+                label: Text(muscleLabel(l, m)),
+                selected: _secondary.contains(m),
+                onSelected: (v) => setState(() => v ? _secondary.add(m) : _secondary.remove(m)),
+              ),
+          ],
+        ),
+      ],
     );
   }
 }

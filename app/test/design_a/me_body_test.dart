@@ -55,12 +55,13 @@ void main() {
     expect(find.text('체중 기록'), findsOneWidget);
   });
 
-  testWidgets('신체 수치: 키가 없으면 키·BMI 줄 없음', (t) async {
+  testWidgets('신체 수치: 키가 없으면 키 줄은 "입력"으로 보이고 BMI 줄은 없음', (t) async {
     final e = AppEnv();
     await e.body.add(BodyMeasurement(id: 'b0', measuredAt: DateTime.utc(2026, 11, 25), weightKg: 70));
     await e.pump(t, initial: Routes.body);
     await settle(t);
-    expect(find.byKey(const Key('body-metric-height')), findsNothing);
+    expect(find.byKey(const Key('body-metric-height')), findsOneWidget);
+    expect(find.descendant(of: find.byKey(const Key('body-metric-height')), matching: find.text('입력')), findsOneWidget);
     expect(find.byKey(const Key('body-metric-bmi')), findsNothing);
     expect(find.byKey(const Key('body-chart')), findsNothing);
   });

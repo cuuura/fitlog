@@ -1,12 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/api/dto.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/config.dart';
 import '../../core/crash/crash_reporting.dart';
-import '../../core/routes.dart';
+import '../../core/ui/confirm.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -42,33 +41,6 @@ class SettingsPage extends ConsumerWidget {
     }
   }
 
-  Future<bool> _confirm(
-    BuildContext context, {
-    required String title,
-    required String body,
-    required String action,
-    bool destructive = false,
-  }) async {
-    final l = AppLocalizations.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text(title),
-        content: Text(body),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l.commonCancel)),
-          TextButton(
-            key: const Key('dialogConfirm'),
-            onPressed: () => Navigator.pop(c, true),
-            style: destructive ? TextButton.styleFrom(foregroundColor: Theme.of(c).colorScheme.error) : null,
-            child: Text(action),
-          ),
-        ],
-      ),
-    );
-    return ok ?? false;
-  }
-
   Future<void> _guard(BuildContext context, Future<void> Function() f) async {
     final messenger = ScaffoldMessenger.of(context);
     final msg = AppLocalizations.of(context).settingsActionFailed;
@@ -97,18 +69,20 @@ class SettingsPage extends ConsumerWidget {
     } catch (_) {}
     if (!context.mounted) return;
     final ok = pending > 0
-        ? await _confirm(
+        ? await confirmAction(
             context,
             title: l.settingsSignOutPendingTitle,
             body: l.settingsSignOutPendingBody(pending),
             action: l.settingsSignOutAnyway,
+            confirmKey: const Key('dialogConfirm'),
             destructive: true,
           )
-        : await _confirm(
+        : await confirmAction(
             context,
             title: l.settingsSignOutConfirmTitle,
             body: l.settingsSignOutConfirmBody,
             action: l.settingsSignOut,
+            confirmKey: const Key('dialogConfirm'),
           );
     if (!ok || !context.mounted) return;
     await _guard(context, () => ref.read(authControllerProvider.notifier).signOut());
@@ -116,11 +90,12 @@ class SettingsPage extends ConsumerWidget {
 
   Future<void> _deleteAccount(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context);
-    final ok = await _confirm(
+    final ok = await confirmAction(
       context,
       title: l.settingsDeleteConfirmTitle,
       body: l.settingsDeleteConfirmBody,
       action: l.settingsDeleteConfirmAction,
+      confirmKey: const Key('dialogConfirm'),
       destructive: true,
     );
     if (!ok || !context.mounted) return;
@@ -129,11 +104,12 @@ class SettingsPage extends ConsumerWidget {
 
   Future<void> _withdrawHealth(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context);
-    final ok = await _confirm(
+    final ok = await confirmAction(
       context,
       title: l.settingsWithdrawHealth,
       body: l.settingsWithdrawHealthBody,
       action: l.settingsWithdrawAction,
+      confirmKey: const Key('dialogConfirm'),
       destructive: true,
     );
     if (!ok || !context.mounted) return;
@@ -229,17 +205,6 @@ class SettingsPage extends ConsumerWidget {
                 await ref.read(restTimerNotifierProvider).requestExactAlarmPermission();
               }),
             ),
-          header(l.settingsSectionBody),
-          ListTile(
-            title: Text(l.settingsProfile),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(Routes.profile),
-          ),
-          ListTile(
-            title: Text(l.settingsBodyWeight),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(Routes.body),
-          ),
           header(l.settingsSectionAccount),
           if (me != null)
             ListTile(
@@ -253,12 +218,6 @@ class SettingsPage extends ConsumerWidget {
                     )
                   : (me.displayName == null ? null : Text(me.displayName!)),
             ),
-          ListTile(
-            key: const Key('aiTile'),
-            title: Text(l.settingsAi),
-            subtitle: Text(l.settingsAiSubtitle),
-            onTap: () => context.push(Routes.ai),
-          ),
           ListTile(
             key: const Key('syncTile'),
             title: Text(l.syncSheetTitle),
