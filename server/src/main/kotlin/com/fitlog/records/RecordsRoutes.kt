@@ -94,8 +94,11 @@ data class SuggestItem(
     val oneRmKg: Double? = null,
     val oneRmSource: String? = null,
     val suggestedKg: Double? = null,
-    /** true 면 시작 때 비워둘 수 있는 키(DOUBLE 규칙). 아니면 생략 */
+    /** true 면 시작 때 비워둘 수 있는 키(DOUBLE 규칙·derive·fromFirstSession). 아니면 생략 */
     val optional: Boolean? = null,
+    /** 자동 계산 키만: 기준 종목 키와 비율(lifts.<k>.derive) */
+    val derivedFrom: String? = null,
+    val derivedRatio: Double? = null,
 )
 
 // ---------------------------------------------------------------- 내부 도구
@@ -319,6 +322,8 @@ fun Route.recordsRoutes(config: AppConfig) {
                     },
                     suggestedKg = oneRm?.let { BigDecimal.valueOf(it).multiply(BigDecimal.valueOf(percent)).setScale(2, RoundingMode.HALF_UP).toDouble() },
                     optional = if (key in optionalKeys) true else null,
+                    derivedFrom = def.lifts[key]?.derive?.from,
+                    derivedRatio = def.lifts[key]?.derive?.ratio,
                 )
             }
         }

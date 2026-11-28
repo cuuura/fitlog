@@ -8,7 +8,10 @@ interface ProgramCalculator {
     /** 이 프로그램이 시작할 때 필요한 입력: 키 → TM 또는 WORKING (tmFrom·of 를 따라 실제 상태 키로 푼 결과) */
     fun requiredInputs(program: ProgramDefinition): Map<String, Needs>
 
-    /** requiredInputs 중 시작 때 비워둘 수 있는 키(DOUBLE 규칙의 working) */
+    /**
+     * requiredInputs 중 시작 때 비워둘 수 있는 키: DOUBLE 규칙의 working, lifts.<k>.derive 키(initialState 가 from × ratio 로 채움),
+     * lifts.<k>.fromFirstSession 키(비우면 null 무게, 첫 완료 회차의 최소 무게로 working 을 정한 뒤 그 규칙대로 판정)
+     */
     fun optionalInputs(program: ProgramDefinition): Set<String> = emptySet()
 
     /** 사용자 입력으로 초기 상태를 만든다. 필요한 키가 빠지면 IllegalArgumentException(메시지에 키) */
