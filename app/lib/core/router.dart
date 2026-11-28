@@ -13,6 +13,7 @@ import '../features/ai_history/ai_history_page.dart';
 import '../features/deletion_requests/deletion_requests_page.dart';
 import '../features/exercise_picker/exercise_picker_page.dart';
 import '../features/export/export_page.dart';
+import '../features/csv_import/csv_import_page.dart';
 import '../features/importing/import_page.dart';
 import '../features/history/history_page.dart';
 import '../features/history/session_edit_page.dart';
@@ -120,6 +121,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             GoRoute(path: Routes.deletionRequests, builder: (_, _) => const DeletionRequestsPage()),
             GoRoute(path: Routes.aiConnect, builder: (_, _) => const AiConnectPage()),
             GoRoute(path: Routes.export, builder: (_, _) => const ExportPage()),
+            GoRoute(path: Routes.csvImport, builder: (_, _) => const CsvImportPage()),
           ]),
         ],
       ),

@@ -1,10 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/api/dto.dart';
 import '../../core/auth/auth_controller.dart';
 import '../../core/config.dart';
 import '../../core/crash/crash_reporting.dart';
+import '../../core/reminders/reminder_scheduler.dart';
+import '../../core/reminders/reminder_settings.dart';
+import '../../core/routes.dart';
 import '../../core/ui/confirm.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../data/providers.dart';
@@ -120,6 +124,59 @@ class SettingsPage extends ConsumerWidget {
     });
   }
 
+  /// v1.2 운동 알림(LOG-12). 설정은 기기에만 저장한다.
+  List<Widget> _reminderSection(BuildContext context, WidgetRef ref, AppLocalizations l, Widget Function(String) header) {
+    final r = ref.watch(reminderSettingsProvider);
+    Future<void> set(ReminderSettings next) => _guardWith(
+      context,
+      l.settingsSaveFailed,
+      () => ref.read(reminderSettingsProvider.notifier).update(next),
+    );
+    return [
+      header(l.settingsSectionReminder),
+      SwitchListTile(
+        key: const Key('reminderEnabled'),
+        title: Text(l.reminderEnable),
+        subtitle: Text(l.reminderEnableDesc),
+        value: r.enabled,
+        onChanged: (v) async {
+          if (v) await ref.read(reminderSchedulerProvider).requestPermission();
+          if (!context.mounted) return;
+          await set(r.copyWith(enabled: v));
+        },
+      ),
+      if (r.enabled) ...[
+        ListTile(
+          key: const Key('reminderTime'),
+          title: Text(l.reminderTime),
+          subtitle: Text(MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay(hour: r.hour, minute: r.minute), alwaysUse24HourFormat: true)),
+          enabled: r.when == ReminderWhen.sameDay,
+          onTap: () async {
+            final t = await showTimePicker(context: context, initialTime: TimeOfDay(hour: r.hour, minute: r.minute));
+            if (t == null || !context.mounted) return;
+            await set(r.copyWith(hour: t.hour, minute: t.minute));
+          },
+        ),
+        ListTile(
+          title: Text(l.reminderWhen),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: SegmentedButton<ReminderWhen>(
+              key: const Key('reminderWhen'),
+              showSelectedIcon: false,
+              segments: [
+                ButtonSegment(value: ReminderWhen.sameDay, label: Text(l.reminderWhenSameDay)),
+                ButtonSegment(value: ReminderWhen.eveBefore, label: Text(l.reminderWhenEve)),
+              ],
+              selected: {r.when},
+              onSelectionChanged: (v) => set(r.copyWith(when: v.first)),
+            ),
+          ),
+        ),
+      ],
+    ];
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
@@ -205,6 +262,15 @@ class SettingsPage extends ConsumerWidget {
                 await ref.read(restTimerNotifierProvider).requestExactAlarmPermission();
               }),
             ),
+          ..._reminderSection(context, ref, l, header),
+          header(l.settingsSectionData),
+          ListTile(
+            key: const Key('csvImportTile'),
+            title: Text(l.settingsCsvImport),
+            subtitle: Text(l.settingsCsvImportDesc),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(Routes.csvImport),
+          ),
           header(l.settingsSectionAccount),
           if (me != null)
             ListTile(
