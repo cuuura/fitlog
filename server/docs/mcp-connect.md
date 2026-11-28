@@ -164,4 +164,4 @@ Gemini CLI의 인증 명령과 설정 키는 버전에 따라 다를 수 있으�
 
 ### 클라이언트 등록 방식 (DCR·CIMD)
 
-서버는 두 방식을 모두 받는다. 동적 등록(DCR, `/oauth/register`)과 클라이언트 메타데이터 문서(CIMD: `client_id` 가 https URL 이고 서버가 그 JSON 문서를 받아 확인)다. ChatGPT 는 CIMD 를 우선 쓴다. CIMD 클라이언트는 동의 화면에 `이름 (도메인)` 으로 표시되고, 진단 기록에는 `cimd=1 cimd_host=<도메인>` 으로 남는다.
+서버는 두 방식을 모두 받는다. 동적 등록(DCR, `/oauth/register`)과 클라이언트 메타데이터 문서(CIMD: `client_id` 가 https URL 이고 서버가 그 JSON 문서를 받아 확인)다. ChatGPT 는 CIMD 를 우선 쓴다. 문서의 token_endpoint_auth_method(ChatGPT 는 private_key_jwt)는 검사하지 않고 PKCE·redirect_uri 정확 일치로 보호한다. CIMD 클라이언트는 동의 화면에 `이름 (도메인)` 으로 표시되고, 진단 기록에는 `cimd=1 cimd_host=<도메인>` 으로 남는다.
