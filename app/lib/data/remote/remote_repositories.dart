@@ -30,6 +30,16 @@ class RemoteProgramRepository implements ProgramRepository {
   @override
   Future<Program> validateProgram(Map<String, Object?> definition) => api.validateProgram(definition);
   @override
+  Future<Program> updateProgram(String id, {String? name, required Map<String, Object?> definition}) =>
+      api.putProgram(id, name: name, definition: definition);
+  @override
+  Future<Instance> replaceInstanceDefinition(
+    String instanceId,
+    Map<String, Object?> definition, {
+    Map<String, double> tm = const {},
+    Map<String, double> working = const {},
+  }) => _notify(instanceId, api.putInstanceDefinition(instanceId, definition, tm: tm, working: working));
+  @override
   Future<void> deleteProgram(String id) => api.deleteProgram(id);
   @override
   Future<List<SuggestItem>> suggest(String programId) => api.suggest(programId);

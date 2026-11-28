@@ -259,6 +259,30 @@ class ApiClient {
   /// 저장 없이 검증. 실패면 ApiException(VALIDATION_FAILED, details).
   Future<Program> validateProgram(Map<String, Object?> definition) =>
       _call(() async => Program.fromJson(_map(await dio.post('/v1/programs/validate', data: definition))));
+
+  /// v1.2: 내 프로그램 고치기. 응답에 activeInstanceIds가 있다.
+  Future<Program> putProgram(String id, {String? name, required Map<String, Object?> definition}) => _call(
+    () async => Program.fromJson(
+      _map(await dio.put('/v1/programs/$id', data: {'name': ?name, 'definition': definition})),
+    ),
+  );
+
+  /// v1.2: 진행 중 인스턴스의 정의 교체(다음 회차부터). 빠진 시작 값이 있으면 400 details `/tm/<key>`·`/working/<key>`.
+  Future<Instance> putInstanceDefinition(
+    String instanceId,
+    Map<String, Object?> definition, {
+    Map<String, double> tm = const {},
+    Map<String, double> working = const {},
+  }) => _call(
+    () async => Instance.fromJson(
+      _map(
+        await dio.put(
+          '/v1/program-instances/$instanceId/definition',
+          data: {'definition': definition, if (tm.isNotEmpty) 'tm': tm, if (working.isNotEmpty) 'working': working},
+        ),
+      ),
+    ),
+  );
   Future<void> deleteProgram(String id) => _call(() async => dio.delete('/v1/programs/$id'));
   Future<List<SuggestItem>> suggest(String programId) => _call(
     () async => [for (final j in _list(await dio.get('/v1/programs/$programId/suggest'))) SuggestItem.fromJson(j)],

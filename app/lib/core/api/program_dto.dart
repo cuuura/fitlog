@@ -113,6 +113,9 @@ class ProgramRules {
 class Program extends ProgramSummary {
   /// program.schema.json 형식 그대로. 화면 표시에 필요한 부분만 읽는다(days[].name, days[].exercises[].lift, lifts 등).
   final Map<String, Object?> definition;
+
+  /// v1.2: PUT /v1/programs/{id} 응답에만 있다. 이 프로그램의 ACTIVE·PAUSED 인스턴스 id.
+  final List<String> activeInstanceIds;
   const Program({
     required super.id,
     super.templateKey,
@@ -129,6 +132,7 @@ class Program extends ProgramSummary {
     super.aka,
     super.rules,
     required this.definition,
+    this.activeInstanceIds = const [],
   });
 
   factory Program.fromJson(Map<String, Object?> j) {
@@ -149,6 +153,9 @@ class Program extends ProgramSummary {
       aka: s.aka,
       rules: s.rules,
       definition: (j['definition'] as Map).cast<String, Object?>(),
+      activeInstanceIds: j['activeInstanceIds'] is List
+          ? [for (final e in j['activeInstanceIds'] as List) if (e is String) e]
+          : const [],
     );
   }
 }
@@ -264,6 +271,9 @@ class Instance {
   final DateTime startDate;
   final InstanceState state;
   final PlannedWorkout? next;
+
+  /// v1.2: 서버가 인스턴스에 저장한 정의(시작 시점 스냅샷). 없으면 null.
+  final Map<String, Object?>? definition;
   const Instance({
     required this.id,
     required this.programId,
@@ -273,6 +283,7 @@ class Instance {
     required this.startDate,
     required this.state,
     this.next,
+    this.definition,
   });
 
   factory Instance.fromJson(Map<String, Object?> j) => Instance(
@@ -284,6 +295,7 @@ class Instance {
     startDate: _date(j['startDate'])!,
     state: InstanceState.fromJson(((j['state'] as Map?) ?? const {}).cast()),
     next: j['next'] == null ? null : PlannedWorkout.fromJson((j['next'] as Map).cast()),
+    definition: j['definition'] is Map ? (j['definition'] as Map).cast<String, Object?>() : null,
   );
   Map<String, Object?> toJson() => {
     'id': id,
