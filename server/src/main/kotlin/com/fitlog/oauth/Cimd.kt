@@ -145,10 +145,9 @@ internal class CimdResolver(config: AppConfig, private val ttlSec: Long = CIMD_C
         if ((doc["client_id"] as? JsonPrimitive)?.takeIf { it.isString }?.content != clientId) {
             throw CimdException("client_id in the metadata document does not match the URL")
         }
-        val method = (doc["token_endpoint_auth_method"] as? JsonPrimitive)?.takeIf { it.isString }?.content
-        if (doc["token_endpoint_auth_method"] != null && method != "none") {
-            throw CimdException("unsupported token_endpoint_auth_method (only none is supported)")
-        }
+        // token_endpoint_auth_method 는 검사하지 않는다. ChatGPT 는 private_key_jwt 로 문서를 내는데, 거절하면 연결이 아예 안 된다.
+        // DCR 과 같은 방침: 클라이언트 인증 값(client_assertion·secret)은 확인하지 않고 PKCE(S256)와
+        // client_id 도메인이 직접 내건 redirect_uris 정확 일치로 보호한다
         val uris = (doc["redirect_uris"] as? JsonArray)?.map { (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content }
         if (uris.isNullOrEmpty() || uris.size > 10 || uris.any { it == null || !validRedirectUri(it) }) {
             throw CimdException("redirect_uris must be 1..10 URIs: https, or http on localhost/127.0.0.1, without fragment")

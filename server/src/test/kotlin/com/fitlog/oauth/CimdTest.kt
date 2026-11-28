@@ -83,9 +83,8 @@ class CimdTest {
     }
 
     @Test
-    fun unsupported_auth_method_and_bad_documents_are_rejected() {
+    fun bad_documents_are_rejected_and_auth_methods_accepted() {
         val bad = mapOf(
-            "https://a.test/c.json" to doc("https://a.test/c.json", extra = ""","token_endpoint_auth_method":"private_key_jwt""""),
             "https://b.test/c.json" to doc("https://b.test/c.json", redirects = "[]"),
             "https://c.test/c.json" to "not json",
         )
@@ -97,9 +96,11 @@ class CimdTest {
             // 알 수 없는 URL(가져오기 실패)도 오류
             assertEquals(HttpStatusCode.BadRequest, c.get(authorizeUrl("https://none.test/c.json", challengeOf(pkceVerifier()))).status)
         }
-        // auth method none 명시는 허용
-        a2Test(cfg(FakeCimd(mutableMapOf(CIMD_URL to doc(extra = ""","token_endpoint_auth_method":"none"""")))) ) {
-            assertEquals(HttpStatusCode.Found, plainClient().get(authorizeUrl(CIMD_URL, challengeOf(pkceVerifier()))).status)
+        // auth method 는 none·private_key_jwt(ChatGPT) 모두 허용
+        for (m in listOf("none", "private_key_jwt")) {
+            a2Test(cfg(FakeCimd(mutableMapOf(CIMD_URL to doc(extra = ""","token_endpoint_auth_method":"$m"""")))) ) {
+                assertEquals(HttpStatusCode.Found, plainClient().get(authorizeUrl(CIMD_URL, challengeOf(pkceVerifier()))).status, m)
+            }
         }
     }
 
