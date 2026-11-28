@@ -247,7 +247,9 @@ class _ProgramAddSheetState extends ConsumerState<ProgramAddSheet> {
         : selected != null && !shown.any((p) => p.category == selected)
         ? l.progEmptyType
         : l.progEmptySearch;
+    // 칩 줄이 화면보다 짧아도 가운데로 가지 않게 왼쪽에 붙인다.
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),

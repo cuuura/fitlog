@@ -204,7 +204,7 @@ void main() {
     );
     expect(_k('program-pick-w-3'), findsOneWidget);
     expect(find.text('주 3일 · 입문 · 파워리프팅'), findsOneWidget);
-    expect(find.text('흔히 오리지널 531(으)로 알려진 구성'), findsOneWidget);
+    expect(find.text('흔히 부르는 이름: 오리지널 531'), findsOneWidget);
 
     await t.tap(_k('program-variant-w-bbb'));
     await t.pumpAndSettle();

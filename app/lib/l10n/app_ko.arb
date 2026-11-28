@@ -2077,7 +2077,7 @@
   "progLevelIntermediate": "중급",
   "progLevelAdvanced": "상급",
   "progVariantGroup": "구성 선택",
-  "progAka": "흔히 {names}(으)로 알려진 구성",
+  "progAka": "흔히 부르는 이름: {names}",
   "@progAka": {
     "placeholders": {
       "names": {
