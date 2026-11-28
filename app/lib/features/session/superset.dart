@@ -61,9 +61,14 @@ List<String> unbindIds(Session session, SessionExercise se) {
 }
 
 /// [done] 세트를 완료한 직후, 휴식 타이머를 띄우지 않아야 하는지(5절).
-/// - 다음 세트가 DROP이면 쉬지 않는다.
+/// - 같은 종목의 바로 다음 세트(또는 현재 세트)가 DROP이면 쉬지 않는다.
 /// - 슈퍼세트에서 다음 세트가 같은 묶음의 뒤쪽 종목이면(아직 묶음 한 바퀴가 안 끝남) 쉬지 않는다.
-bool skipRestAfter(Session session, SessionExercise se, CurrentSet? next) {
+bool skipRestAfter(Session session, SessionExercise se, WorkoutSet done, CurrentSet? next) {
+  final i = se.sets.indexWhere((w) => w.id == done.id);
+  if (i >= 0 && i + 1 < se.sets.length) {
+    final following = se.sets[i + 1];
+    if (following.setType == SetType.DROP && !following.isCompleted) return true;
+  }
   if (next == null) return false;
   if (next.set.setType == SetType.DROP) return true;
   final g = se.supersetGroup;

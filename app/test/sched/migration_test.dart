@@ -16,6 +16,10 @@ const _v3 = [
     reps INTEGER, duration_sec INTEGER, distance_m REAL, band_level TEXT, rpe REAL, rir INTEGER, rest_sec INTEGER,
     note TEXT, completed_at TEXT, updated_at TEXT NOT NULL, deleted_at TEXT, planned_set_key TEXT,
     target_reps INTEGER, target_weight_kg REAL, is_amrap INTEGER NOT NULL DEFAULT 0 CHECK (is_amrap IN (0, 1)))''',
+  '''CREATE TABLE session_exercises (
+    id TEXT NOT NULL PRIMARY KEY, session_id TEXT NOT NULL, exercise_id TEXT NOT NULL, position INTEGER NOT NULL,
+    note TEXT, updated_at TEXT NOT NULL, deleted_at TEXT, lift_key TEXT,
+    accessory INTEGER NOT NULL DEFAULT 0 CHECK (accessory IN (0, 1)))''',
   "INSERT INTO sessions (id, started_at, tz, updated_at, program_instance_id, plan_seq) "
       "VALUES ('s1', '2026-11-20T01:00:00.000Z', 'Asia/Seoul', '2026-11-20T01:00:00.000Z', 'inst-1', 3)",
   "INSERT INTO workout_sets (id, session_exercise_id, position, weight_kg, reps, updated_at, target_reps, target_weight_kg) "
@@ -78,10 +82,10 @@ void main() {
     expect(row.deletedAt, isNull);
   });
 
-  test('새 설치(onCreate)도 v4', () async {
+  test('새 설치(onCreate)도 최신 버전', () async {
     final db = AppDatabase(NativeDatabase.memory());
     addTearDown(db.close);
-    expect(db.schemaVersion, 4);
+    expect(db.schemaVersion, 5);
     expect(await db.select(db.scheduledWorkouts).get(), isEmpty);
     expect(await db.getLastServerSeq(), 0);
   });

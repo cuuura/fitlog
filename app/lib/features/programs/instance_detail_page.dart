@@ -234,6 +234,15 @@ class _Body extends ConsumerWidget {
     );
   }
 
+  /// 종목 키 행 ⋮ '종목 바꾸기': 종목을 고르면 프로그램의 그 종목을 바꾼다(PRG-7, 온라인).
+  Future<void> _swapLift(BuildContext context, WidgetRef ref, String liftKey) async {
+    final exerciseId = await context.push<String>(Routes.pickExercise);
+    if (exerciseId == null || !context.mounted) return;
+    await run(() async {
+      await ref.read(programRepositoryProvider).swapLift(inst.id, liftKey, exerciseId);
+    });
+  }
+
   List<Map<String, Object?>> get _days => programDays(view.program.definition);
 
   Future<void> _addAccessory(
@@ -531,6 +540,19 @@ class _Body extends ConsumerWidget {
             dense: true,
             contentPadding: EdgeInsets.zero,
             title: Text(_liftName(context, k)),
+            trailing: k.startsWith('acc:')
+                ? null
+                : RowMenu<String>(
+                    key: ValueKey('lift-menu-$k'),
+                    items: [
+                      RowMenuItem(
+                        value: 'swap',
+                        label: l.instanceSwapLift,
+                        key: ValueKey('swap-lift-$k'),
+                      ),
+                    ],
+                    onSelected: (_) => _swapLift(context, ref, k),
+                  ),
             subtitle: Text(
               [
                 if (st.tm[k] != null)

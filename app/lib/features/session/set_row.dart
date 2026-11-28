@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/api/dto.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/units.dart';
+import '../../core/ui/row_menu.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
@@ -293,19 +294,52 @@ class _SetRowState extends ConsumerState<SetRow> {
     bool bold = false,
   }) {
     final s = widget.set;
+    final badge = setTypeBadge(s);
+    final label = Text(
+      widget.label,
+      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+        color: failed ? scheme.error : null,
+        fontWeight: bold ? FontWeight.bold : null,
+      ),
+    );
     return SizedBox(
       key: Key('drag-${s.id}'),
       width: kSetColWidth,
       height: 40,
       child: Center(
-        child: Text(
-          widget.label,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            color: failed ? scheme.error : null,
-            fontWeight: bold ? FontWeight.bold : null,
-          ),
-        ),
+        child: badge == null
+            ? label
+            : FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    label,
+                    const SizedBox(width: 2),
+                    Semantics(
+                      label: s.setType == SetType.DROP
+                          ? l.sessionSetTypeDropName
+                          : l.sessionSetTypeFailureName,
+                      child: Container(
+                        key: Key('set-type-${s.id}'),
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        decoration: BoxDecoration(
+                          color: s.setType == SetType.DROP ? scheme.tertiary : scheme.secondary,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          badge,
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: s.setType == SetType.DROP ? scheme.onTertiary : scheme.onSecondary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
       ),
     );
   }
@@ -579,6 +613,30 @@ class _SetRowState extends ConsumerState<SetRow> {
                       ),
                     ),
                   const Spacer(),
+                  RowMenu<SetType>(
+                    key: Key('set-menu-${s.id}'),
+                    items: [
+                      if (s.setType != SetType.DROP)
+                        RowMenuItem(
+                          value: SetType.DROP,
+                          label: l.sessionSetTypeDrop,
+                          key: Key('set-drop-${s.id}'),
+                        ),
+                      if (s.setType != SetType.FAILURE)
+                        RowMenuItem(
+                          value: SetType.FAILURE,
+                          label: l.sessionSetTypeFailure,
+                          key: Key('set-failure-${s.id}'),
+                        ),
+                      if (s.setType != SetType.NORMAL)
+                        RowMenuItem(
+                          value: SetType.NORMAL,
+                          label: l.sessionSetTypeNormal,
+                          key: Key('set-normal-${s.id}'),
+                        ),
+                    ],
+                    onSelected: (t) => ref.read(sessionControllerProvider).setSetType(s, t),
+                  ),
                   _doneButton(l, scheme, failed),
                 ],
               ),
