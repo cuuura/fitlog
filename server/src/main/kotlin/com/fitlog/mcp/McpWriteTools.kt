@@ -288,7 +288,7 @@ internal val WRITE_TOOLS: List<Tool> = listOf(
     ),
     Tool(
         name = "log_session", title = "운동 기록 추가",
-        description = "이미 한 운동 세션 한 건(종목·세트)을 기록합니다. 종목은 id 또는 이름으로 지정합니다. 앞으로 할 하루짜리 운동 계획은 schedule_workout, 여러 주 반복 규칙은 create_program 을 쓰세요. / Log one workout session that was already done; exercises by id or name. For a future one-day plan use schedule_workout; for a multi-week program use create_program.",
+        description = "이미 한 운동 세션 한 건(종목·세트)을 기록합니다. 종목은 id 또는 이름으로 지정합니다. exercises·sets 배열 순서가 수행 순서입니다. 앞으로 할 하루짜리 운동 계획은 schedule_workout, 여러 주 반복 규칙은 create_program 을 쓰세요. / Log one workout session that was already done; exercises by id or name. For a future one-day plan use schedule_workout; for a multi-week program use create_program.",
         write = true,
         input = S.obj(
             "session" to S.anyObj("import.schema.json 의 session: startedAt, exercises[{exercise:{id|name}, sets[{weightKg, reps,...}]}] ..."),
@@ -303,7 +303,7 @@ internal val WRITE_TOOLS: List<Tool> = listOf(
     ),
     Tool(
         name = "schedule_workout", title = "예정 운동 추가",
-        description = "앞으로 할 하루짜리 운동 계획(날짜·제목·종목별 세트 목표)을 예정 운동으로 저장합니다. 사용자가 그날 앱에서 눌러 시작하면 목표가 채워진 세션이 열립니다. 이미 한 운동 기록은 log_session, 여러 주 반복 규칙은 create_program 을 쓰세요. 같은 날 같은 제목이 있으면 SCHEDULED_DUPLICATE 충돌(SKIP/KEEP_BOTH/REPLACE)로 알려줍니다. 예: 벨트 스쿼트 80kg×12 → {targetWeightKg:80,targetReps:12}, 12~15회 → targetReps 12 + targetRepsMax 15. / Save a future one-day workout plan (date, title, per-exercise set targets) as a scheduled workout the user can start in the app. Use log_session for workouts already done and create_program for multi-week programs.",
+        description = "앞으로 할 하루짜리 운동 계획(날짜·제목·종목별 세트 목표)을 예정 운동으로 저장합니다. 사용자가 그날 앱에서 눌러 시작하면 목표가 채워진 세션이 열립니다. items·sets 배열 순서가 수행 순서입니다. 이미 한 운동 기록은 log_session, 여러 주 반복 규칙은 create_program 을 쓰세요. 같은 날 같은 제목이 있으면 SCHEDULED_DUPLICATE 충돌(SKIP/KEEP_BOTH/REPLACE)로 알려줍니다. 예: 벨트 스쿼트 80kg×12 → {targetWeightKg:80,targetReps:12}, 12~15회 → targetReps 12 + targetRepsMax 15. / Save a future one-day workout plan (date, title, per-exercise set targets) as a scheduled workout the user can start in the app. Use log_session for workouts already done and create_program for multi-week programs.",
         write = true,
         input = S.obj(
             "workout" to S.obj(

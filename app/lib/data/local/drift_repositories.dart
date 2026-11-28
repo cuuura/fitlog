@@ -184,13 +184,13 @@ class DriftSessionRepository extends _DriftBase implements SessionRepository {
     final ses =
         await (db.select(db.sessionExercises)
               ..where((t) => t.sessionId.isIn(ids) & t.deletedAt.isNull())
-              ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+              ..orderBy([(t) => OrderingTerm.asc(t.position), (t) => OrderingTerm.asc(t.id)]))
             .get();
     final sets = ses.isEmpty
         ? <WorkoutSetRow>[]
         : await (db.select(db.workoutSets)
                 ..where((t) => t.sessionExerciseId.isIn([for (final e in ses) e.id]) & t.deletedAt.isNull())
-                ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+                ..orderBy([(t) => OrderingTerm.asc(t.position), (t) => OrderingTerm.asc(t.id)]))
               .get();
     final setsBySe = <String, List<WorkoutSet>>{};
     for (final s in sets) {
@@ -704,7 +704,7 @@ class DriftSessionRepository extends _DriftBase implements SessionRepository {
       final sets =
           await (db.select(db.workoutSets)
                 ..where((t) => t.sessionExerciseId.equals(se.id) & t.deletedAt.isNull())
-                ..orderBy([(t) => OrderingTerm.asc(t.position)]))
+                ..orderBy([(t) => OrderingTerm.asc(t.position), (t) => OrderingTerm.asc(t.id)]))
               .get();
       if (sets.isNotEmpty) {
         return LastSets(sessionId: s.id, startedAt: s.startedAt.toUtc(), sets: [for (final w in sets) setOf(w)]);

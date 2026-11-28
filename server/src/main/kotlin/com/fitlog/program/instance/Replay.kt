@@ -21,6 +21,7 @@ import com.fitlog.engine.ProgramEvent
 import com.fitlog.engine.ProgramState
 import com.fitlog.engine.SkipPolicy
 import org.jetbrains.exposed.sql.ResultRow
+import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
@@ -122,10 +123,10 @@ private fun Transaction.loadReplayData(ctx: InstanceCtx): ReplayData {
     val sessionIds = chosen.map { it[WorkoutSessions.id] }
     val exRows = if (sessionIds.isEmpty()) emptyList() else SessionExercises.selectAll()
         .where { (SessionExercises.sessionId inList sessionIds) and SessionExercises.deletedAt.isNull() }
-        .orderBy(SessionExercises.position).toList()
+        .orderBy(SessionExercises.position to SortOrder.ASC, SessionExercises.id to SortOrder.ASC).toList()
     val setRows = if (exRows.isEmpty()) emptyList() else WorkoutSets.selectAll()
         .where { (WorkoutSets.sessionExerciseId inList exRows.map { it[SessionExercises.id] }) and WorkoutSets.deletedAt.isNull() }
-        .orderBy(WorkoutSets.position).toList()
+        .orderBy(WorkoutSets.position to SortOrder.ASC, WorkoutSets.id to SortOrder.ASC).toList()
     val setsByEx = setRows.groupBy { it[WorkoutSets.sessionExerciseId] }
     val exBySession = exRows.groupBy { it[SessionExercises.sessionId] }
     val sessions = chosen.map { s ->

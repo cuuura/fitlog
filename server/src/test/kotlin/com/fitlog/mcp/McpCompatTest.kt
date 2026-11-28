@@ -13,7 +13,9 @@ import com.fitlog.oauth.mcpInit
 import com.fitlog.oauth.mcpPost
 import com.fitlog.oauth.plainClient
 import com.fitlog.oauth.result
+import com.fitlog.session.change
 import com.fitlog.session.exJson
+import com.fitlog.session.push
 import com.fitlog.session.insertExercise
 import com.fitlog.session.newId
 import com.fitlog.session.putSession
@@ -147,6 +149,38 @@ class McpCompatTest {
         val otherSid = c.mcpInit(other.access)
         assertTrue(c.mcpCall(other.access, otherSid, "fetch", """{"id":"session:$sid1"}""").result().isError())
         assertFalse(Ids.newId().toString().isEmpty())
+    }
+
+    @Test
+    fun get_session_follows_positions_after_a_sync_reorder() = a2Test {
+        val c = plainClient()
+        val conn = c.connect()
+        val sid = c.mcpInit(conn.access)
+        val uid = conn.userId
+        val exA = insertExercise(uid, "BARBELL")
+        val exB = insertExercise(uid, "BARBELL")
+        val session = newId(); val seA = newId(); val seB = newId(); val s1 = newId(); val s2 = newId()
+        c.putSession(uid, session, sessionJson(session, "2026-11-10T01:00:00Z", "2026-11-10T02:00:00Z", exercises = listOf(
+            exJson(seA, exA, position = 0, sets = listOf(setJson(s1, 0, "100", "5"), setJson(s2, 1, "110", "3"))),
+            exJson(seB, exB, position = 1, sets = listOf(setJson(position = 0, weightKg = "50", reps = "10"))),
+        )))
+        fun order(r: JsonObject): Pair<List<String>, List<String>> {
+            val exs = r.sc()["session"]!!.jsonObject["exercises"]!!.jsonArray.map { it.jsonObject }
+            return exs.map { it["exerciseId"]!!.jsonPrimitive.content } to
+                exs.first { it["id"]!!.jsonPrimitive.content == seA }["sets"]!!.jsonArray.map { it.jsonObject["id"]!!.jsonPrimitive.content }
+        }
+        assertEquals(listOf("$exA", "$exB") to listOf(s1, s2), order(c.mcpCall(conn.access, sid, "get_session", """{"id":"$session"}""").result()))
+
+        // position 만 뒤집어 push
+        val t = "2099-01-01T00:00:00Z"
+        c.push(
+            uid,
+            change("session_exercise", seA, at = t, parentId = session, payload = """{"exerciseId":"$exA","position":1}"""),
+            change("session_exercise", seB, at = t, parentId = session, payload = """{"exerciseId":"$exB","position":0}"""),
+            change("workout_set", s1, at = t, parentId = seA, payload = """{"position":1,"weightKg":100,"reps":5,"completedAt":"$t"}"""),
+            change("workout_set", s2, at = t, parentId = seA, payload = """{"position":0,"weightKg":110,"reps":3,"completedAt":"$t"}"""),
+        )
+        assertEquals(listOf("$exB", "$exA") to listOf(s2, s1), order(c.mcpCall(conn.access, sid, "get_session", """{"id":"$session"}""").result()))
     }
 
     @Test

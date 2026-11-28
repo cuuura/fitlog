@@ -878,7 +878,32 @@ def c_app_flow(R):
         for what, i in (("앱이 PUT 한 세션", R.need("session_id")), ("push 한 세션", sid), ("push 한 세트", set1), ("체중", bid)):
             expect(i in pulled, f"sync pull(since=0)에 {what}({i[:8]})가 없음")
         R.ctx["sync_session_id"], R.ctx["body_id"] = sid, bid
+        R.ctx["sync_se_id"], R.ctx["sync_set_ids"] = seid, (set1, set2)
+        R.ctx["sync_squat"], R.ctx["sync_ts_base"] = squat, now
     R.run("app.sync_push_then_pull", sync_flow)
+
+    def sync_reorder_flow():
+        # position 만 뒤집어 다시 push 하면 GET 세션의 종목 안 세트 순서가 바뀐다
+        sid, seid = R.need("sync_session_id"), R.need("sync_se_id")
+        set1, set2 = R.need("sync_set_ids")
+        now = R.need("sync_ts_base")
+        ts = lambda d=0: (now + timedelta(seconds=d)).strftime("%Y-%m-%dT%H:%M:%S.000Z")  # noqa: E731
+        def set_ids():
+            g = api(R, "GET", f"/v1/sessions/{sid}", tok())
+            expect_status(g, 200, "sync 세션 상세")
+            return [x["id"] for x in g.json()["exercises"][0]["sets"]]
+        expect(set_ids() == [set1, set2], f"처음 세트 순서가 [set1, set2] 여야 함: {set_ids()}")
+        changes = [
+            {"entity": "workout_set", "id": set1, "op": "UPSERT", "parentId": seid, "clientUpdatedAt": ts(100),
+             "payload": {"position": 1, "weightKg": 90.0, "reps": 8, "completedAt": ts(-3600 * 5 + 300)}},
+            {"entity": "workout_set", "id": set2, "op": "UPSERT", "parentId": seid, "clientUpdatedAt": ts(101),
+             "payload": {"position": 0, "weightKg": 92.5, "reps": 6, "completedAt": ts(-3600 * 5 + 600)}},
+        ]
+        r = api(R, "POST", "/v1/sync/push", tok(), {"changes": changes})
+        expect_status(r, 200, "sync reorder push")
+        expect(all(x["status"] == "applied" for x in r.json()["results"]), f"reorder push 결과: {r.json()['results']}")
+        expect(set_ids() == [set2, set1], f"position 을 뒤집은 뒤 세트 순서가 [set2, set1] 여야 함: {set_ids()}")
+    R.run("app.sync_reorder_positions", sync_reorder_flow)
 
     def read_back():
         sid = R.need("session_id")

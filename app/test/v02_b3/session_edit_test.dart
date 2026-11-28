@@ -108,8 +108,16 @@ void main() {
     final first = se.sets[0], second = se.sets[1];
     await h.pump(tester, Routes.sessionEdit(s.id));
 
-    await tester.tap(find.byKey(Key('edit-set-down-${first.id}')));
+    expect(find.byKey(Key('edit-set-down-${first.id}')), findsNothing, reason: '위/아래 버튼은 없다');
+    expect(find.byKey(Key('edit-set-up-${second.id}')), findsNothing);
+    final g = await tester.startGesture(tester.getCenter(find.byKey(Key('edit-set-handle-${first.id}'))));
     await tester.pump(const Duration(milliseconds: 100));
+    for (var i = 0; i < 10; i++) {
+      await g.moveBy(const Offset(0, 15));
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+    await g.up();
+    await tester.pumpAndSettle();
     var sets = (await reload(h, s.id)).exercises.single.sets;
     expect(sets.map((e) => e.id), [second.id, first.id]);
     expect(sets.map((e) => e.position), [0, 1]);

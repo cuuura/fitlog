@@ -106,11 +106,11 @@ private fun Transaction.buildBundle(uid: UUID, exportedAt: Instant): JsonObject 
     val sessionIds = sessions.map { it[WorkoutSessions.id] }
     val ses = if (sessionIds.isEmpty()) emptyList() else SessionExercises.selectAll()
         .where { (SessionExercises.sessionId inList sessionIds) and SessionExercises.deletedAt.isNull() }
-        .orderBy(SessionExercises.position).toList()
+        .orderBy(SessionExercises.position to SortOrder.ASC, SessionExercises.id to SortOrder.ASC).toList()
     val seIds = ses.map { it[SessionExercises.id] }
     val sets = if (seIds.isEmpty()) emptyList() else WorkoutSets.selectAll()
         .where { (WorkoutSets.sessionExerciseId inList seIds) and WorkoutSets.deletedAt.isNull() }
-        .orderBy(WorkoutSets.position).toList()
+        .orderBy(WorkoutSets.position to SortOrder.ASC, WorkoutSets.id to SortOrder.ASC).toList()
     val setsBySe = sets.groupBy { it[WorkoutSets.sessionExerciseId] }
     val sesBySession = ses.groupBy { it[SessionExercises.sessionId] }
 
@@ -290,14 +290,14 @@ private fun Transaction.setsCsv(uid: UUID): String {
             .associate { it[ProgramInstances.id] to it[Programs.name] }
     val ses = SessionExercises.selectAll()
         .where { (SessionExercises.sessionId inList sessionIds) and SessionExercises.deletedAt.isNull() }
-        .orderBy(SessionExercises.position).toList().groupBy { it[SessionExercises.sessionId] }
+        .orderBy(SessionExercises.position to SortOrder.ASC, SessionExercises.id to SortOrder.ASC).toList().groupBy { it[SessionExercises.sessionId] }
     val exerciseIds = ses.values.flatten().map { it[SessionExercises.exerciseId] }.distinct()
     val exById = if (exerciseIds.isEmpty()) emptyMap() else Exercises.selectAll().where { Exercises.id inList exerciseIds }
         .associateBy { it[Exercises.id] }
     val seIds = ses.values.flatten().map { it[SessionExercises.id] }
     val setsBySe = if (seIds.isEmpty()) emptyMap() else WorkoutSets.selectAll()
         .where { (WorkoutSets.sessionExerciseId inList seIds) and WorkoutSets.deletedAt.isNull() }
-        .orderBy(WorkoutSets.position).toList().groupBy { it[WorkoutSets.sessionExerciseId] }
+        .orderBy(WorkoutSets.position to SortOrder.ASC, WorkoutSets.id to SortOrder.ASC).toList().groupBy { it[WorkoutSets.sessionExerciseId] }
 
     for (s in sessions) {
         val sid = s[WorkoutSessions.id]

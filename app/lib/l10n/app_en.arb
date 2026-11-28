@@ -540,6 +540,7 @@
     }
   },
   "sessionReorderHandle": "Reorder",
+  "sessionReorderSets": "Reorder sets",
   "sessionSummaryTitle": "Session summary",
   "sessionSummarySets": "Sets",
   "sessionSummaryVolume": "Volume",

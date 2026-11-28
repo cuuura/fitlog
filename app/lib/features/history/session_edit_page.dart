@@ -12,16 +12,24 @@ import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme.dart';
 import '../../core/units.dart';
+import '../../core/widgets/reorder.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
-import '../session/session_controller.dart' show SetLimits, exerciseMapProvider, sessionByIdProvider;
+import '../session/session_controller.dart'
+    show SetLimits, exerciseMapProvider, sessionByIdProvider;
 import '../session/session_format.dart';
 
 /// 로컬 시각을 골라 돌려준다. 취소하면 null. 테스트에서 바꿔 끼운다.
-typedef DateTimePicker = Future<DateTime?> Function(BuildContext context, DateTime initialLocal);
+typedef DateTimePicker = Future<DateTime?> Function(
+  BuildContext context,
+  DateTime initialLocal,
+);
 
-Future<DateTime?> pickDateTimeDefault(BuildContext context, DateTime initial) async {
+Future<DateTime?> pickDateTimeDefault(
+  BuildContext context,
+  DateTime initial,
+) async {
   final date = await showDatePicker(
     context: context,
     initialDate: initial,
@@ -29,16 +37,24 @@ Future<DateTime?> pickDateTimeDefault(BuildContext context, DateTime initial) as
     lastDate: DateTime(initial.year + 1),
   );
   if (date == null || !context.mounted) return null;
-  final time = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(initial));
+  final time = await showTimePicker(
+    context: context,
+    initialTime: TimeOfDay.fromDateTime(initial),
+  );
   if (time == null) return null;
   return DateTime(date.year, date.month, date.day, time.hour, time.minute);
 }
 
 /// 종료가 시작보다 앞이면 false.
-bool validTimeRange(DateTime start, DateTime? end) => end == null || !end.isBefore(start);
+bool validTimeRange(DateTime start, DateTime? end) =>
+    end == null || !end.isBefore(start);
 
 class SessionEditPage extends ConsumerStatefulWidget {
-  const SessionEditPage({super.key, required this.sessionId, this.pickDateTime = pickDateTimeDefault});
+  const SessionEditPage({
+    super.key,
+    required this.sessionId,
+    this.pickDateTime = pickDateTimeDefault,
+  });
   final String sessionId;
   final DateTimePicker pickDateTime;
 
@@ -70,21 +86,28 @@ class _SessionEditPageState extends ConsumerState<SessionEditPage> {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final cur = start ? s.startedAt : (s.endedAt ?? s.startedAt);
-    final picked = await widget.pickDateTime(context, sessionLocalTime(cur, s.tz));
+    final picked = await widget.pickDateTime(
+      context,
+      sessionLocalTime(cur, s.tz),
+    );
     if (picked == null || !mounted) return;
     final utc = picked.toUtc();
     final newStart = start ? utc : s.startedAt;
     final newEnd = start ? s.endedAt : utc;
     if (!validTimeRange(newStart, newEnd)) {
-      messenger.showSnackBar(SnackBar(content: Text(l.historyEditEndBeforeStart)));
+      messenger.showSnackBar(
+        SnackBar(content: Text(l.historyEditEndBeforeStart)),
+      );
       return;
     }
     await _run(
-      () => ref.read(sessionRepositoryProvider).updateSessionTimes(
-        s.id,
-        startedAt: start ? utc : null,
-        endedAt: start ? null : utc,
-      ),
+      () => ref
+          .read(sessionRepositoryProvider)
+          .updateSessionTimes(
+            s.id,
+            startedAt: start ? utc : null,
+            endedAt: start ? null : utc,
+          ),
     );
   }
 
@@ -103,7 +126,10 @@ class _SessionEditPageState extends ConsumerState<SessionEditPage> {
       builder: (c) => AlertDialog(
         content: Text(l.historyEditRemoveExerciseConfirm),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l.commonCancel)),
+          TextButton(
+            onPressed: () => Navigator.pop(c, false),
+            child: Text(l.commonCancel),
+          ),
           TextButton(
             key: const Key('edit-confirm'),
             onPressed: () => Navigator.pop(c, true),
@@ -124,34 +150,44 @@ class _SessionEditPageState extends ConsumerState<SessionEditPage> {
       weightKg: base?.weightKg,
       addedWeightKg: base?.addedWeightKg,
       reps: base?.reps,
-      completedAt: s.endedAt ?? ref.read(clockProvider)(), // 끝난 세션에 더한 세트는 한 걸로 센다
+      completedAt:
+          s.endedAt ?? ref.read(clockProvider)(), // 끝난 세션에 더한 세트는 한 걸로 센다
     );
     await _run(() async {
       await ref.read(sessionRepositoryProvider).addSet(se.id, draft);
     });
   }
 
-  Future<void> _moveSet(SessionExercise se, int index, int delta) async {
-    final ids = [for (final w in se.sets) w.id];
-    final j = index + delta;
-    if (j < 0 || j >= ids.length) return;
-    final t = ids[index];
-    ids[index] = ids[j];
-    ids[j] = t;
-    await _run(() => ref.read(sessionRepositoryProvider).reorderSets(se.id, ids));
+  Future<void> _reorderSets(SessionExercise se, int from, int to) async {
+    final ids = movedItem([for (final w in se.sets) w.id], from, to);
+    await _run(
+      () => ref.read(sessionRepositoryProvider).reorderSets(se.id, ids),
+    );
+  }
+
+  Future<void> _reorderExercises(Session s, int from, int to) async {
+    final ids = movedItem([for (final e in s.exercises) e.id], from, to);
+    await _run(
+      () => ref.read(sessionRepositoryProvider).reorderExercises(s.id, ids),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final async = ref.watch(sessionByIdProvider(widget.sessionId));
-    final exercises = ref.watch(exerciseMapProvider).value ?? const <String, Exercise>{};
+    final exercises =
+        ref.watch(exerciseMapProvider).value ?? const <String, Exercise>{};
     final unit = ref.watch(settingsProvider).weightUnit;
     final s = async.value;
     if (s == null) {
       return Scaffold(
         appBar: AppBar(title: Text(l.historyEditTitle)),
-        body: Center(child: async.isLoading ? const CircularProgressIndicator() : Text(l.historyEditNotFound)),
+        body: Center(
+          child: async.isLoading
+              ? const CircularProgressIndicator()
+              : Text(l.historyEditNotFound),
+        ),
       );
     }
     if (!_noteInit) {
@@ -163,110 +199,195 @@ class _SessionEditPageState extends ConsumerState<SessionEditPage> {
 
     return Scaffold(
       appBar: AppBar(title: Text(l.historyEditTitle)),
-      body: ListView(
+      body: ReorderableListView(
         padding: const EdgeInsets.all(16),
-        children: [
-          if (s.isProgram)
-            Card(
-              key: const Key('edit-program-notice'),
-              color: AppColors.of(context).warnSoft,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
-                  children: [
-                    Icon(Icons.info_outline, color: AppColors.of(context).warn),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(l.historyEditProgramNotice)),
-                  ],
+        buildDefaultDragHandles: false,
+        onReorderStart: (_) => reorderHaptic(),
+        onReorderItem: (o, n) => _reorderExercises(s, o, n),
+        proxyDecorator: reorderProxy(
+          compact: (i) => Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(
+              exercises[s.exercises[i].exerciseId] == null
+                  ? '…'
+                  : exerciseDisplayName(
+                      context,
+                      exercises[s.exercises[i].exerciseId]!,
+                    ),
+              style: theme.textTheme.titleMedium,
+            ),
+          ),
+        ),
+        header: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (s.isProgram)
+              Card(
+                key: const Key('edit-program-notice'),
+                color: AppColors.of(context).warnSoft,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.info_outline,
+                        color: AppColors.of(context).warn,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text(l.historyEditProgramNotice)),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ListTile(
-            key: const Key('edit-start'),
-            contentPadding: EdgeInsets.zero,
-            title: Text(l.historyEditStart),
-            trailing: Text('${formatDate(startLocal)} ${formatClock(startLocal)}', style: AppNum.table(context)),
-            onTap: () => _editTime(s, start: true),
-          ),
-          if (s.endedAt != null)
             ListTile(
-              key: const Key('edit-end'),
+              key: const Key('edit-start'),
               contentPadding: EdgeInsets.zero,
-              title: Text(l.historyEditEnd),
-              trailing: Builder(builder: (_) {
-                final e = sessionLocalTime(s.endedAt!, s.tz);
-                return Text('${formatDate(e)} ${formatClock(e)}', style: AppNum.table(context));
-              }),
-              onTap: () => _editTime(s, start: false),
+              title: Text(l.historyEditStart),
+              trailing: Text(
+                '${formatDate(startLocal)} ${formatClock(startLocal)}',
+                style: AppNum.table(context),
+              ),
+              onTap: () => _editTime(s, start: true),
             ),
-          const SizedBox(height: 8),
-          TextField(
-            key: const Key('edit-note'),
-            controller: _note,
-            maxLines: null,
-            decoration: InputDecoration(labelText: l.historyEditNote, border: const OutlineInputBorder()),
-            onChanged: (v) {
-              final t = v.trim();
-              _run(() => ref.read(sessionRepositoryProvider).updateSessionNote(s.id, t.isEmpty ? null : t));
-            },
-          ),
-          const SizedBox(height: 12),
-          for (final se in s.exercises)
-            Card(
-              key: Key('edit-ex-${se.id}'),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+            if (s.endedAt != null)
+              ListTile(
+                key: const Key('edit-end'),
+                contentPadding: EdgeInsets.zero,
+                title: Text(l.historyEditEnd),
+                trailing: Builder(
+                  builder: (_) {
+                    final e = sessionLocalTime(s.endedAt!, s.tz);
+                    return Text(
+                      '${formatDate(e)} ${formatClock(e)}',
+                      style: AppNum.table(context),
+                    );
+                  },
+                ),
+                onTap: () => _editTime(s, start: false),
+              ),
+            const SizedBox(height: 8),
+            TextField(
+              key: const Key('edit-note'),
+              controller: _note,
+              maxLines: null,
+              decoration: InputDecoration(
+                labelText: l.historyEditNote,
+                border: const OutlineInputBorder(),
+              ),
+              onChanged: (v) {
+                final t = v.trim();
+                _run(
+                  () => ref
+                      .read(sessionRepositoryProvider)
+                      .updateSessionNote(s.id, t.isEmpty ? null : t),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+        footer: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 6),
+            OutlinedButton.icon(
+              key: const Key('edit-add-exercise'),
+              icon: const Icon(Icons.add),
+              label: Text(l.historyEditAddExercise),
+              onPressed: () => _addExercise(s),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+        children: [
+          for (var ei = 0; ei < s.exercises.length; ei++)
+            Builder(
+              key: Key('edit-ex-${s.exercises[ei].id}'),
+              builder: (context) {
+                final se = s.exercises[ei];
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: Text(
-                            exercises[se.exerciseId] == null ? '…' : exerciseDisplayName(context, exercises[se.exerciseId]!),
-                            style: theme.textTheme.titleMedium,
+                        Row(
+                          children: [
+                            ReorderableDragStartListener(
+                              index: ei,
+                              child: Padding(
+                                key: Key('edit-ex-handle-${se.id}'),
+                                padding: const EdgeInsets.only(
+                                  right: 8,
+                                  top: 8,
+                                  bottom: 8,
+                                ),
+                                child: const Icon(Icons.drag_handle),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                exercises[se.exerciseId] == null
+                                    ? '…'
+                                    : exerciseDisplayName(
+                                        context,
+                                        exercises[se.exerciseId]!,
+                                      ),
+                                style: theme.textTheme.titleMedium,
+                              ),
+                            ),
+                            IconButton(
+                              key: Key('edit-ex-delete-${se.id}'),
+                              tooltip: l.historyEditRemoveExercise,
+                              icon: const Icon(Icons.delete_outline),
+                              onPressed: () => _removeExercise(se),
+                            ),
+                          ],
+                        ),
+                        ReorderableListView.builder(
+                          key: Key('edit-sets-${se.id}'),
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          buildDefaultDragHandles: false,
+                          itemCount: se.sets.length,
+                          onReorderStart: (_) => reorderHaptic(),
+                          onReorderItem: (o, n) => _reorderSets(se, o, n),
+                          proxyDecorator: reorderProxy(),
+                          itemBuilder: (context, i) => _EditSetRow(
+                            key: ValueKey('row-${se.sets[i].id}'),
+                            set: se.sets[i],
+                            index: i,
+                            type:
+                                exercises[se.exerciseId]?.type ??
+                                ExerciseType.BARBELL,
+                            unit: unit,
+                            onSave: (w) => _run(
+                              () => ref
+                                  .read(sessionRepositoryProvider)
+                                  .updateSet(w),
+                            ),
+                            onDelete: () => _run(
+                              () => ref
+                                  .read(sessionRepositoryProvider)
+                                  .deleteSet(se.sets[i].id),
+                            ),
                           ),
                         ),
-                        IconButton(
-                          key: Key('edit-ex-delete-${se.id}'),
-                          tooltip: l.historyEditRemoveExercise,
-                          icon: const Icon(Icons.delete_outline),
-                          onPressed: () => _removeExercise(se),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: TextButton.icon(
+                            key: Key('edit-set-add-${se.id}'),
+                            icon: const Icon(Icons.add),
+                            label: Text(l.historyEditAddSet),
+                            onPressed: () => _addSet(s, se),
+                          ),
                         ),
                       ],
                     ),
-                    for (var i = 0; i < se.sets.length; i++)
-                      _EditSetRow(
-                        key: ValueKey('row-${se.sets[i].id}'),
-                        set: se.sets[i],
-                        index: i,
-                        isLast: i == se.sets.length - 1,
-                        type: exercises[se.exerciseId]?.type ?? ExerciseType.BARBELL,
-                        unit: unit,
-                        onSave: (w) => _run(() => ref.read(sessionRepositoryProvider).updateSet(w)),
-                        onDelete: () => _run(() => ref.read(sessionRepositoryProvider).deleteSet(se.sets[i].id)),
-                        onMove: (d) => _moveSet(se, i, d),
-                      ),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton.icon(
-                        key: Key('edit-set-add-${se.id}'),
-                        icon: const Icon(Icons.add),
-                        label: Text(l.historyEditAddSet),
-                        onPressed: () => _addSet(s, se),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
-          OutlinedButton.icon(
-            key: const Key('edit-add-exercise'),
-            icon: const Icon(Icons.add),
-            label: Text(l.historyEditAddExercise),
-            onPressed: () => _addExercise(s),
-          ),
-          const SizedBox(height: 24),
         ],
       ),
     );
@@ -284,21 +405,17 @@ class _EditSetRow extends StatefulWidget {
     super.key,
     required this.set,
     required this.index,
-    required this.isLast,
     required this.type,
     required this.unit,
     required this.onSave,
     required this.onDelete,
-    required this.onMove,
   });
   final WorkoutSet set;
   final int index;
-  final bool isLast;
   final ExerciseType type;
   final WeightUnit unit;
   final void Function(WorkoutSet) onSave;
   final VoidCallback onDelete;
-  final void Function(int delta) onMove;
 
   @override
   State<_EditSetRow> createState() => _EditSetRowState();
@@ -311,7 +428,8 @@ class _EditSetRowState extends State<_EditSetRow> {
   bool _repsBad = false;
 
   bool get _bodyweight => widget.type == ExerciseType.BODYWEIGHT;
-  double? get _modelWeight => _bodyweight ? widget.set.addedWeightKg : widget.set.weightKg;
+  double? get _modelWeight =>
+      _bodyweight ? widget.set.addedWeightKg : widget.set.weightKg;
 
   @override
   void initState() {
@@ -324,8 +442,10 @@ class _EditSetRowState extends State<_EditSetRow> {
   void didUpdateWidget(_EditSetRow old) {
     super.didUpdateWidget(old);
     // 입력창이 뜻하는 값이 모델과 다를 때만 덮어쓴다(타이핑 중·오류 중 보호).
-    if (!_weightBad && _parseKg(_weight.text) != _modelWeight) _weight.text = _kgText(_modelWeight);
-    if (!_repsBad && int.tryParse(_reps.text.trim()) != widget.set.reps) _reps.text = widget.set.reps?.toString() ?? '';
+    if (!_weightBad && _parseKg(_weight.text) != _modelWeight)
+      _weight.text = _kgText(_modelWeight);
+    if (!_repsBad && int.tryParse(_reps.text.trim()) != widget.set.reps)
+      _reps.text = widget.set.reps?.toString() ?? '';
   }
 
   @override
@@ -335,7 +455,8 @@ class _EditSetRowState extends State<_EditSetRow> {
     super.dispose();
   }
 
-  String _kgText(double? kg) => kg == null ? '' : Units.format(kg, widget.unit, withUnit: false);
+  String _kgText(double? kg) =>
+      kg == null ? '' : Units.format(kg, widget.unit, withUnit: false);
 
   double? _parseKg(String t) {
     final v = double.tryParse(t.trim().replaceAll(',', '.'));
@@ -359,11 +480,13 @@ class _EditSetRowState extends State<_EditSetRow> {
       _repsBad = rBad;
     });
     if (wBad || rBad) return;
-    widget.onSave(widget.set.copyWith(
-      weightKg: _bodyweight ? null : () => weight,
-      addedWeightKg: _bodyweight ? () => weight : null,
-      reps: () => reps,
-    ));
+    widget.onSave(
+      widget.set.copyWith(
+        weightKg: _bodyweight ? null : () => weight,
+        addedWeightKg: _bodyweight ? () => weight : null,
+        reps: () => reps,
+      ),
+    );
   }
 
   @override
@@ -387,7 +510,10 @@ class _EditSetRowState extends State<_EditSetRow> {
                   child: Text(
                     w.isWarmup ? l.sessionWarmupShort : '${widget.index + 1}',
                     textAlign: TextAlign.center,
-                    style: AppNum.table(context, color: AppColors.of(context).fg2),
+                    style: AppNum.table(
+                      context,
+                      color: AppColors.of(context).fg2,
+                    ),
                   ),
                 ),
               ),
@@ -396,15 +522,24 @@ class _EditSetRowState extends State<_EditSetRow> {
                 child: TextField(
                   key: Key('edit-weight-$id'),
                   controller: _weight,
-                  keyboardType: TextInputType.numberWithOptions(decimal: true, signed: _bodyweight),
-                  inputFormatters: [FilteringTextInputFormatter.allow(RegExp(_bodyweight ? r'[-0-9.,]' : r'[0-9.,]'))],
+                  keyboardType: TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: _bodyweight,
+                  ),
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(_bodyweight ? r'[-0-9.,]' : r'[0-9.,]'),
+                    ),
+                  ],
                   textAlign: TextAlign.center,
                   style: AppNum.style(context, 20),
                   onChanged: (_) => _commit(),
                   decoration: InputDecoration(
                     isDense: true,
                     border: const OutlineInputBorder(),
-                    labelText: _bodyweight ? l.historyEditAdded(unitName) : l.historyEditWeight(unitName),
+                    labelText: _bodyweight
+                        ? l.historyEditAdded(unitName)
+                        : l.historyEditWeight(unitName),
                     errorText: _weightBad ? l.historyEditInvalid : null,
                   ),
                 ),
@@ -431,7 +566,15 @@ class _EditSetRowState extends State<_EditSetRow> {
           ),
           Row(
             children: [
-              const SizedBox(width: 32),
+              ReorderableDragStartListener(
+                index: widget.index,
+                child: SizedBox(
+                  key: Key('edit-set-handle-$id'),
+                  width: 32,
+                  height: 40,
+                  child: const Icon(Icons.drag_handle, size: 20),
+                ),
+              ),
               Expanded(
                 child: Wrap(
                   crossAxisAlignment: WrapCrossAlignment.center,
@@ -452,18 +595,6 @@ class _EditSetRowState extends State<_EditSetRow> {
                       ),
                   ],
                 ),
-              ),
-              IconButton(
-                key: Key('edit-set-up-$id'),
-                tooltip: l.historyEditMoveUp,
-                icon: const Icon(Icons.arrow_upward, size: 20),
-                onPressed: widget.index == 0 ? null : () => widget.onMove(-1),
-              ),
-              IconButton(
-                key: Key('edit-set-down-$id'),
-                tooltip: l.historyEditMoveDown,
-                icon: const Icon(Icons.arrow_downward, size: 20),
-                onPressed: widget.isLast ? null : () => widget.onMove(1),
               ),
               IconButton(
                 key: Key('edit-set-delete-$id'),

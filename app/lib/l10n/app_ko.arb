@@ -612,6 +612,7 @@
     }
   },
   "sessionReorderHandle": "순서 변경",
+  "sessionReorderSets": "세트 순서 바꾸기",
   "sessionSummaryTitle": "세션 요약",
   "sessionSummarySets": "총 세트",
   "sessionSummaryVolume": "볼륨",

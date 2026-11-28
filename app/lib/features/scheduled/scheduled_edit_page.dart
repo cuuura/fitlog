@@ -10,6 +10,7 @@ import '../../core/ids.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/units.dart';
+import '../../core/widgets/reorder.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../calendar/calendar_logic.dart';
@@ -23,7 +24,8 @@ const kScheduledMaxSets = 50;
 const kScheduledMaxRestSec = 3600;
 
 class _SetDraft {
-  _SetDraft({
+  _SetDraft(
+    this.id, {
     this.base = const ScheduledSet(),
     String weight = '',
     String reps = '',
@@ -35,17 +37,13 @@ class _SetDraft {
        repsMax = TextEditingController(text: repsMax),
        rir = TextEditingController(text: rir);
 
+  /// 항목 안에서 안정적인 번호(테스트 키용). 순서를 바꿔도 그대로다.
+  final int id;
+
   /// 화면에 없는 필드(targetRpe·targetDurationSec)를 고쳐 쓸 때 그대로 보존하려고 둔다.
   final ScheduledSet base;
   bool warmup;
   final TextEditingController weight, reps, repsMax, rir;
-
-  _SetDraft copyValues() => _SetDraft(
-    weight: weight.text,
-    reps: reps.text,
-    repsMax: repsMax.text,
-    rir: rir.text,
-  );
 
   void dispose() {
     for (final c in [weight, reps, repsMax, rir]) {
@@ -55,16 +53,37 @@ class _SetDraft {
 }
 
 class _ItemDraft {
-  _ItemDraft(this.exerciseId, {String note = '', String rest = '', List<_SetDraft>? sets})
+  _ItemDraft(this.id, this.exerciseId, {String note = '', String rest = ''})
     : uid = UniqueKey(),
       note = TextEditingController(text: note),
-      rest = TextEditingController(text: rest),
-      sets = sets ?? [_SetDraft()];
+      rest = TextEditingController(text: rest);
 
+  /// 화면 안에서 안정적인 번호(테스트 키용). 순서를 바꿔도 그대로다.
+  final int id;
   final Key uid;
   final String exerciseId;
   final TextEditingController note, rest;
-  final List<_SetDraft> sets;
+  final List<_SetDraft> sets = [];
+  int _setSeq = 0;
+
+  _SetDraft addSet({
+    ScheduledSet base = const ScheduledSet(),
+    String weight = '',
+    String reps = '',
+    String repsMax = '',
+    String rir = '',
+  }) {
+    final d = _SetDraft(
+      _setSeq++,
+      base: base,
+      weight: weight,
+      reps: reps,
+      repsMax: repsMax,
+      rir: rir,
+    );
+    sets.add(d);
+    return d;
+  }
 
   void dispose() {
     note.dispose();
@@ -92,6 +111,7 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
   final _title = TextEditingController();
   final _note = TextEditingController();
   final _items = <_ItemDraft>[];
+  int _itemSeq = 0;
   DateTime? _date;
   ScheduledWorkout? _existing;
   bool _loading = true;
@@ -116,17 +136,25 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
     super.dispose();
   }
 
-  String _numText(num? v) => v == null ? '' : (v == v.roundToDouble() ? v.toInt().toString() : v.toString());
+  String _numText(num? v) => v == null
+      ? ''
+      : (v == v.roundToDouble() ? v.toInt().toString() : v.toString());
 
   Future<void> _load() async {
     final unit = ref.read(settingsProvider).weightUnit;
     final today = dateOnly(ref.read(clockProvider)().toLocal());
     if (_isNew) {
-      _date = (widget.initialDate == null ? null : parsePlannedDate(widget.initialDate!)) ?? today;
+      _date =
+          (widget.initialDate == null
+              ? null
+              : parsePlannedDate(widget.initialDate!)) ??
+          today;
       if (mounted) setState(() => _loading = false);
       return;
     }
-    final w = await ref.read(scheduledWorkoutRepositoryProvider).byId(widget.scheduledId!);
+    final w = await ref
+        .read(scheduledWorkoutRepositoryProvider)
+        .byId(widget.scheduledId!);
     if (!mounted) return;
     setState(() {
       _existing = w;
@@ -135,23 +163,24 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
         _title.text = w.title;
         _note.text = w.note ?? '';
         for (final i in w.items) {
-          _items.add(
-            _ItemDraft(
-              i.exerciseId,
-              note: i.note ?? '',
-              rest: _numText(i.restSec),
-              sets: [
-                for (final s in i.sets)
-                  _SetDraft(
-                    base: s,
-                    weight: s.targetWeightKg == null ? '' : Units.format(s.targetWeightKg!, unit, withUnit: false),
-                    reps: _numText(s.targetReps),
-                    repsMax: _numText(s.targetRepsMax),
-                    rir: _numText(s.targetRir),
-                  ),
-              ],
-            ),
+          final item = _ItemDraft(
+            _itemSeq++,
+            i.exerciseId,
+            note: i.note ?? '',
+            rest: _numText(i.restSec),
           );
+          for (final st in i.sets) {
+            item.addSet(
+              base: st,
+              weight: st.targetWeightKg == null
+                  ? ''
+                  : Units.format(st.targetWeightKg!, unit, withUnit: false),
+              reps: _numText(st.targetReps),
+              repsMax: _numText(st.targetRepsMax),
+              rir: _numText(st.targetRir),
+            );
+          }
+          _items.add(item);
         }
       }
       _loading = false;
@@ -173,20 +202,37 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
     if (_items.length >= kScheduledMaxItems) return;
     final id = await context.push<String>(Routes.pickExercise);
     if (id == null || !mounted) return;
-    setState(() => _items.add(_ItemDraft(id)));
+    setState(() => _items.add(_ItemDraft(_itemSeq++, id)..addSet()));
   }
 
   void _addSet(_ItemDraft item) {
     if (item.sets.length >= kScheduledMaxSets) return;
-    setState(() => item.sets.add(item.sets.isEmpty ? _SetDraft() : item.sets.last.copyValues()));
+    setState(() {
+      final last = item.sets.isEmpty ? null : item.sets.last;
+      if (last == null) {
+        item.addSet();
+      } else {
+        item.addSet(
+          weight: last.weight.text,
+          reps: last.reps.text,
+          repsMax: last.repsMax.text,
+          rir: last.rir.text,
+        );
+      }
+    });
   }
 
-  void _move(int i, int delta) {
-    final j = i + delta;
-    if (j < 0 || j >= _items.length) return;
+  void _reorderItems(int from, int to) {
     setState(() {
-      final it = _items.removeAt(i);
-      _items.insert(j, it);
+      final it = _items.removeAt(from);
+      _items.insert(to, it);
+    });
+  }
+
+  void _reorderSets(_ItemDraft item, int from, int to) {
+    setState(() {
+      final st = item.sets.removeAt(from);
+      item.sets.insert(to, st);
     });
   }
 
@@ -274,7 +320,14 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
         );
       }
       final note = it.note.text.trim();
-      items.add(ScheduledItem(exerciseId: it.exerciseId, note: note.isEmpty ? null : note, restSec: rest, sets: sets));
+      items.add(
+        ScheduledItem(
+          exerciseId: it.exerciseId,
+          note: note.isEmpty ? null : note,
+          restSec: rest,
+          sets: sets,
+        ),
+      );
     }
     final note = _note.text.trim();
     final date = _date ?? dateOnly(ref.read(clockProvider)().toLocal());
@@ -323,7 +376,8 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final unit = ref.watch(settingsProvider).weightUnit;
-    final names = ref.watch(exerciseMapProvider).value ?? const <String, Exercise>{};
+    final names =
+        ref.watch(exerciseMapProvider).value ?? const <String, Exercise>{};
     final date = _date;
 
     Widget body;
@@ -332,76 +386,107 @@ class _ScheduledEditPageState extends ConsumerState<ScheduledEditPage> {
     } else if (!_isNew && _existing == null) {
       body = Center(child: Text(l.schedActionError));
     } else {
-      body = ListView(
+      String nameOf(_ItemDraft it) => names[it.exerciseId] == null
+          ? it.exerciseId
+          : exerciseDisplayName(context, names[it.exerciseId]!);
+      body = ReorderableListView(
         padding: const EdgeInsets.all(16),
+        buildDefaultDragHandles: false,
+        onReorderStart: (_) => reorderHaptic(),
+        onReorderItem: _reorderItems,
+        proxyDecorator: reorderProxy(
+          compact: (i) => Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(nameOf(_items[i]), style: theme.textTheme.titleMedium),
+          ),
+        ),
+        header: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('sched-date'),
+              onPressed: _pickDate,
+              icon: const Icon(Icons.event),
+              label: Text(
+                '${l.schedFieldDate}  ${date == null ? '' : dayKey(date)}',
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              key: const Key('sched-title'),
+              controller: _title,
+              maxLength: 100,
+              decoration: InputDecoration(
+                labelText: l.schedFieldTitle,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 4),
+            TextField(
+              key: const Key('sched-note'),
+              controller: _note,
+              maxLength: 1000,
+              maxLines: null,
+              decoration: InputDecoration(
+                labelText: l.schedFieldNote,
+                border: const OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+        footer: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            OutlinedButton.icon(
+              key: const Key('sched-add-exercise'),
+              onPressed: _items.length >= kScheduledMaxItems
+                  ? null
+                  : _addExercise,
+              icon: const Icon(Icons.add),
+              label: Text(l.schedAddExercise),
+            ),
+            if (_error != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 12),
+                child: Text(
+                  _error!,
+                  key: const Key('sched-error'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.error,
+                  ),
+                ),
+              ),
+            const SizedBox(height: 16),
+            FilledButton(
+              key: const Key('sched-save'),
+              onPressed: _saving ? null : _save,
+              child: Text(l.schedSave),
+            ),
+          ],
+        ),
         children: [
-          OutlinedButton.icon(
-            key: const Key('sched-date'),
-            onPressed: _pickDate,
-            icon: const Icon(Icons.event),
-            label: Text('${l.schedFieldDate}  ${date == null ? '' : dayKey(date)}'),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            key: const Key('sched-title'),
-            controller: _title,
-            maxLength: 100,
-            decoration: InputDecoration(labelText: l.schedFieldTitle, border: const OutlineInputBorder()),
-          ),
-          const SizedBox(height: 4),
-          TextField(
-            key: const Key('sched-note'),
-            controller: _note,
-            maxLength: 1000,
-            maxLines: null,
-            decoration: InputDecoration(labelText: l.schedFieldNote, border: const OutlineInputBorder()),
-          ),
-          const SizedBox(height: 8),
           for (var i = 0; i < _items.length; i++)
             _ItemCard(
               key: _items[i].uid,
               index: i,
               item: _items[i],
-              name: names[_items[i].exerciseId] == null
-                  ? _items[i].exerciseId
-                  : exerciseDisplayName(context, names[_items[i].exerciseId]!),
+              name: nameOf(_items[i]),
               unit: unit,
-              isFirst: i == 0,
-              isLast: i == _items.length - 1,
-              onUp: () => _move(i, -1),
-              onDown: () => _move(i, 1),
               onRemove: () => _removeItem(i),
               onAddSet: () => _addSet(_items[i]),
               onRemoveSet: (j) => _removeSet(_items[i], j),
+              onReorderSets: (o, n) => _reorderSets(_items[i], o, n),
               onChanged: () => setState(() {}),
             ),
-          OutlinedButton.icon(
-            key: const Key('sched-add-exercise'),
-            onPressed: _items.length >= kScheduledMaxItems ? null : _addExercise,
-            icon: const Icon(Icons.add),
-            label: Text(l.schedAddExercise),
-          ),
-          if (_error != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: Text(
-                _error!,
-                key: const Key('sched-error'),
-                style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.error),
-              ),
-            ),
-          const SizedBox(height: 16),
-          FilledButton(
-            key: const Key('sched-save'),
-            onPressed: _saving ? null : _save,
-            child: Text(l.schedSave),
-          ),
         ],
       );
     }
 
     return Scaffold(
-      appBar: AppBar(title: Text(_isNew ? l.schedEditNewTitle : l.schedEditEditTitle)),
+      appBar: AppBar(
+        title: Text(_isNew ? l.schedEditNewTitle : l.schedEditEditTitle),
+      ),
       body: body,
     );
   }
@@ -414,11 +499,8 @@ class _ItemCard extends StatelessWidget {
     required this.item,
     required this.name,
     required this.unit,
-    required this.isFirst,
-    required this.isLast,
-    required this.onUp,
-    required this.onDown,
     required this.onRemove,
+    required this.onReorderSets,
     required this.onAddSet,
     required this.onRemoveSet,
     required this.onChanged,
@@ -427,8 +509,8 @@ class _ItemCard extends StatelessWidget {
   final _ItemDraft item;
   final String name;
   final WeightUnit unit;
-  final bool isFirst, isLast;
-  final VoidCallback onUp, onDown, onRemove, onAddSet, onChanged;
+  final VoidCallback onRemove, onAddSet, onChanged;
+  final void Function(int, int) onReorderSets;
   final void Function(int) onRemoveSet;
 
   @override
@@ -436,8 +518,9 @@ class _ItemCard extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final unitName = unit == WeightUnit.KG ? 'kg' : 'lb';
+    final id = item.id;
     return Card(
-      key: Key('sched-item-$index'),
+      key: Key('sched-item-$id'),
       margin: const EdgeInsets.symmetric(vertical: 6),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -446,21 +529,17 @@ class _ItemCard extends StatelessWidget {
           children: [
             Row(
               children: [
+                ReorderableDragStartListener(
+                  index: index,
+                  child: Padding(
+                    key: Key('sched-handle-$id'),
+                    padding: const EdgeInsets.only(right: 8, top: 8, bottom: 8),
+                    child: const Icon(Icons.drag_handle),
+                  ),
+                ),
                 Expanded(child: Text(name, style: theme.textTheme.titleMedium)),
                 IconButton(
-                  key: Key('sched-up-$index'),
-                  tooltip: l.schedMoveUp,
-                  onPressed: isFirst ? null : onUp,
-                  icon: const Icon(Icons.arrow_upward),
-                ),
-                IconButton(
-                  key: Key('sched-down-$index'),
-                  tooltip: l.schedMoveDown,
-                  onPressed: isLast ? null : onDown,
-                  icon: const Icon(Icons.arrow_downward),
-                ),
-                IconButton(
-                  key: Key('sched-remove-$index'),
+                  key: Key('sched-remove-$id'),
                   tooltip: l.schedRemoveExercise,
                   onPressed: onRemove,
                   icon: const Icon(Icons.delete_outline),
@@ -469,7 +548,7 @@ class _ItemCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             TextField(
-              key: Key('sched-rest-$index'),
+              key: Key('sched-rest-$id'),
               controller: item.rest,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -480,22 +559,33 @@ class _ItemCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            for (var j = 0; j < item.sets.length; j++)
-              _SetEditor(
+            ReorderableListView.builder(
+              key: Key('sched-sets-$id'),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              buildDefaultDragHandles: false,
+              itemCount: item.sets.length,
+              onReorderStart: (_) => reorderHaptic(),
+              onReorderItem: onReorderSets,
+              proxyDecorator: reorderProxy(),
+              itemBuilder: (context, j) => _SetEditor(
                 key: ValueKey(item.sets[j]),
                 item: item.sets[j],
-                itemIndex: index,
+                itemId: id,
                 setIndex: j,
                 weightLabel: l.schedFieldWeight(unitName),
                 canRemove: item.sets.length > 1,
                 onRemove: () => onRemoveSet(j),
                 onChanged: onChanged,
               ),
+            ),
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: TextButton.icon(
-                key: Key('sched-add-set-$index'),
-                onPressed: item.sets.length >= kScheduledMaxSets ? null : onAddSet,
+                key: Key('sched-add-set-$id'),
+                onPressed: item.sets.length >= kScheduledMaxSets
+                    ? null
+                    : onAddSet,
                 icon: const Icon(Icons.add),
                 label: Text(l.schedAddSet),
               ),
@@ -511,7 +601,7 @@ class _SetEditor extends StatelessWidget {
   const _SetEditor({
     super.key,
     required this.item,
-    required this.itemIndex,
+    required this.itemId,
     required this.setIndex,
     required this.weightLabel,
     required this.canRemove,
@@ -519,7 +609,7 @@ class _SetEditor extends StatelessWidget {
     required this.onChanged,
   });
   final _SetDraft item;
-  final int itemIndex, setIndex;
+  final int itemId, setIndex;
   final String weightLabel;
   final bool canRemove;
   final VoidCallback onRemove, onChanged;
@@ -528,14 +618,24 @@ class _SetEditor extends StatelessWidget {
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final theme = Theme.of(context);
-    final k = '$itemIndex-$setIndex';
-    Widget field(String id, TextEditingController c, String label, {bool decimal = false, int flex = 1}) => Expanded(
+    final k = '$itemId-${item.id}';
+    Widget field(
+      String id,
+      TextEditingController c,
+      String label, {
+      bool decimal = false,
+      int flex = 1,
+    }) => Expanded(
       flex: flex,
       child: TextField(
         key: Key('sched-$id-$k'),
         controller: c,
         keyboardType: TextInputType.numberWithOptions(decimal: decimal),
-        decoration: InputDecoration(isDense: true, labelText: label, border: const OutlineInputBorder()),
+        decoration: InputDecoration(
+          isDense: true,
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
       ),
     );
     return Padding(
@@ -545,8 +645,18 @@ class _SetEditor extends StatelessWidget {
         children: [
           Row(
             children: [
+              ReorderableDragStartListener(
+                index: setIndex,
+                child: Padding(
+                  key: Key('sched-set-handle-$k'),
+                  padding: const EdgeInsets.only(right: 8, top: 8, bottom: 8),
+                  child: const Icon(Icons.drag_handle, size: 20),
+                ),
+              ),
               Text(
-                item.warmup ? l.schedWarmup : l.sessionTableSetLabel(setIndex + 1),
+                item.warmup
+                    ? l.schedWarmup
+                    : l.sessionTableSetLabel(setIndex + 1),
                 style: theme.textTheme.labelLarge,
               ),
               const SizedBox(width: 8),
