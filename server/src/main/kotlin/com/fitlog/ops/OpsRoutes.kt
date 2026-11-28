@@ -37,6 +37,11 @@ private val SANE_REQUEST_ID = Regex("^[A-Za-z0-9._-]{1,64}$")
 
 /** A3 소유. 루트(인증 없음): GET /health/ready, /privacy, /account-deletion */
 fun Route.opsRoutes(config: AppConfig) {
+    // 배포 버전: 이미지 빌드 커밋(FITLOG_VERSION). 배포가 최신 main 인지 확인하는 용도, 비밀 아님
+    get("/health/version") {
+        call.response.header(HttpHeaders.CacheControl, "no-store")
+        call.respondText(System.getenv("FITLOG_VERSION")?.ifBlank { null } ?: "dev")
+    }
     // 준비 상태: DB 에 SELECT 1 이 되면 200, 아니면 503 (업타임 모니터·컨테이너 HEALTHCHECK 용)
     get("/health/ready") {
         call.response.header(HttpHeaders.CacheControl, "no-store")

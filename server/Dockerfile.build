@@ -38,6 +38,9 @@ USER fitlog
 ENV PORT=8080 \
     JAVA_OPTS="-XX:MaxRAMPercentage=60 -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -Xss512k -XX:+ExitOnOutOfMemoryError"
 EXPOSE 8080
+# 배포된 버전 확인용(GET /health/version). 마지막 단계라 빌드 캐시를 깨지 않는다
+ARG GIT_SHA=unknown
+ENV FITLOG_VERSION=$GIT_SHA
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
     CMD curl -fsS "http://localhost:${PORT}/health/ready" || exit 1

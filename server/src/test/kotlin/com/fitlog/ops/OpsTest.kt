@@ -41,6 +41,13 @@ class OpsTest {
     }
 
     @Test
+    fun `version endpoint is public and not empty`() = opsApp {
+        val res = client.get("/health/version")
+        assertEquals(HttpStatusCode.OK, res.status)
+        assertTrue(res.bodyAsText().isNotBlank())
+    }
+
+    @Test
     fun `privacy page substitutes placeholders and sets security headers`() = opsApp {
         val res = client.get("/privacy")
         assertEquals(HttpStatusCode.OK, res.status)
