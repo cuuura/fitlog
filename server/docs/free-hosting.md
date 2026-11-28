@@ -42,3 +42,5 @@ flutter run --dart-define=API_BASE_URL=https://fitlog-server-xxxx.onrender.com
 ## 출시 전
 
 테스트용 아이디·비밀번호 로그인은 출시 전에 `PASSWORD_LOGIN_ENABLED` 를 꺼야 한다.
+
+배포된 버전 확인: `GET /health/version` 은 이미지를 빌드한 커밋 SHA 를 돌려준다. keep-awake 워크플로 로그에도 찍힌다. main 최신 커밋과 다르면 Render 가 이전 이미지를 받은 것이니, 이미지 빌드(server-image)가 끝난 뒤 Render 에서 Manual Deploy 를 하거나 RENDER_DEPLOY_HOOK_URL 시크릿을 넣어 둔다.
