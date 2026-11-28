@@ -17,12 +17,14 @@ import com.fitlog.core.lockUser
 import com.fitlog.core.notFound
 import com.fitlog.core.validation
 import com.fitlog.engine.ProgramDefinition
+import com.fitlog.engine.ProgramEngine
 import com.fitlog.exercise.EXERCISE_TYPES
 import com.fitlog.exercise.MUSCLES
 import com.fitlog.exercise.toExercise
 import com.fitlog.oauth.McpPrincipal
 import com.fitlog.program.catalog.ExerciseIndex
 import com.fitlog.program.catalog.Program
+import com.fitlog.program.Durations
 import com.fitlog.program.catalog.ProgramSummary
 import com.fitlog.program.instance.Instance
 import com.fitlog.program.schema.ProgramValidator
@@ -181,6 +183,7 @@ private fun ResultRow.programSummary(): ProgramSummary {
         description = def.description, category = def.category, level = def.level, family = def.family,
         variantLabel = def.variantLabel, aka = def.aka, rules = def.rules, builtIn = this[Programs.ownerId] == null,
         dayCount = def.days.size, source = this[Programs.sourceCol],
+        sessionMinutes = Durations.sessionMinutes(ProgramEngine, this[Programs.definition]),
     )
 }
 
@@ -191,6 +194,7 @@ private fun ResultRow.programFull(): Program {
         description = def.description, category = def.category, level = def.level, family = def.family,
         variantLabel = def.variantLabel, aka = def.aka, rules = def.rules, builtIn = this[Programs.ownerId] == null,
         dayCount = def.days.size, source = this[Programs.sourceCol], definition = def,
+        sessionMinutes = Durations.sessionMinutes(ProgramEngine, this[Programs.definition]),
     )
 }
 
@@ -212,6 +216,7 @@ private val programSummaryOut = S.obj(
     "aka" to S.arr(S.str(), "흔히 부르는 이름"),
     "rules" to S.obj("progress" to S.str(), "failure" to S.str(), "deload" to S.str(), required = listOf("progress", "failure", "deload")),
     "builtIn" to S.bool(), "dayCount" to S.int(), "source" to S.str(),
+    "sessionMinutes" to S.obj("min" to S.int(), "max" to S.int(), required = listOf("min", "max"), desc = "회당 어림 시간(분) 범위"),
     required = listOf("id", "name", "builtIn", "dayCount", "source"),
 )
 private val instanceOut = S.obj(
@@ -347,6 +352,7 @@ internal val READ_TOOLS: List<Tool> = listOf(
             "program" to S.obj(
                 "id" to idS, "templateKey" to S.str(), "name" to S.str(), "builtIn" to S.bool(), "dayCount" to S.int(),
                 "definition" to S.anyObj("program.schema.json 형식"),
+                "sessionMinutes" to S.obj("min" to S.int(), "max" to S.int(), required = listOf("min", "max"), desc = "회당 어림 시간(분) 범위"),
                 required = listOf("id", "name", "definition"),
             ),
             required = listOf("program"),

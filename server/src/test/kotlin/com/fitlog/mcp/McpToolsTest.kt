@@ -308,6 +308,12 @@ class McpToolsTest {
             assertEquals("Asia/Seoul", startReq.tz)
             importer.calls.clear()
 
+            ctx.call("start_program", """{"program":{"templateKey":"stronglifts-5x5"},"startDate":"2026-11-02","working":{"squat":100},"skipPolicy":"FIXED_DATE","weekdays":{"A":"MON","B":"THU"}}""")
+            val wsp = importer.calls.single().second.bundle.jsonObject["startPrograms"]!!.jsonArray[0].jsonObject
+            assertEquals("THU", wsp["weekdays"]!!.jsonObject["B"]!!.jsonPrimitive.content)
+            assertTrue(ctx.call("start_program", """{"program":{"templateKey":"x"},"startDate":"2026-11-02","weekdays":"MON"}""").isError())
+            importer.calls.clear()
+
             ctx.call("log_session", """{"session":{"startedAt":"2026-11-01T10:00:00+09:00","exercises":[]}}""")
             assertEquals("2026-11-01T10:00:00+09:00", importer.calls.single().second.bundle.jsonObject["sessions"]!!.jsonArray[0].jsonObject["startedAt"]!!.jsonPrimitive.content)
             importer.calls.clear()

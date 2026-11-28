@@ -43,7 +43,17 @@ data class ProgramRules(val progress: String, val failure: String, val deload: S
 data class ExerciseRef(val id: String? = null, val name: String? = null)
 
 @Serializable
-data class Lift(val exercise: ExerciseRef, val tmFrom: String? = null)
+data class Lift(
+    val exercise: ExerciseRef,
+    val tmFrom: String? = null,
+    /** 시작 값을 비우면 from 종목 시작 값 × ratio 로 채운다(v1.1 계약 4절) */
+    val derive: Derive? = null,
+    /** WORKING 키만. 시작 때 비워도 되고, 첫 완료 회차의 최소 무게로 working 을 정한다 */
+    val fromFirstSession: Boolean = false,
+)
+
+@Serializable
+data class Derive(val from: String, val ratio: Double)
 
 @Serializable
 sealed interface Load {

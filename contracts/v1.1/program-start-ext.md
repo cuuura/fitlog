@@ -97,3 +97,41 @@
 - 보조 종목 카드(접힘, 선택): 날마다 보조 종목 추가(기존 종목 고르기 화면·세트·횟수·무게). 시작 성공 뒤 `PUT /program-instances/{id}/accessories`로 저장. 실패해도 시작은 성공으로 두고 안내
 - 회당 시간: 추가 시트 카드와 맞추기 화면에 "회당 약 45~70분"(sessionMinutes), 첫 운동 카드에 "약 55분"(estimatedMinutes). 값 없으면 숨김
 - 기간과 단계·RPE 카드는 v1.2 스레드의 PRG-17·PRG-19 필드가 들어온 뒤(이번 범위 아님)
+
+## 부록 A. 템플릿 지정
+
+기본 템플릿 20종 중 근거가 분명한 곳만 지정했다(기존 인스턴스는 저장된 정의 사본이라 영향 없음). 모두 "비우면 채운다"일 뿐 사용자가 값을 주면 그 값이 우선이다.
+
+### derive
+
+| 템플릿 | 종목 키 | 규칙 | 근거 |
+| --- | --- | --- | --- |
+| gzclp | `squat_t2`·`bench_t2`·`ohp_t2`·`deadlift_t2` | 같은 종목 T1 키 × 0.65 | GZCLP 안내의 T2 시작 무게 "T1 시작 무게의 약 65%". 반올림 내림이라 보수적 |
+| phul-4day | `front_squat` | `squat` × 0.8 | 프런트 스쿼트는 백 스쿼트의 약 80~85%로 보는 일반 코칭 관례의 하한 쪽 |
+| phul-4day | `incline_bb` | `bench` × 0.8 | 인클라인 벤치는 플랫 벤치의 약 80~85% 관례의 하한 쪽 |
+| reddit-ppl-6day | `bench_vol` | `bench` × 0.8 | 근비대일(8~12회)은 근력일(5회) 무게보다 가벼움. 5RM→8RM 환산(약 88%)보다 낮게 |
+| reddit-ppl-6day | `ohp_vol` | `ohp` × 0.8 | 위와 같음 |
+| reddit-ppl-6day | `rdl`·`rdl2` | `deadlift` × 0.6 | 루마니안 데드는 데드리프트의 약 60~70%, 8~12회 구간이라 하한 쪽 |
+| rippler-12week | `squat_t2` | `squat` × 0.8 | 프런트 스쿼트 변형(TM). 위 프런트 스쿼트 관례와 같음 |
+| rippler-12week | `bench_t2` | `bench` × 0.8 | 인클라인 벤치 변형(TM). 위와 같음 |
+| rippler-12week | `deadlift_t2` | `deadlift` × 0.7 | 루마니안 데드 변형(TM). RDL 약 60~70%의 상단 (TM 기준이라 약간 높게) |
+
+phul-4day의 `bench`·`squat`은 DOUBLE이라 시작 때 비울 수 있다. 그 경우 파생 키도 비운 채 시작하고 첫 운동에서 정해진다(두 키 모두 DOUBLE이라 가능).
+
+### fromFirstSession
+
+WORKING 키 중 기록이 없으면 처음 정하는 게 자연스러운 고립 보조(컬·레이즈·푸시다운·페이스 풀·카프·트라이셉스 익스텐션·플라이·풀오버)에 붙였다. 모두 DOUBLE 규칙이라 DOUBLE만으로도 시작 때 비울 수 있었으며, 이 표시는 앱의 "첫 운동에서 정하기" 안내와 `suggest`의 `optional`을 명시한다.
+
+| 템플릿 | 종목 키 |
+| --- | --- |
+| dumbbell-home-3day | `curl`, `pullover`, `lateral` |
+| phul-4day | `curl`, `skull`, `calf`, `fly`, `lateral`, `incline_curl`, `tri_ext` |
+| ppl-3day | `lateral`, `pushdown`, `face_pull`, `db_curl`, `calf` |
+| reddit-ppl-6day | `face`, `hammer`, `curl`, `pushdown`, `overext`, `lat`, `calf` 및 각 `…2` |
+| rippler-12week | `pushdown`, `lateral`, `face_pull`, `calf` |
+| upper-lower-4day | `db_curl`, `pushdown`, `lateral`, `oh_tri`, `hammer`, `calf` |
+
+## 부록 B. 구현 메모 (S2)
+
+- 검증 추가 규칙: `derive`와 `fromFirstSession` 모두 `tmFrom`과 함께 못 쓴다. `fromFirstSession`은 그 키에 LINEAR·STAGES·DOUBLE 규칙이 있어야 한다(없으면 정할 수 없음). `from`이 비워 시작할 수 있는 키(DOUBLE·fromFirstSession)면 파생 키는 WORKING이면서 LINEAR·STAGES·DOUBLE 규칙이 있어야 한다. `from`이 가리키는 상태 키가 파생 키 자신이거나 또 다른 파생 키면 에러.
+- 판정 시점 최소 무게는 워밍업 제외, 무게가 0보다 큰 세트만 본다. 무게 기록이 없으면 정해지지 않고 다음 회차로 미룬다.

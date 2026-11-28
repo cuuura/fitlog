@@ -25,12 +25,14 @@
     "lateral": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000017"
-      }
+      },
+      "fromFirstSession": true
     },
     "pushdown": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002d"
-      }
+      },
+      "fromFirstSession": true
     },
     "row": {
       "exercise": {
@@ -50,12 +52,14 @@
     "face_pull": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002e"
-      }
+      },
+      "fromFirstSession": true
     },
     "db_curl": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000019"
-      }
+      },
+      "fromFirstSession": true
     },
     "squat": {
       "exercise": {
@@ -80,7 +84,8 @@
     "calf": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002f"
-      }
+      },
+      "fromFirstSession": true
     }
   },
   "progression": {

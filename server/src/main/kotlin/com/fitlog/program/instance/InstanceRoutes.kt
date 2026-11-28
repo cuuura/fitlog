@@ -19,13 +19,16 @@ import com.fitlog.core.lockUser
 import com.fitlog.core.notFound
 import com.fitlog.core.userId
 import com.fitlog.core.validation
+import com.fitlog.engine.EngineSettings
 import com.fitlog.engine.Needs
+import com.fitlog.engine.PlannedDay
 import com.fitlog.engine.PlannedExercise
 import com.fitlog.engine.PlannedSet
 import com.fitlog.engine.ProgramCalculator
 import com.fitlog.engine.ProgramDefinition
 import com.fitlog.engine.ProgramState
 import com.fitlog.engine.SkipPolicy
+import com.fitlog.program.Durations
 import com.fitlog.session.checkTz
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.request.receive
@@ -70,25 +73,42 @@ internal fun requireWeekdays(def: ProgramDefinition, field: String = "skipPolicy
 
 private fun ProgramState.toView() = InstanceState(tm, working, stage, failStreak, week, cycle, seq)
 
+/** 엔진 계획 한 회차 + (FIXED_DATE) 예정일 */
+internal data class PlanRow(val day: PlannedDay, val scheduled: LocalDate?)
+
+/**
+ * 인스턴스·DB 없이 계산하는 계획. FIXED_DATE 예정일은 첫 회차가 anchor 다음 날(없으면 startDate 당일)부터
+ * 그 날 weekday 를 찾고, 다음 회차는 앞 예정일 다음 날부터 찾는다.
+ */
+internal fun planRows(
+    engine: ProgramCalculator, def: ProgramDefinition, policy: SkipPolicy, startDate: LocalDate,
+    state: ProgramState, count: Int, anchor: LocalDate?, settings: EngineSettings,
+    dayOrder: Map<String, List<Int>> = emptyMap(),
+): List<PlanRow> {
+    var prev: LocalDate? = null
+    return engine.plan(def, state, count, settings).mapIndexed { i, p ->
+        val scheduled = if (policy == SkipPolicy.FIXED_DATE) {
+            weekdayOf(def.days.getOrNull(p.dayIndex)?.weekday)?.let { wd ->
+                val from = if (i == 0) (anchor?.plusDays(1) ?: startDate) else prev!!.plusDays(1)
+                nextOnOrAfter(from, wd).also { prev = it }
+            }
+        } else null
+        PlanRow(if (dayOrder[p.dayKey].isNullOrEmpty()) p else p.copy(exercises = applyDayOrder(p.exercises, dayOrder[p.dayKey])), scheduled)
+    }
+}
+
 /** 계획 + 인스턴스 보조운동 + (FIXED_DATE) 예정일. 호출자는 state 가 최신이라고 보장한다 */
 internal fun Transaction.plannedWorkouts(
     engine: ProgramCalculator, ctx: InstanceCtx, state: ProgramState, count: Int, anchor: LocalDate?,
 ): List<PlannedWorkout> {
     val settings = engineSettings(ctx.userId, ctx.definition)
-    val plan = engine.plan(ctx.definition, state, count, settings)
-    if (plan.isEmpty()) return emptyList()
+    val rows = planRows(engine, ctx.definition, ctx.policy, ctx.startDate, state, count, anchor, settings, ctx.dayOrder)
+    if (rows.isEmpty()) return emptyList()
     val accessories = ProgramAccessories.selectAll()
         .where { (ProgramAccessories.instanceId eq ctx.id) and ProgramAccessories.deletedAt.isNull() }
         .orderBy(ProgramAccessories.position to SortOrder.ASC, ProgramAccessories.id to SortOrder.ASC)
         .toList().groupBy { it[ProgramAccessories.dayKey] }
-    var prev: LocalDate? = null
-    return plan.mapIndexed { i, p ->
-        val scheduled = if (ctx.policy == SkipPolicy.FIXED_DATE) {
-            weekdayOf(ctx.definition.days.getOrNull(p.dayIndex)?.weekday)?.let { wd ->
-                val from = if (i == 0) (anchor?.plusDays(1) ?: ctx.startDate) else prev!!.plusDays(1)
-                nextOnOrAfter(from, wd).also { prev = it }
-            }
-        } else null
+    return rows.map { (p, scheduled) ->
         val acc = accessories[p.dayKey].orEmpty().map { a ->
             val aid = a[ProgramAccessories.id]
             val w = a[ProgramAccessories.weightKg]?.toDouble()
@@ -101,10 +121,11 @@ internal fun Transaction.plannedWorkouts(
                 },
             )
         }
+        val exercises = p.exercises + acc
         PlannedWorkout(
             instanceId = ctx.id, planSeq = p.planSeq, dayIndex = p.dayIndex, dayKey = p.dayKey, dayName = p.dayName,
             week = p.week, cycle = p.cycle, scheduledDate = scheduled?.toString(), confirmed = p.confirmed,
-            exercises = applyDayOrder(p.exercises, ctx.dayOrder[p.dayKey]) + acc,
+            exercises = exercises, estimatedMinutes = Durations.estimateMinutes(exercises),
         )
     }
 }
@@ -142,6 +163,58 @@ internal fun Transaction.visibleExercise(userId: UUID, id: UUID): Boolean =
         (Exercises.id eq id) and Exercises.deletedAt.isNull() and (Exercises.ownerId.isNull() or (Exercises.ownerId eq userId))
     }.any()
 
+/** 시작·미리 계산이 같이 쓰는 검증 결과 */
+private class StartPrep(
+    val program: ResultRow, val def: ProgramDefinition, val definitionText: String, val policy: SkipPolicy,
+    val initial: ProgramState,
+)
+
+/** 시작과 preview 의 공용 검증(DB 쓰기 없음). 프로그램 조회·weekdays 적용·FIXED_DATE 요일·무게 범위·필수 입력·초기 상태 */
+private fun Transaction.prepareStart(
+    engine: ProgramCalculator, uid: UUID, programId: UUID, policy: SkipPolicy,
+    tm: Map<String, Double>, working: Map<String, Double>, weekdays: Map<String, String>,
+): StartPrep {
+    val program = Programs.selectAll().where {
+        (Programs.id eq programId) and Programs.deletedAt.isNull() and (Programs.ownerId.isNull() or (Programs.ownerId eq uid))
+    }.singleOrNull() ?: validation("unknown program", "programId")
+    val stored: ProgramDefinition = try {
+        AppJson.decodeFromString(program[Programs.definition])
+    } catch (e: IllegalArgumentException) {
+        throw IllegalStateException("stored program definition is invalid: ${program[Programs.id]}", e)
+    }
+    val def = try {
+        applyWeekdays(stored, weekdays)
+    } catch (e: WeekdayException) {
+        validation(e.message ?: "invalid weekdays", e.field)
+    }
+    val defText = if (weekdays.isEmpty()) program[Programs.definition] else AppJson.encodeToString(ProgramDefinition.serializer(), def)
+    if (policy == SkipPolicy.FIXED_DATE) requireWeekdays(def)
+
+    (tm.entries + working.entries).forEach { (k, v) ->
+        if (!v.isFinite() || v < 0 || v > 9999.99) validation("weight must be between 0 and 9999.99", "tm.$k")
+    }
+    val optionalKeys = engine.optionalInputs(def)
+    engine.requiredInputs(def).forEach { (key, need) ->
+        if (key in optionalKeys) return@forEach
+        when (need) {
+            Needs.TM -> if (key !in tm) validation("tm.$key is required", "tm.$key")
+            Needs.WORKING -> if (key !in working) validation("working.$key is required", "working.$key")
+        }
+    }
+    val initial = try {
+        engine.initialState(def, tm, working)
+    } catch (e: IllegalArgumentException) {
+        validation(e.message ?: "invalid initial values", "tm")
+    }
+    return StartPrep(program, def, defText, policy, initial)
+}
+
+private fun parseStartDate(s: String): LocalDate = try {
+    LocalDate.parse(s)
+} catch (e: DateTimeParseException) {
+    validation("startDate must be yyyy-MM-dd", "startDate")
+}
+
 private fun Transaction.startInstance(engine: ProgramCalculator, uid: UUID, body: StartInstance): Instance {
     lockUser(uid)
     val existing = ProgramInstances.selectAll().where { ProgramInstances.id eq body.id }.singleOrNull()
@@ -149,47 +222,18 @@ private fun Transaction.startInstance(engine: ProgramCalculator, uid: UUID, body
         if (existing[ProgramInstances.userId] != uid || existing[ProgramInstances.deletedAt] != null) conflict("id already in use", "id")
         return instanceView(engine, existing) // 같은 id 재전송은 만들어진 그대로(멱등)
     }
-    val startDate = try {
-        LocalDate.parse(body.startDate)
-    } catch (e: DateTimeParseException) {
-        validation("startDate must be yyyy-MM-dd", "startDate")
-    }
+    val startDate = parseStartDate(body.startDate)
     checkTz(body.tz)
     val policy = body.skipPolicy?.let { parseSkipPolicy(it) } ?: SkipPolicy.SHIFT
-
-    val program = Programs.selectAll().where {
-        (Programs.id eq body.programId) and Programs.deletedAt.isNull() and (Programs.ownerId.isNull() or (Programs.ownerId eq uid))
-    }.singleOrNull() ?: validation("unknown program", "programId")
-    val def: ProgramDefinition = try {
-        AppJson.decodeFromString(program[Programs.definition])
-    } catch (e: IllegalArgumentException) {
-        throw IllegalStateException("stored program definition is invalid: ${program[Programs.id]}", e)
-    }
-    if (policy == SkipPolicy.FIXED_DATE) requireWeekdays(def)
-
-    (body.tm.entries + body.working.entries).forEach { (k, v) ->
-        if (!v.isFinite() || v < 0 || v > 9999.99) validation("weight must be between 0 and 9999.99", "tm.$k")
-    }
-    val optionalKeys = engine.optionalInputs(def)
-    engine.requiredInputs(def).forEach { (key, need) ->
-        if (key in optionalKeys) return@forEach
-        when (need) {
-            Needs.TM -> if (key !in body.tm) validation("tm.$key is required", "tm.$key")
-            Needs.WORKING -> if (key !in body.working) validation("working.$key is required", "working.$key")
-        }
-    }
-    val initial = try {
-        engine.initialState(def, body.tm, body.working)
-    } catch (e: IllegalArgumentException) {
-        validation(e.message ?: "invalid initial values", "tm")
-    }
+    val prep = prepareStart(engine, uid, body.programId, policy, body.tm, body.working, body.weekdays)
+    val initial = prep.initial
     val stateJson = AppJson.encodeToString(ProgramState.serializer(), initial)
     val now = Times.now()
     ProgramInstances.insert {
         it[id] = body.id
         it[userId] = uid
         it[programId] = body.programId
-        it[definition] = program[Programs.definition]
+        it[definition] = prep.definitionText
         it[status] = "ACTIVE"
         it[skipPolicy] = policy.name
         it[ProgramInstances.startDate] = startDate
@@ -201,6 +245,32 @@ private fun Transaction.startInstance(engine: ProgramCalculator, uid: UUID, body
         it[updatedAt] = now
     }
     return instanceView(engine, loadInstanceRow(uid, body.id)!!)
+}
+
+/** 시작 전 미리 계산. 저장하지 않는다(lockUser 도 하지 않음) */
+private fun Transaction.previewStart(engine: ProgramCalculator, uid: UUID, programId: UUID, body: PreviewRequest): PreviewResult {
+    val visible = Programs.selectAll().where {
+        (Programs.id eq programId) and Programs.deletedAt.isNull() and (Programs.ownerId.isNull() or (Programs.ownerId eq uid))
+    }.any()
+    if (!visible) notFound("program not found")
+    val tz = body.tz ?: "UTC"
+    checkTz(tz)
+    val startDate = body.startDate?.let(::parseStartDate) ?: InstanceClock.today(tz)
+    val policy = body.skipPolicy?.let { parseSkipPolicy(it) } ?: SkipPolicy.SHIFT
+    if (body.count !in 1..4) validation("count must be between 1 and 4", "count")
+    val prep = prepareStart(engine, uid, programId, policy, body.tm, body.working, body.weekdays)
+    val rows = planRows(engine, prep.def, policy, startDate, prep.initial, body.count, null, engineSettings(uid, prep.def))
+    val workouts = rows.map { (p, scheduled) ->
+        PreviewWorkout(
+            planSeq = p.planSeq, dayIndex = p.dayIndex, dayKey = p.dayKey, dayName = p.dayName, week = p.week, cycle = p.cycle,
+            scheduledDate = scheduled?.toString(), confirmed = p.confirmed,
+            estimatedMinutes = Durations.estimateMinutes(p.exercises), exercises = p.exercises,
+        )
+    }
+    val tm = prep.initial.tm
+    val working = prep.initial.working
+    val derived = tm.keys.filter { it !in body.tm } + working.keys.filter { it !in body.working }
+    return PreviewResult(workouts, PreviewInputs(tm, working), derived.distinct())
 }
 
 internal fun Transaction.patchInstance(engine: ProgramCalculator, uid: UUID, id: UUID, body: PatchInstance): Instance {
@@ -348,6 +418,13 @@ private fun Transaction.replaceAccessories(uid: UUID, id: UUID, body: List<Acces
 
 /** A3 소유 (v0.2). 경로는 /v1 아래 상대 경로로 등록한다 */
 fun Route.instanceRoutes(config: AppConfig) {
+    post("/programs/{id}/preview") {
+        val uid = call.userId
+        val programId = Ids.parse(call.parameters["id"])
+        val body = call.receive<PreviewRequest>()
+        call.respond(dbQuery { previewStart(config.engine, uid, programId, body) })
+    }
+
     route("/program-instances") {
         get {
             val uid = call.userId

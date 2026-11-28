@@ -21,6 +21,7 @@ import com.fitlog.support.createUser
 import com.fitlog.support.jsonBody
 import com.fitlog.support.jsonClient
 import io.ktor.client.HttpClient
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -32,6 +33,7 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.update
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.time.LocalDate
 import java.util.UUID
@@ -166,9 +168,10 @@ class InstanceEditTest {
         assertEquals(105.0, over.workingOf("squat"))
         // 규칙 종류가 바뀐 키는 연속 값을 비운다
         transaction {
+            val st = """{"working":{"squat":105,"deadlift":120,"bench":0},"tm":{"bench":80},"failStreak":{"squat":2,"bench":1},"stage":{"squat":1}}"""
             ProgramInstances.update({ ProgramInstances.id eq UUID.fromString(id) }) {
-                it[state] = """{"working":{"squat":105,"deadlift":120,"bench":0},"tm":{"bench":80},"failStreak":{"squat":2,"bench":1},"stage":{"squat":1}}"""
-                it[initialState] = it[state]
+                it[ProgramInstances.state] = st
+                it[ProgramInstances.initialState] = st
             }
         }
         val changed = withDead.copy(progression = withDead.progression + ("squat" to Rule.Double(2.5)))
@@ -302,5 +305,5 @@ class InstanceEditTest {
     }
 
     private suspend fun HttpClient.getProgram(uid: UUID, id: String) =
-        io.ktor.client.request.get("/v1/programs/$id") { auth(uid) }
+        get("/v1/programs/$id") { auth(uid) }
 }

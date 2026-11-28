@@ -180,6 +180,30 @@
         "tmFrom": {
           "type": "string",
           "description": "다른 키의 TM을 함께 쓸 때 그 키(예: 데드 변형이 데드 TM 사용)"
+        },
+        "derive": {
+          "type": "object",
+          "description": "자동 계산: 시작 값을 비우면 from 종목 시작 값 × ratio 로 채운다(roundingKg 단위 내림). from 은 다른 lifts 키(사슬·자기 자신 불가), tmFrom 과 함께 쓸 수 없다",
+          "required": [
+            "from",
+            "ratio"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "from": {
+              "type": "string"
+            },
+            "ratio": {
+              "type": "number",
+              "minimum": 0.05,
+              "maximum": 2.0
+            }
+          }
+        },
+        "fromFirstSession": {
+          "type": "boolean",
+          "default": false,
+          "description": "첫 운동에서 정하기: WORKING 키만. 시작 때 비워도 되고, 첫 완료 회차에서 판정 세트 중 무게 있는 세트의 최소 무게로 working 을 정한다. LINEAR·STAGES·DOUBLE 규칙이 필요"
         }
       }
     },

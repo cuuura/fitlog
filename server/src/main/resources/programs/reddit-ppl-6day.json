@@ -27,17 +27,20 @@
     "face": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002e"
-      }
+      },
+      "fromFirstSession": true
     },
     "hammer": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000001a"
-      }
+      },
+      "fromFirstSession": true
     },
     "curl": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000019"
-      }
+      },
+      "fromFirstSession": true
     },
     "bench": {
       "exercise": {
@@ -47,7 +50,8 @@
     "ohp_vol": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000009"
-      }
+      },
+      "derive": { "from": "ohp", "ratio": 0.8 }
     },
     "incline": {
       "exercise": {
@@ -57,17 +61,20 @@
     "pushdown": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002d"
-      }
+      },
+      "fromFirstSession": true
     },
     "overext": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000038"
-      }
+      },
+      "fromFirstSession": true
     },
     "lat": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000017"
-      }
+      },
+      "fromFirstSession": true
     },
     "squat": {
       "exercise": {
@@ -77,7 +84,8 @@
     "rdl": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000007"
-      }
+      },
+      "derive": { "from": "deadlift", "ratio": 0.6 }
     },
     "legpress": {
       "exercise": {
@@ -92,7 +100,8 @@
     "calf": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002f"
-      }
+      },
+      "fromFirstSession": true
     },
     "row": {
       "exercise": {
@@ -112,17 +121,20 @@
     "face2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002e"
-      }
+      },
+      "fromFirstSession": true
     },
     "hammer2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000001a"
-      }
+      },
+      "fromFirstSession": true
     },
     "curl2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000019"
-      }
+      },
+      "fromFirstSession": true
     },
     "ohp": {
       "exercise": {
@@ -132,7 +144,8 @@
     "bench_vol": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000003"
-      }
+      },
+      "derive": { "from": "bench", "ratio": 0.8 }
     },
     "incline2": {
       "exercise": {
@@ -142,22 +155,26 @@
     "pushdown2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002d"
-      }
+      },
+      "fromFirstSession": true
     },
     "overext2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000038"
-      }
+      },
+      "fromFirstSession": true
     },
     "lat2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000017"
-      }
+      },
+      "fromFirstSession": true
     },
     "rdl2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000007"
-      }
+      },
+      "derive": { "from": "deadlift", "ratio": 0.6 }
     },
     "legpress2": {
       "exercise": {
@@ -172,7 +189,8 @@
     "calf2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002f"
-      }
+      },
+      "fromFirstSession": true
     }
   },
   "progression": {
