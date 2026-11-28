@@ -366,15 +366,15 @@
     }
   },
   "programDeleteAction": "프로그램 삭제",
-  "programDeleteConfirmTitle": "프로그램을 삭제할까요?",
-  "programDeleteConfirmBody": "{name}을(를) 삭제해요. 이미 시작한 진행 중 프로그램은 영향받지 않아요.",
-  "@programDeleteConfirmBody": {
+  "programDeleteConfirmTitle": "'{name}' 프로그램을 삭제할까요?",
+  "@programDeleteConfirmTitle": {
     "placeholders": {
       "name": {
         "type": "String"
       }
     }
   },
+  "programDeleteConfirmBody": "이미 시작한 진행 중 프로그램은 영향받지 않아요.",
   "programDeleteFailed": "삭제하지 못했어요",
   "programBuiltIn": "템플릿",
   "programDaysHeader": "구성",
@@ -524,9 +524,17 @@
     }
   },
   "instanceAccessoryRemove": "보조운동 삭제",
+  "instanceAccessoryRemoved": "보조운동을 지웠어요",
   "instanceDelete": "프로그램 연결 삭제",
-  "instanceDeleteConfirmTitle": "진행 중 프로그램을 삭제할까요?",
-  "instanceDeleteConfirmBody": "기록은 남고 연결만 끊깁니다.",
+  "instanceDeleteConfirmTitle": "'{name}' 진행을 삭제할까요?",
+  "@instanceDeleteConfirmTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "instanceDeleteConfirmBody": "기록은 그대로 남고, 프로그램 연결만 끊어요.",
   "instanceActionFailed": "처리하지 못했어요",
   "homePlanSection": "오늘 할 운동",
   "homePlanWeek": "{week}주차",
@@ -786,7 +794,7 @@
   },
   "recordsOneRmDate": "날짜",
   "recordsOneRmNote": "메모",
-  "recordsOneRmDeleteConfirm": "이 측정 기록을 삭제할까요?",
+  "recordsOneRmDeleted": "1RM 기록을 지웠어요",
   "recordsInvalidWeight": "0보다 큰 무게를 입력해 주세요.",
   "recordsLoadFailed": "불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요. 기록은 온라인에서만 볼 수 있어요.",
   "recordsActionFailed": "처리하지 못했어요. 다시 시도해 주세요.",

@@ -11,12 +11,12 @@ import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme.dart';
 import '../../core/units.dart';
+import '../../core/ui/confirm.dart';
 import '../../data/providers.dart';
 import '../../domain/repositories.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../deletion_requests/pending_deletion_banner.dart';
 import '../exercise_picker/exercise_labels.dart';
-import '../programs/program_common.dart' show confirmDialog;
 import '../scheduled/scheduled_card.dart';
 import '../scheduled/scheduled_logic.dart' show HomeScheduled;
 import '../scheduled/scheduled_providers.dart';
@@ -236,7 +236,7 @@ class HomePage extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     final fixed = p.instance.skipPolicy == SkipPolicy.FIXED_DATE;
-    final ok = await confirmDialog(
+    final ok = await confirmAction(
       context,
       title: l.instanceSkipConfirmTitle,
       body: fixed

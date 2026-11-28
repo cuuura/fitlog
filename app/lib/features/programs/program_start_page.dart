@@ -12,6 +12,7 @@ import '../../core/ids.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme.dart';
+import '../../core/ui/bottom_action_bar.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -312,20 +313,13 @@ class _StartFormState extends ConsumerState<_StartForm> {
             ],
           ),
         ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                key: const Key('start-submit'),
-                onPressed: _busy || !_complete ? null : _submit,
-                child: _busy
-                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                    : Text(l.progStartCta),
-              ),
-            ),
+        BottomActionBar(
+          child: FilledButton(
+            key: const Key('start-submit'),
+            onPressed: _busy || !_complete ? null : _submit,
+            child: _busy
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                : Text(l.progStartCta),
           ),
         ),
       ],

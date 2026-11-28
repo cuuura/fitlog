@@ -10,6 +10,10 @@ import '../../core/ids.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme.dart';
+import '../../core/ui/confirm.dart';
+import '../../core/ui/form_sheet.dart';
+import '../../core/ui/row_menu.dart';
+import '../../core/ui/undo.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -22,15 +26,20 @@ class InstanceDetailPage extends ConsumerWidget {
   const InstanceDetailPage({super.key, required this.instanceId});
   final String instanceId;
 
+  /// 계획 캐시·화면을 갱신한다.
+  Future<void> _refresh(WidgetRef ref) async {
+    await ref.read(planCacheProvider).refresh(instanceId: instanceId);
+    ref.invalidate(instanceViewProvider(instanceId));
+    ref.invalidate(instanceListProvider);
+  }
+
   /// 변경을 실행하고 계획 캐시·화면을 갱신한다. 실패하면 스낵바.
   Future<void> _run(BuildContext context, WidgetRef ref, Future<void> Function() action) async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
     try {
       await action();
-      await ref.read(planCacheProvider).refresh(instanceId: instanceId);
-      ref.invalidate(instanceViewProvider(instanceId));
-      ref.invalidate(instanceListProvider);
+      await _refresh(ref);
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text(errorMessage(l, e, fallback: l.instanceActionFailed))));
     }
@@ -41,47 +50,120 @@ class InstanceDetailPage extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final async = ref.watch(instanceViewProvider(instanceId));
     return Scaffold(
-      appBar: AppBar(title: Text(async.value?.instance.name ?? l.instanceTitle)),
+      appBar: AppBar(
+        title: Text(async.value?.instance.name ?? l.instanceTitle),
+        actions: [
+          if (async.value != null)
+            _InstanceMenu(
+              view: async.value!,
+              run: (a) => _run(context, ref, a),
+            ),
+        ],
+      ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorRetry(error: e, onRetry: () => ref.invalidate(instanceViewProvider(instanceId))),
-        data: (v) => _Body(view: v, run: (a) => _run(context, ref, a)),
+        data: (v) => _Body(view: v, run: (a) => _run(context, ref, a), refresh: () => _refresh(ref)),
       ),
     );
   }
 }
 
-class _Body extends ConsumerWidget {
-  const _Body({required this.view, required this.run});
+enum _InstanceAction { pause, resume, finish, delete }
+
+/// 진행 중 프로그램 상세 AppBar의 ⋮ 메뉴: 일시정지/다시 시작, 끝내기, 삭제.
+class _InstanceMenu extends ConsumerWidget {
+  const _InstanceMenu({required this.view, required this.run});
   final InstanceView view;
   final Future<void> Function(Future<void> Function()) run;
 
   Instance get inst => view.instance;
 
+  Future<void> _setStatus(WidgetRef ref, InstanceStatus s) => run(() async {
+    await ref.read(programRepositoryProvider).patchInstance(inst.id, InstancePatch(status: s));
+  });
+
+  Future<void> _finish(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context);
+    final ok = await confirmAction(
+      context,
+      title: l.instanceFinishConfirmTitle,
+      body: l.instanceFinishConfirmBody,
+      action: l.instanceFinish,
+    );
+    if (!ok) return;
+    await _setStatus(ref, InstanceStatus.FINISHED);
+  }
+
+  Future<void> _delete(BuildContext context, WidgetRef ref) async {
+    final l = AppLocalizations.of(context);
+    final ok = await confirmAction(
+      context,
+      title: l.instanceDeleteConfirmTitle(inst.name),
+      body: l.instanceDeleteConfirmBody,
+      action: l.commonDelete,
+      destructive: true,
+    );
+    if (!ok) return;
+    var done = false;
+    await run(() async {
+      await ref.read(programRepositoryProvider).deleteInstance(inst.id);
+      done = true;
+    });
+    if (done && context.mounted) context.pop();
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    return RowMenu<_InstanceAction>(
+      key: const Key('instance-menu'),
+      items: [
+        if (inst.status == InstanceStatus.ACTIVE)
+          RowMenuItem(value: _InstanceAction.pause, label: l.instancePause, key: const Key('instance-pause')),
+        if (inst.status == InstanceStatus.PAUSED)
+          RowMenuItem(value: _InstanceAction.resume, label: l.instanceResume, key: const Key('instance-resume')),
+        if (inst.status != InstanceStatus.FINISHED)
+          RowMenuItem(value: _InstanceAction.finish, label: l.instanceFinish, key: const Key('instance-finish')),
+        RowMenuItem(
+          value: _InstanceAction.delete,
+          label: l.instanceDelete,
+          destructive: true,
+          key: const Key('instance-delete'),
+        ),
+      ],
+      onSelected: (a) => switch (a) {
+        _InstanceAction.pause => _setStatus(ref, InstanceStatus.PAUSED),
+        _InstanceAction.resume => _setStatus(ref, InstanceStatus.ACTIVE),
+        _InstanceAction.finish => _finish(context, ref),
+        _InstanceAction.delete => _delete(context, ref),
+      },
+    );
+  }
+}
+
+class _Body extends ConsumerWidget {
+  const _Body({required this.view, required this.run, required this.refresh});
+  final InstanceView view;
+  final Future<void> Function(Future<void> Function()) run;
+
+  /// 시트 안에서 저장한 뒤 계획 캐시·화면을 갱신한다(저장 실패는 시트가 받는다).
+  final Future<void> Function() refresh;
+
+  Instance get inst => view.instance;
+
   String _liftName(BuildContext context, String key) => view.lifts[key]?.name(context) ?? key;
 
-  Future<void> _setStatus(BuildContext context, WidgetRef ref, InstanceStatus s) async {
-    final l = AppLocalizations.of(context);
-    if (s == InstanceStatus.FINISHED) {
-      final ok = await confirmDialog(
-        context,
-        title: l.instanceFinishConfirmTitle,
-        body: l.instanceFinishConfirmBody,
-        action: l.instanceFinish,
-      );
-      if (!ok) return;
-    }
-    await run(() async {
-      await ref.read(programRepositoryProvider).patchInstance(inst.id, InstancePatch(status: s));
-    });
-  }
+  Future<void> _setStatus(WidgetRef ref, InstanceStatus s) => run(() async {
+    await ref.read(programRepositoryProvider).patchInstance(inst.id, InstancePatch(status: s));
+  });
 
   Future<void> _skipNext(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context);
     final next = view.plan.firstOrNull;
     if (next == null) return;
     final fixed = inst.skipPolicy == SkipPolicy.FIXED_DATE;
-    final ok = await confirmDialog(
+    final ok = await confirmAction(
       context,
       title: l.instanceSkipConfirmTitle,
       body: fixed ? l.instanceSkipConfirmFixed(next.dayName) : l.instanceSkipConfirmShift(next.dayName),
@@ -94,39 +176,24 @@ class _Body extends ConsumerWidget {
     });
   }
 
-  Future<void> _delete(BuildContext context, WidgetRef ref) async {
-    final l = AppLocalizations.of(context);
-    final ok = await confirmDialog(
-      context,
-      title: l.instanceDeleteConfirmTitle,
-      body: l.instanceDeleteConfirmBody,
-      action: l.commonDelete,
-    );
-    if (!ok) return;
-    var done = false;
-    await run(() async {
-      await ref.read(programRepositoryProvider).deleteInstance(inst.id);
-      done = true;
-    });
-    if (done && context.mounted) context.pop();
-  }
-
   Future<void> _adjust(BuildContext context, WidgetRef ref) async {
     final unit = ref.read(settingsProvider).weightUnit;
-    final res = await showDialog<({Map<String, double> tm, Map<String, double> working})>(
-      context: context,
-      builder: (_) => _AdjustDialog(state: inst.state, unit: unit, nameOf: (k) => _liftName(context, k)),
+    final repo = ref.read(programRepositoryProvider);
+    await showFormSheet<bool>(
+      context,
+      builder: (_) => _AdjustSheet(
+        state: inst.state,
+        unit: unit,
+        nameOf: (k) => _liftName(context, k),
+        save: (tm, working) async {
+          await repo.patchInstance(
+            inst.id,
+            InstancePatch(adjustTm: tm.isEmpty ? null : tm, adjustWorking: working.isEmpty ? null : working),
+          );
+          await refresh();
+        },
+      ),
     );
-    if (res == null || (res.tm.isEmpty && res.working.isEmpty)) return;
-    await run(() async {
-      await ref.read(programRepositoryProvider).patchInstance(
-        inst.id,
-        InstancePatch(
-          adjustTm: res.tm.isEmpty ? null : res.tm,
-          adjustWorking: res.working.isEmpty ? null : res.working,
-        ),
-      );
-    });
   }
 
   List<Map<String, Object?>> get _days => programDays(view.program.definition);
@@ -135,30 +202,36 @@ class _Body extends ConsumerWidget {
     final exerciseId = await context.push<String>(Routes.pickExercise);
     if (exerciseId == null || !context.mounted) return;
     final unit = ref.read(settingsProvider).weightUnit;
-    final res = await showDialog<({int sets, int reps, double? weightKg})>(
-      context: context,
-      builder: (_) => _AccessoryDialog(unit: unit),
-    );
-    if (res == null) return;
-    final same = view.accessories.where((a) => a.dayKey == dayKey).length;
-    final list = [
-      ...view.accessories,
-      Accessory(
-        id: newId(),
-        dayKey: dayKey,
-        exerciseId: exerciseId,
-        position: same,
-        sets: res.sets,
-        reps: res.reps,
-        weightKg: res.weightKg,
+    final repo = ref.read(programRepositoryProvider);
+    await showFormSheet<bool>(
+      context,
+      builder: (_) => _AccessorySheet(
+        unit: unit,
+        save: (res) async {
+          final same = view.accessories.where((a) => a.dayKey == dayKey).length;
+          final list = [
+            ...view.accessories,
+            Accessory(
+              id: newId(),
+              dayKey: dayKey,
+              exerciseId: exerciseId,
+              position: same,
+              sets: res.sets,
+              reps: res.reps,
+              weightKg: res.weightKg,
+            ),
+          ];
+          await repo.putAccessories(inst.id, list);
+          await refresh();
+        },
       ),
-    ];
-    await run(() async {
-      await ref.read(programRepositoryProvider).putAccessories(inst.id, list);
-    });
+    );
   }
 
-  Future<void> _removeAccessory(WidgetRef ref, Accessory a) async {
+  Future<void> _removeAccessory(BuildContext context, WidgetRef ref, Accessory a) async {
+    final l = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final repo = ref.read(programRepositoryProvider);
     final rest = [for (final x in view.accessories) if (x.id != a.id) x];
     // 같은 날 안에서 position을 0부터 다시 매긴다.
     final counters = <String, int>{};
@@ -174,9 +247,37 @@ class _Body extends ConsumerWidget {
           weightKg: x.weightKg,
         ),
     ];
+    var done = false;
     await run(() async {
-      await ref.read(programRepositoryProvider).putAccessories(inst.id, list);
+      await repo.putAccessories(inst.id, list);
+      done = true;
     });
+    if (!done) return;
+    // 되돌리기: 지우기 전 목록을 다시 넣는다. 지운 줄은 새 id로 넣어 동기화 삭제 표시와 부딪히지 않게 한다.
+    final before = [
+      for (final x in view.accessories)
+        if (x.id == a.id)
+          Accessory(
+            id: newId(),
+            dayKey: x.dayKey,
+            exerciseId: x.exerciseId,
+            position: x.position,
+            sets: x.sets,
+            reps: x.reps,
+            weightKg: x.weightKg,
+          )
+        else
+          x,
+    ];
+    showUndoSnack(
+      messenger,
+      l,
+      message: l.instanceAccessoryRemoved,
+      onUndo: () async {
+        await repo.putAccessories(inst.id, before);
+        await refresh();
+      },
+    );
   }
 
   @override
@@ -200,26 +301,17 @@ class _Body extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            if (inst.status == InstanceStatus.ACTIVE)
-              OutlinedButton(
-                onPressed: () => _setStatus(context, ref, InstanceStatus.PAUSED),
-                child: Text(l.instancePause),
-              ),
-            if (inst.status == InstanceStatus.PAUSED)
-              FilledButton(
-                onPressed: () => _setStatus(context, ref, InstanceStatus.ACTIVE),
-                child: Text(l.instanceResume),
-              ),
-            const SizedBox(width: 8),
-            if (inst.status != InstanceStatus.FINISHED)
-              OutlinedButton(
-                onPressed: () => _setStatus(context, ref, InstanceStatus.FINISHED),
-                child: Text(l.instanceFinish),
-              ),
-          ],
-        ),
+        if (inst.status == InstanceStatus.PAUSED) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              key: const Key('instance-resume-button'),
+              onPressed: () => _setStatus(ref, InstanceStatus.ACTIVE),
+              child: Text(l.instanceResume),
+            ),
+          ),
+        ],
         if (next != null && inst.status == InstanceStatus.ACTIVE) ...[
           const SizedBox(height: 16),
           SizedBox(
@@ -371,17 +463,10 @@ class _Body extends ConsumerWidget {
               trailing: IconButton(
                 tooltip: l.instanceAccessoryRemove,
                 icon: const Icon(Icons.close),
-                onPressed: () => _removeAccessory(ref, a),
+                onPressed: () => _removeAccessory(context, ref, a),
               ),
             ),
         ],
-        const SizedBox(height: 24),
-        TextButton.icon(
-          onPressed: () => _delete(context, ref),
-          style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
-          icon: const Icon(Icons.delete_outline),
-          label: Text(l.instanceDelete),
-        ),
       ],
     );
   }
@@ -402,17 +487,20 @@ class _Body extends ConsumerWidget {
   }
 }
 
-class _AdjustDialog extends StatefulWidget {
-  const _AdjustDialog({required this.state, required this.unit, required this.nameOf});
+class _AdjustSheet extends StatefulWidget {
+  const _AdjustSheet({required this.state, required this.unit, required this.nameOf, required this.save});
   final InstanceState state;
   final WeightUnit unit;
   final String Function(String key) nameOf;
 
+  /// 바뀐 값(kg)을 저장한다. 실패하면 예외를 던져 시트가 입력을 유지하게 한다.
+  final Future<void> Function(Map<String, double> tm, Map<String, double> working) save;
+
   @override
-  State<_AdjustDialog> createState() => _AdjustDialogState();
+  State<_AdjustSheet> createState() => _AdjustSheetState();
 }
 
-class _AdjustDialogState extends State<_AdjustDialog> {
+class _AdjustSheetState extends State<_AdjustSheet> {
   final Map<String, TextEditingController> _tm = {};
   final Map<String, TextEditingController> _working = {};
 
@@ -447,57 +535,51 @@ class _AdjustDialogState extends State<_AdjustDialog> {
     return out;
   }
 
+  Future<bool?> _submit() async {
+    final tm = _changed(_tm, widget.state.tm);
+    final working = _changed(_working, widget.state.working);
+    if (tm.isNotEmpty || working.isNotEmpty) await widget.save(tm, working);
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final unitText = widget.unit == WeightUnit.KG ? 'kg' : 'lb';
-    Widget field(String keyPrefix, String key, String label, TextEditingController c) => Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: TextField(
-        key: ValueKey('$keyPrefix-$key'),
-        controller: c,
-        keyboardType: const TextInputType.numberWithOptions(decimal: true),
-        inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-        decoration: InputDecoration(labelText: '$label ($unitText)', border: const OutlineInputBorder()),
-      ),
+    Widget field(String keyPrefix, String key, String label, TextEditingController c) => TextField(
+      key: ValueKey('$keyPrefix-$key'),
+      controller: c,
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+      decoration: InputDecoration(labelText: '$label ($unitText)', border: const OutlineInputBorder()),
     );
-    return AlertDialog(
-      title: Text(l.instanceAdjust),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l.instanceAdjustHelp),
-            for (final e in _tm.entries) field('adjust-tm', e.key, '${widget.nameOf(e.key)} · TM', e.value),
-            for (final e in _working.entries)
-              field('adjust-working', e.key, '${widget.nameOf(e.key)} · ${l.programStartWorking}', e.value),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l.commonCancel)),
-        FilledButton(
-          onPressed: () => Navigator.pop(context, (
-            tm: _changed(_tm, widget.state.tm),
-            working: _changed(_working, widget.state.working),
-          )),
-          child: Text(l.commonSave),
-        ),
+    return FormSheet<bool>(
+      title: l.instanceAdjust,
+      submitLabel: l.commonSave,
+      failureMessage: (e) => errorMessage(l, e, fallback: l.instanceActionFailed),
+      onSubmit: _submit,
+      children: [
+        Text(l.instanceAdjustHelp),
+        for (final e in _tm.entries) field('adjust-tm', e.key, '${widget.nameOf(e.key)} · TM', e.value),
+        for (final e in _working.entries)
+          field('adjust-working', e.key, '${widget.nameOf(e.key)} · ${l.programStartWorking}', e.value),
       ],
     );
   }
 }
 
-class _AccessoryDialog extends StatefulWidget {
-  const _AccessoryDialog({required this.unit});
+typedef _AccessoryInput = ({int sets, int reps, double? weightKg});
+
+class _AccessorySheet extends StatefulWidget {
+  const _AccessorySheet({required this.unit, required this.save});
   final WeightUnit unit;
+  final Future<void> Function(_AccessoryInput res) save;
 
   @override
-  State<_AccessoryDialog> createState() => _AccessoryDialogState();
+  State<_AccessorySheet> createState() => _AccessorySheetState();
 }
 
-class _AccessoryDialogState extends State<_AccessoryDialog> {
+class _AccessorySheetState extends State<_AccessorySheet> {
   final _sets = TextEditingController(text: '3');
   final _reps = TextEditingController(text: '10');
   final _weight = TextEditingController();
@@ -510,6 +592,19 @@ class _AccessoryDialogState extends State<_AccessoryDialog> {
     super.dispose();
   }
 
+  Future<bool?> _submit() async {
+    final sets = int.tryParse(_sets.text.trim());
+    final reps = int.tryParse(_reps.text.trim());
+    if (sets == null || sets <= 0 || reps == null || reps <= 0) return null;
+    final w = parseNumber(_weight.text);
+    await widget.save((
+      sets: sets,
+      reps: reps,
+      weightKg: w == null || w <= 0 ? null : Units.fromDisplay(w, widget.unit),
+    ));
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -517,47 +612,32 @@ class _AccessoryDialogState extends State<_AccessoryDialog> {
     final sets = int.tryParse(_sets.text.trim());
     final reps = int.tryParse(_reps.text.trim());
     final valid = sets != null && sets > 0 && reps != null && reps > 0;
-    return AlertDialog(
-      title: Text(l.instanceAccessoryAdd),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            key: const ValueKey('acc-sets'),
-            controller: _sets,
-            keyboardType: TextInputType.number,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(labelText: l.instanceAccessorySets),
-          ),
-          TextField(
-            key: const ValueKey('acc-reps'),
-            controller: _reps,
-            keyboardType: TextInputType.number,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(labelText: l.instanceAccessoryReps),
-          ),
-          TextField(
-            key: const ValueKey('acc-weight'),
-            controller: _weight,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: InputDecoration(labelText: l.instanceAccessoryWeight(unitText)),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l.commonCancel)),
-        FilledButton(
-          onPressed: !valid
-              ? null
-              : () {
-                  final w = parseNumber(_weight.text);
-                  Navigator.pop(context, (
-                    sets: sets,
-                    reps: reps,
-                    weightKg: w == null || w <= 0 ? null : Units.fromDisplay(w, widget.unit),
-                  ));
-                },
-          child: Text(l.commonSave),
+    return FormSheet<bool>(
+      title: l.instanceAccessoryAdd,
+      submitLabel: l.commonAdd,
+      enabled: valid,
+      failureMessage: (e) => errorMessage(l, e, fallback: l.instanceActionFailed),
+      onSubmit: _submit,
+      children: [
+        TextField(
+          key: const ValueKey('acc-sets'),
+          controller: _sets,
+          keyboardType: TextInputType.number,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(labelText: l.instanceAccessorySets),
+        ),
+        TextField(
+          key: const ValueKey('acc-reps'),
+          controller: _reps,
+          keyboardType: TextInputType.number,
+          onChanged: (_) => setState(() {}),
+          decoration: InputDecoration(labelText: l.instanceAccessoryReps),
+        ),
+        TextField(
+          key: const ValueKey('acc-weight'),
+          controller: _weight,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: InputDecoration(labelText: l.instanceAccessoryWeight(unitText)),
         ),
       ],
     );

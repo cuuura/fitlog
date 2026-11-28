@@ -4,9 +4,9 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../core/api/dto.dart';
 import '../../core/routes.dart';
+import '../../core/ui/confirm.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
-import '../programs/program_common.dart' show confirmDialog;
 import 'scheduled_logic.dart';
 import 'start_scheduled_flow.dart';
 
@@ -67,11 +67,12 @@ Future<void> runScheduledAction(
       case ScheduledMenuAction.unskip:
         await repo.setSkipped(view.id, false);
       case ScheduledMenuAction.delete:
-        final ok = await confirmDialog(
+        final ok = await confirmAction(
           context,
           title: l.schedDeleteTitle,
           body: l.schedDeleteBody(view.workout.title),
           action: l.schedMenuDelete,
+          destructive: true,
         );
         if (ok) await repo.delete(view.id);
     }

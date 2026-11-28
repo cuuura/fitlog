@@ -11,6 +11,9 @@ import '../../core/ids.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme.dart';
+import '../../core/ui/form_sheet.dart';
+import '../../core/ui/row_menu.dart';
+import '../../core/ui/undo.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -44,42 +47,37 @@ class ExerciseRecordsPage extends ConsumerWidget {
   }
 
   Future<void> _add(BuildContext context, WidgetRef ref) async {
-    final l = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    final m = await showDialog<OneRmMeasurement>(context: context, builder: (_) => const _AddOneRmDialog());
-    if (m == null) return;
-    try {
-      await ref.read(recordsRepositoryProvider).addOneRm(exerciseId, m);
-      _refresh(ref);
-    } catch (_) {
-      messenger.showSnackBar(SnackBar(content: Text(l.recordsActionFailed)));
-    }
+    final saved = await showFormSheet<bool>(
+      context,
+      builder: (_) => _AddOneRmSheet(exerciseId: exerciseId),
+    );
+    if (saved == true) _refresh(ref);
   }
 
+  /// 확인 없이 지우고 되돌리기를 보여 준다. 되돌리기는 새 id로 다시 넣는다.
   Future<void> _delete(BuildContext context, WidgetRef ref, OneRmMeasurement m) async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        content: Text(l.recordsOneRmDeleteConfirm),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l.commonCancel)),
-          TextButton(
-            key: const Key('records-delete-confirm'),
-            onPressed: () => Navigator.pop(c, true),
-            child: Text(l.commonDelete),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
+    final repo = ref.read(recordsRepositoryProvider);
     try {
-      await ref.read(recordsRepositoryProvider).deleteOneRm(m.id);
+      await repo.deleteOneRm(m.id);
       _refresh(ref);
     } catch (_) {
       messenger.showSnackBar(SnackBar(content: Text(l.recordsActionFailed)));
+      return;
     }
+    showUndoSnack(
+      messenger,
+      l,
+      message: l.recordsOneRmDeleted,
+      onUndo: () async {
+        await repo.addOneRm(
+          exerciseId,
+          OneRmMeasurement(id: newId(), weightKg: m.weightKg, measuredAt: m.measuredAt, note: m.note),
+        );
+        _refresh(ref);
+      },
+    );
   }
 
   @override
@@ -199,23 +197,8 @@ class ExerciseRecordsPage extends ConsumerWidget {
 
     children.add(
       Padding(
-        padding: const EdgeInsets.fromLTRB(16, 20, 8, 0),
-        child: Row(
-          children: [
-            Expanded(
-              child: Text(
-                l.recordsOneRmSection,
-                style: theme.textTheme.titleSmall?.copyWith(color: c.accentStrong),
-              ),
-            ),
-            TextButton.icon(
-              key: const Key('records-add-onerm'),
-              icon: const Icon(Icons.add),
-              label: Text(l.recordsOneRmAdd),
-              onPressed: () => _add(context, ref),
-            ),
-          ],
-        ),
+        padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
+        child: Text(l.recordsOneRmSection, style: theme.textTheme.titleSmall?.copyWith(color: c.accentStrong)),
       ),
     );
     if (oneRms.value != null) {
@@ -228,11 +211,17 @@ class ExerciseRecordsPage extends ConsumerWidget {
             key: Key('onerm-${m.id}'),
             title: Text(Units.format(m.weightKg, unit), style: AppNum.medium(context)),
             subtitle: Text([formatDate(m.measuredAt.toLocal()), if (m.note != null) m.note!].join(' · ')),
-            trailing: IconButton(
-              key: Key('onerm-delete-${m.id}'),
-              tooltip: l.commonDelete,
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () => _delete(context, ref, m),
+            trailing: RowMenu<String>(
+              key: Key('onerm-menu-${m.id}'),
+              items: [
+                RowMenuItem(
+                  value: 'delete',
+                  label: l.commonDelete,
+                  destructive: true,
+                  key: Key('onerm-delete-${m.id}'),
+                ),
+              ],
+              onSelected: (_) => _delete(context, ref, m),
             ),
           ),
         );
@@ -253,18 +242,25 @@ class ExerciseRecordsPage extends ConsumerWidget {
           ),
         ],
       ),
-      body: ListView(children: [...children, const SizedBox(height: 24)]),
+      floatingActionButton: FloatingActionButton.extended(
+        key: const Key('records-add-onerm'),
+        icon: const Icon(Icons.add),
+        label: Text(l.recordsOneRmAdd),
+        onPressed: () => _add(context, ref),
+      ),
+      body: ListView(children: [...children, const SizedBox(height: 88)]),
     );
   }
 }
 
-class _AddOneRmDialog extends ConsumerStatefulWidget {
-  const _AddOneRmDialog();
+class _AddOneRmSheet extends ConsumerStatefulWidget {
+  const _AddOneRmSheet({required this.exerciseId});
+  final String exerciseId;
   @override
-  ConsumerState<_AddOneRmDialog> createState() => _AddOneRmDialogState();
+  ConsumerState<_AddOneRmSheet> createState() => _AddOneRmSheetState();
 }
 
-class _AddOneRmDialogState extends ConsumerState<_AddOneRmDialog> {
+class _AddOneRmSheetState extends ConsumerState<_AddOneRmSheet> {
   final _weight = TextEditingController();
   final _note = TextEditingController();
   late DateTime _date;
@@ -293,16 +289,18 @@ class _AddOneRmDialogState extends ConsumerState<_AddOneRmDialog> {
     if (d != null) setState(() => _date = DateTime(d.year, d.month, d.day, _date.hour, _date.minute));
   }
 
-  void _submit() {
+  /// 검증 실패면 null(시트 유지). 저장이 실패하면 예외가 FormSheet까지 올라가 입력이 남는다.
+  Future<bool?> _submit() async {
     final unit = ref.read(settingsProvider).weightUnit;
     final v = double.tryParse(_weight.text.trim().replaceAll(',', '.'));
     if (v == null || v <= 0) {
       setState(() => _bad = true);
-      return;
+      return null;
     }
+    setState(() => _bad = false);
     final note = _note.text.trim();
-    Navigator.pop(
-      context,
+    await ref.read(recordsRepositoryProvider).addOneRm(
+      widget.exerciseId,
       OneRmMeasurement(
         id: newId(),
         weightKg: Units.fromDisplay(v, unit),
@@ -310,48 +308,43 @@ class _AddOneRmDialogState extends ConsumerState<_AddOneRmDialog> {
         note: note.isEmpty ? null : note,
       ),
     );
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
     final unit = ref.watch(settingsProvider).weightUnit;
-    return AlertDialog(
-      title: Text(l.recordsOneRmAdd),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              key: const Key('onerm-weight'),
-              controller: _weight,
-              autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-              decoration: InputDecoration(
-                labelText: l.recordsOneRmWeight(unit == WeightUnit.KG ? 'kg' : 'lb'),
-                errorText: _bad ? l.recordsInvalidWeight : null,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ListTile(
-              key: const Key('onerm-date'),
-              contentPadding: EdgeInsets.zero,
-              title: Text(l.recordsOneRmDate),
-              trailing: Text(formatDate(_date)),
-              onTap: _pickDate,
-            ),
-            TextField(
-              key: const Key('onerm-note'),
-              controller: _note,
-              decoration: InputDecoration(labelText: l.recordsOneRmNote),
-            ),
-          ],
+    return FormSheet<bool>(
+      title: l.recordsOneRmAdd,
+      submitLabel: l.commonAdd,
+      submitKey: const Key('onerm-save'),
+      failureMessage: (_) => l.recordsActionFailed,
+      onSubmit: _submit,
+      children: [
+        TextField(
+          key: const Key('onerm-weight'),
+          controller: _weight,
+          autofocus: true,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+          decoration: InputDecoration(
+            labelText: l.recordsOneRmWeight(unit == WeightUnit.KG ? 'kg' : 'lb'),
+            errorText: _bad ? l.recordsInvalidWeight : null,
+          ),
         ),
-      ),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: Text(l.commonCancel)),
-        TextButton(key: const Key('onerm-save'), onPressed: _submit, child: Text(l.commonSave)),
+        ListTile(
+          key: const Key('onerm-date'),
+          contentPadding: EdgeInsets.zero,
+          title: Text(l.recordsOneRmDate),
+          trailing: Text(formatDate(_date)),
+          onTap: _pickDate,
+        ),
+        TextField(
+          key: const Key('onerm-note'),
+          controller: _note,
+          decoration: InputDecoration(labelText: l.recordsOneRmNote),
+        ),
       ],
     );
   }

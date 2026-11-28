@@ -29,6 +29,15 @@ class FlakyRecords extends MemoryRecordsRepository {
   }
 }
 
+class FailingAddRecords extends MemoryRecordsRepository {
+  bool fail = true;
+  @override
+  Future<OneRmMeasurement> addOneRm(String exerciseId, OneRmMeasurement m) {
+    if (fail) throw Exception('offline');
+    return super.addOneRm(exerciseId, m);
+  }
+}
+
 void main() {
   const route = '/exercises/ex-squat/records';
 
@@ -75,7 +84,7 @@ void main() {
     expect(find.text('직접 측정한 1RM이 없어요'), findsOneWidget);
   });
 
-  testWidgets('1RM 측정 추가(무게·메모)와 삭제(확인)', (tester) async {
+  testWidgets('1RM 측정 추가(무게·메모)와 삭제(되돌리기)', (tester) async {
     final h = B3Harness();
     await h.pump(tester, route);
     await tester.pump(const Duration(milliseconds: 100));
@@ -100,13 +109,49 @@ void main() {
     expect(find.text('152.5 kg'), findsOneWidget);
     expect(find.textContaining('컨디션 최고'), findsOneWidget);
 
-    await tester.tap(find.byKey(Key('onerm-delete-${saved.single.id}')));
+    // 한 줄짜리라 확인 없이 지우고 되돌리기를 보여 준다
+    final oldId = saved.single.id;
+    await tester.tap(find.byKey(Key('onerm-menu-$oldId')));
     await tester.pumpAndSettle();
-    expect(await h.records.oneRms('ex-squat'), hasLength(1), reason: '확인 전에는 삭제하지 않는다');
-    await tester.tap(find.byKey(const Key('records-delete-confirm')));
+    await tester.tap(find.byKey(Key('onerm-delete-$oldId')));
     await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
     expect(await h.records.oneRms('ex-squat'), isEmpty);
     expect(find.text('직접 측정한 1RM이 없어요'), findsOneWidget);
+    expect(find.text('1RM 기록을 지웠어요'), findsOneWidget);
+
+    await tester.tap(find.text('되돌리기'));
+    await tester.pumpAndSettle();
+    final back = (await h.records.oneRms('ex-squat')).single;
+    expect(back.weightKg, 152.5);
+    expect(back.note, '컨디션 최고');
+    expect(back.measuredAt, DateTime.utc(2026, 11, 26, 12));
+    expect(back.id, isNot(oldId), reason: '새 id로 다시 넣는다');
+    expect(find.text('152.5 kg'), findsOneWidget);
+  });
+
+  testWidgets('1RM 추가는 오른쪽 아래 버튼과 시트, 저장 실패하면 입력이 남는다', (tester) async {
+    final h = B3Harness();
+    final failing = FailingAddRecords();
+    h.recordsOverride = failing;
+    await h.pump(tester, route);
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.byType(FloatingActionButton), findsOneWidget);
+    expect(find.descendant(of: find.byType(FloatingActionButton), matching: find.text('측정 추가')), findsOneWidget);
+
+    await tester.tap(find.byKey(const Key('records-add-onerm')));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsNothing);
+    await tester.enterText(find.byKey(const Key('onerm-weight')), '140');
+    await tester.tap(find.byKey(const Key('onerm-save')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('sheet-error')), findsOneWidget);
+    expect(find.widgetWithText(TextField, '140'), findsOneWidget);
+    failing.fail = false;
+    await tester.tap(find.byKey(const Key('onerm-save')));
+    await tester.pumpAndSettle();
+    expect((await failing.oneRms('ex-squat')).single.weightKg, 140);
+    expect(find.byKey(const Key('onerm-weight')), findsNothing);
   });
 
   testWidgets('lb로 입력한 1RM은 kg로 저장', (tester) async {

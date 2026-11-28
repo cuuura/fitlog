@@ -132,27 +132,6 @@ class ErrorRetry extends StatelessWidget {
   }
 }
 
-Future<bool> confirmDialog(
-  BuildContext context, {
-  required String title,
-  String? body,
-  required String action,
-}) async {
-  final l = AppLocalizations.of(context);
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (c) => AlertDialog(
-      title: Text(title),
-      content: body == null ? null : Text(body),
-      actions: [
-        TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l.commonCancel)),
-        FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(action)),
-      ],
-    ),
-  );
-  return ok ?? false;
-}
-
 /// 입력한 숫자(소수점 쉼표 허용). 비었거나 잘못되면 null.
 double? parseNumber(String s) => double.tryParse(s.trim().replaceAll(',', '.'));
 

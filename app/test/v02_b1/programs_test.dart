@@ -5,6 +5,7 @@ import 'package:fitlog/core/auth/auth_controller.dart';
 import 'package:fitlog/core/clock.dart';
 import 'package:fitlog/core/routes.dart';
 import 'package:fitlog/core/settings/settings_controller.dart';
+import 'package:fitlog/core/ui/row_menu.dart';
 import 'package:fitlog/data/memory/memory_repositories.dart';
 import 'package:fitlog/data/providers.dart';
 import 'package:fitlog/features/programs/instance_detail_page.dart';
@@ -109,10 +110,24 @@ Instance _inst(String id, {InstanceStatus status = InstanceStatus.ACTIVE, int se
 class _FailingRepo extends MemoryProgramRepository {
   Object? listError;
   Object? startError;
+  Object? putError;
+  Object? patchError;
   @override
   Future<List<ProgramSummary>> listPrograms({ProgramListSource? source}) async {
     if (listError != null) throw listError!;
     return super.listPrograms(source: source);
+  }
+
+  @override
+  Future<List<Accessory>> putAccessories(String instanceId, List<Accessory> list) async {
+    if (putError != null) throw putError!;
+    return super.putAccessories(instanceId, list);
+  }
+
+  @override
+  Future<Instance> patchInstance(String id, InstancePatch patch) async {
+    if (patchError != null) throw patchError!;
+    return super.patchInstance(id, patch);
   }
 
   @override
@@ -228,13 +243,14 @@ void main() {
       expect(find.text('내 프로그램'), findsOneWidget);
       expect(find.text('템플릿 5x5'), findsOneWidget);
       expect(find.text('내 루틴'), findsNothing);
-      expect(find.byIcon(Icons.delete_outline), findsNothing);
+      expect(find.byType(RowMenu<String>), findsNothing);
       expect(find.byKey(const Key('programs-import-ai')), findsOneWidget);
       await tester.tap(find.text('내 프로그램'));
       await tester.pumpAndSettle();
       expect(find.text('내 루틴'), findsOneWidget);
-      // 내 프로그램에만 삭제 버튼이 있다
-      expect(find.byIcon(Icons.delete_outline), findsOneWidget);
+      // 내 프로그램에만 ⋮ 메뉴가 있고 늘 보이는 휴지통은 없다
+      expect(find.byType(RowMenu<String>), findsOneWidget);
+      expect(find.byIcon(Icons.delete_outline), findsNothing);
       await tester.tap(find.text('템플릿'));
       await tester.pumpAndSettle();
 
@@ -261,13 +277,32 @@ void main() {
       await env.pump(tester, Routes.programs);
       await tester.tap(find.text('내 프로그램'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.delete_outline));
+      await tester.tap(find.byType(RowMenu<String>));
       await tester.pumpAndSettle();
-      expect(find.text('프로그램을 삭제할까요?'), findsOneWidget);
-      await tester.tap(find.text('삭제').last);
+      await tester.tap(find.byKey(const Key('program-delete-p-mine')));
+      await tester.pumpAndSettle();
+      expect(find.text("'내 루틴' 프로그램을 삭제할까요?"), findsOneWidget);
+      expect(env.programs.programs.containsKey('p-mine'), isTrue, reason: '확인 전에는 지우지 않는다');
+      // 파괴적 확인은 OutlinedButton
+      expect(find.descendant(of: find.byType(AlertDialog), matching: find.byType(OutlinedButton)), findsOneWidget);
+      await tester.tap(find.byKey(const Key('confirm-ok')));
       await tester.pumpAndSettle();
       expect(env.programs.programs.containsKey('p-mine'), isFalse);
       expect(find.text('내 루틴'), findsNothing);
+    });
+
+    testWidgets('내 프로그램 삭제 확인에서 취소하면 그대로', (tester) async {
+      final env = _Env();
+      await env.pump(tester, Routes.programs);
+      await tester.tap(find.text('내 프로그램'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byType(RowMenu<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('program-delete-p-mine')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('취소'));
+      await tester.pumpAndSettle();
+      expect(env.programs.programs.containsKey('p-mine'), isTrue);
     });
   });
 
@@ -323,7 +358,7 @@ void main() {
       expect(i.state.working, {'bench': 60});
       expect(i.startDate, DateTime(2026, 11, 26));
       expect(i.skipPolicy, SkipPolicy.SHIFT);
-      expect(find.text('일시정지'), findsOneWidget); // 인스턴스 상세
+      expect(find.byKey(const Key('instance-menu')), findsOneWidget); // 인스턴스 상세
     });
 
     testWidgets('lb 입력은 kg로 변환해 저장', (tester) async {
@@ -398,16 +433,41 @@ void main() {
       expect(find.textContaining('100 kg 5×5'), findsWidgets);
     });
 
+    testWidgets('상태 버튼 줄과 맨 아래 삭제 버튼 없이 ⋮ 메뉴로 모았다', (tester) async {
+      final env = withInstance();
+      await env.pump(tester, Routes.instanceDetail('i1'));
+      expect(find.widgetWithText(OutlinedButton, '일시정지'), findsNothing);
+      expect(find.widgetWithText(OutlinedButton, '종료'), findsNothing);
+      expect(find.text('프로그램 연결 삭제'), findsNothing);
+      await tester.tap(find.byKey(const Key('instance-menu')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('instance-pause')), findsOneWidget);
+      expect(find.byKey(const Key('instance-resume')), findsNothing);
+      expect(find.byKey(const Key('instance-finish')), findsOneWidget);
+      expect(find.byKey(const Key('instance-delete')), findsOneWidget);
+    });
+
     testWidgets('일시정지 후 재개', (tester) async {
       final env = withInstance();
       await env.pump(tester, Routes.instanceDetail('i1'));
-      await tester.tap(find.text('일시정지'));
+      await tester.tap(find.byKey(const Key('instance-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('instance-pause')));
       await tester.pumpAndSettle();
       expect(env.programs.instances['i1']!.status, InstanceStatus.PAUSED);
-      expect(find.text('재개'), findsOneWidget);
-      await tester.tap(find.text('재개'));
+      // 일시정지 상태의 주 행동: 본문 "재개" 버튼
+      expect(find.byKey(const Key('instance-resume-button')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('instance-resume-button')));
       await tester.pumpAndSettle();
       expect(env.programs.instances['i1']!.status, InstanceStatus.ACTIVE);
+      // 메뉴에서도 재개할 수 있다
+      await tester.tap(find.byKey(const Key('instance-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('instance-pause')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('instance-menu')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('instance-resume')), findsOneWidget);
     });
 
     testWidgets('다음 회차 건너뛰기는 확인 후 planSeq=seq+1로', (tester) async {
@@ -425,9 +485,12 @@ void main() {
     testWidgets('종료는 확인을 거친다', (tester) async {
       final env = withInstance();
       await env.pump(tester, Routes.instanceDetail('i1'));
-      await tester.tap(find.widgetWithText(OutlinedButton, '종료'));
+      await tester.tap(find.byKey(const Key('instance-menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('instance-finish')));
       await tester.pumpAndSettle();
       expect(find.text('프로그램을 종료할까요?'), findsOneWidget);
+      // 끝내기는 파괴적이 아니므로 채움 버튼
       await tester.tap(find.widgetWithText(FilledButton, '종료'));
       await tester.pumpAndSettle();
       expect(env.programs.instances['i1']!.status, InstanceStatus.FINISHED);
@@ -447,7 +510,7 @@ void main() {
       await tester.enterText(find.byKey(const ValueKey('acc-reps')), '12');
       await tester.enterText(find.byKey(const ValueKey('acc-weight')), '45');
       await tester.pump();
-      await tester.tap(find.text('저장'));
+      await tester.tap(find.byKey(const Key('sheet-submit')));
       await tester.pumpAndSettle();
       final saved = env.programs.accessoryLists['i1']!.single;
       expect(saved.dayKey, 'A');
@@ -457,9 +520,60 @@ void main() {
       expect(find.text('벤치프레스'), findsOneWidget);
       expect(find.textContaining('4×12 · 45 lb'), findsOneWidget);
 
+      // 지울 때는 확인 없이 지우고 되돌리기를 보여 준다
       await tester.tap(find.byIcon(Icons.close));
       await tester.pumpAndSettle();
       expect(env.programs.accessoryLists['i1'], isEmpty);
+      expect(find.byType(AlertDialog), findsNothing);
+      await tester.tap(find.text('되돌리기'));
+      await tester.pumpAndSettle();
+      final back = env.programs.accessoryLists['i1']!.single;
+      expect((back.exerciseId, back.sets, back.reps, back.position), ('ex-bench', 4, 12, 0));
+      expect(find.text('벤치프레스'), findsOneWidget);
+    });
+
+    testWidgets('보조운동 저장이 실패하면 시트와 입력이 남고 오류가 보인다', (tester) async {
+      final env = _Env();
+      env.programs.instances['i1'] = _inst('i1');
+      env.programs.putError = const ApiException(code: 'NETWORK', message: 'x');
+      await env.pump(tester, Routes.instanceDetail('i1'));
+      final add = find.byKey(const ValueKey('add-accessory-A'));
+      await tester.ensureVisible(add);
+      await tester.tap(add);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('pick-bench'));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const ValueKey('acc-sets')), '5');
+      await tester.tap(find.byKey(const Key('sheet-submit')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sheet-error')), findsOneWidget);
+      expect(find.widgetWithText(TextField, '5'), findsOneWidget);
+      env.programs.putError = null;
+      await tester.tap(find.byKey(const Key('sheet-submit')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sheet-error')), findsNothing);
+      expect(env.programs.accessoryLists['i1']!.single.sets, 5);
+    });
+
+    testWidgets('기준 무게 조정은 시트에서 저장하고, 실패하면 입력이 남는다', (tester) async {
+      final env = withInstance();
+      env.programs.patchError = const ApiException(code: 'NETWORK', message: 'x');
+      await env.pump(tester, Routes.instanceDetail('i1'));
+      final adjust = find.text('TM·작업 무게 조정');
+      await tester.ensureVisible(adjust);
+      await tester.tap(adjust);
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+      await tester.enterText(find.byKey(const ValueKey('adjust-tm-squat')), '105');
+      await tester.tap(find.byKey(const Key('sheet-submit')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sheet-error')), findsOneWidget);
+      expect(find.widgetWithText(TextField, '105'), findsOneWidget);
+      env.programs.patchError = null;
+      await tester.tap(find.byKey(const Key('sheet-submit')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('sheet-submit')), findsNothing);
+      expect(env.programs.instances['i1']!.state.tm['squat'], 105);
     });
 
     testWidgets('삭제는 확인 후 연결을 끊고 돌아간다', (tester) async {
@@ -467,11 +581,14 @@ void main() {
       await env.pump(tester, Routes.programs);
       await tester.tap(find.text('내 5x5'));
       await tester.pumpAndSettle();
-      await tester.ensureVisible(find.text('프로그램 연결 삭제'));
-      await tester.tap(find.text('프로그램 연결 삭제'));
+      await tester.tap(find.byKey(const Key('instance-menu')));
       await tester.pumpAndSettle();
-      expect(find.text('기록은 남고 연결만 끊깁니다.'), findsOneWidget);
-      await tester.tap(find.widgetWithText(FilledButton, '삭제'));
+      await tester.tap(find.byKey(const Key('instance-delete')));
+      await tester.pumpAndSettle();
+      expect(find.text("'내 5x5' 진행을 삭제할까요?"), findsOneWidget);
+      expect(find.text('기록은 그대로 남고, 프로그램 연결만 끊어요.'), findsOneWidget);
+      expect(env.programs.instances, isNotEmpty, reason: '확인 전에는 지우지 않는다');
+      await tester.tap(find.widgetWithText(OutlinedButton, '삭제'));
       await tester.pumpAndSettle();
       expect(env.programs.instances, isEmpty);
       expect(find.text('내 5x5'), findsNothing);

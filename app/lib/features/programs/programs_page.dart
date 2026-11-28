@@ -7,6 +7,8 @@ import '../../core/api/program_dto.dart';
 import '../../core/routes.dart';
 import '../../data/providers.dart';
 import '../../core/theme.dart';
+import '../../core/ui/confirm.dart';
+import '../../core/ui/row_menu.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../source_badge/source_badge.dart';
 import '../sync_status/sync_status_indicator.dart';
@@ -203,11 +205,12 @@ class _ProgramsTab extends ConsumerWidget {
     ProgramSummary p,
   ) async {
     final l = AppLocalizations.of(context);
-    final ok = await confirmDialog(
+    final ok = await confirmAction(
       context,
-      title: l.programDeleteConfirmTitle,
-      body: l.programDeleteConfirmBody(p.name),
+      title: l.programDeleteConfirmTitle(p.name),
+      body: l.programDeleteConfirmBody,
       action: l.commonDelete,
+      destructive: true,
     );
     if (!ok) return;
     try {
@@ -287,10 +290,17 @@ class _ProgramsTab extends ConsumerWidget {
             description: p.description,
             trailing: p.builtIn
                 ? Icon(Icons.chevron_right, color: c.fg2)
-                : IconButton(
-                    tooltip: l.programDeleteAction,
-                    icon: const Icon(Icons.delete_outline),
-                    onPressed: () => _delete(context, ref, p),
+                : RowMenu<String>(
+                    key: Key('program-menu-${p.id}'),
+                    items: [
+                      RowMenuItem(
+                        value: 'delete',
+                        label: l.programDeleteAction,
+                        destructive: true,
+                        key: Key('program-delete-${p.id}'),
+                      ),
+                    ],
+                    onSelected: (_) => _delete(context, ref, p),
                   ),
             onTap: () => context.push(Routes.programDetail(p.id)),
           );

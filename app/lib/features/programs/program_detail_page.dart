@@ -5,6 +5,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../core/api/program_dto.dart';
 import '../../core/routes.dart';
+import '../../core/ui/bottom_action_bar.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -169,14 +170,11 @@ class ProgramDetailPage extends ConsumerWidget {
         },
       ),
       bottomNavigationBar: async.hasValue
-          ? SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: FilledButton(
-                  key: const Key('program-start'),
-                  onPressed: () => context.push(Routes.programStart(programId)),
-                  child: Text(l.progStartCta),
-                ),
+          ? BottomActionBar(
+              child: FilledButton(
+                key: const Key('program-start'),
+                onPressed: () => context.push(Routes.programStart(programId)),
+                child: Text(l.progStartCta),
               ),
             )
           : null,

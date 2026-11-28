@@ -294,15 +294,15 @@
     }
   },
   "programDeleteAction": "Delete program",
-  "programDeleteConfirmTitle": "Delete this program?",
-  "programDeleteConfirmBody": "{name} will be deleted. Programs already in progress are not affected.",
-  "@programDeleteConfirmBody": {
+  "programDeleteConfirmTitle": "Delete '{name}'?",
+  "@programDeleteConfirmTitle": {
     "placeholders": {
       "name": {
         "type": "String"
       }
     }
   },
+  "programDeleteConfirmBody": "Programs already in progress are not affected.",
   "programDeleteFailed": "Could not delete",
   "programBuiltIn": "Template",
   "programDaysHeader": "Days",
@@ -452,8 +452,16 @@
     }
   },
   "instanceAccessoryRemove": "Remove accessory",
+  "instanceAccessoryRemoved": "Accessory removed",
   "instanceDelete": "Delete from my programs",
-  "instanceDeleteConfirmTitle": "Delete this program in progress?",
+  "instanceDeleteConfirmTitle": "Delete '{name}' in progress?",
+  "@instanceDeleteConfirmTitle": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
   "instanceDeleteConfirmBody": "Your logs stay; only the link to the program is removed.",
   "instanceActionFailed": "Action failed",
   "homePlanSection": "Today's workout",
@@ -714,7 +722,7 @@
   },
   "recordsOneRmDate": "Date",
   "recordsOneRmNote": "Note",
-  "recordsOneRmDeleteConfirm": "Delete this measurement?",
+  "recordsOneRmDeleted": "1RM record deleted",
   "recordsInvalidWeight": "Enter a weight above 0.",
   "recordsLoadFailed": "Couldn't load. Check your connection and try again. Records are available online only.",
   "recordsActionFailed": "That didn't work. Please try again.",
