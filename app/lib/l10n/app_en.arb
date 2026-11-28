@@ -321,7 +321,6 @@
   "programWeekdaySun": "Sun",
   "programStartTitle": "Start program",
   "programStartWeightsHeader": "Starting weights",
-  "programStartWeightsHelp": "Required. Suggestions come from your recent 1RM.",
   "programStartTm": "TM (training max)",
   "programStartWorking": "Working weight",
   "programStartFieldLabel": "{name} ({unit})",
@@ -354,7 +353,7 @@
   },
   "programStartNoBasis": "No data, enter it yourself",
   "programStartDate": "Start date",
-  "programStartPolicy": "When a day is skipped",
+  "programStartPolicy": "If you miss a day",
   "programSkipShift": "Shift",
   "programSkipShiftDesc": "A skipped day is treated as not happening; you do the same day next. Weights stay the same.",
   "programSkipFixed": "Fixed days",
@@ -363,6 +362,202 @@
   "programStartSubmit": "Start",
   "programStartFailed": "Could not start",
   "programStartValidation": "Please check the values",
+  "programStartFirstTitle": "First workout · {date}",
+  "@programStartFirstTitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartDateLabel": "{weekday}, {month}/{day}",
+  "@programStartDateLabel": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartDateToday": "Today",
+  "programStartDaysInfo": "{count} days a week",
+  "@programStartDaysInfo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartOverlapSame": "\"{name}\" is already in progress",
+  "@programStartOverlapSame": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartOverlapDays": "Overlaps with \"{name}\" on {days}",
+  "@programStartOverlapDays": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartOverlapPaused": "It is paused. It stays as it is and the new one starts.",
+  "programStartOverlapBoth": "Both run separately. Weights are tracked per program.",
+  "programStartOverlapPause": "The existing program is paused and only this one runs. Records and weights are kept.",
+  "programStartKeepBoth": "Run both",
+  "programStartKeepPause": "Pause existing",
+  "programStartPauseFailed": "Started, but could not pause {names}. Please pause it from the program screen.",
+  "@programStartPauseFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartWeightsTitle": "Starting weights",
+  "programStartWeightsHelp": "Your sets are calculated from these. Starting light lets you progress longer.",
+  "programStartWeightsReady": "{count} ready",
+  "@programStartWeightsReady": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartWeightsNeed": "{count} to fill in",
+  "@programStartWeightsNeed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartWeightsMissing": "Enter a weight for {names}",
+  "@programStartWeightsMissing": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartPresetSuggest": "As suggested",
+  "programStartPresetLight": "10% lighter",
+  "programStartFar": "Far from the suggestion ({value}). Please check it",
+  "@programStartFar": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartStepDown": "Decrease {name} by {step}",
+  "@programStartStepDown": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartStepUp": "Increase {name} by {step}",
+  "@programStartStepUp": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartCalcLink": "Calculate from a lift",
+  "programStartCalcWeight": "Weight lifted",
+  "programStartCalcReps": "Reps",
+  "programStartCalcOk": "Calculate and fill",
+  "programStartCalcInvalid": "Enter a weight and reps (12 or fewer)",
+  "programStartNoRecordHint": "If you are unsure, starting at the lightest is fine. It goes up fast.",
+  "programStartFillBar": "Fill with empty bar",
+  "programStartOptionalGroup": "{count} optional lifts",
+  "@programStartOptionalGroup": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartScheduleTitle": "Schedule",
+  "programStartScheduleSummary": "From {start} · {days} · {policy}",
+  "@programStartScheduleSummary": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      },
+      "policy": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartAnyDay": "Any day",
+  "programStartOverlapChip": "{count} overlap",
+  "@programStartOverlapChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartLegendThis": "This program",
+  "programStartLegendOther": "Running programs",
+  "programStartLegendBoth": "Overlapping day",
+  "programStartDayThis": "{day}, workout day of this program",
+  "@programStartDayThis": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartDayOther": "{day}, another running program",
+  "@programStartDayOther": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartDayBoth": "{day}, both programs overlap",
+  "@programStartDayBoth": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartDayNone": "{day}",
+  "@programStartDayNone": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartOffline": "You need to be online to set your weights. Check your connection and try again.",
   "instanceTitle": "Program in progress",
   "instanceStatusActive": "Active",
   "instanceStatusPaused": "Paused",
@@ -1884,7 +2079,6 @@
   },
   "progSkipShiftSeg": "Shift to next day",
   "progSkipFixedSeg": "Fixed dates",
-  "progStartTmHeader": "Starting TM",
   "progStartSourceMeasured": "Measured",
   "progStartSourceEstimated": "Estimated",
   "progStartBasisMeasured": "Latest measured 1RM {rm} → TM {tm} ({pct}%)",
@@ -1938,8 +2132,8 @@
     }
   },
   "progStartCta": "Start this program",
-  "progStartTmField": "TM",
-  "progStartWorkingField": "Work",
+  "progStartTmField": "Base weight",
+  "progStartWorkingField": "Start weight",
   "progStartOptionalHint": "Leave blank to set it from your first workout",
   "histMonthStats": "{count} sessions · {volume}",
   "@histMonthStats": {

@@ -29,6 +29,58 @@ bool programHasWeekdays(Map<String, Object?> def) {
   return days.isNotEmpty && days.every((d) => d['weekday'] != null);
 }
 
+/// 요일 코드(월~일 순서). DateTime.weekday - 1 이 인덱스.
+const programWeekdayCodes = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+
+/// 정의에 적힌 운동 요일(중복 없이 월~일 순). 하나도 없으면 빈 목록.
+List<String> programWeekdays(Map<String, Object?> def) {
+  final set = <String>{for (final d in programDays(def)) if (d['weekday'] is String) d['weekday'] as String};
+  return [
+    for (final c in programWeekdayCodes)
+      if (set.contains(c)) c,
+  ];
+}
+
+/// 첫 운동 날짜. 서버와 같은 규칙: SHIFT는 시작일 그대로, FIXED_DATE는 첫째 날의 요일이 처음 오는 날(시작일 포함).
+/// 세트·무게는 계산하지 않는다.
+DateTime firstWorkoutDate(Map<String, Object?> def, DateTime start, SkipPolicy policy) {
+  final day = DateTime(start.year, start.month, start.day);
+  if (policy != SkipPolicy.FIXED_DATE) return day;
+  final days = programDays(def);
+  final wd = days.isEmpty ? null : programWeekdayCodes.indexOf('${days.first['weekday']}');
+  if (wd == null || wd < 0) return day;
+  final diff = (wd + 1 - day.weekday) % 7;
+  return DateTime(day.year, day.month, day.day + diff);
+}
+
+/// 첫째 날의 이름과 그날 종목 lift 키(중복 없이, 정의 순서).
+({String name, List<String> lifts})? programFirstDay(Map<String, Object?> def) {
+  final days = programDays(def);
+  if (days.isEmpty) return null;
+  final first = days.first;
+  final lifts = <String>[];
+  for (final e in (first['exercises'] as List? ?? const [])) {
+    final lift = (e as Map)['lift'];
+    if (lift is String && !lifts.contains(lift)) lifts.add(lift);
+  }
+  return (name: '${first['name'] ?? first['key'] ?? ''}', lifts: lifts);
+}
+
+/// 무게 ± 한 번의 크기(kg). 정의의 roundingKg, 없으면 2.5.
+double programStepKg(Map<String, Object?> def) {
+  final v = def['roundingKg'];
+  return v is num && v > 0 ? v.toDouble() : 2.5;
+}
+
+/// Epley 추정 1RM. 횟수가 1~12가 아니거나 무게가 0 이하면 null.
+double? epleyOneRm(double weightKg, int reps) {
+  if (weightKg <= 0 || reps < 1 || reps > 12) return null;
+  return reps == 1 ? weightKg : weightKg * (1 + reps / 30);
+}
+
+/// [step] 배수로 반올림.
+double roundToStep(double kg, double step) => Units.roundKg((kg / step).round() * step);
+
 /// lifts[key].exercise → {id} 이면 id, {name} 이면 null.
 String? liftExerciseId(Map<String, Object?> def, String key) {
   final lift = ((def['lifts'] as Map?)?[key] as Map?)?.cast<String, Object?>();

@@ -30,11 +30,19 @@ final programViewProvider = FutureProvider.autoDispose.family<ProgramView, Strin
   return ProgramView(p, lifts);
 });
 
+/// 진행 중·일시정지 인스턴스와 그 프로그램 정의의 운동 요일(겹침 확인용).
+class RunningProgram {
+  const RunningProgram(this.instance, this.weekdays);
+  final Instance instance;
+  final List<String> weekdays;
+}
+
 class StartView {
-  const StartView(this.program, this.lifts, this.suggestions);
+  const StartView(this.program, this.lifts, this.suggestions, {this.running = const []});
   final Program program;
   final Map<String, LiftRef> lifts;
   final List<SuggestItem> suggestions;
+  final List<RunningProgram> running;
 }
 
 final startViewProvider = FutureProvider.autoDispose.family<StartView, String>((ref, id) async {
@@ -42,7 +50,25 @@ final startViewProvider = FutureProvider.autoDispose.family<StartView, String>((
   final p = await repo.getProgram(id);
   final suggestions = await repo.suggest(id);
   final lifts = await loadLiftRefs(ref.watch(exerciseRepositoryProvider), p.definition);
-  return StartView(p, lifts, suggestions);
+  // 겹침 안내는 부가 정보라서, 못 읽어도 시작은 막지 않는다.
+  final running = <RunningProgram>[];
+  try {
+    final defs = <String, List<String>>{id: programWeekdays(p.definition)};
+    for (final i in await repo.listInstances()) {
+      if (i.status == InstanceStatus.FINISHED) continue;
+      var days = defs[i.programId];
+      if (days == null) {
+        try {
+          days = programWeekdays((await repo.getProgram(i.programId)).definition);
+        } catch (_) {
+          days = const [];
+        }
+        defs[i.programId] = days;
+      }
+      running.add(RunningProgram(i, days));
+    }
+  } catch (_) {}
+  return StartView(p, lifts, suggestions, running: running);
 });
 
 class InstanceView {
