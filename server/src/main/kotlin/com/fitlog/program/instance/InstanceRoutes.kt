@@ -58,12 +58,12 @@ import java.util.UUID
 
 private val STATUSES = setOf("ACTIVE", "PAUSED", "FINISHED")
 
-private fun conflict(msg: String, field: String? = null): Nothing = throw ApiException(ErrorCode.CONFLICT, msg, field)
+internal fun conflict(msg: String, field: String? = null): Nothing = throw ApiException(ErrorCode.CONFLICT, msg, field)
 
 private fun parseSkipPolicy(s: String, field: String = "skipPolicy"): SkipPolicy =
     runCatching { SkipPolicy.valueOf(s) }.getOrNull() ?: validation("$field must be SHIFT or FIXED_DATE", field)
 
-private fun requireWeekdays(def: ProgramDefinition, field: String = "skipPolicy") {
+internal fun requireWeekdays(def: ProgramDefinition, field: String = "skipPolicy") {
     val bad = def.days.indexOfFirst { weekdayOf(it.weekday) == null }
     if (bad >= 0) validation("FIXED_DATE requires weekday on every day (days[$bad] has none)", field)
 }
@@ -104,7 +104,7 @@ internal fun Transaction.plannedWorkouts(
         PlannedWorkout(
             instanceId = ctx.id, planSeq = p.planSeq, dayIndex = p.dayIndex, dayKey = p.dayKey, dayName = p.dayName,
             week = p.week, cycle = p.cycle, scheduledDate = scheduled?.toString(), confirmed = p.confirmed,
-            exercises = p.exercises + acc,
+            exercises = applyDayOrder(p.exercises, ctx.dayOrder[p.dayKey]) + acc,
         )
     }
 }
@@ -130,13 +130,14 @@ internal fun Transaction.instanceView(engine: ProgramCalculator, row: ResultRow,
     return Instance(
         id = ctx.id, programId = r[ProgramInstances.programId], name = ctx.definition.name, status = ctx.status,
         skipPolicy = ctx.policy.name, startDate = ctx.startDate.toString(), state = state.toView(), next = next,
+        dayOrder = ctx.dayOrder,
     )
 }
 
-private fun Transaction.ownInstance(userId: UUID, id: UUID): ResultRow =
+internal fun Transaction.ownInstance(userId: UUID, id: UUID): ResultRow =
     loadInstanceRow(userId, id) ?: notFound("program instance not found")
 
-private fun Transaction.visibleExercise(userId: UUID, id: UUID): Boolean =
+internal fun Transaction.visibleExercise(userId: UUID, id: UUID): Boolean =
     Exercises.selectAll().where {
         (Exercises.id eq id) and Exercises.deletedAt.isNull() and (Exercises.ownerId.isNull() or (Exercises.ownerId eq userId))
     }.any()
@@ -415,6 +416,28 @@ fun Route.instanceRoutes(config: AppConfig) {
                     plannedWorkouts(config.engine, InstanceCtx(row), state, count, anchor)
                 }
                 call.respond(plan)
+            }
+
+            put("/definition") {
+                val uid = call.userId
+                val id = Ids.parse(call.parameters["id"])
+                val body = call.receive<ReplaceDefinition>()
+                val def = validateDefinition(uid, body.definition)
+                call.respond(dbQuery { replaceInstanceDefinition(config.engine, uid, id, def, body.tm, body.working) })
+            }
+
+            post("/swap") {
+                val uid = call.userId
+                val id = Ids.parse(call.parameters["id"])
+                val body = call.receive<SwapLift>()
+                call.respond(dbQuery { swapInstanceLift(config.engine, uid, id, body) })
+            }
+
+            put("/day-order") {
+                val uid = call.userId
+                val id = Ids.parse(call.parameters["id"])
+                val body = call.receive<DayOrderRequest>()
+                call.respond(dbQuery { putDayOrder(uid, id, body) })
             }
 
             post("/skip") {

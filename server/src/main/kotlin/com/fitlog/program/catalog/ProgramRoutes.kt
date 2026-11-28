@@ -24,6 +24,10 @@ import io.ktor.server.routing.Route
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
+import com.fitlog.core.ProgramInstances
+import kotlinx.serialization.json.JsonArray
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.JsonElement
@@ -100,6 +104,43 @@ private fun program(r: ResultRow): Program {
         dayCount = def.days.size, source = r[Programs.sourceCol], definition = def,
         importBatchId = r[Programs.importBatchId],
     )
+}
+
+
+/**
+ * PUT /v1/programs/{id} 와 MCP update_program 이 같이 쓴다. 내 프로그램만(기본 템플릿 403, 남의 것·없음 404).
+ * 응답 = GET /v1/programs/{id} 모양 + activeInstanceIds(이 프로그램의 ACTIVE·PAUSED 인스턴스)
+ */
+suspend fun updateProgram(uid: UUID, id: UUID, name: String?, definition: JsonElement): JsonObject {
+    var defEl = definition
+    if (name != null) {
+        val defObj = defEl as? JsonObject ?: validation("definition must be an object", "definition")
+        defEl = JsonObject(defObj + ("name" to JsonPrimitive(name)))
+    }
+    val index = ExerciseIndex.load(uid)
+    val def = ProgramValidator.validate(defEl, index.resolver).orThrow()
+    val text = AppJson.encodeToString(def)
+    return dbQuery {
+        val row = Programs.selectAll().where { (Programs.id eq id) and Programs.deletedAt.isNull() }.firstOrNull()
+            ?: notFound("program not found")
+        val owner = row[Programs.ownerId]
+        if (owner == null) forbidden("built-in templates cannot be edited")
+        if (owner != uid) notFound("program not found")
+        Programs.update({ Programs.id eq id }) {
+            it[Programs.name] = def.name
+            it[Programs.definition] = text
+            it[Programs.updatedAt] = Times.now()
+        }
+        val active = ProgramInstances.selectAll().where {
+            (ProgramInstances.programId eq id) and (ProgramInstances.userId eq uid) and
+                ProgramInstances.deletedAt.isNull() and (ProgramInstances.status inList listOf("ACTIVE", "PAUSED"))
+        }.orderBy(ProgramInstances.createdAt).map { it[ProgramInstances.id].toString() }
+        val p = Programs.selectAll().where { Programs.id eq id }.first().let(::program)
+        JsonObject(
+            (AppJson.encodeToJsonElement(Program.serializer(), p) as JsonObject) +
+                ("activeInstanceIds" to JsonArray(active.map(::JsonPrimitive))),
+        )
+    }
 }
 
 /** A1 소유 (v0.2). 경로는 /v1 아래 상대 경로로 등록한다 */
@@ -194,6 +235,22 @@ fun Route.programRoutes(config: AppConfig) {
             }.firstOrNull()?.let(::program)
         } ?: notFound("program not found")
         call.respond(p)
+    }
+
+    // v1.2 edit.md 3절: 내 프로그램 정의 고치기. 진행 중 인스턴스는 바뀌지 않는다(적용은 PUT definition)
+    put("/programs/{id}") {
+        val uid = call.userId
+        val id = Ids.parse(call.parameters["id"])
+        val body: JsonElement = call.receive()
+        val obj = body as? JsonObject ?: validation("body must be an object")
+        for (k in obj.keys) if (k != "name" && k != "definition") validation("unknown property '$k'", k)
+        val defEl = obj["definition"] ?: validation("definition is required", "definition")
+        val name = obj["name"]?.let { n ->
+            val p = n as? JsonPrimitive
+            if (p == null || !p.isString) validation("name must be a string", "name")
+            p.content
+        }
+        call.respond(updateProgram(uid, id, name, defEl))
     }
 
     delete("/programs/{id}") {

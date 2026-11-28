@@ -30,7 +30,7 @@ internal class WInstance(
 )
 
 /** 계획을 짤 때 필요한 인스턴스 정보(새로 시작하거나 이미 있는 것) */
-internal class InstInfo(val id: UUID, val def: ProgramDefinition, val baseSeq: Int, val baseState: ProgramState)
+internal class InstInfo(val id: UUID, val def: ProgramDefinition, val startSeq: Int, val baseState: ProgramState)
 
 internal class WSet(
     val id: UUID, val position: Int, val isWarmup: Boolean, val weightKg: Double?, val addedWeightKg: Double?,
