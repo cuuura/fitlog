@@ -1,8 +1,13 @@
 {
   "schemaVersion": 1,
   "name": "AMRAP 볼륨 웨이브 4일",
-  "description": "주 4회. 1+ 세트(AMRAP) 횟수로 주 끝에 TM을 올린다. OHP는 1일차 T2의 마지막 세트를 AMRAP으로 둔 변형. 흔히 'nSuns 5/3/1 LP'로 알려진 구성을 참고했습니다.",
+  "description": "주 4회. 1+ 세트(AMRAP) 횟수로 주 끝에 TM을 올린다. OHP는 1일차 T2의 마지막 세트를 AMRAP으로 둔 변형.",
   "category": "POWERBUILDING",
+  "level": "INTERMEDIATE",
+  "family": "nsuns-amrap-wave",
+  "variantLabel": "주 4일",
+  "aka": ["nSuns 5/3/1 LP"],
+  "rules": { "progress": "1+ 세트를 6회 이상 하면 주 끝에 기준 무게를 가장 크게 올려요.", "failure": "1+ 세트를 1회 이하로 하면 올리지 않고 그대로 해요.", "deload": "기준 무게가 너무 무거우면 직접 낮춰요. 자동으로 낮추지는 않아요." },
   "tmPercent": 0.9,
   "roundingKg": 2.5,
   "lifts": {

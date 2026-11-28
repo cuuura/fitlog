@@ -16,6 +16,15 @@ data class ProgramDefinition(
     val description: String? = null,
     /** 목록 필터용 타입(BODYBUILDING 등). 계산에는 쓰지 않음 */
     val category: String? = null,
+    /** 표시용 수준(BEGINNER·INTERMEDIATE·ADVANCED). 계산에는 쓰지 않음 */
+    val level: String? = null,
+    /** 같은 기준 무게 체계의 변형 묶음 키. 있으면 variantLabel 필수 */
+    val family: String? = null,
+    val variantLabel: String? = null,
+    /** 흔히 부르는 이름(검색용) */
+    val aka: List<String>? = null,
+    /** 쉬운 말 규칙 세 줄(표시용) */
+    val rules: ProgramRules? = null,
     val tmPercent: Double = 0.9,
     val workingPercent: Double = 0.8,
     val roundingKg: Double = 2.5,
@@ -25,6 +34,9 @@ data class ProgramDefinition(
     val progression: Map<String, Rule> = emptyMap(),
     val days: List<Day>,
 )
+
+@Serializable
+data class ProgramRules(val progress: String, val failure: String, val deload: String)
 
 /** 저장된 정의에서는 항상 id 가 채워져 있다(검증기가 name 을 id 로 푼다) */
 @Serializable

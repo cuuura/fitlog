@@ -46,6 +46,19 @@ class ProgramSummary {
   /// BODYBUILDING | POWERBUILDING | POWERLIFTING | GENERAL_STRENGTH | BODYWEIGHT.
   /// 옛 서버는 보내지 않고, 미래 값이 올 수 있어 enum이 아닌 문자열로 둔다.
   final String? category;
+
+  /// BEGINNER | INTERMEDIATE | ADVANCED. 미래 값이 올 수 있어 문자열로 둔다.
+  final String? level;
+
+  /// 같은 기준 무게 체계의 변형 묶음 키와 묶음 안 구성 이름.
+  final String? family;
+  final String? variantLabel;
+
+  /// 흔히 부르는 이름(검색용). 없으면 빈 목록.
+  final List<String> aka;
+
+  /// 쉬운 말 규칙 세 줄. 없거나 형식이 틀리면 null.
+  final ProgramRules? rules;
   const ProgramSummary({
     required this.id,
     this.templateKey,
@@ -56,6 +69,11 @@ class ProgramSummary {
     this.source,
     this.importBatchId,
     this.category,
+    this.level,
+    this.family,
+    this.variantLabel,
+    this.aka = const [],
+    this.rules,
   });
 
   factory ProgramSummary.fromJson(Map<String, Object?> j) => ProgramSummary(
@@ -68,7 +86,28 @@ class ProgramSummary {
     source: j['source'] == null ? null : _enumByName(ProgramSource.values, j['source']),
     importBatchId: j['importBatchId'] as String?,
     category: j['category'] is String ? j['category'] as String : null,
+    level: j['level'] is String ? j['level'] as String : null,
+    family: j['family'] is String ? j['family'] as String : null,
+    variantLabel: j['variantLabel'] is String ? j['variantLabel'] as String : null,
+    aka: j['aka'] is List ? [for (final e in j['aka'] as List) if (e is String) e] : const [],
+    rules: ProgramRules.tryParse(j['rules']),
   );
+}
+
+/// 템플릿 규칙 세 줄(오르면 / 실패하면 / 낮출 때). 서버가 ko 로 내려준다.
+class ProgramRules {
+  final String progress;
+  final String failure;
+  final String deload;
+  const ProgramRules({required this.progress, required this.failure, required this.deload});
+
+  /// 객체가 아니거나 세 줄 중 하나라도 문자열이 아니면 null.
+  static ProgramRules? tryParse(Object? v) {
+    if (v is! Map) return null;
+    final p = v['progress'], f = v['failure'], d = v['deload'];
+    if (p is String && f is String && d is String) return ProgramRules(progress: p, failure: f, deload: d);
+    return null;
+  }
 }
 
 class Program extends ProgramSummary {
@@ -84,6 +123,11 @@ class Program extends ProgramSummary {
     super.source,
     super.importBatchId,
     super.category,
+    super.level,
+    super.family,
+    super.variantLabel,
+    super.aka,
+    super.rules,
     required this.definition,
   });
 
@@ -99,6 +143,11 @@ class Program extends ProgramSummary {
       source: s.source,
       importBatchId: s.importBatchId,
       category: s.category,
+      level: s.level,
+      family: s.family,
+      variantLabel: s.variantLabel,
+      aka: s.aka,
+      rules: s.rules,
       definition: (j['definition'] as Map).cast<String, Object?>(),
     );
   }
@@ -132,7 +181,8 @@ class SuggestItem {
     exerciseId: j['exerciseId'] as String,
     needs: _enumByName(SuggestNeeds.values, j['needs']),
     oneRmKg: _num(j['oneRmKg']),
-    oneRmSource: j['oneRmSource'] == null ? null : _enumByName(OneRmSource.values, j['oneRmSource']),
+    // 모르는 출처 값(앞으로 추가될 수 있음)은 예외 대신 null.
+    oneRmSource: OneRmSource.values.where((e) => e.name == j['oneRmSource']).firstOrNull,
     suggestedKg: _num(j['suggestedKg']),
     optional: j['optional'] as bool? ?? false,
   );

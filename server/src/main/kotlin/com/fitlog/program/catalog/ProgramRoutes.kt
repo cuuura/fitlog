@@ -14,6 +14,7 @@ import com.fitlog.core.notFound
 import com.fitlog.core.userId
 import com.fitlog.core.validation
 import com.fitlog.engine.ProgramDefinition
+import com.fitlog.engine.ProgramRules
 import com.fitlog.program.schema.ProgramValidator
 import com.fitlog.program.schema.orThrow
 import io.ktor.http.HttpStatusCode
@@ -47,6 +48,11 @@ data class ProgramSummary(
     val name: String,
     val description: String? = null,
     val category: String? = null,
+    val level: String? = null,
+    val family: String? = null,
+    val variantLabel: String? = null,
+    val aka: List<String>? = null,
+    val rules: ProgramRules? = null,
     val builtIn: Boolean,
     val dayCount: Int,
     val source: String,
@@ -61,6 +67,11 @@ data class Program(
     val name: String,
     val description: String? = null,
     val category: String? = null,
+    val level: String? = null,
+    val family: String? = null,
+    val variantLabel: String? = null,
+    val aka: List<String>? = null,
+    val rules: ProgramRules? = null,
     val builtIn: Boolean,
     val dayCount: Int,
     val source: String,
@@ -74,7 +85,8 @@ private fun summary(r: ResultRow): ProgramSummary {
     val def = decode(r[Programs.definition])
     return ProgramSummary(
         id = r[Programs.id], templateKey = r[Programs.templateKey], name = r[Programs.name],
-        description = def.description, category = def.category, builtIn = r[Programs.ownerId] == null,
+        description = def.description, category = def.category, level = def.level, family = def.family,
+        variantLabel = def.variantLabel, aka = def.aka, rules = def.rules, builtIn = r[Programs.ownerId] == null,
         dayCount = def.days.size, source = r[Programs.sourceCol], importBatchId = r[Programs.importBatchId],
     )
 }
@@ -83,7 +95,8 @@ private fun program(r: ResultRow): Program {
     val def = decode(r[Programs.definition])
     return Program(
         id = r[Programs.id], templateKey = r[Programs.templateKey], name = r[Programs.name],
-        description = def.description, category = def.category, builtIn = r[Programs.ownerId] == null,
+        description = def.description, category = def.category, level = def.level, family = def.family,
+        variantLabel = def.variantLabel, aka = def.aka, rules = def.rules, builtIn = r[Programs.ownerId] == null,
         dayCount = def.days.size, source = r[Programs.sourceCol], definition = def,
         importBatchId = r[Programs.importBatchId],
     )
@@ -118,7 +131,8 @@ fun Route.programRoutes(config: AppConfig) {
         val def = ProgramValidator.validate(body, index.resolver).orThrow()
         call.respond(
             Program(
-                id = null, name = def.name, description = def.description, category = def.category, builtIn = false,
+                id = null, name = def.name, description = def.description, category = def.category, level = def.level, family = def.family,
+        variantLabel = def.variantLabel, aka = def.aka, rules = def.rules, builtIn = false,
                 dayCount = def.days.size, source = "USER", definition = def,
             ),
         )

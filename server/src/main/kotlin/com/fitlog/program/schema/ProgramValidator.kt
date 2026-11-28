@@ -10,6 +10,7 @@ import com.fitlog.engine.ExerciseRef
 import com.fitlog.engine.Lift
 import com.fitlog.engine.Load
 import com.fitlog.engine.ProgramDefinition
+import com.fitlog.engine.ProgramRules
 import com.fitlog.engine.Rule
 import com.fitlog.engine.SetSpec
 import com.fitlog.engine.Stage
@@ -62,6 +63,8 @@ private val KEY_RE = Regex("^[a-z][a-z0-9_]{0,31}$")
 private val DAY_KEY_RE = Regex("^[A-Za-z0-9_]{1,16}$")
 private val UUID_RE = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 private val PROGRAM_CATEGORIES = listOf("BODYBUILDING", "POWERBUILDING", "POWERLIFTING", "GENERAL_STRENGTH", "BODYWEIGHT")
+private val PROGRAM_LEVELS = listOf("BEGINNER", "INTERMEDIATE", "ADVANCED")
+private val FAMILY_RE = Regex("^[a-z0-9-]{1,40}$")
 private val ROUNDING = listOf(0.5, 1.0, 1.25, 2.5, 5.0)
 private val WEEKDAYS = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
 
@@ -165,13 +168,19 @@ private class Run(val resolver: ExerciseResolver) {
         val o = obj(json, "") ?: return null
         checkKeys(
             o, "",
-            setOf("schemaVersion", "name", "description", "category", "tmPercent", "workingPercent", "roundingKg", "barKg", "cycleWeeks", "lifts", "progression", "days"),
+            setOf("schemaVersion", "name", "description", "category", "level", "family", "variantLabel", "aka", "rules", "tmPercent", "workingPercent", "roundingKg", "barKg", "cycleWeeks", "lifts", "progression", "days"),
             setOf("schemaVersion", "name", "lifts", "days"),
         )
         if ("schemaVersion" in o && numberOrNull(o["schemaVersion"]) != 1.0) err("/schemaVersion", "must be 1")
         val name = str(o, "name", "", 1, 80)
         val description = str(o, "description", "", 0, 2000)
         val category = enum(o, "category", "", PROGRAM_CATEGORIES)
+        val level = enum(o, "level", "", PROGRAM_LEVELS)
+        val family = str(o, "family", "", pattern = FAMILY_RE)
+        val variantLabel = str(o, "variantLabel", "", 1, 30)
+        if ("family" in o && "variantLabel" !in o) err("/variantLabel", "required when 'family' is present")
+        val aka = aka(o)
+        val rules = rules(o)
         val tmPercent = num(o, "tmPercent", "", exclMin = 0.0, max = 1.0)
         val workingPercent = num(o, "workingPercent", "", exclMin = 0.0, max = 1.0)
         val roundingKg = if ("roundingKg" in o) {
@@ -195,6 +204,11 @@ private class Run(val resolver: ExerciseResolver) {
             name = name,
             description = description,
             category = category,
+            level = level,
+            family = family,
+            variantLabel = variantLabel,
+            aka = aka,
+            rules = rules,
             tmPercent = tmPercent ?: 0.9,
             workingPercent = workingPercent ?: 0.8,
             roundingKg = roundingKg ?: 2.5,
@@ -204,6 +218,28 @@ private class Run(val resolver: ExerciseResolver) {
             progression = progression ?: emptyMap(),
             days = days,
         )
+    }
+
+    fun aka(o: JsonObject): List<String>? {
+        val a = arr(o, "aka", "", 0, 5) ?: return null
+        val out = mutableListOf<String>()
+        a.forEachIndexed { i, el ->
+            if (el !is JsonPrimitive || !el.isString) { err("/aka/$i", "must be a string"); return@forEachIndexed }
+            if (el.content.length !in 1..40) { err("/aka/$i", "must be 1 to 40 characters"); return@forEachIndexed }
+            out += el.content
+        }
+        return out
+    }
+
+    fun rules(o: JsonObject): ProgramRules? {
+        val el = o["rules"] ?: return null
+        val r = obj(el, "/rules") ?: return null
+        checkKeys(r, "/rules", setOf("progress", "failure", "deload"), setOf("progress", "failure", "deload"))
+        val progress = str(r, "progress", "/rules", 1, 120)
+        val failure = str(r, "failure", "/rules", 1, 120)
+        val deload = str(r, "deload", "/rules", 1, 120)
+        if (progress == null || failure == null || deload == null) return null
+        return ProgramRules(progress, failure, deload)
     }
 
     // ------------------------------------------------------------ lifts

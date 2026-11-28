@@ -765,6 +765,8 @@ def c_app_flow(R):
         sl = [p for p in lst if p.get("templateKey") == "stronglifts-5x5"]
         expect(sl, f"템플릿 stronglifts-5x5 가 목록에 없음: {[p.get('templateKey') for p in lst]}")
         expect(sl[0].get("category") == "GENERAL_STRENGTH", f"템플릿 category 누락: {sl[0].get('category')}")
+        expect(sl[0].get("level") == "BEGINNER" and set((sl[0].get("rules") or {}).keys()) == {"progress", "failure", "deload"},
+               f"템플릿 level·rules 누락: {sl[0].get('level')} {sl[0].get('rules')}")
         R.ctx["program_id"] = sl[0]["id"]
         ex = api(R, "GET", "/v1/exercises", tok())
         expect_status(ex, 200, "종목 목록")

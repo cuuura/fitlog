@@ -77,6 +77,49 @@ class ProgramValidatorTest {
         assertTrue("/category" in errors(lower).paths())
     }
 
+    private fun withTop(extra: String) = base.replaceFirst("\"name\":\"P\",", "\"name\":\"P\",$extra,")
+
+    @Test
+    fun display_fields_are_optional_and_parsed() {
+        val d = valid(base)
+        assertEquals(null, d.level); assertEquals(null, d.family); assertEquals(null, d.aka); assertEquals(null, d.rules)
+        val full = valid(
+            withTop(
+                """"level":"BEGINNER","family":"wendler-531","variantLabel":"BBB","aka":["a","b"],""" +
+                    """"rules":{"progress":"올려요.","failure":"다시 해요.","deload":"낮춰요."}""",
+            ),
+        )
+        assertEquals("BEGINNER", full.level)
+        assertEquals("wendler-531", full.family)
+        assertEquals("BBB", full.variantLabel)
+        assertEquals(listOf("a", "b"), full.aka)
+        assertEquals("낮춰요.", full.rules!!.deload)
+    }
+
+    @Test
+    fun display_fields_reject_bad_values_at_their_paths() {
+        assertTrue("/level" in errors(withTop(""""level":"EXPERT"""")).paths())
+        assertTrue("/level" in errors(withTop(""""level":"beginner"""")).paths())
+        assertTrue("/family" in errors(withTop(""""family":"Bad_Key","variantLabel":"x"""")).paths())
+        assertTrue("/family" in errors(withTop(""""family":"${"a".repeat(41)}","variantLabel":"x"""")).paths())
+        assertTrue("/variantLabel" in errors(withTop(""""family":"ok"""")).paths())
+        assertTrue("/variantLabel" in errors(withTop(""""family":"ok","variantLabel":"${"가".repeat(31)}"""")).paths())
+        assertTrue("/variantLabel" in errors(withTop(""""family":"ok","variantLabel":"""" + "\"")).paths())
+        assertTrue("/aka" in errors(withTop(""""aka":["1","2","3","4","5","6"]""")).paths())
+        assertTrue("/aka/1" in errors(withTop(""""aka":["ok",""]""")).paths())
+        assertTrue("/aka/0" in errors(withTop(""""aka":[1]""")).paths())
+        assertTrue("/aka" in errors(withTop(""""aka":"x"""")).paths())
+    }
+
+    @Test
+    fun rules_need_all_three_lines_within_length() {
+        assertTrue("/rules" in errors(withTop(""""rules":{"progress":"a","failure":"b"}""")).paths())
+        assertTrue("/rules/deload" in errors(withTop(""""rules":{"progress":"a","failure":"b","deload":"${"가".repeat(121)}"}""")).paths())
+        assertTrue("/rules/failure" in errors(withTop(""""rules":{"progress":"a","failure":"","deload":"c"}""")).paths())
+        assertTrue("/rules/extra" in errors(withTop(""""rules":{"progress":"a","failure":"b","deload":"c","extra":"d"}""")).paths())
+        assertTrue("/rules" in errors(withTop(""""rules":"x"""")).paths())
+    }
+
     @Test
     fun name_resolution_failure_is_reported_at_the_name_path() {
         val e = errors(base.replace("Bench Press", "Nope"))

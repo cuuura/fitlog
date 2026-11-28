@@ -178,7 +178,8 @@ private fun ResultRow.programSummary(): ProgramSummary {
     val def = decodeDef(this[Programs.definition])
     return ProgramSummary(
         id = this[Programs.id], templateKey = this[Programs.templateKey], name = this[Programs.name],
-        description = def.description, category = def.category, builtIn = this[Programs.ownerId] == null,
+        description = def.description, category = def.category, level = def.level, family = def.family,
+        variantLabel = def.variantLabel, aka = def.aka, rules = def.rules, builtIn = this[Programs.ownerId] == null,
         dayCount = def.days.size, source = this[Programs.sourceCol],
     )
 }
@@ -187,7 +188,8 @@ private fun ResultRow.programFull(): Program {
     val def = decodeDef(this[Programs.definition])
     return Program(
         id = this[Programs.id], templateKey = this[Programs.templateKey], name = this[Programs.name],
-        description = def.description, category = def.category, builtIn = this[Programs.ownerId] == null,
+        description = def.description, category = def.category, level = def.level, family = def.family,
+        variantLabel = def.variantLabel, aka = def.aka, rules = def.rules, builtIn = this[Programs.ownerId] == null,
         dayCount = def.days.size, source = this[Programs.sourceCol], definition = def,
     )
 }
@@ -205,6 +207,10 @@ private val exerciseOut = S.obj(
 private val programSummaryOut = S.obj(
     "id" to idS, "templateKey" to S.str(), "name" to S.str(), "description" to S.str(),
     "category" to S.str("프로그램 타입(목록 필터용)", enum = listOf("BODYBUILDING", "POWERBUILDING", "POWERLIFTING", "GENERAL_STRENGTH", "BODYWEIGHT")),
+    "level" to S.str("표시용 수준", enum = listOf("BEGINNER", "INTERMEDIATE", "ADVANCED")),
+    "family" to S.str("같은 기준 무게 체계의 변형 묶음 키"), "variantLabel" to S.str("묶음 안 구성 이름"),
+    "aka" to S.arr(S.str(), "흔히 부르는 이름"),
+    "rules" to S.obj("progress" to S.str(), "failure" to S.str(), "deload" to S.str(), required = listOf("progress", "failure", "deload")),
     "builtIn" to S.bool(), "dayCount" to S.int(), "source" to S.str(),
     required = listOf("id", "name", "builtIn", "dayCount", "source"),
 )

@@ -1,8 +1,13 @@
 {
   "schemaVersion": 1,
   "name": "AMRAP 볼륨 웨이브 5일",
-  "description": "주 5회. 벤치는 볼륨일과 1+일에 두 번 나오며 증량 판정은 1+일의 AMRAP 세트로만 하고, OHP도 T2로 나오는 첫날은 판정에서 뺀다. 1+ 세트 횟수에 따라 주 끝에 TM을 올린다. 흔히 'nSuns 5/3/1 LP 5일'로 알려진 구성을 참고했습니다.",
+  "description": "주 5회. 벤치는 볼륨일과 1+일에 두 번 나오며 증량 판정은 1+일의 AMRAP 세트로만 하고, OHP도 T2로 나오는 첫날은 판정에서 뺀다. 1+ 세트 횟수에 따라 주 끝에 TM을 올린다.",
   "category": "POWERBUILDING",
+  "level": "INTERMEDIATE",
+  "family": "nsuns-amrap-wave",
+  "variantLabel": "주 5일",
+  "aka": ["nSuns 5/3/1 LP 5일"],
+  "rules": { "progress": "1+ 세트를 6회 이상 하면 주 끝에 기준 무게를 가장 크게 올려요.", "failure": "1+ 세트를 1회 이하로 하면 올리지 않고 그대로 해요.", "deload": "기준 무게가 너무 무거우면 직접 낮춰요. 자동으로 낮추지는 않아요." },
   "tmPercent": 0.9,
   "roundingKg": 2.5,
   "lifts": {

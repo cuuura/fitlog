@@ -108,6 +108,12 @@ class McpToolsTest {
         val templates = ctx.call("list_programs", """{"source":"TEMPLATE"}""")
         assertTrue(templates.sc()["count"]!!.jsonPrimitive.int >= 5)
         assertEquals(0, ctx.call("list_programs", """{"source":"MINE"}""").sc()["count"]!!.jsonPrimitive.int)
+        val nsuns4 = templates.sc()["programs"]!!.jsonArray.map { it.jsonObject }.first { it["templateKey"]?.jsonPrimitive?.content == "nsuns-4day" }
+        assertEquals("INTERMEDIATE", nsuns4["level"]!!.jsonPrimitive.content)
+        assertEquals("nsuns-amrap-wave", nsuns4["family"]!!.jsonPrimitive.content)
+        assertEquals("주 4일", nsuns4["variantLabel"]!!.jsonPrimitive.content)
+        assertEquals(1, nsuns4["aka"]!!.jsonArray.size)
+        assertEquals(setOf("progress", "failure", "deload"), nsuns4["rules"]!!.jsonObject.keys)
 
         val program = ctx.call("get_program", """{"templateKey":"stronglifts-5x5"}""")
         val p = program.sc()["program"]!!.jsonObject
