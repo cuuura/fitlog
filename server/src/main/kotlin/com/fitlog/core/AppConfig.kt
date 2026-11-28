@@ -71,6 +71,10 @@ data class AppConfig(
     val mcpTrace: Boolean? = null,
     /** null 이면 oauth 패키지의 실제 구현(JDK HttpClient, SSRF 방어 포함). 테스트에서 가짜 주입용 */
     val cimdFetcher: ClientMetadataFetcher? = null,
+    /** 자기 자신을 주기적으로 호출할 공개 주소(끝 슬래시 없음). null 이면 끈다. Render 무료 플랜의 15분 유휴 잠들기 방지용 */
+    val selfPingUrl: String? = null,
+    /** 자기 호출 간격(초). 최소 60 */
+    val selfPingIntervalSec: Long = 600,
 ) {
     /** /mcp 요청 추적 기록을 쌓고 /health/mcp-trace 로 보여줄지 */
     val mcpTraceEnabled: Boolean get() = mcpTrace ?: passwordLogin.enabled
@@ -116,6 +120,9 @@ data class AppConfig(
                 signupCode = env.v("PASSWORD_SIGNUP_CODE"),
             ),
             mcpTrace = env.v("MCP_TRACE")?.toBoolean(),
+            selfPingUrl = if (env.v("SELF_PING_ENABLED") == "false") null
+            else (env.v("SELF_PING_URL") ?: env.v("RENDER_EXTERNAL_URL"))?.let(::normalizeBaseUrl),
+            selfPingIntervalSec = (env.v("SELF_PING_INTERVAL_SEC")?.toLong() ?: 600L).coerceAtLeast(60L),
         ).also { require(it.jwt.secret.length >= 32) { "JWT_SECRET must be at least 32 characters" } }
     }
 }

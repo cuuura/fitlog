@@ -101,4 +101,26 @@ class AppConfigTest {
         assertEquals(2, hc.minimumIdle)
         assertEquals(120_000, hc.keepaliveTime)
     }
+
+    @Test
+    fun selfPingUsesRenderUrlAndNormalizes() {
+        assertEquals("https://x.onrender.com", AppConfig.fromEnv(base + mapOf("RENDER_EXTERNAL_URL" to "https://x.onrender.com/")).selfPingUrl)
+        assertEquals("https://x.onrender.com", AppConfig.fromEnv(base + mapOf("RENDER_EXTERNAL_URL" to "x.onrender.com")).selfPingUrl)
+    }
+
+    @Test
+    fun selfPingCanBeDisabledOrOverridden() {
+        val render = base + mapOf("RENDER_EXTERNAL_URL" to "https://x.onrender.com")
+        assertNull(AppConfig.fromEnv(render + mapOf("SELF_PING_ENABLED" to "false")).selfPingUrl)
+        assertEquals("https://y.example.com", AppConfig.fromEnv(render + mapOf("SELF_PING_URL" to "https://y.example.com")).selfPingUrl)
+    }
+
+    @Test
+    fun selfPingOffByDefaultAndIntervalHasFloor() {
+        val none = AppConfig.fromEnv(base)
+        assertNull(none.selfPingUrl)
+        assertEquals(600L, none.selfPingIntervalSec)
+        assertEquals(60L, AppConfig.fromEnv(base + mapOf("SELF_PING_INTERVAL_SEC" to "5")).selfPingIntervalSec)
+        assertEquals(300L, AppConfig.fromEnv(base + mapOf("SELF_PING_INTERVAL_SEC" to "300")).selfPingIntervalSec)
+    }
 }

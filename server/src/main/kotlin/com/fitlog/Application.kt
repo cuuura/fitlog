@@ -21,6 +21,7 @@ import com.fitlog.records.recordsRoutes
 import com.fitlog.session.sessionRoutes
 import com.fitlog.sync.syncRoutes
 import com.fitlog.ops.installOps
+import com.fitlog.ops.installSelfPing
 import com.fitlog.ops.opsRoutes
 import com.fitlog.security.Bucket
 import com.fitlog.security.installRateLimits
@@ -64,6 +65,7 @@ fun Application.module(config: AppConfig) {
     installCore(config)
     // v1.0
     installOps(config)
+    installSelfPing(config)
     installRateLimits(config)
     routing {
         get("/health") { call.respondText("ok") }

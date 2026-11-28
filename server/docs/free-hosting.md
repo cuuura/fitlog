@@ -24,8 +24,10 @@ flutter run --dart-define=API_BASE_URL=https://fitlog-server-xxxx.onrender.com
 ## 무료 플랜 제약
 
 - 15분간 요청이 없으면 서비스가 잠들고, 다음 첫 요청에 약 1분 걸린다. 앱 첫 요청이 시간 초과되면 브라우저로 `/health/ready` 를 먼저 열어 깨운다.
-  - 잠들지 않게: `.github/workflows/keep-awake.yml` 이 5분마다 `/health/ready` 를 호출한다(주소는 Variables `KEEP_AWAKE_URL`, 없으면 파일의 기본값). GitHub 스케줄은 늦거나 빠질 수 있으니 더 확실히 하려면 UptimeRobot 무료 모니터(HTTP, 5분 간격)로 같은 주소를 등록한다.
-  - 무료 인스턴스 시간은 월 750시간이라 서비스 1개를 24시간 켜 두는 것(최대 744시간)은 한도 안이다. 무료 웹 서비스를 더 만들면 넘는다.
+  - 잠들지 않게: Render 에서는 서버가 10분마다 자기 공개 주소(`RENDER_EXTERNAL_URL`)의 `/health` 를 직접 호출해 외부 트래픽으로 보이게 한다(자동). 끄려면 `SELF_PING_ENABLED=false`, 주소·간격을 바꾸려면 `SELF_PING_URL` / `SELF_PING_INTERVAL_SEC`(초, 최소 60).
+  - `.github/workflows/keep-awake.yml` 의 5분 스케줄은 실제로는 몇 시간에 한 번만 돌아 보조 수단일 뿐이다.
+  - 이미 잠든 서버는 스스로 깨울 수 없으므로 UptimeRobot 무료 모니터(HTTP, 5분 간격, `/health/ready`)를 두 번째 안전장치로 함께 등록하길 권한다.
+  - 무료 인스턴스 시간은 월 750시간이라 서비스 1개를 계속 켜 두면 월 720~744시간을 쓰므로 한도 안이다. 이 방식으로 무료 서비스를 둘 이상 켜 두면 750시간을 넘으니 하나만 쓴다.
 - 무료 PostgreSQL 은 생성 30일 뒤 만료되고 14일 유예 후 삭제된다. 그 전에 유료로 전환하거나 DB를 새로 만들어 연결한다.
 - 저장 공간은 1GB, 백업은 없다.
 
