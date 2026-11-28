@@ -4,6 +4,7 @@
   "title": "Fitlog Program",
   "description": "프로그램 정의. 템플릿·사용자 프로그램·AI 입력이 모두 이 형식. 의미는 engine.md 참고. v1.1: repsMax·restSec·weekly(count/addKg/skip/repsMax)·DOUBLE 추가(contracts/v1.1/program-ext.md).",
   "type": "object",
+  "dependentRequired": { "family": ["variantLabel"] },
   "required": [
     "schemaVersion",
     "name",
@@ -34,6 +35,39 @@
         "BODYWEIGHT"
       ],
       "description": "프로그램 타입(목록 필터용). 계산에는 쓰지 않음"
+    },
+    "level": {
+      "type": "string",
+      "enum": ["BEGINNER", "INTERMEDIATE", "ADVANCED"],
+      "description": "표시용 수준(입문·중급·상급). 계산에는 쓰지 않음"
+    },
+    "family": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]{1,40}$",
+      "description": "같은 기준 무게 체계의 변형 묶음 키. 있으면 variantLabel 필수"
+    },
+    "variantLabel": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 30,
+      "description": "묶음 안 구성 이름(예: 주 4일, BBB)"
+    },
+    "aka": {
+      "type": "array",
+      "maxItems": 5,
+      "items": { "type": "string", "minLength": 1, "maxLength": 40 },
+      "description": "흔히 부르는 이름(검색용)"
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["progress", "failure", "deload"],
+      "properties": {
+        "progress": { "type": "string", "minLength": 1, "maxLength": 120, "description": "오르면" },
+        "failure": { "type": "string", "minLength": 1, "maxLength": 120, "description": "실패하면" },
+        "deload": { "type": "string", "minLength": 1, "maxLength": 120, "description": "낮출 때" }
+      },
+      "description": "쉬운 말 규칙 세 줄(표시용)"
     },
     "tmPercent": {
       "type": "number",

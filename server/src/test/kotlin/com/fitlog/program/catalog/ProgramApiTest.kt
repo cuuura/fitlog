@@ -115,6 +115,28 @@ class ProgramApiTest {
     }
 
     @Test
+    fun list_and_detail_expose_display_fields() = fitlogTest {
+        val uid = user()
+        val mineId = Ids.newId()
+        save(uid, mineId, def("Plain"))
+        val arr = Json.parseToJsonElement(jsonClient().get("/v1/programs") { auth(uid) }.bodyAsText()).jsonArray.map { it.jsonObject }
+        val ns = arr.first { it["templateKey"]?.jsonPrimitive?.content == "nsuns-5day" }
+        assertEquals("INTERMEDIATE", ns["level"]!!.jsonPrimitive.content)
+        assertEquals("nsuns-amrap-wave", ns["family"]!!.jsonPrimitive.content)
+        assertEquals("주 5일", ns["variantLabel"]!!.jsonPrimitive.content)
+        assertEquals("nSuns 5/3/1 LP 5일", ns["aka"]!!.jsonArray.single().jsonPrimitive.content)
+        assertTrue(ns["rules"]!!.jsonObject["progress"]!!.jsonPrimitive.content.isNotBlank())
+        val plain = arr.first { it["id"]!!.jsonPrimitive.content == mineId.toString() }
+        for (k in listOf("level", "family", "variantLabel", "aka", "rules")) {
+            assertTrue(plain[k] == null || plain[k] is kotlinx.serialization.json.JsonNull, k)
+        }
+        val detail = jsonClient().get("/v1/programs/${ns["id"]!!.jsonPrimitive.content}") { auth(uid) }.obj()
+        assertEquals("nsuns-amrap-wave", detail["family"]!!.jsonPrimitive.content)
+        assertEquals("INTERMEDIATE", detail["definition"]!!.jsonObject["level"]!!.jsonPrimitive.content)
+        assertEquals(setOf("progress", "failure", "deload"), detail["rules"]!!.jsonObject.keys)
+    }
+
+    @Test
     fun seeding_is_idempotent() = fitlogTest {
         val uid = user()
         seedProgramTemplates()

@@ -1,8 +1,11 @@
 {
   "schemaVersion": 1,
   "name": "주간 볼륨·회복·강도 3일",
-  "description": "주 3회: 월 볼륨(5x5 @90%), 수 회복(2x5 @72%), 금 강도(1x5 @100%). 강도일에 5회를 모두 성공하면 +2.5kg(데드리프트 +5kg). 작업 무게 = 지금 5회를 할 수 있는 무게. 흔히 'Texas Method'로 알려진 구성을 참고했습니다.",
+  "description": "주 3회: 월 볼륨(5x5 @90%), 수 회복(2x5 @72%), 금 강도(1x5 @100%). 강도일에 5회를 모두 성공하면 +2.5kg(데드리프트 +5kg). 작업 무게 = 지금 5회를 할 수 있는 무게.",
   "category": "POWERLIFTING",
+  "level": "INTERMEDIATE",
+  "aka": ["Texas Method"],
+  "rules": { "progress": "금요일 강도일에 5회를 모두 성공하면 2.5kg(데드리프트는 5kg) 올려요.", "failure": "강도일에 못 채우면 같은 무게로 다시 해요. 3번 이어서 실패하면 무게를 낮춰요.", "deload": "3번 이어서 실패하면 무게를 10% 낮춰서 다시 올라가요." },
   "workingPercent": 0.9,
   "roundingKg": 2.5,
   "lifts": {

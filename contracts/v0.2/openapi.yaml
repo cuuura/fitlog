@@ -215,6 +215,18 @@ components:
         name: { type: string }
         description: { type: string }
         category: { type: string, enum: [BODYBUILDING, POWERBUILDING, POWERLIFTING, GENERAL_STRENGTH, BODYWEIGHT], description: 프로그램 타입(목록 필터용). 정의에 없으면 생략/null }
+        level: { type: string, enum: [BEGINNER, INTERMEDIATE, ADVANCED], description: 표시용 수준. 정의에 없으면 생략/null }
+        family: { type: string, pattern: '^[a-z0-9-]{1,40}$', description: 같은 기준 무게 체계의 변형 묶음 키 }
+        variantLabel: { type: string, minLength: 1, maxLength: 30, description: 묶음 안 구성 이름. family 가 있으면 있음 }
+        aka: { type: array, maxItems: 5, items: { type: string, minLength: 1, maxLength: 40 }, description: 흔히 부르는 이름(검색용) }
+        rules:
+          type: object
+          required: [progress, failure, deload]
+          properties:
+            progress: { type: string, maxLength: 120, description: 오르면 }
+            failure: { type: string, maxLength: 120, description: 실패하면 }
+            deload: { type: string, maxLength: 120, description: 낮출 때 }
+          description: 쉬운 말 규칙 세 줄(표시용, ko)
         builtIn: { type: boolean }
         dayCount: { type: integer }
         source: { type: string, enum: [TEMPLATE, USER, AI_JSON, AI_MCP] }

@@ -98,4 +98,80 @@ void main() {
     expect(formatDate(i.startDate), '2026-11-26');
     expect(PlannedWorkout.fromJson(i.next!.toJson()).dayKey, 'B');
   });
+
+  group('Program display fields', () {
+    Map<String, Object?> base() => {'id': 'p1', 'name': 'N', 'builtIn': true, 'dayCount': 4};
+
+    test('parses level, family, variantLabel, aka, rules', () {
+      final p = ProgramSummary.fromJson({
+        ...base(),
+        'level': 'INTERMEDIATE',
+        'family': 'nsuns-amrap-wave',
+        'variantLabel': '주 4일',
+        'aka': ['nSuns 5/3/1 LP'],
+        'rules': {'progress': '올려요.', 'failure': '다시 해요.', 'deload': '낮춰요.'},
+      });
+      expect(p.level, 'INTERMEDIATE');
+      expect(p.family, 'nsuns-amrap-wave');
+      expect(p.variantLabel, '주 4일');
+      expect(p.aka, ['nSuns 5/3/1 LP']);
+      expect(p.rules!.progress, '올려요.');
+      expect(p.rules!.deload, '낮춰요.');
+    });
+
+    test('missing fields give null and empty aka (old server)', () {
+      final p = ProgramSummary.fromJson(base());
+      expect(p.level, isNull);
+      expect(p.family, isNull);
+      expect(p.variantLabel, isNull);
+      expect(p.aka, isEmpty);
+      expect(p.rules, isNull);
+    });
+
+    test('unknown level string is kept, malformed values do not throw', () {
+      final p = ProgramSummary.fromJson({
+        ...base(),
+        'level': 'EXPERT',
+        'family': 3,
+        'variantLabel': ['x'],
+        'aka': ['ok', 7, null, 'b'],
+        'rules': {'progress': 'a', 'failure': 5, 'deload': 'c'},
+      });
+      expect(p.level, 'EXPERT');
+      expect(p.family, isNull);
+      expect(p.variantLabel, isNull);
+      expect(p.aka, ['ok', 'b']);
+      expect(p.rules, isNull);
+      expect(ProgramSummary.fromJson({...base(), 'aka': 'x', 'rules': 'y'}).aka, isEmpty);
+      expect(ProgramSummary.fromJson({...base(), 'rules': 'y'}).rules, isNull);
+    });
+
+    test('Program.fromJson carries the fields over', () {
+      final p = Program.fromJson({
+        ...base(),
+        'level': 'BEGINNER',
+        'family': 'wendler-531',
+        'variantLabel': 'BBB',
+        'aka': ['a'],
+        'rules': {'progress': 'a', 'failure': 'b', 'deload': 'c'},
+        'definition': <String, Object?>{},
+      });
+      expect(p.level, 'BEGINNER');
+      expect(p.family, 'wendler-531');
+      expect(p.variantLabel, 'BBB');
+      expect(p.aka, ['a']);
+      expect(p.rules!.failure, 'b');
+    });
+  });
+
+  test('SuggestItem: 모르는 oneRmSource 는 null 로 받는다', () {
+    final item = SuggestItem.fromJson({
+      'key': 'squat',
+      'exerciseId': 'e1',
+      'needs': SuggestNeeds.values.first.name,
+      'oneRmSource': 'INFERRED_FROM_BIG3',
+    });
+    expect(item.oneRmSource, isNull);
+    expect(item.key, 'squat');
+  });
 }

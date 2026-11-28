@@ -46,6 +46,29 @@ class TemplatesValidTest {
     }
 
     @Test
+    fun every_template_has_level_and_rules_and_family_has_variant_label() {
+        for (t in ProgramTemplates.all) {
+            val d = (validate(t.key) as ValidationResult.Valid).definition
+            assertTrue(d.level in setOf("BEGINNER", "INTERMEDIATE", "ADVANCED"), "${t.key}: level=${d.level}")
+            assertTrue(d.rules != null, "${t.key}: rules missing")
+            if (d.family != null) assertTrue(d.variantLabel != null, "${t.key}: variantLabel missing")
+            assertTrue(d.description!!.length <= 2000 && !d.description!!.contains("알려진 구성"), "${t.key}: aka sentence left in description")
+        }
+    }
+
+    @Test
+    fun families_group_the_expected_templates_with_unique_labels() {
+        val byFamily = ProgramTemplates.all
+            .map { it.key to (validate(it.key) as ValidationResult.Valid).definition }
+            .filter { it.second.family != null }
+            .groupBy({ it.second.family!! }, { it.first to it.second.variantLabel!! })
+        assertEquals(setOf("nsuns-amrap-wave", "wendler-531"), byFamily.keys)
+        assertEquals(listOf("nsuns-4day", "nsuns-5day", "nsuns-6day"), byFamily["nsuns-amrap-wave"]!!.map { it.first })
+        assertEquals(4, byFamily["wendler-531"]!!.size)
+        for ((f, v) in byFamily) assertEquals(v.size, v.map { it.second }.toSet().size, "$f: duplicate variantLabel")
+    }
+
+    @Test
     fun template_ids_are_fixed() {
         val ids = ProgramTemplates.all.map { it.id.toString() }
         assertEquals(

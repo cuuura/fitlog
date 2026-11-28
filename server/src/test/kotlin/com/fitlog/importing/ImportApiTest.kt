@@ -353,6 +353,31 @@ class ImportApiTest {
     }
 
     @Test
+    fun import_accepts_display_fields_and_rejects_bad_ones() = fitlogTest {
+        startApplication()
+        val c = jsonClient()
+        val uid = createUser()
+        val extra = """"level":"ADVANCED","family":"my-fam","variantLabel":"주 3일","aka":["별명"],""" +
+            """"rules":{"progress":"올려요.","failure":"다시 해요.","deload":"낮춰요."},"""
+        val good = programDef("Disp").replaceFirst("\"name\":\"Disp\",", "\"name\":\"Disp\",$extra")
+        val r = c.imp(uid, bundle(programs("""{"definition":$good}""")))
+        assertEquals(HttpStatusCode.Created, r.status)
+        val pid = c.detail(uid, r.obj().str("id")!!).obj().itemIds("program").single()
+        val got = c.get("/v1/programs/$pid") { auth(uid) }.obj()
+        assertEquals("ADVANCED", got.str("level"))
+        assertEquals("my-fam", got.str("family"))
+        assertEquals("주 3일", got.str("variantLabel"))
+        assertEquals("낮춰요.", got["rules"]!!.jsonObject.str("deload"))
+
+        val bad = programDef("Bad").replaceFirst("\"name\":\"Bad\",", "\"name\":\"Bad\",\"level\":\"X\",\"family\":\"ok\",")
+        val br = c.imp(uid, bundle(programs("""{"definition":$bad}""")))
+        assertEquals(HttpStatusCode.BadRequest, br.status)
+        val paths = br.obj()["error"]!!.jsonObject["details"]!!.jsonArray.map { it.str("path")!! }
+        assertTrue("/programs/0/definition/level" in paths, paths.toString())
+        assertTrue("/programs/0/definition/variantLabel" in paths, paths.toString())
+    }
+
+    @Test
     fun program_name_exists_conflict_and_replace_revert() = fitlogTest {
         startApplication()
         val c = jsonClient()
