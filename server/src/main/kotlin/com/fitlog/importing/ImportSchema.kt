@@ -42,6 +42,7 @@ internal class PProgram(val ptr: String, val index: Int, val id: UUID?, val ref:
 internal class PStart(
     val ptr: String, val id: UUID?, val program: PProgRef, val startDate: LocalDate, val tz: String?,
     val skipPolicy: String, val tm: Map<String, Double>, val working: Map<String, Double>,
+    val weekdays: Map<String, String> = emptyMap(),
 )
 
 internal class PSet(
@@ -272,7 +273,7 @@ private class Run(val errors: MutableList<ErrorDetail>) {
     fun start(el: JsonElement, path: String): PStart? {
         val o = obj(el, path) ?: return null
         val before = errors.size
-        keys(o, path, setOf("id", "program", "startDate", "tz", "skipPolicy", "tm", "working"), setOf("program", "startDate"))
+        keys(o, path, setOf("id", "program", "startDate", "tz", "skipPolicy", "tm", "working", "weekdays"), setOf("program", "startDate"))
         val id = uuid(o, "id", path)
         var ref: PProgRef? = null
         o["program"]?.let { p ->
@@ -293,8 +294,17 @@ private class Run(val errors: MutableList<ErrorDetail>) {
         val policy = enum(o, "skipPolicy", path, listOf("SHIFT", "FIXED_DATE")) ?: "SHIFT"
         val tm = weights(o, "tm", path)
         val working = weights(o, "working", path)
+        val weekdays = linkedMapOf<String, String>()
+        o["weekdays"]?.let { el ->
+            obj(el, "$path/weekdays")?.forEach { (k, v) ->
+                val s = prim(v)?.takeIf { it.isString }?.content
+                if (s == null || s !in setOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")) {
+                    err("$path/weekdays/${escPtr(k)}", "must be one of MON, TUE, WED, THU, FRI, SAT, SUN")
+                } else weekdays[k] = s
+            }
+        }
         if (errors.size > before || ref == null || date == null) return null
-        return PStart(path, id, ref!!, date, tz, policy, tm, working)
+        return PStart(path, id, ref!!, date, tz, policy, tm, working, weekdays)
     }
 
     private fun weights(o: JsonObject, key: String, path: String): Map<String, Double> {

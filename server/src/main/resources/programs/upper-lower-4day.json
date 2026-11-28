@@ -25,12 +25,14 @@
     "db_curl": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000019"
-      }
+      },
+      "fromFirstSession": true
     },
     "pushdown": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002d"
-      }
+      },
+      "fromFirstSession": true
     },
     "squat": {
       "exercise": {
@@ -75,17 +77,20 @@
     "lateral": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000017"
-      }
+      },
+      "fromFirstSession": true
     },
     "oh_tri": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000038"
-      }
+      },
+      "fromFirstSession": true
     },
     "hammer": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000001a"
-      }
+      },
+      "fromFirstSession": true
     },
     "hack": {
       "exercise": {
@@ -105,7 +110,8 @@
     "calf": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002f"
-      }
+      },
+      "fromFirstSession": true
     },
     "bulgarian": {
       "exercise": {

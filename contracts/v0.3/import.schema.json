@@ -65,7 +65,12 @@
         "tz": { "type": "string", "description": "없으면 사용자 기기 시간대(앱) 또는 Asia/Seoul(MCP 기본)" },
         "skipPolicy": { "enum": ["SHIFT", "FIXED_DATE"], "default": "SHIFT" },
         "tm": { "type": "object", "additionalProperties": { "type": "number", "exclusiveMinimum": 0 } },
-        "working": { "type": "object", "additionalProperties": { "type": "number", "exclusiveMinimum": 0 } }
+        "working": { "type": "object", "additionalProperties": { "type": "number", "exclusiveMinimum": 0 } },
+        "weekdays": {
+          "type": "object",
+          "description": "날 키(days[].key) → 요일. 안 준 날은 프로그램 그대로(v1.1)",
+          "additionalProperties": { "enum": ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"] }
+        }
       }
     },
     "set": {

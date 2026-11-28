@@ -25,7 +25,8 @@
     "curl": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000019"
-      }
+      },
+      "fromFirstSession": true
     },
     "crunch": {
       "exercise": {
@@ -55,12 +56,14 @@
     "pullover": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000024"
-      }
+      },
+      "fromFirstSession": true
     },
     "lateral": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000017"
-      }
+      },
+      "fromFirstSession": true
     }
   },
   "progression": {

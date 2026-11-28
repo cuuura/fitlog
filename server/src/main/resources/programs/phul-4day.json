@@ -36,12 +36,14 @@
     "curl": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000000c"
-      }
+      },
+      "fromFirstSession": true
     },
     "skull": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000012"
-      }
+      },
+      "fromFirstSession": true
     },
     "squat": {
       "exercise": {
@@ -66,17 +68,20 @@
     "calf": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002f"
-      }
+      },
+      "fromFirstSession": true
     },
     "incline_bb": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000004"
-      }
+      },
+      "derive": { "from": "bench", "ratio": 0.8 }
     },
     "fly": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000020"
-      }
+      },
+      "fromFirstSession": true
     },
     "cable_row": {
       "exercise": {
@@ -91,22 +96,26 @@
     "lateral": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000017"
-      }
+      },
+      "fromFirstSession": true
     },
     "incline_curl": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000001b"
-      }
+      },
+      "fromFirstSession": true
     },
     "tri_ext": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000038"
-      }
+      },
+      "fromFirstSession": true
     },
     "front_squat": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000002"
-      }
+      },
+      "derive": { "from": "squat", "ratio": 0.8 }
     },
     "lunge": {
       "exercise": {

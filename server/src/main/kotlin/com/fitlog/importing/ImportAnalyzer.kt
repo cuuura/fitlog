@@ -584,7 +584,11 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
                 Out.SKIP -> { count("startPrograms", "SKIP"); instInfos[key] = null }
                 Out.UNRESOLVED -> instInfos[key] = null
                 Out.NEW -> {
-                    val def = prog.def
+                    val def = try {
+                        com.fitlog.program.instance.applyWeekdays(prog.def, sp.weekdays)
+                    } catch (e: com.fitlog.program.instance.WeekdayException) {
+                        err("${sp.ptr}/${e.field.replace('.', '/')}", e.message ?: "invalid weekdays"); continue
+                    }
                     if (sp.skipPolicy == "FIXED_DATE") {
                         val bad = def.days.indexOfFirst { d -> d.weekday == null }
                         if (bad >= 0) { err("${sp.ptr}/skipPolicy", "FIXED_DATE requires weekday on every day (days[$bad] has none)"); continue }

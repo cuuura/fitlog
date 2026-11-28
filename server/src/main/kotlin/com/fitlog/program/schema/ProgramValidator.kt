@@ -5,6 +5,9 @@ import com.fitlog.core.ErrorCode
 import com.fitlog.core.ErrorDetail
 import com.fitlog.engine.ApplyAt
 import com.fitlog.engine.Day
+import com.fitlog.engine.Derive
+import com.fitlog.engine.Needs
+import com.fitlog.engine.ProgramEngine
 import com.fitlog.engine.DayExercise
 import com.fitlog.engine.ExerciseRef
 import com.fitlog.engine.Lift
@@ -197,6 +200,7 @@ private class Run(val resolver: ExerciseResolver) {
         val progression = progression(o)
         val days = days(o)
         crossChecks(progression)
+        if (errors.isEmpty() && lifts != null && days != null) deriveChecks(lifts, progression ?: emptyMap(), roundingKg ?: 2.5, o, days)
 
         if (errors.isNotEmpty() || name == null || lifts == null || days == null) return null
         return ProgramDefinition(
@@ -259,11 +263,24 @@ private class Run(val resolver: ExerciseResolver) {
 
     fun lift(el: JsonElement, path: String): Lift? {
         val o = obj(el, path) ?: return null
-        checkKeys(o, path, setOf("exercise", "tmFrom"), setOf("exercise"))
+        checkKeys(o, path, setOf("exercise", "tmFrom", "derive", "fromFirstSession"), setOf("exercise"))
         val ex = o["exercise"]?.let { exerciseRef(it, "$path/exercise") }
         val tmFrom = str(o, "tmFrom", path)
         if (tmFrom != null && tmFrom !in liftKeys) err("$path/tmFrom", "'$tmFrom' is not a key in lifts")
-        return if (ex != null) Lift(ex, tmFrom) else null
+        val derive = o["derive"]?.let { derive(it, "$path/derive") }
+        val ffs = bool(o, "fromFirstSession", path)
+        return if (ex != null && (!o.containsKey("fromFirstSession") || ffs != null) && (!o.containsKey("derive") || derive != null)) {
+            Lift(ex, tmFrom, derive, ffs ?: false)
+        } else null
+    }
+
+    fun derive(el: JsonElement, path: String): Derive? {
+        val o = obj(el, path) ?: return null
+        checkKeys(o, path, setOf("from", "ratio"), setOf("from", "ratio"))
+        val from = str(o, "from", path)
+        if (from != null && from !in liftKeys) err("$path/from", "'$from' is not a key in lifts")
+        val ratio = num(o, "ratio", path, 0.05, 2.0)
+        return if (from != null && ratio != null) Derive(from, ratio) else null
     }
 
     fun exerciseRef(el: JsonElement, path: String): ExerciseRef? {
@@ -527,6 +544,59 @@ private class Run(val resolver: ExerciseResolver) {
             else -> {
                 checkKeys(o, path, setOf("type"), setOf("type"))
                 return Load.NoLoad
+            }
+        }
+    }
+
+    // ------------------------------------------------------------ derive·fromFirstSession 의미 검사
+
+    /** 입력 요구·규칙을 알아야 해서 정의가 다 만들어진 뒤에 한다 */
+    fun deriveChecks(lifts: Map<String, Lift>, progression: Map<String, Rule>, roundingKg: Double, top: JsonObject, days: List<Day>) {
+        if (lifts.values.none { it.derive != null || it.fromFirstSession }) return
+        val tmp = ProgramDefinition(
+            schemaVersion = 1, name = "x", roundingKg = roundingKg, lifts = lifts, progression = progression, days = days,
+        )
+        val required = ProgramEngine.requiredInputs(tmp)
+        fun stateKeyOf(k: String): String {
+            var key = k
+            var guard = 0
+            while (guard++ < 8) key = lifts[key]?.tmFrom ?: break
+            return key
+        }
+        val firstRules = { k: String -> progression[k] is Rule.Linear || progression[k] is Rule.Stages || progression[k] is Rule.Double }
+        // from 이 비워 시작할 수 있는 키인지(DOUBLE·fromFirstSession)
+        fun emptyStart(k: String) = progression[k] is Rule.Double || lifts[k]?.fromFirstSession == true
+        for ((key, lift) in lifts) {
+            val p = "/lifts/${esc(key)}"
+            val d = lift.derive
+            if (d != null) {
+                val dp = "$p/derive"
+                val needs = required[key]
+                when {
+                    lift.tmFrom != null -> err("$p/tmFrom", "cannot be used together with 'derive' (this key already shares another key's TM)")
+                    needs == null -> err(dp, "'$key' does not need a start value, so 'derive' has no effect")
+                    d.from == key -> err("$dp/from", "must not point to itself")
+                    lifts[d.from]?.derive != null -> err("$dp/from", "'${d.from}' has its own 'derive' (chains are not allowed)")
+                    else -> {
+                        val fromKey = stateKeyOf(d.from)
+                        when {
+                            fromKey == key -> err("$dp/from", "'${d.from}' resolves to this key (circular)")
+                            lifts[fromKey]?.derive != null -> err("$dp/from", "'${d.from}' resolves to a key with its own 'derive' (chains are not allowed)")
+                            fromKey !in required -> err("$dp/from", "'${d.from}' does not need a start value")
+                            emptyStart(fromKey) && (needs == Needs.TM || !firstRules(key)) ->
+                                err("$dp/from", "'${d.from}' can start empty, so '$key' needs a LINEAR, STAGES or DOUBLE rule and a WORKING value")
+                        }
+                    }
+                }
+            }
+            if (lift.fromFirstSession) {
+                val fp = "$p/fromFirstSession"
+                when {
+                    lift.tmFrom != null -> err("$p/tmFrom", "cannot be used together with 'fromFirstSession'")
+                    required[key] == null -> err(fp, "'$key' does not need a start value, so 'fromFirstSession' has no effect")
+                    required[key] == Needs.TM -> err(fp, "only WORKING keys can use 'fromFirstSession' ('$key' needs a TM)")
+                    !firstRules(key) -> err(fp, "'$key' needs a LINEAR, STAGES or DOUBLE progression rule to set its weight from the first session")
+                }
             }
         }
     }

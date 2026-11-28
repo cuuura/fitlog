@@ -14,7 +14,10 @@ import com.fitlog.core.notFound
 import com.fitlog.core.userId
 import com.fitlog.core.validation
 import com.fitlog.engine.ProgramDefinition
+import com.fitlog.engine.ProgramEngine
 import com.fitlog.engine.ProgramRules
+import com.fitlog.program.Durations
+import com.fitlog.program.SessionMinutes
 import com.fitlog.program.schema.ProgramValidator
 import com.fitlog.program.schema.orThrow
 import io.ktor.http.HttpStatusCode
@@ -57,6 +60,8 @@ data class ProgramSummary(
     val dayCount: Int,
     val source: String,
     @Serializable(with = UUIDSerializer::class) val importBatchId: UUID? = null,
+    /** 회당 어림 시간(분) 범위. 계산 실패 시 생략 */
+    val sessionMinutes: SessionMinutes? = null,
 )
 
 /** openapi Program. 저장 전 미리보기(validate)에서는 id 가 없다 */
@@ -77,6 +82,7 @@ data class Program(
     val source: String,
     val definition: ProgramDefinition,
     @Serializable(with = UUIDSerializer::class) val importBatchId: UUID? = null,
+    val sessionMinutes: SessionMinutes? = null,
 )
 
 private fun decode(text: String): ProgramDefinition = AppJson.decodeFromString(ProgramDefinition.serializer(), text)
@@ -88,6 +94,7 @@ private fun summary(r: ResultRow): ProgramSummary {
         description = def.description, category = def.category, level = def.level, family = def.family,
         variantLabel = def.variantLabel, aka = def.aka, rules = def.rules, builtIn = r[Programs.ownerId] == null,
         dayCount = def.days.size, source = r[Programs.sourceCol], importBatchId = r[Programs.importBatchId],
+        sessionMinutes = Durations.sessionMinutes(ProgramEngine, r[Programs.definition]),
     )
 }
 
@@ -99,6 +106,7 @@ private fun program(r: ResultRow): Program {
         variantLabel = def.variantLabel, aka = def.aka, rules = def.rules, builtIn = r[Programs.ownerId] == null,
         dayCount = def.days.size, source = r[Programs.sourceCol], definition = def,
         importBatchId = r[Programs.importBatchId],
+        sessionMinutes = Durations.sessionMinutes(ProgramEngine, r[Programs.definition]),
     )
 }
 

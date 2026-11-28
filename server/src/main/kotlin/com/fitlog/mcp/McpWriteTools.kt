@@ -268,6 +268,7 @@ internal val WRITE_TOOLS: List<Tool> = listOf(
             "startDate" to S.str("YYYY-MM-DD", format = "date"),
             "tm" to S.map(S.num(min = 0.0), "리프트 키 → TM(kg)"), "working" to S.map(S.num(min = 0.0), "리프트 키 → 작업 무게(kg)"),
             "skipPolicy" to S.str(enum = listOf("SHIFT", "FIXED_DATE")), "tz" to S.str("IANA 시간대. 기본 Asia/Seoul"),
+            "weekdays" to S.map(S.str(enum = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")), "날 키(A·B…) → 요일. 안 준 날은 프로그램 그대로"),
             "onConflict" to onConflictS, "resolutions" to resolutionsS, "note" to noteS,
             required = listOf("program", "startDate"),
         ),
@@ -282,6 +283,7 @@ internal val WRITE_TOOLS: List<Tool> = listOf(
                 if (a.has("tm")) put("tm", a.obj("tm")!!)
                 if (a.has("working")) put("working", a.obj("working")!!)
                 a.enum("skipPolicy", listOf("SHIFT", "FIXED_DATE"))?.let { put("skipPolicy", it) }
+                if (a.has("weekdays")) put("weekdays", a.obj("weekdays")!!)
             }
             importBundle(ctx, a, bundleOf(a, "startPrograms" to JsonArray(listOf(sp))), tz = a.str("tz"))
         },
