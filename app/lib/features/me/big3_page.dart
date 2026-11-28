@@ -299,7 +299,7 @@ class _Big3PageState extends ConsumerState<Big3Page> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          padding: const EdgeInsets.fromLTRB(16, 16, 28, 0),
           child: SizedBox(
             height: 240,
             child: LineChart(
