@@ -2072,12 +2072,73 @@
   "progTypePowerlifting": "파워리프팅",
   "progTypeGeneralStrength": "기초 근력",
   "progTypeBodyweight": "맨몸·홈트",
+  "progLevelAll": "수준 전체",
+  "progLevelBeginner": "입문",
+  "progLevelIntermediate": "중급",
+  "progLevelAdvanced": "상급",
+  "progVariantGroup": "구성 선택",
+  "progAka": "흔히 {names}(으)로 알려진 구성",
+  "@progAka": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "progRuleUp": "오르면",
+  "progRuleFailLabel": "실패하면",
+  "progRuleDeloadLabel": "낮출 때",
+  "progRecTitle": "추천",
+  "progAllTitle": "전체 · {n}종",
+  "@progAllTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "progRecWhyFresh": "최근 4주 기록이 거의 없어서 배우기 쉬운 입문 구성을 먼저 보여 드려요.",
+  "progRecWhySteadyBeginner": "최근 4주 동안 주 {n}회 운동했어요. 3대 기록이 아직 없어서 입문 구성을 먼저 보여 드려요.",
+  "@progRecWhySteadyBeginner": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "progRecWhySteady": "최근 4주 동안 주 {n}회 운동했고 3대 기록이 있어서 맞는 구성을 먼저 보여 드려요.",
+  "@progRecWhySteady": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "progRecWhyStrong": "최근 4주 동안 주 {n}회 운동했고 3대 기록이 있어서 중급 구성을 먼저 보여 드려요.",
+  "@progRecWhyStrong": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "progEmptyType": "이 타입의 프로그램은 아직 없어요.",
   "progEmptySearch": "찾는 프로그램이 없어요.",
   "progWeekDays": "주 {n}일",
   "@progWeekDays": {
     "placeholders": {
       "n": {
+        "type": "int"
+      }
+    }
+  },
+  "progWeekDaysRange": "주 {a}~{b}일",
+  "@progWeekDaysRange": {
+    "placeholders": {
+      "a": {
+        "type": "int"
+      },
+      "b": {
         "type": "int"
       }
     }

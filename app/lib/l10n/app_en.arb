@@ -2000,12 +2000,73 @@
   "progTypePowerlifting": "Powerlifting",
   "progTypeGeneralStrength": "General strength",
   "progTypeBodyweight": "Bodyweight & home",
+  "progLevelAll": "Any level",
+  "progLevelBeginner": "Beginner",
+  "progLevelIntermediate": "Intermediate",
+  "progLevelAdvanced": "Advanced",
+  "progVariantGroup": "Choose a setup",
+  "progAka": "Also known as {names}",
+  "@progAka": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "progRuleUp": "When it goes well",
+  "progRuleFailLabel": "When you miss",
+  "progRuleDeloadLabel": "When to back off",
+  "progRecTitle": "Recommended",
+  "progAllTitle": "All · {n}",
+  "@progAllTitle": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "progRecWhyFresh": "You have few workouts in the last 4 weeks, so we show easy-to-learn beginner setups first.",
+  "progRecWhySteadyBeginner": "You trained {n} times a week over the last 4 weeks. You have no big-3 records yet, so we show beginner setups first.",
+  "@progRecWhySteadyBeginner": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "progRecWhySteady": "You trained {n} times a week over the last 4 weeks and have big-3 records, so we show setups that fit first.",
+  "@progRecWhySteady": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "progRecWhyStrong": "You trained {n} times a week over the last 4 weeks and have big-3 records, so we show intermediate setups first.",
+  "@progRecWhyStrong": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
   "progEmptyType": "No programs of this type yet.",
   "progEmptySearch": "No matching programs.",
   "progWeekDays": "{n} days/week",
   "@progWeekDays": {
     "placeholders": {
       "n": {
+        "type": "int"
+      }
+    }
+  },
+  "progWeekDaysRange": "{a}-{b} days/week",
+  "@progWeekDaysRange": {
+    "placeholders": {
+      "a": {
+        "type": "int"
+      },
+      "b": {
         "type": "int"
       }
     }

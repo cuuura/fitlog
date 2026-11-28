@@ -19,6 +19,14 @@ String? programCategoryLabel(AppLocalizations l, String? category) => switch (ca
   _ => null,
 };
 
+/// 프로그램 level(서버 문자열) → 표시 이름. 모르는 값/null이면 null(숨김).
+String? programLevelLabel(AppLocalizations l, String? level) => switch (level) {
+  'BEGINNER' => l.progLevelBeginner,
+  'INTERMEDIATE' => l.progLevelIntermediate,
+  'ADVANCED' => l.progLevelAdvanced,
+  _ => null,
+};
+
 List<Map<String, Object?>> programDays(Map<String, Object?> def) => [
   for (final d in (def['days'] as List? ?? const [])) (d as Map).cast<String, Object?>(),
 ];
