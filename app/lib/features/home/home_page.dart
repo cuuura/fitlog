@@ -23,6 +23,7 @@ import '../scheduled/scheduled_providers.dart';
 import '../session/plan_logic.dart';
 import '../session/session_controller.dart';
 import '../session/session_format.dart';
+import '../programs/program_add_sheet.dart';
 import '../session/start_program_flow.dart';
 import '../sync_status/sync_status_indicator.dart';
 
@@ -204,7 +205,7 @@ class HomePage extends ConsumerWidget {
                 Text(l.homeStartProgramHint, style: text.bodySmall),
                 TextButton(
                   key: const Key('home-program-hint-action'),
-                  onPressed: () => context.go(Routes.programs),
+                  onPressed: () => showProgramAddSheet(context),
                   child: Text(l.homeStartProgramAction),
                 ),
               ],

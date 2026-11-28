@@ -106,10 +106,18 @@ void main() {
       definition: {'name': '내 프로그램', 'days': []},
     );
     await h.pump(tester, Routes.programs);
-    await tester.tap(find.text('내 프로그램'));
+    await tester.tap(find.descendant(of: find.byKey(const Key('programs-segments')), matching: find.textContaining('내 프로그램')));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('source-p-ai')), findsOneWidget);
     expect(find.byKey(const Key('source-p-mine')), findsNothing);
+    // 추가 시트의 내 프로그램 구분에도 같은 배지
+    await tester.tap(find.byKey(const Key('programs-add')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.descendant(of: find.byKey(const Key('program-add-segments')), matching: find.text('내 프로그램')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('source-p-ai')), findsNWidgets(2));
+    await tester.tap(find.byKey(const Key('program-add-close')));
+    await tester.pumpAndSettle();
 
     h.router.push(Routes.programDetail('p-ai'));
     await tester.pumpAndSettle();

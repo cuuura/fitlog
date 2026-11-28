@@ -98,6 +98,91 @@ void main() {
     await check(t, await seeded(), Routes.programs);
   });
 
+  testWidgets('프로그램 추가 시트(카드 펼침, 내 프로그램, 다른 방법)와 내 프로그램 탭', (t) async {
+    for (final (scale, mode) in [(1.3, ThemeMode.light), (2.0, ThemeMode.dark), (2.0, ThemeMode.light)]) {
+      final e = await seeded();
+      for (var i = 0; i < 3; i++) {
+        e.programs.programs['t$i'] = Program(
+          id: 't$i',
+          name: '아주 긴 이름의 프로그램 템플릿 번호 $i 입니다',
+          description: '설명이 길어도 넘치지 않아야 하는 프로그램 설명 문장입니다. 두 줄을 넘깁니다.',
+          builtIn: true,
+          dayCount: 3 + i,
+          category: 'POWERBUILDING',
+          definition: {
+            'schemaVersion': 1,
+            'name': 'x',
+            'lifts': {'squat': {'exercise': {'id': squat.id}}},
+            'days': [
+              {
+                'key': 'A',
+                'name': 'A',
+                'weekday': 'MON',
+                'exercises': [
+                  {
+                    'lift': 'squat',
+                    'sets': [
+                      {'count': 3, 'reps': 5, 'load': {'type': 'WORKING'}},
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        );
+      }
+      e.programs.programs['m1'] = Program(
+        id: 'm1',
+        name: '내가 만든 아주 긴 이름의 프로그램',
+        description: '내 설명',
+        builtIn: false,
+        dayCount: 3,
+        definition: {'schemaVersion': 1, 'name': 'x', 'lifts': <String, Object?>{}, 'days': <Object?>[]},
+      );
+      await e.pump(t, initial: Routes.programs, size: const Size(360, 780), themeMode: mode, textScale: scale);
+      noError(t, '프로그램 탭 $scale');
+      await t.tap(find.byKey(const Key('programs-add')));
+      await t.pumpAndSettle();
+      noError(t, '시트 $scale');
+      await t.tap(find.byKey(const Key('program-toggle-t0')));
+      await t.pumpAndSettle();
+      noError(t, '카드 펼침 $scale');
+      expect(find.byKey(const Key('program-pick-t0')), findsOneWidget);
+      final h = t.getSize(find.byKey(const Key('program-pick-t0'))).height;
+      expect(h, greaterThanOrEqualTo(48));
+      await t.tap(find.descendant(of: find.byKey(const Key('program-add-segments')), matching: find.text('내 프로그램')));
+      await t.pumpAndSettle();
+      noError(t, '시트 내 프로그램 $scale');
+      await t.drag(find.byKey(const Key('program-add-list')), const Offset(0, -600));
+      await t.pumpAndSettle();
+      noError(t, '시트 다른 방법 $scale');
+      await t.tap(find.byKey(const Key('program-add-close')));
+      await t.pumpAndSettle();
+      await t.tap(find.descendant(of: find.byKey(const Key('programs-segments')), matching: find.textContaining('내 프로그램')));
+      await t.pumpAndSettle();
+      noError(t, '내 프로그램 탭 $scale');
+    }
+  });
+
+  testWidgets('셸 안 프로그램 탭: 스낵바가 FAB를 가리지 않는다', (t) async {
+    final e = await seeded();
+    e.programs.programs['m1'] = Program(
+      id: 'm1',
+      name: '내 프로그램',
+      builtIn: false,
+      dayCount: 3,
+      definition: {'schemaVersion': 1, 'name': 'x', 'lifts': <String, Object?>{}, 'days': <Object?>[]},
+    );
+    await e.pump(t, initial: Routes.programs, size: const Size(360, 780));
+    expect(find.byKey(const Key('app-nav')), findsOneWidget, reason: '셸 안에서 확인');
+    ScaffoldMessenger.of(t.element(find.byKey(const Key('programs-add')))).showSnackBar(const SnackBar(content: Text('알림 문구')));
+    await t.pumpAndSettle();
+    expect(find.text('알림 문구'), findsOneWidget);
+    final fab = t.getRect(find.byKey(const Key('programs-add')));
+    final snack = t.getRect(find.byType(SnackBar));
+    expect(fab.overlaps(snack), isFalse);
+  });
+
   testWidgets('종목별 기록', (t) async {
     await check(t, await seeded(), Routes.exerciseRecords(squat.id));
   });

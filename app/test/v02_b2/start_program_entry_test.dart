@@ -109,6 +109,35 @@ void main() {
     expect(find.byKey(const Key('home-program-hint')), findsOneWidget);
   });
 
+  testWidgets('홈의 프로그램 시작하기는 프로그램 탭이 아니라 추가 시트를 연다', (t) async {
+    final h = Harness();
+    h.programs.programs['p9'] = Program(
+      id: 'p9',
+      name: '시트 템플릿',
+      description: '설명',
+      builtIn: true,
+      dayCount: 3,
+      definition: {'schemaVersion': 1, 'name': 'x', 'lifts': <String, Object?>{}, 'days': <Object?>[]},
+    );
+    await h.pump(
+      t,
+      extraRoutes: [
+        GoRoute(path: Routes.programs, builder: (_, _) => const Scaffold(body: Text('programs-page'))),
+        GoRoute(path: '/programs/:id/start', builder: (_, _) => const Scaffold(body: Text('start-page'))),
+      ],
+    );
+    await t.tap(find.byKey(const Key('home-program-hint-action')));
+    await _settle(t);
+    expect(find.text('programs-page'), findsNothing);
+    expect(find.byKey(const Key('program-add-segments')), findsOneWidget);
+    expect(find.byKey(const Key('program-p9')), findsOneWidget);
+    await t.tap(find.byKey(const Key('program-toggle-p9')));
+    await _settle(t);
+    await t.tap(find.byKey(const Key('program-pick-p9')));
+    await _settle(t);
+    expect(find.text('start-page'), findsOneWidget);
+  });
+
   testWidgets('비어 있는 자유 세션: 취소하면 유지, 버리고 시작하면 프로그램 세션', (t) async {
     final h = Harness();
     await _setup(h);

@@ -25,6 +25,7 @@ Program _p(
   bool builtIn = true,
   String? description,
   String? templateKey,
+  int days = 4,
 }) => Program(
   id: id,
   name: name,
@@ -32,7 +33,7 @@ Program _p(
   templateKey: templateKey,
   category: category,
   builtIn: builtIn,
-  dayCount: 4,
+  dayCount: days,
   definition: {
     'schemaVersion': 1,
     'name': name,
@@ -104,10 +105,15 @@ Future<MemoryProgramRepository> _pump(
   return repo;
 }
 
+/// 추가 시트를 열어 두고(없으면 FAB로 열기) 구분을 고른다.
 Future<void> _seg(WidgetTester tester, String label) async {
+  if (find.byKey(const Key('program-add-segments')).evaluate().isEmpty) {
+    await tester.tap(find.byKey(const Key('programs-add')));
+    await tester.pumpAndSettle();
+  }
   await tester.tap(
     find.descendant(
-      of: find.byKey(const Key('programs-segments')),
+      of: find.byKey(const Key('program-add-segments')),
       matching: find.text(label),
     ),
   );
@@ -208,10 +214,41 @@ void main() {
       );
     });
 
-    testWidgets('진행 중 탭에는 검색/칩이 없다', (tester) async {
+    testWidgets('프로그램 탭 본문에는 검색/칩이 없고 시트에만 있다', (tester) async {
       await _pump(tester, _templates);
       expect(find.byKey(const Key('programs-search')), findsNothing);
       expect(find.byKey(const Key('programs-type-filter')), findsNothing);
+      await tester.tap(find.byKey(const Key('programs-add')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('programs-search')), findsOneWidget);
+      expect(find.byKey(const Key('programs-type-filter')), findsOneWidget);
+    });
+
+    testWidgets('일수 칩: 주 3일 / 4일 / 5일 이상, 다시 누르면 전체', (tester) async {
+      await _pump(tester, [
+        _p('d3', '삼일', days: 3),
+        _p('d4', '사일', days: 4),
+        _p('d5', '오일', days: 5),
+        _p('d6', '육일', days: 6),
+      ]);
+      await _seg(tester, '템플릿');
+      for (final k in ['all', '3', '4', '5']) {
+        expect(find.byKey(Key('programs-days-$k')), findsOneWidget, reason: k);
+      }
+      await tester.tap(find.byKey(const Key('programs-days-4')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('program-d4')), findsOneWidget);
+      expect(find.byKey(const Key('program-d3')), findsNothing);
+      expect(find.byKey(const Key('program-d5')), findsNothing);
+      await tester.tap(find.byKey(const Key('programs-days-5')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('program-d5')), findsOneWidget);
+      expect(find.byKey(const Key('program-d6')), findsOneWidget);
+      expect(find.byKey(const Key('program-d4')), findsNothing);
+      await tester.tap(find.byKey(const Key('programs-days-5')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('program-d3')), findsOneWidget);
+      expect(find.byKey(const Key('program-d6')), findsOneWidget);
     });
 
     testWidgets('타입 선택으로 거르고 다시 누르면 전체', (tester) async {
@@ -340,13 +377,7 @@ void main() {
 
     testWidgets('영어 문구', (tester) async {
       await _pump(tester, _templates, locale: const Locale('en'));
-      await tester.tap(
-        find.descendant(
-          of: find.byKey(const Key('programs-segments')),
-          matching: find.text('Templates'),
-        ),
-      );
-      await tester.pumpAndSettle();
+      await _seg(tester, 'Templates');
       expect(find.text('Search by name'), findsOneWidget);
       expect(find.text('All'), findsOneWidget);
       expect(find.text('Powerlifting'), findsWidgets);

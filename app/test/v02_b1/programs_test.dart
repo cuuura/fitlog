@@ -112,6 +112,7 @@ class _FailingRepo extends MemoryProgramRepository {
   Object? startError;
   Object? putError;
   Object? patchError;
+  Object? deleteError;
   @override
   Future<List<ProgramSummary>> listPrograms({ProgramListSource? source}) async {
     if (listError != null) throw listError!;
@@ -131,10 +132,21 @@ class _FailingRepo extends MemoryProgramRepository {
   }
 
   @override
+  Future<void> deleteProgram(String id) async {
+    if (deleteError != null) throw deleteError!;
+    return super.deleteProgram(id);
+  }
+
+  @override
   Future<Instance> startInstance(StartInstance start) async {
     if (startError != null) throw startError!;
     return super.startInstance(start);
   }
+}
+
+Future<void> _mineSeg(WidgetTester tester) async {
+  await tester.tap(find.descendant(of: find.byKey(const Key('programs-segments')), matching: find.textContaining('내 프로그램')));
+  await tester.pumpAndSettle();
 }
 
 class _Env {
@@ -181,13 +193,14 @@ class _Env {
     deviceTimezoneProvider.overrideWithValue(() async => 'Asia/Seoul'),
   ];
 
-  Future<void> pump(WidgetTester tester, String initial) async {
+  Future<void> pump(WidgetTester tester, String initial, {List<RouteBase> extraRoutes = const []}) async {
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
     final router = GoRouter(
       initialLocation: initial,
       routes: [
+        ...extraRoutes,
         GoRoute(path: Routes.home, builder: (_, _) => const Scaffold(body: Text('home-page'))),
         GoRoute(path: Routes.programs, builder: (_, _) => const ProgramsPage()),
         GoRoute(path: '/programs/:id', builder: (_, s) => ProgramDetailPage(programId: s.pathParameters['id']!)),
@@ -218,7 +231,7 @@ class _Env {
 
 void main() {
   group('목록', () {
-    testWidgets('두 탭: 진행 중 인스턴스와 템플릿·내 프로그램', (tester) async {
+    testWidgets('두 구분: 진행 중 인스턴스와 내 프로그램, 템플릿 구분은 없다', (tester) async {
       final env = _Env();
       env.programs.instances['i1'] = Instance(
         id: 'i1',
@@ -238,32 +251,85 @@ void main() {
       expect(find.textContaining('다음: Workout B'), findsOneWidget);
 
       expect(find.text('진행 중 1'), findsOneWidget);
-      await tester.tap(find.text('템플릿'));
-      await tester.pumpAndSettle();
-      expect(find.text('내 프로그램'), findsOneWidget);
-      expect(find.text('템플릿 5x5'), findsOneWidget);
-      expect(find.text('내 루틴'), findsNothing);
-      expect(find.byType(RowMenu<String>), findsNothing);
-      expect(find.byKey(const Key('programs-import-ai')), findsOneWidget);
-      await tester.tap(find.text('내 프로그램'));
-      await tester.pumpAndSettle();
+      expect(find.text('템플릿'), findsNothing);
+      expect(find.byKey(const Key('programs-import-ai')), findsNothing, reason: 'AI 가져오기는 시트 안으로');
+      expect(find.byKey(const Key('programs-add')), findsOneWidget);
+      await _mineSeg(tester);
       expect(find.text('내 루틴'), findsOneWidget);
+      expect(find.text('템플릿 5x5'), findsNothing);
       // 내 프로그램에만 ⋮ 메뉴가 있고 늘 보이는 휴지통은 없다
       expect(find.byType(RowMenu<String>), findsOneWidget);
       expect(find.byIcon(Icons.delete_outline), findsNothing);
-      await tester.tap(find.text('템플릿'));
-      await tester.pumpAndSettle();
 
-      await tester.tap(find.text('템플릿 5x5'));
+      // 자세히 → 상세 화면
+      await tester.tap(find.byKey(const Key('program-detail-p-mine')));
       await tester.pumpAndSettle();
+      expect(find.text('내 루틴 설명'), findsOneWidget);
       expect(find.text('월'), findsOneWidget);
     });
 
-    testWidgets('오프라인이면 안내와 다시 시도', (tester) async {
+    testWidgets('진행 중이 비면 첫 프로그램 고르기 버튼이 시트를 연다', (tester) async {
+      final env = _Env();
+      await env.pump(tester, Routes.programs);
+      expect(find.byKey(const Key('programs-first-pick')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('programs-first-pick')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('program-p-tpl')), findsOneWidget);
+    });
+
+    testWidgets('FAB로 시트를 열어 카드를 펼치고 이걸로 정하면 맞추기 화면', (tester) async {
+      final env = _Env();
+      env.programs.instances['i1'] = _inst('i1');
+      await env.pump(tester, Routes.programs);
+      await tester.tap(find.byKey(const Key('programs-add')));
+      await tester.pumpAndSettle();
+      // 템플릿 구분이 기본, 내 프로그램은 다른 구분
+      expect(find.byKey(const Key('program-p-tpl')), findsOneWidget);
+      expect(find.byKey(const Key('program-p-mine')), findsNothing);
+      // 이미 진행 중인 프로그램에만 칩
+      expect(find.byKey(const Key('program-running-p-tpl')), findsOneWidget);
+      expect(find.byKey(const Key('program-running-p-opt')), findsNothing);
+      // 펼치기 전에는 구조가 없다
+      expect(find.byKey(const Key('program-pick-p-tpl')), findsNothing);
+      await tester.tap(find.text('템플릿 5x5'));
+      await tester.pumpAndSettle();
+      expect(find.text('월'), findsOneWidget);
+      expect(find.textContaining('스쿼트  5×5'), findsOneWidget);
+      expect(find.text('이걸로 정하고 무게 맞추기'), findsOneWidget);
+      // 한 번에 하나만 펼친다
+      await tester.tap(find.text('더블'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('program-pick-p-tpl')), findsNothing);
+      expect(find.byKey(const Key('program-pick-p-opt')), findsOneWidget);
+      await tester.tap(find.text('템플릿 5x5'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('program-pick-p-tpl')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('program-add-segments')), findsNothing, reason: '시트는 닫힌다');
+      expect(find.text('프로그램 시작'), findsOneWidget);
+    });
+
+    testWidgets('시트 맨 아래 다른 방법: AI로 가져오기와 하루만 예약', (tester) async {
+      final env = _Env();
+      await env.pump(tester, Routes.programs, extraRoutes: [
+        GoRoute(path: Routes.importJson, builder: (_, _) => const Scaffold(body: Text('import-page'))),
+        GoRoute(path: Routes.scheduledNew, builder: (_, _) => const Scaffold(body: Text('scheduled-new-page'))),
+      ]);
+      await tester.tap(find.byKey(const Key('programs-add')));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.byKey(const Key('programs-import-ai')), 200, scrollable: find.descendant(of: find.byKey(const Key('program-add-list')), matching: find.byType(Scrollable)));
+      expect(find.text('다른 방법으로 추가'), findsOneWidget);
+      expect(find.byKey(const Key('programs-scheduled-new')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('programs-import-ai')));
+      await tester.pumpAndSettle();
+      expect(find.text('import-page'), findsOneWidget);
+    });
+
+    testWidgets('오프라인이면 시트에 안내와 다시 시도', (tester) async {
       final env = _Env();
       env.programs.listError = const ApiException(code: 'NETWORK', message: 'x');
       await env.pump(tester, Routes.programs);
-      await tester.tap(find.text('템플릿'));
+      await tester.tap(find.byKey(const Key('programs-add')));
       await tester.pumpAndSettle();
       expect(find.textContaining('서버에 연결할 수 없어요'), findsOneWidget);
       env.programs.listError = null;
@@ -272,11 +338,43 @@ void main() {
       expect(find.text('템플릿 5x5'), findsOneWidget);
     });
 
+    testWidgets('오프라인이면 내 프로그램에도 안내와 다시 시도', (tester) async {
+      final env = _Env();
+      env.programs.listError = const ApiException(code: 'NETWORK', message: 'x');
+      await env.pump(tester, Routes.programs);
+      await tester.tap(find.byKey(const Key('programs-add')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('program-add-close')));
+      await tester.pumpAndSettle();
+      await _mineSeg(tester);
+      expect(find.textContaining('서버에 연결할 수 없어요'), findsOneWidget);
+      env.programs.listError = null;
+      await tester.tap(find.text('다시 시도'));
+      await tester.pumpAndSettle();
+      expect(find.text('내 루틴'), findsOneWidget);
+    });
+
+    testWidgets('삭제 실패 스낵바는 FAB를 가리지 않는다(이 탭 전용 메신저)', (tester) async {
+      final env = _Env();
+      env.programs.deleteError = const ApiException(code: 'X', message: '삭제 실패요');
+      await env.pump(tester, Routes.programs);
+      await _mineSeg(tester);
+      await tester.tap(find.byType(RowMenu<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('program-delete-p-mine')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('confirm-ok')));
+      await tester.pumpAndSettle();
+      expect(find.text('삭제 실패요'), findsOneWidget);
+      final fab = tester.getRect(find.byKey(const Key('programs-add')));
+      final snack = tester.getRect(find.byType(SnackBar));
+      expect(fab.overlaps(snack), isFalse);
+    });
+
     testWidgets('내 프로그램 삭제는 확인 후', (tester) async {
       final env = _Env();
       await env.pump(tester, Routes.programs);
-      await tester.tap(find.text('내 프로그램'));
-      await tester.pumpAndSettle();
+      await _mineSeg(tester);
       await tester.tap(find.byType(RowMenu<String>));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('program-delete-p-mine')));
@@ -294,8 +392,7 @@ void main() {
     testWidgets('내 프로그램 삭제 확인에서 취소하면 그대로', (tester) async {
       final env = _Env();
       await env.pump(tester, Routes.programs);
-      await tester.tap(find.text('내 프로그램'));
-      await tester.pumpAndSettle();
+      await _mineSeg(tester);
       await tester.tap(find.byType(RowMenu<String>));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('program-delete-p-mine')));
