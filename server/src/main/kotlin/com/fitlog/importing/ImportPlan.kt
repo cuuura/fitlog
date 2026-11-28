@@ -35,10 +35,12 @@ internal class InstInfo(val id: UUID, val def: ProgramDefinition, val baseSeq: I
 internal class WSet(
     val id: UUID, val position: Int, val isWarmup: Boolean, val weightKg: Double?, val addedWeightKg: Double?,
     val reps: Int?, val durationSec: Int?, val distanceM: Double?, val rpe: Double?, val rir: Int?, val restSec: Int?,
-    val note: String?,
+    val note: String?, val setType: String = "NORMAL",
 )
 
-internal class WSessionEx(val id: UUID, val exerciseId: UUID, val position: Int, val note: String?, val sets: List<WSet>)
+internal class WSessionEx(
+    val id: UUID, val exerciseId: UUID, val position: Int, val note: String?, val sets: List<WSet>, val supersetGroup: String? = null,
+)
 
 internal class WSession(
     val id: UUID, val startedAt: Instant, val endedAt: Instant, val tz: String, val note: String?,
@@ -122,10 +124,10 @@ internal fun detId(userId: UUID, bundleHash: String, pointer: String): UUID {
 
 internal data class FpSet(
     val warm: Boolean, val w: String?, val aw: String?, val reps: Int?, val dur: Int?, val dist: String?,
-    val rpe: String?, val rir: Int?, val rest: Int?, val note: String?,
+    val rpe: String?, val rir: Int?, val rest: Int?, val note: String?, val setType: String = "NORMAL",
 )
 
-internal data class FpEx(val exerciseId: UUID, val note: String?, val sets: List<FpSet>)
+internal data class FpEx(val exerciseId: UUID, val note: String?, val sets: List<FpSet>, val supersetGroup: String? = null)
 
 internal data class FpSession(val startedAt: Long, val endedAt: Long?, val tz: String, val note: String?, val exs: List<FpEx>)
 
@@ -135,11 +137,12 @@ internal fun blankNull(s: String?) = s?.takeIf { it.isNotEmpty() }
 
 internal fun fpSet(
     warm: Boolean, w: Double?, aw: Double?, reps: Int?, dur: Int?, dist: Double?, rpe: Double?, rir: Int?, rest: Int?, note: String?,
-) = FpSet(warm, d2(w), d2(aw), reps, dur, d1(dist), d1(rpe), rir, rest, blankNull(note))
+    setType: String = "NORMAL",
+) = FpSet(warm, d2(w), d2(aw), reps, dur, d1(dist), d1(rpe), rir, rest, blankNull(note), setType)
 
 internal fun fpOf(s: WSession) = FpSession(
     s.startedAt.toEpochMilli(), s.endedAt.toEpochMilli(), s.tz, blankNull(s.note),
     s.exercises.map { e ->
-        FpEx(e.exerciseId, blankNull(e.note), e.sets.map { fpSet(it.isWarmup, it.weightKg, it.addedWeightKg, it.reps, it.durationSec, it.distanceM, it.rpe, it.rir, it.restSec, it.note) })
+        FpEx(e.exerciseId, blankNull(e.note), e.sets.map { fpSet(it.isWarmup, it.weightKg, it.addedWeightKg, it.reps, it.durationSec, it.distanceM, it.rpe, it.rir, it.restSec, it.note, it.setType) }, blankNull(e.supersetGroup))
     },
 )

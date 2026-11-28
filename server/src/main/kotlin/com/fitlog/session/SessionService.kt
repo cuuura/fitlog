@@ -40,6 +40,7 @@ internal fun Transaction.putSession(userId: UUID, id: UUID, body: Session, engin
     body.exercises.forEachIndexed { i, ex ->
         if (!seIds.add(ex.id)) validation("duplicate id", "exercises[$i].id")
         if (ex.position < 0) validation("position must be >= 0", "exercises[$i].position")
+        checkSupersetGroup(ex.supersetGroup, "exercises[$i].supersetGroup")
         val ref = refs[ex.exerciseId]
         if (ref == null || ref.deleted || (ref.ownerId != null && ref.ownerId != userId)) {
             validation("unknown exercise", "exercises[$i].exerciseId")
@@ -93,7 +94,7 @@ internal fun Transaction.putSession(userId: UUID, id: UUID, body: Session, engin
         body.programInstanceId, body.planSeq, body.planDayKey, body.scheduledWorkoutId,
     )
     body.exercises.forEach { ex ->
-        upsertSessionExerciseRow(ex.id, id, ex.exerciseId, ex.position, ex.note, now, ex.liftKey, ex.accessory)
+        upsertSessionExerciseRow(ex.id, id, ex.exerciseId, ex.position, ex.note, now, ex.liftKey, ex.accessory, ex.supersetGroup)
         checkedSets.getValue(ex.id).forEach { upsertSetRow(ex.id, it, now) }
     }
     // 본문에 없는 기존 종목·세트는 소프트 삭제

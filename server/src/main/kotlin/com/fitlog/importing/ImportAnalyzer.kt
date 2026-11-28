@@ -761,7 +761,8 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
         s.exercises.sortedBy { it.position }.map { e ->
             FpEx(
                 e.exerciseId, blankNull(e.note),
-                e.sets.sortedBy { it.position }.map { fpSet(it.isWarmup, it.weightKg, it.addedWeightKg, it.reps, it.durationSec, it.distanceM, it.rpe, it.rir, it.restSec, it.note) },
+                e.sets.sortedBy { it.position }.map { fpSet(it.isWarmup, it.weightKg, it.addedWeightKg, it.reps, it.durationSec, it.distanceM, it.rpe, it.rir, it.restSec, it.note, it.setType) },
+                blankNull(e.supersetGroup),
             )
         },
     )
@@ -770,7 +771,7 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
         val dto = WorkoutSet(
             id = UUID(0, 0), position = 0, isWarmup = ps.isWarmup, weightKg = ps.weightKg, addedWeightKg = ps.addedWeightKg,
             reps = ps.reps, durationSec = ps.durationSec, distanceM = ps.distanceM, rpe = ps.rpe, rir = ps.rir, restSec = ps.restSec,
-            note = ps.note, completedAt = startedAt,
+            note = ps.note, completedAt = startedAt, setType = ps.setType,
         )
         return try {
             checkSet(dto, type, "")
@@ -829,9 +830,10 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
                             si++
                             WSet(
                                 (if (suffix.isEmpty()) ps.id else null) ?: detId(uid, hash, ps.ptr + suffix), k, ps.isWarmup,
-                                w.weightKg, w.addedWeightKg, w.reps, w.durationSec, w.distanceM, w.rpe, w.rir, w.restSec, ps.note,
+                                w.weightKg, w.addedWeightKg, w.reps, w.durationSec, w.distanceM, w.rpe, w.rir, w.restSec, ps.note, ps.setType,
                             )
                         },
+                        ex.supersetGroup,
                     )
                 }
                 val first = resolved.first().second.nameKo

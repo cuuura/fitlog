@@ -28,6 +28,7 @@ import com.fitlog.exercise.validated
 import com.fitlog.session.WorkoutSet
 import com.fitlog.session.checkProgramLink
 import com.fitlog.session.checkSet
+import com.fitlog.session.checkSupersetGroup
 import com.fitlog.session.sessionInstanceId
 import com.fitlog.engine.ProgramCalculator
 import com.fitlog.program.instance.replayInstances
@@ -197,9 +198,10 @@ private fun Transaction.applySessionExercise(userId: UUID, c: Change, at: Instan
     if (parent[WorkoutSessions.userId] != userId) forbidden()
     if (parent[WorkoutSessions.deletedAt] != null) parentMissing("session deleted")
     if (p.position < 0) validation("position must be >= 0", "payload.position")
+    checkSupersetGroup(p.supersetGroup, "payload.supersetGroup")
     val ref = exerciseRefs(listOf(p.exerciseId))[p.exerciseId] ?: parentMissing("exercise not found")
     if (ref.ownerId != null && ref.ownerId != userId) validation("unknown exercise", "payload.exerciseId")
-    upsertSessionExerciseRow(c.id, parentId, p.exerciseId, p.position, p.note, at, p.liftKey, p.accessory)
+    upsertSessionExerciseRow(c.id, parentId, p.exerciseId, p.position, p.note, at, p.liftKey, p.accessory, p.supersetGroup)
     return applied(c)
 }
 

@@ -246,10 +246,10 @@ private fun Transaction.persist(ctx: ImportContext, a: Analyzer): ImportOutcome.
                         reps = s.reps, durationSec = s.durationSec, distanceM = s.distanceM, rpe = s.rpe, rir = s.rir, restSec = s.restSec,
                         note = s.note, completedAt = doneAt,
                         plannedSetKey = ps?.plannedSetKey, targetReps = ps?.targetReps, targetWeightKg = ps?.targetWeightKg,
-                        isAmrap = ps?.isAmrap ?: false,
+                        isAmrap = ps?.isAmrap ?: false, setType = s.setType,
                     )
                 },
-                liftKey = pe?.key, accessory = pe?.accessory ?: false,
+                liftKey = pe?.key, accessory = pe?.accessory ?: false, supersetGroup = e.supersetGroup,
             )
         }
         val body = Session(

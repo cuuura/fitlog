@@ -13,6 +13,12 @@ internal fun checkTz(tz: String, field: String = "tz") {
 
 private fun join(path: String, name: String) = if (path.isEmpty()) name else "$path.$name"
 
+internal val SET_TYPES = setOf("NORMAL", "DROP", "FAILURE")
+
+internal fun checkSupersetGroup(g: String?, field: String) {
+    if (g != null && (g.isEmpty() || g.length > 8)) validation("supersetGroup must be 1 to 8 characters", field)
+}
+
 internal fun bd2(d: Double): BigDecimal = Kg.of(d)
 internal fun bd1(d: Double): BigDecimal = BigDecimal.valueOf(d).setScale(1, RoundingMode.HALF_UP)
 
@@ -28,6 +34,7 @@ internal fun checkSet(s: WorkoutSet, type: String?, path: String): WorkoutSet {
     s.addedWeightKg?.let {
         if (!it.isFinite() || it < -9999.99 || it > 9999.99) bad("addedWeightKg", "addedWeightKg must be between -9999.99 and 9999.99")
     }
+    if (s.setType !in SET_TYPES) bad("setType", "setType must be one of NORMAL, DROP, FAILURE")
     s.reps?.let { if (it < 0) bad("reps", "reps must be >= 0") }
     s.durationSec?.let { if (it < 0) bad("durationSec", "durationSec must be >= 0") }
     s.distanceM?.let { if (!it.isFinite() || it < 0 || it > 9_999_999.0) bad("distanceM", "distanceM must be >= 0") }

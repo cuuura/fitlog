@@ -14,6 +14,8 @@ data class WorkoutSet(
     val id: UUID,
     val position: Int,
     val isWarmup: Boolean = false,
+    /** v1.2: NORMAL | DROP | FAILURE (isWarmup 과 별개) */
+    val setType: String = "NORMAL",
     val weightKg: Double? = null,
     val addedWeightKg: Double? = null,
     val reps: Int? = null,
@@ -45,6 +47,8 @@ data class SessionExercise(
     val sets: List<WorkoutSet> = emptyList(),
     val liftKey: String? = null,
     val accessory: Boolean = false,
+    /** v1.2: 슈퍼세트 묶음 글자(1~8자) 또는 null */
+    val supersetGroup: String? = null,
 )
 
 @Serializable
