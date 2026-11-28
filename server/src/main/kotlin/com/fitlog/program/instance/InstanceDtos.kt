@@ -102,7 +102,33 @@ data class Instance(
     val startDate: String,
     val state: InstanceState,
     val next: PlannedWorkout? = null,
+    /** v1.2: {dayKey: 정의 종목 인덱스 순열}. 없으면 빈 객체 */
+    val dayOrder: Map<String, List<Int>> = emptyMap(),
 )
+
+/** PUT /program-instances/{id}/definition */
+@Serializable
+data class ReplaceDefinition(
+    val definition: kotlinx.serialization.json.JsonElement,
+    val tm: Map<String, Double> = emptyMap(),
+    val working: Map<String, Double> = emptyMap(),
+)
+
+/** POST /program-instances/{id}/swap */
+@Serializable
+data class SwapLift(
+    val liftKey: String,
+    val exerciseId: UUID,
+    val tm: Double? = null,
+    val working: Double? = null,
+)
+
+/** PUT /program-instances/{id}/day-order */
+@Serializable
+data class DayOrderRequest(val dayKey: String, val order: List<Int>)
+
+@Serializable
+data class DayOrderResponse(val dayOrder: Map<String, List<Int>>)
 
 @Serializable
 data class AdjustInput(

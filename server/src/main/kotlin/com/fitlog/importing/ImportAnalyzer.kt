@@ -928,7 +928,7 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
                 }
                 continue
             }
-            var expected = info.baseSeq + 1
+            var expected = info.startSeq + 1
             for (c in list.sortedBy { it.s.planSeq }) {
                 if (c.s.planSeq == expected) { expected++; c.ws.link = info } else mismatch += c
             }
@@ -940,7 +940,7 @@ internal class Analyzer(private val ctx: ImportContext, private val req: ImportR
                 val existingJson = buildJsonObject {
                     put("instanceId", iid.toString())
                     put("planSeq", c.s.planSeq ?: 0)
-                    if (info != null) put("expectedPlanSeq", info.baseSeq + 1)
+                    if (info != null) put("expectedPlanSeq", info.startSeq + 1)
                 }
                 val r = decide(
                     "PLAN_MISMATCH", c.s.ptr, "planSeq does not match the next workout of the program instance",

@@ -61,12 +61,12 @@ import java.util.UUID
 
 private val STATUSES = setOf("ACTIVE", "PAUSED", "FINISHED")
 
-private fun conflict(msg: String, field: String? = null): Nothing = throw ApiException(ErrorCode.CONFLICT, msg, field)
+internal fun conflict(msg: String, field: String? = null): Nothing = throw ApiException(ErrorCode.CONFLICT, msg, field)
 
 private fun parseSkipPolicy(s: String, field: String = "skipPolicy"): SkipPolicy =
     runCatching { SkipPolicy.valueOf(s) }.getOrNull() ?: validation("$field must be SHIFT or FIXED_DATE", field)
 
-private fun requireWeekdays(def: ProgramDefinition, field: String = "skipPolicy") {
+internal fun requireWeekdays(def: ProgramDefinition, field: String = "skipPolicy") {
     val bad = def.days.indexOfFirst { weekdayOf(it.weekday) == null }
     if (bad >= 0) validation("FIXED_DATE requires weekday on every day (days[$bad] has none)", field)
 }
@@ -83,6 +83,7 @@ internal data class PlanRow(val day: PlannedDay, val scheduled: LocalDate?)
 internal fun planRows(
     engine: ProgramCalculator, def: ProgramDefinition, policy: SkipPolicy, startDate: LocalDate,
     state: ProgramState, count: Int, anchor: LocalDate?, settings: EngineSettings,
+    dayOrder: Map<String, List<Int>> = emptyMap(),
 ): List<PlanRow> {
     var prev: LocalDate? = null
     return engine.plan(def, state, count, settings).mapIndexed { i, p ->
@@ -92,7 +93,7 @@ internal fun planRows(
                 nextOnOrAfter(from, wd).also { prev = it }
             }
         } else null
-        PlanRow(p, scheduled)
+        PlanRow(if (dayOrder[p.dayKey].isNullOrEmpty()) p else p.copy(exercises = applyDayOrder(p.exercises, dayOrder[p.dayKey])), scheduled)
     }
 }
 
@@ -101,7 +102,7 @@ internal fun Transaction.plannedWorkouts(
     engine: ProgramCalculator, ctx: InstanceCtx, state: ProgramState, count: Int, anchor: LocalDate?,
 ): List<PlannedWorkout> {
     val settings = engineSettings(ctx.userId, ctx.definition)
-    val rows = planRows(engine, ctx.definition, ctx.policy, ctx.startDate, state, count, anchor, settings)
+    val rows = planRows(engine, ctx.definition, ctx.policy, ctx.startDate, state, count, anchor, settings, ctx.dayOrder)
     if (rows.isEmpty()) return emptyList()
     val accessories = ProgramAccessories.selectAll()
         .where { (ProgramAccessories.instanceId eq ctx.id) and ProgramAccessories.deletedAt.isNull() }
@@ -150,13 +151,14 @@ internal fun Transaction.instanceView(engine: ProgramCalculator, row: ResultRow,
     return Instance(
         id = ctx.id, programId = r[ProgramInstances.programId], name = ctx.definition.name, status = ctx.status,
         skipPolicy = ctx.policy.name, startDate = ctx.startDate.toString(), state = state.toView(), next = next,
+        dayOrder = ctx.dayOrder,
     )
 }
 
-private fun Transaction.ownInstance(userId: UUID, id: UUID): ResultRow =
+internal fun Transaction.ownInstance(userId: UUID, id: UUID): ResultRow =
     loadInstanceRow(userId, id) ?: notFound("program instance not found")
 
-private fun Transaction.visibleExercise(userId: UUID, id: UUID): Boolean =
+internal fun Transaction.visibleExercise(userId: UUID, id: UUID): Boolean =
     Exercises.selectAll().where {
         (Exercises.id eq id) and Exercises.deletedAt.isNull() and (Exercises.ownerId.isNull() or (Exercises.ownerId eq userId))
     }.any()
@@ -491,6 +493,28 @@ fun Route.instanceRoutes(config: AppConfig) {
                     plannedWorkouts(config.engine, InstanceCtx(row), state, count, anchor)
                 }
                 call.respond(plan)
+            }
+
+            put("/definition") {
+                val uid = call.userId
+                val id = Ids.parse(call.parameters["id"])
+                val body = call.receive<ReplaceDefinition>()
+                val def = validateDefinition(uid, body.definition)
+                call.respond(dbQuery { replaceInstanceDefinition(config.engine, uid, id, def, body.tm, body.working) })
+            }
+
+            post("/swap") {
+                val uid = call.userId
+                val id = Ids.parse(call.parameters["id"])
+                val body = call.receive<SwapLift>()
+                call.respond(dbQuery { swapInstanceLift(config.engine, uid, id, body) })
+            }
+
+            put("/day-order") {
+                val uid = call.userId
+                val id = Ids.parse(call.parameters["id"])
+                val body = call.receive<DayOrderRequest>()
+                call.respond(dbQuery { putDayOrder(uid, id, body) })
             }
 
             post("/skip") {

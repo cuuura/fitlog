@@ -222,10 +222,10 @@ private fun Transaction.persist(ctx: ImportContext, a: Analyzer): ImportOutcome.
         val link = ws.link ?: return null
         val seq = ws.planSeq ?: return null
         val list = plans.getOrPut(link.id) {
-            val maxOffset = p.sessions.filter { it.link?.id == link.id }.maxOf { (it.planSeq ?: 0) - link.baseSeq }.coerceAtLeast(1)
+            val maxOffset = p.sessions.filter { it.link?.id == link.id }.maxOf { (it.planSeq ?: 0) - link.startSeq }.coerceAtLeast(1)
             ProgramEngine.plan(link.def, link.baseState, maxOffset, engineSettings(uid, link.def))
         }
-        return list.getOrNull(seq - link.baseSeq - 1)
+        return list.getOrNull(seq - link.startSeq - 1)
     }
     for (ws in p.sessions) {
         val day = dayFor(ws)

@@ -98,6 +98,8 @@ private fun Transaction.buildBundle(uid: UUID, exportedAt: Instant): JsonObject 
         }
         .orderBy(ProgramInstances.createdAt).toList()
     val instanceIds = instances.map { it[ProgramInstances.id] }.toSet()
+    // 정의 교체(v1.2) 이전 회차(planSeq <= base_seq)는 프로그램 연결을 빼고 내보낸다(가져오면 새 정의로 다시 판정되지 않게)
+    val baseSeqByInstance = instances.associate { it[ProgramInstances.id] to it[ProgramInstances.baseSeq] }
 
     // 세션(삭제 제외). 살아 있는 종목·세트가 하나도 없으면 스키마(minItems 1)를 못 지키므로 건너뛴다
     val sessions = WorkoutSessions.selectAll()
@@ -190,7 +192,7 @@ private fun Transaction.buildBundle(uid: UUID, exportedAt: Instant): JsonObject 
                     s[WorkoutSessions.scheduledWorkoutId]?.let { put("scheduledWorkoutId", it.toString()) }
                     val inst = s[WorkoutSessions.programInstanceId]
                     val planSeq = s[WorkoutSessions.planSeq]
-                    if (inst != null && planSeq != null && inst in instanceIds) {
+                    if (inst != null && planSeq != null && inst in instanceIds && planSeq > (baseSeqByInstance[inst] ?: 0)) {
                         putJsonObject("program") {
                             put("instanceId", inst.toString())
                             put("planSeq", planSeq)
