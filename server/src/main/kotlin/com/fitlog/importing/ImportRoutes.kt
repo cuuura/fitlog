@@ -1,12 +1,20 @@
 package com.fitlog.importing
 
 import com.fitlog.core.AppConfig
+import com.fitlog.core.ErrorBody
+import com.fitlog.core.ErrorResponse
+import com.fitlog.core.Exercises
 import com.fitlog.core.Ids
 import com.fitlog.core.Times
 import com.fitlog.core.dbQuery
 import com.fitlog.core.userId
 import com.fitlog.core.validation
 import io.ktor.http.HttpStatusCode
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.or
+import org.jetbrains.exposed.sql.selectAll
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
@@ -20,6 +28,33 @@ private fun contextOf(uid: UUID, req: ImportRequest): ImportContext {
     return ImportContext(uid, ImportChannel.APP_JSON, req.clientName?.trim()?.ifEmpty { null } ?: "직접 입력")
 }
 
+private suspend fun csvPreview(config: AppConfig, uid: UUID, req: CsvPreviewRequest): CsvPreviewResponse {
+    val format = req.format.uppercase()
+    if (format !in listOf("STRONG", "HEVY", "AUTO")) validation("format must be one of STRONG, HEVY, AUTO", "format")
+    val unit = (req.weightUnit ?: "KG").uppercase()
+    if (unit !in listOf("KG", "LB")) validation("weightUnit must be KG or LB", "weightUnit")
+    if (req.tz !in java.time.ZoneId.getAvailableZoneIds()) validation("tz must be a valid IANA time zone", "tz")
+    if (req.csv.isBlank()) validation("csv is empty", "csv")
+    val known = dbQuery {
+        val own = HashMap<String, UUID>()
+        val builtIn = HashMap<String, UUID>()
+        val types = HashMap<UUID, String>()
+        Exercises.selectAll().where { Exercises.deletedAt.isNull() and (Exercises.ownerId.isNull() or (Exercises.ownerId eq uid)) }.forEach { r ->
+            val id = r[Exercises.id]
+            types[id] = r[Exercises.type]
+            val target = if (r[Exercises.ownerId] == null) builtIn else own
+            listOfNotNull(r[Exercises.nameKo], r[Exercises.nameEn]).forEach { n -> target.putIfAbsent(CsvExerciseDictionary.normalize(n).full, id) }
+        }
+        CsvKnownExercises(own, builtIn, types)
+    }
+    val conv = CsvImport.convert(uid, format, req.csv, unit, req.tz, known)
+    val chunks = conv.bundles.map { b ->
+        val r = ImportRequest(bundle = b, tz = req.tz, onConflict = "ASK")
+        CsvChunk(b, config.importer.preview(contextOf(uid, r), r))
+    }
+    return CsvPreviewResponse(conv.summary, chunks)
+}
+
 /** A1 소유 (v0.3). 등록 위치: /v1 아래, 인증 필요 */
 fun Route.importRoutes(config: AppConfig) {
     route("/imports") {
@@ -27,6 +62,16 @@ fun Route.importRoutes(config: AppConfig) {
             val uid = call.userId
             val req = call.receive<ImportRequest>()
             call.respond(config.importer.preview(contextOf(uid, req), req))
+        }
+
+        post("/csv/preview") {
+            val uid = call.userId
+            val req = call.receive<CsvPreviewRequest>()
+            if (req.csv.length > CSV_MAX_BYTES / 4 && req.csv.toByteArray(Charsets.UTF_8).size > CSV_MAX_BYTES) {
+                call.respond(HttpStatusCode.PayloadTooLarge, ErrorResponse(ErrorBody("VALIDATION_FAILED", "csv too large (max 4MB)", "csv")))
+                return@post
+            }
+            call.respond(csvPreview(config, uid, req))
         }
 
         post {

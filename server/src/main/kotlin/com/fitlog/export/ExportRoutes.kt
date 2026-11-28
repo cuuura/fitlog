@@ -52,7 +52,7 @@ private val fileDateFmt = DateTimeFormatter.ofPattern("yyyyMMdd").withZone(ZoneO
 
 private const val SETS_HEADER =
     "date,session_id,program,day,exercise_ko,exercise_en,exercise_type,set_no,is_warmup,weight_kg,added_weight_kg," +
-        "reps,rpe,rir,rest_sec,duration_sec,distance_m,target_reps,target_weight_kg,is_amrap,note"
+        "reps,rpe,rir,rest_sec,duration_sec,distance_m,target_reps,target_weight_kg,is_amrap,note,superset_group,set_type"
 private const val BODY_HEADER = "date,weight_kg,source"
 
 /** A3 소유 (v0.3). 등록 위치: /v1 아래, 인증 필요 */
@@ -200,6 +200,7 @@ private fun Transaction.buildBundle(uid: UUID, exportedAt: Instant): JsonObject 
                         for ((se, ss) in exs) add(buildJsonObject {
                             putJsonObject("exercise") { put("id", se[SessionExercises.exerciseId].toString()) }
                             se[SessionExercises.note]?.let { put("note", it) }
+                            se[SessionExercises.supersetGroup]?.let { put("supersetGroup", it) }
                             putJsonArray("sets") { for (w in ss) add(setJson(w)) }
                         })
                     }
@@ -246,6 +247,7 @@ private fun Transaction.buildBundle(uid: UUID, exportedAt: Instant): JsonObject 
 private fun setJson(w: ResultRow): JsonObject = buildJsonObject {
     put("id", w[WorkoutSets.id].toString())
     put("isWarmup", w[WorkoutSets.isWarmup])
+    put("setType", w[WorkoutSets.setType])
     w[WorkoutSets.weightKg]?.let { put("weightKg", num(it)) }
     w[WorkoutSets.addedWeightKg]?.let { put("addedWeightKg", num(it)) }
     w[WorkoutSets.reps]?.let { put("reps", it) }
@@ -316,7 +318,7 @@ private fun Transaction.setsCsv(uid: UUID): String {
                     w[WorkoutSets.restSec]?.toString(), w[WorkoutSets.durationSec]?.toString(),
                     w[WorkoutSets.distanceM]?.let(::plain), w[WorkoutSets.targetReps]?.toString(),
                     w[WorkoutSets.targetWeightKg]?.let(::plain), w[WorkoutSets.isAmrap].toString(),
-                    w[WorkoutSets.note],
+                    w[WorkoutSets.note], se[SessionExercises.supersetGroup], w[WorkoutSets.setType],
                 )
             }
         }

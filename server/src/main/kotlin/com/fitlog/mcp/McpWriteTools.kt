@@ -291,7 +291,7 @@ internal val WRITE_TOOLS: List<Tool> = listOf(
         description = "이미 한 운동 세션 한 건(종목·세트)을 기록합니다. 종목은 id 또는 이름으로 지정합니다. exercises·sets 배열 순서가 수행 순서입니다. 앞으로 할 하루짜리 운동 계획은 schedule_workout, 여러 주 반복 규칙은 create_program 을 쓰세요. / Log one workout session that was already done; exercises by id or name. For a future one-day plan use schedule_workout; for a multi-week program use create_program.",
         write = true,
         input = S.obj(
-            "session" to S.anyObj("import.schema.json 의 session: startedAt, exercises[{exercise:{id|name}, sets[{weightKg, reps,...}]}] ..."),
+            "session" to S.anyObj("import.schema.json 의 session: startedAt, exercises[{exercise:{id|name}, supersetGroup?(1~8자, 같은 값끼리 슈퍼세트), sets[{weightKg, reps, setType?(NORMAL|DROP|FAILURE), isWarmup?,...}]}] ..."),
             "onConflict" to onConflictS, "resolutions" to resolutionsS, "note" to noteS,
             required = listOf("session"),
         ),

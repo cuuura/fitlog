@@ -47,10 +47,12 @@ internal class PStart(
 internal class PSet(
     val ptr: String, val id: UUID?, val isWarmup: Boolean, val weightKg: Double?, val addedWeightKg: Double?,
     val reps: Int?, val durationSec: Int?, val distanceM: Double?, val rpe: Double?, val rir: Int?,
-    val restSec: Int?, val note: String?,
+    val restSec: Int?, val note: String?, val setType: String = "NORMAL",
 )
 
-internal class PSessionEx(val ptr: String, val ref: PExRef, val note: String?, val sets: List<PSet>)
+internal class PSessionEx(
+    val ptr: String, val ref: PExRef, val note: String?, val sets: List<PSet>, val supersetGroup: String? = null,
+)
 
 internal class PSession(
     val ptr: String, val id: UUID?, val startedAt: Instant, val endedAt: Instant?, val tz: String?, val note: String?,
@@ -311,7 +313,7 @@ private class Run(val errors: MutableList<ErrorDetail>) {
         val before = errors.size
         keys(
             o, path,
-            setOf("id", "isWarmup", "weightKg", "addedWeightKg", "reps", "durationSec", "distanceM", "rpe", "rir", "restSec", "note"),
+            setOf("id", "isWarmup", "weightKg", "addedWeightKg", "reps", "durationSec", "distanceM", "rpe", "rir", "restSec", "note", "setType"),
             emptySet(),
         )
         val id = uuid(o, "id", path)
@@ -326,8 +328,9 @@ private class Run(val errors: MutableList<ErrorDetail>) {
         val rir = int(o, "rir", path, 0, 10)
         val rest = int(o, "restSec", path, min = 0)
         val note = str(o, "note", path)
+        val setType = enum(o, "setType", path, listOf("NORMAL", "DROP", "FAILURE")) ?: "NORMAL"
         if (errors.size > before) return null
-        return PSet(path, id, warm, w, aw, reps, dur, dist, rpe, rir, rest, note)
+        return PSet(path, id, warm, w, aw, reps, dur, dist, rpe, rir, rest, note, setType)
     }
 
     fun session(el: JsonElement, path: String): PSession? {
@@ -359,7 +362,7 @@ private class Run(val errors: MutableList<ErrorDetail>) {
     private fun sessionEx(el: JsonElement, path: String): PSessionEx? {
         val o = obj(el, path) ?: return null
         val before = errors.size
-        keys(o, path, setOf("exercise", "note", "sets"), setOf("exercise", "sets"))
+        keys(o, path, setOf("exercise", "note", "sets", "supersetGroup"), setOf("exercise", "sets"))
         var ref: PExRef? = null
         o["exercise"]?.let { e ->
             val ep = "$path/exercise"
@@ -373,9 +376,10 @@ private class Run(val errors: MutableList<ErrorDetail>) {
             }
         }
         val note = str(o, "note", path)
+        val group = if (o["supersetGroup"] is JsonNull) null else str(o, "supersetGroup", path, 1, 8)
         val sets = arr(o, "sets", path, 1, 50)?.mapIndexedNotNull { i, s -> set(s, "$path/sets/$i") }.orEmpty()
         if (errors.size > before || ref == null) return null
-        return PSessionEx(path, ref!!, note, sets)
+        return PSessionEx(path, ref!!, note, sets, group)
     }
 
     fun scheduledSet(el: JsonElement, path: String): ScheduledSet? {

@@ -65,6 +65,7 @@ internal data class SessionExercisePayload(
     val note: String? = null,
     val liftKey: String? = null,
     val accessory: Boolean = false,
+    val supersetGroup: String? = null,
 )
 
 @Serializable
