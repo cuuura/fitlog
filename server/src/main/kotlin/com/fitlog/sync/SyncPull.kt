@@ -65,7 +65,7 @@ internal fun Transaction.buildChanges(entity: String, ids: Collection<UUID>): Li
                 if (del) null else payloadOf(
                     SessionExercisePayload(
                         it[SessionExercises.exerciseId], it[SessionExercises.position], it[SessionExercises.note],
-                        it[SessionExercises.liftKey], it[SessionExercises.accessory],
+                        it[SessionExercises.liftKey], it[SessionExercises.accessory], it[SessionExercises.supersetGroup],
                     ),
                 ),
                 it[SessionExercises.updatedAt], it[SessionExercises.serverSeq],

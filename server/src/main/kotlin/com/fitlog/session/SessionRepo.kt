@@ -39,6 +39,7 @@ internal fun ResultRow.toWorkoutSet() = WorkoutSet(
     id = this[WorkoutSets.id],
     position = this[WorkoutSets.position],
     isWarmup = this[WorkoutSets.isWarmup],
+    setType = this[WorkoutSets.setType],
     weightKg = this[WorkoutSets.weightKg]?.toDouble(),
     addedWeightKg = this[WorkoutSets.addedWeightKg]?.toDouble(),
     reps = this[WorkoutSets.reps],
@@ -89,6 +90,7 @@ internal fun Transaction.loadSession(userId: UUID, id: UUID): Session? {
                 sets = setsBySe[it[SessionExercises.id]].orEmpty(),
                 liftKey = it[SessionExercises.liftKey],
                 accessory = it[SessionExercises.accessory],
+                supersetGroup = it[SessionExercises.supersetGroup],
             )
         },
         updatedAt = s[WorkoutSessions.updatedAt],
@@ -132,7 +134,7 @@ internal fun Transaction.upsertSessionRow(
 
 internal fun Transaction.upsertSessionExerciseRow(
     id: UUID, sessionId: UUID, exerciseId: UUID, position: Int, note: String?, at: Instant,
-    liftKey: String? = null, accessory: Boolean = false,
+    liftKey: String? = null, accessory: Boolean = false, supersetGroup: String? = null,
 ) {
     fun fill(b: UpdateBuilder<*>) {
         b[SessionExercises.sessionId] = sessionId
@@ -141,6 +143,7 @@ internal fun Transaction.upsertSessionExerciseRow(
         b[SessionExercises.note] = note
         b[SessionExercises.liftKey] = liftKey
         b[SessionExercises.accessory] = accessory
+        b[SessionExercises.supersetGroup] = supersetGroup
         b[SessionExercises.updatedAt] = at
         b[SessionExercises.deletedAt] = null
         b[SessionExercises.serverSeq] = ChangeSeq.next
@@ -157,6 +160,7 @@ internal fun Transaction.upsertSetRow(sessionExerciseId: UUID, s: WorkoutSet, at
         b[WorkoutSets.sessionExerciseId] = sessionExerciseId
         b[WorkoutSets.position] = s.position
         b[WorkoutSets.isWarmup] = s.isWarmup
+        b[WorkoutSets.setType] = s.setType
         b[WorkoutSets.weightKg] = s.weightKg?.let(::bd2)
         b[WorkoutSets.addedWeightKg] = s.addedWeightKg?.let(::bd2)
         b[WorkoutSets.reps] = s.reps

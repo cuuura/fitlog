@@ -558,6 +558,12 @@ class _PickCard extends ConsumerWidget {
                               key: Key('program-meta-${p.id}'),
                               style: text.bodySmall?.copyWith(color: c.fg2),
                             ),
+                            if (sessionMinutesText(l, p.sessionMinutes) case final m?)
+                              Text(
+                                m,
+                                key: Key('program-session-minutes-${p.id}'),
+                                style: text.bodySmall?.copyWith(color: c.fg2),
+                              ),
                             if (p.description != null)
                               Text(
                                 p.description!,

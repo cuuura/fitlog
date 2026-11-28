@@ -70,3 +70,5 @@ Claude·ChatGPT·Gemini가 사람 개입 없이 연결할 수 있게 MCP 인증 
 - 모든 MCP 호출을 `ai_tool_call` 로그(연결, 도구, 결과 코드, 소요 시간)로 남긴다. 입력 본문은 남기지 않는다
 
 > v1.0 추가: 도구 `schedule_workout`, `list_scheduled_workouts`, `skip_scheduled_workout`과 `request_deletion` entity `scheduled_workout`은 `../v1.0/scheduled-workout.md` §9.
+
+> v1.2 추가: 도구 `get_program_analysis`(읽기), `update_program`, `edit_program_instance`(쓰기)는 `../v1.2/edit.md` §7. 바꾸는 도구의 설명에는 "바꿀 내용을 사용자에게 먼저 보여 주고 동의를 받은 뒤 호출"이 들어 있다.

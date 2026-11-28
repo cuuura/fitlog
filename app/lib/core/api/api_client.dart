@@ -288,6 +288,11 @@ class ApiClient {
     () async => [for (final j in _list(await dio.get('/v1/programs/$programId/suggest'))) SuggestItem.fromJson(j)],
   );
 
+  /// v1.1: 시작 전 미리 계산(저장 안 함).
+  Future<StartPreview> previewStart(String programId, StartPreviewRequest r) => _call(
+    () async => StartPreview.fromJson(_map(await dio.post('/v1/programs/$programId/preview', data: r.toJson()))),
+  );
+
   // ---------- v0.2: 인스턴스 ----------
 
   Future<List<Instance>> getInstances({InstanceStatus? status}) => _call(

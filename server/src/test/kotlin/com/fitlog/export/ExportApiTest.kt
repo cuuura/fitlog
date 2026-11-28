@@ -262,13 +262,13 @@ class ExportApiTest {
         val text = String(bytes, Charsets.UTF_8).removePrefix("﻿")
         val lines = text.split("\n")
         assertEquals(
-            "date,session_id,program,day,exercise_ko,exercise_en,exercise_type,set_no,is_warmup,weight_kg,added_weight_kg,reps,rpe,rir,rest_sec,duration_sec,distance_m,target_reps,target_weight_kg,is_amrap,note",
+            "date,session_id,program,day,exercise_ko,exercise_en,exercise_type,set_no,is_warmup,weight_kg,added_weight_kg,reps,rpe,rir,rest_sec,duration_sec,distance_m,target_reps,target_weight_kg,is_amrap,note,superset_group,set_type",
             lines[0],
         )
         val first = "2026-11-20 10:00"
         assertTrue(lines[1].startsWith("$first,"), lines[1])
         assertTrue(lines[1].contains(",내 프로그램,A,\"벤치, \"\"프레스\"\"\",Bench,BARBELL,1,false,100,,5,8,,,,,5,100,true,\"줄1"), lines[1])
-        assertTrue(text.contains("줄2, \"\"인용\"\"\"\n"), text)
+        assertTrue(text.contains("줄2, \"\"인용\"\"\",,NORMAL\n"), text)
         // 두 번째 세트(줄바꿈을 포함한 첫 행 다음)
         val row2 = lines.first { it.startsWith("$first,") && it.contains(",2,true,60,") }
         assertTrue(row2.contains(",내 프로그램,A,"))

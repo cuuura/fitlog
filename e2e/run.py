@@ -42,13 +42,13 @@ EXPECTED_READ_TOOLS = [
     "get_profile", "search_exercises", "list_programs", "get_program", "validate_program",
     "list_program_instances", "get_plan", "list_sessions", "get_session", "get_exercise_records",
     "get_exercise_progress", "get_training_summary", "get_body_measurements", "list_deletion_requests",
-    "list_scheduled_workouts",
+    "list_scheduled_workouts", "get_program_analysis",
     "search", "fetch",  # OpenAI(ChatGPT) 커넥터 호환 읽기 도구
 ]
 EXPECTED_WRITE_TOOLS = [
     "import_bundle", "create_program", "start_program", "log_session", "log_body_weight",
     "create_exercise", "adjust_program_instance", "request_deletion",
-    "schedule_workout", "skip_scheduled_workout",
+    "schedule_workout", "skip_scheduled_workout", "update_program", "edit_program_instance",
 ]
 EXPECTED_TOOLS = EXPECTED_READ_TOOLS + EXPECTED_WRITE_TOOLS
 
@@ -304,7 +304,7 @@ def server_consent_version():
 def server_tool_names():
     d = os.path.join(ROOT, "server", "src", "main", "kotlin", "com", "fitlog", "mcp")
     names = []
-    for f in ("McpTools.kt", "McpWriteTools.kt", "McpCompatTools.kt"):
+    for f in ("McpTools.kt", "McpWriteTools.kt", "McpCompatTools.kt", "McpEditTools.kt"):
         p = os.path.join(d, f)
         if not os.path.exists(p):
             return None
@@ -1271,6 +1271,14 @@ def build_call_cases(R, cc):
     cases["log_body_weight"] = lambda: {"measuredAt": (datetime.now(timezone.utc) - timedelta(days=30)).strftime("%Y-%m-%dT%H:%M:%SZ"), "weightKg": 79.9}
     cases["create_exercise"] = lambda: {"nameKo": f"E2E 케이블 컬 {suffix}", "nameEn": f"E2E Cable Curl {suffix}", "type": "MACHINE", "primaryMuscle": "BICEPS"}
     cases["adjust_program_instance"] = lambda: {"instanceId": cc.instance_id, "working": {"squat": 105}}
+    cases["get_program_analysis"] = lambda: {"instanceId": cc.instance_id, "sessions": 5}
+
+    def own_program_id():
+        mine = api(R, "GET", "/v1/programs?source=MINE", R.need("app_access")).json()
+        return next(p["id"] for p in mine if p["name"] == cc.new_definition["name"])
+    cases["update_program"] = lambda: {"programId": own_program_id(), "definition": cc.new_definition, "name": cc.new_definition["name"]}
+    # 같은 종목으로 교체해 상태는 그대로 두고 호출 경로(정의 교체)만 확인한다
+    cases["edit_program_instance"] = lambda: {"instanceId": cc.instance_id, "swap": {"liftKey": "squat", "exerciseId": cc.exercise_id}}
     tomorrow = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d")
     cases["schedule_workout"] = lambda: {"workout": {"plannedDate": tomorrow, "title": "E2E 하체", "items": [
         {"exercise": {"name": "스쿼트"}, "restSec": 180, "sets": [
@@ -1285,7 +1293,7 @@ def build_call_cases(R, cc):
 # 호출 순서: 데이터를 만드는 쓰기 도구를 먼저, 그 값을 읽는 조회 도구를 나중에
 CALL_ORDER = ["get_profile", "search_exercises", "list_programs", "get_program", "validate_program", "create_program",
               "create_exercise", "start_program", "list_program_instances", "get_plan", "adjust_program_instance",
-              "log_session", "log_body_weight", "import_bundle", "schedule_workout", "list_scheduled_workouts",
+              "get_program_analysis", "update_program", "edit_program_instance", "log_session", "log_body_weight", "import_bundle", "schedule_workout", "list_scheduled_workouts",
               "skip_scheduled_workout", "list_sessions", "get_session", "get_exercise_records",
               "get_exercise_progress", "get_training_summary", "get_body_measurements", "request_deletion", "list_deletion_requests", "search", "fetch"]
 
@@ -1379,6 +1387,12 @@ def mcp_tools(R):
                 expect(sc["status"] == "PENDING", f"request_deletion status={sc['status']}")
             if name == "list_deletion_requests":
                 expect(sc.get("count", 0) >= 1, "삭제 요청 목록에 방금 만든 요청이 없음")
+            if name == "get_program_analysis":
+                expect(sc["analysis"]["lifts"] and "adherence" in sc["analysis"], f"get_program_analysis 결과: {json.dumps(sc, ensure_ascii=False)[:300]}")
+            if name == "update_program":
+                expect(sc["program"]["name"] == cc.new_definition["name"] and "activeInstanceIds" in sc["program"], f"update_program 결과: {json.dumps(sc, ensure_ascii=False)[:300]}")
+            if name == "edit_program_instance":
+                expect(sc["instance"]["state"]["working"]["squat"] == 105, f"edit_program_instance 뒤 상태 유지 기대: {sc['instance']['state']}")
             if name == "adjust_program_instance":
                 expect(sc["instance"]["state"]["working"]["squat"] == 105, f"조정 결과: {sc['instance']['state']['working']}")
             state[name] = sc
@@ -1407,7 +1421,7 @@ def mcp_tools(R):
 
     def make_bad(name):
         def f():
-            use_f = name in ("create_exercise", "adjust_program_instance", "request_deletion", "log_body_weight", "skip_scheduled_workout")
+            use_f = name in ("create_exercise", "adjust_program_instance", "update_program", "edit_program_instance", "request_deletion", "log_body_weight", "skip_scheduled_workout")
             a = R.need("mcp_f" if use_f else "mcp_a")
             sid = R.need("mcp_f_sid" if use_f else "mcp_sid")
             schema = (R.ctx["_tools_by_name"].get(name) or {}).get("inputSchema", {})

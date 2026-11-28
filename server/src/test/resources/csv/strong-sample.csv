@@ -1,0 +1,18 @@
+Date,Workout Name,Duration,Exercise Name,Set Order,Weight,Reps,Distance,Seconds,Notes,Workout Notes,RPE
+2024-03-04 18:30:12,Push Day,1h 5m,Bench Press (Barbell),W,40,8,0,0,,"Felt good, strong",
+2024-03-04 18:30:12,Push Day,1h 5m,Bench Press (Barbell),1,80,5,0,0,,"Felt good, strong",8
+2024-03-04 18:30:12,Push Day,1h 5m,Bench Press (Barbell),2,80,5,0,0,,"Felt good, strong",8.5
+2024-03-04 18:30:12,Push Day,1h 5m,Bench Press (Barbell),D,60,10,0,0,,"Felt good, strong",
+2024-03-04 18:30:12,Push Day,1h 5m,Overhead Press (Barbell),1,50,6,0,0,,"Felt good, strong",
+2024-03-04 18:30:12,Push Day,1h 5m,Overhead Press (Barbell),F,50,4,0,0,"Heavy, ""slow"" tempo","Felt good, strong",9
+2024-03-04 18:30:12,Push Day,1h 5m,Zottman Curl (Dumbbell),1,12,10,0,0,,"Felt good, strong",
+2024-03-04 18:30:12,Push Day,1h 5m,Zottman Curl (Dumbbell),2,12,9,0,0,,"Felt good, strong",
+2024-03-04 18:30:12,Push Day,1h 5m,Rest Timer,Rest Timer,0,0,0,90,,,
+2024-03-06 19:00:00,Leg Day,50m,Squat (Barbell),1,100,5,0,0,,,
+2024-03-06 19:00:00,Leg Day,50m,Squat (Barbell),2,100,5,0,0,,,
+2024-03-06 19:00:00,Leg Day,50m,Squat (Barbell),F,100,3,0,0,,,
+2024-03-06 19:00:00,Leg Day,50m,Leg Press (Machine),1,160,10,0,0,,,
+2024-03-06 19:00:00,Leg Day,50m,Pull Up,1,0,8,0,0,,,
+2024-03-06 19:00:00,Leg Day,50m,Pull Up,2,0,7,0,0,,,
+2024-03-06 19:00:00,Leg Day,50m,Running,1,0,0,5000,1500,,,
+2024-03-06 19:00:00,Leg Day,50m,Bench Press (Barbell),1,0,0,0,0,,,
