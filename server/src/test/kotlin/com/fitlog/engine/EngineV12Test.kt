@@ -217,7 +217,7 @@ class EngineV12Test {
             sets = tmAmrap,
         )
         val plan = E.plan(p, start(p, tm = 100.0), 3)
-        assertEquals(listOf(100.0, 102.5, 105.0), plan.map { it.exercises.single().sets.first().targetWeightKg })
+        assertEquals(listOf(100.0, 105.0, 110.0), plan.map { it.exercises.single().sets.first().targetWeightKg }) // 목표 5회가 steps 5+ 구간(+5)
     }
 
     private val withDrop = """{"count":3,"reps":5,"load":{"type":"WORKING"}},{"count":1,"reps":10,"drop":true,"load":{"type":"WORKING","value":0.8}}"""

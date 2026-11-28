@@ -1,5 +1,7 @@
 package com.fitlog.engine
 
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -95,6 +97,7 @@ data class SetSpec(
     val repsMax: Int? = null,
     val restSec: Int? = null,
     /** v1.2: 드롭 세트. 모든 규칙의 판정에서 워밍업처럼 제외 */
+    @OptIn(ExperimentalSerializationApi::class) @EncodeDefault(EncodeDefault.Mode.NEVER)
     val drop: Boolean = false,
 )
 
@@ -212,8 +215,10 @@ data class ProgramState(
     /** 지금까지 반영한 회차 수. COMPLETED·SKIPPED 마다 +1, ADJUSTED 는 그대로. 다음 회차의 planSeq = seq + 1 */
     val seq: Int = 0,
     /** v1.2 CUSTOM: 성공 연속 횟수 */
+    @OptIn(ExperimentalSerializationApi::class) @EncodeDefault(EncodeDefault.Mode.NEVER)
     val successStreak: Map<String, Int> = emptyMap(),
     /** v1.2 CUSTOM: 기간(WEEK_END·CYCLE_END) 중 모은 회차 결과 SUCCESS·FAIL·HOLD */
+    @OptIn(ExperimentalSerializationApi::class) @EncodeDefault(EncodeDefault.Mode.NEVER)
     val periodResult: Map<String, String> = emptyMap(),
 )
 

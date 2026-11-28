@@ -46,7 +46,7 @@ class CustomRuleValidatorTest {
         valid(program("""{"type":"CUSTOM","target":"TM","success":{"method":"E1RM","amount":0.9}}""", """{"reps":5,"load":{"type":"PERCENT_TM","value":0.8}}"""))
         valid(
             program(
-                """{"type":"CUSTOM","applyAt":"WEEK_END","success":{"when":"AMRAP_REPS"},"failure":{"when":"AMRAP_BELOW"},"steps":[{"minReps":1,"maxReps":2,"amount":0},{"minReps":3,"amount":2.5}]}""",
+                """{"type":"CUSTOM","applyAt":"WEEK_END","success":{"when":"AMRAP_REPS"},"failure":{"when":"AMRAP_BELOW","amount":0.9},"steps":[{"minReps":1,"maxReps":2,"amount":0},{"minReps":3,"amount":2.5}]}""",
                 """{"reps":5,"amrap":true,"load":{"type":"WORKING"}}""",
             ),
         )
@@ -72,7 +72,7 @@ class CustomRuleValidatorTest {
     fun c12_amrap_rules_without_amrap_set() {
         val steps = """"steps":[{"minReps":1,"amount":2.5}]"""
         assertTrue("/progression/squat" in paths(program("""{"type":"CUSTOM","success":{"when":"AMRAP_REPS"},$steps}""")))
-        assertTrue("/progression/squat" in paths(program("""{"type":"CUSTOM","success":{"amount":2.5},"failure":{"when":"AMRAP_BELOW"}}""")))
+        assertTrue("/progression/squat" in paths(program("""{"type":"CUSTOM","success":{"amount":2.5},"failure":{"when":"AMRAP_BELOW","amount":0.9}}""")))
     }
 
     @Test
