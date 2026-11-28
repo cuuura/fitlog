@@ -393,7 +393,6 @@
   "programWeekdaySun": "일",
   "programStartTitle": "프로그램 시작",
   "programStartWeightsHeader": "시작 무게",
-  "programStartWeightsHelp": "비워 둘 수 없어요. 제안값은 최근 1RM에서 계산했어요.",
   "programStartTm": "TM (트레이닝 맥스)",
   "programStartWorking": "작업 무게",
   "programStartFieldLabel": "{name} ({unit})",
@@ -426,7 +425,7 @@
   },
   "programStartNoBasis": "기록이 없어서 직접 입력해야 해요",
   "programStartDate": "시작일",
-  "programStartPolicy": "건너뛰기 방식",
+  "programStartPolicy": "빠진 날 처리",
   "programSkipShift": "미루기",
   "programSkipShiftDesc": "건너뛴 날은 없던 것으로 치고, 다음에 같은 날 운동을 해요. 무게는 그대로예요.",
   "programSkipFixed": "요일 고정",
@@ -435,6 +434,202 @@
   "programStartSubmit": "시작하기",
   "programStartFailed": "시작하지 못했어요",
   "programStartValidation": "입력값을 확인해 주세요",
+  "programStartFirstTitle": "첫 운동 · {date}",
+  "@programStartFirstTitle": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartDateLabel": "{month}월 {day}일({weekday})",
+  "@programStartDateLabel": {
+    "placeholders": {
+      "month": {
+        "type": "int"
+      },
+      "day": {
+        "type": "int"
+      },
+      "weekday": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartDateToday": "오늘",
+  "programStartDaysInfo": "주 {count}일",
+  "@programStartDaysInfo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartOverlapSame": "\"{name}\" 프로그램이 이미 진행 중이에요",
+  "@programStartOverlapSame": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartOverlapDays": "진행 중인 \"{name}\" 프로그램과 {days}요일이 겹쳐요",
+  "@programStartOverlapDays": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartOverlapPaused": "일시정지된 프로그램이에요. 그대로 두고 새로 시작해요.",
+  "programStartOverlapBoth": "두 프로그램이 따로 진행돼요. 무게는 프로그램마다 따로 관리돼요.",
+  "programStartOverlapPause": "기존 프로그램은 일시정지하고 이 프로그램만 진행해요. 기록과 무게는 그대로 남아요.",
+  "programStartKeepBoth": "같이 진행",
+  "programStartKeepPause": "기존 것 일시정지",
+  "programStartPauseFailed": "시작은 됐지만 {names}을(를) 일시정지하지 못했어요. 프로그램 화면에서 직접 일시정지해 주세요.",
+  "@programStartPauseFailed": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartWeightsTitle": "시작 무게",
+  "programStartWeightsHelp": "세트마다 들 무게를 계산하는 바탕이에요. 가볍게 시작할수록 오래 올라가요.",
+  "programStartWeightsReady": "{count}개 준비됨",
+  "@programStartWeightsReady": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartWeightsNeed": "{count}개 입력 필요",
+  "@programStartWeightsNeed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartWeightsMissing": "{names} 무게를 넣어 주세요",
+  "@programStartWeightsMissing": {
+    "placeholders": {
+      "names": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartPresetSuggest": "제안대로",
+  "programStartPresetLight": "10% 가볍게",
+  "programStartFar": "제안({value})과 많이 달라요. 맞는지 확인해 주세요",
+  "@programStartFar": {
+    "placeholders": {
+      "value": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartStepDown": "{name} {step} 줄이기",
+  "@programStartStepDown": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartStepUp": "{name} {step} 늘리기",
+  "@programStartStepUp": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "step": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartCalcLink": "든 무게와 횟수로 계산",
+  "programStartCalcWeight": "든 무게",
+  "programStartCalcReps": "횟수",
+  "programStartCalcOk": "계산해서 넣기",
+  "programStartCalcInvalid": "무게와 횟수(12회 이하)를 넣어 주세요",
+  "programStartNoRecordHint": "잘 모르겠으면 가장 가볍게 시작해도 좋아요. 금방 올라가요.",
+  "programStartFillBar": "빈 봉으로 채우기",
+  "programStartOptionalGroup": "비워도 되는 종목 {count}개",
+  "@programStartOptionalGroup": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartScheduleTitle": "일정",
+  "programStartScheduleSummary": "{start}부터 · {days} · {policy}",
+  "@programStartScheduleSummary": {
+    "placeholders": {
+      "start": {
+        "type": "String"
+      },
+      "days": {
+        "type": "String"
+      },
+      "policy": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartAnyDay": "요일 자유",
+  "programStartOverlapChip": "{count}일 겹침",
+  "@programStartOverlapChip": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartLegendThis": "이 프로그램",
+  "programStartLegendOther": "진행 중인 프로그램",
+  "programStartLegendBoth": "겹치는 날",
+  "programStartDayThis": "{day}요일, 이 프로그램 운동일",
+  "@programStartDayThis": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartDayOther": "{day}요일, 다른 진행 중 프로그램 있음",
+  "@programStartDayOther": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartDayBoth": "{day}요일, 두 프로그램이 겹침",
+  "@programStartDayBoth": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartDayNone": "{day}요일",
+  "@programStartDayNone": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "programStartOffline": "서버에 연결해야 무게를 맞출 수 있어요. 연결을 확인하고 다시 시도해 주세요.",
   "instanceTitle": "진행 중 프로그램",
   "instanceStatusActive": "진행 중",
   "instanceStatusPaused": "일시정지",
@@ -1943,7 +2138,6 @@
   },
   "progSkipShiftSeg": "다음 날로 밀기",
   "progSkipFixedSeg": "날짜 고정",
-  "progStartTmHeader": "초기 TM",
   "progStartSourceMeasured": "측정",
   "progStartSourceEstimated": "추정",
   "progStartBasisMeasured": "최근 측정 1RM {rm} → TM {tm} ({pct}%)",
@@ -1997,8 +2191,8 @@
     }
   },
   "progStartCta": "이 프로그램 시작",
-  "progStartTmField": "TM",
-  "progStartWorkingField": "작업",
+  "progStartTmField": "기준 무게",
+  "progStartWorkingField": "시작 무게",
   "progStartOptionalHint": "비워두면 첫 운동 기록으로 정합니다",
   "histMonthStats": "세션 {count}회 · {volume}",
   "@histMonthStats": {
