@@ -1,17 +1,13 @@
 // B3 소유. STA-2·3·6 종목별 기록(최고 무게·추정 1RM·횟수별 최고) + 1RM 측정 기록. 온라인 전용(REST).
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
-import '../../core/api/dto.dart';
 import '../../core/api/program_dto.dart' show ExerciseRecords, OneRmMeasurement, RecordPoint;
-import '../../core/clock.dart';
 import '../../core/ids.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme.dart';
-import '../../core/ui/form_sheet.dart';
 import '../../core/ui/row_menu.dart';
 import '../../core/ui/undo.dart';
 import '../../core/units.dart';
@@ -20,6 +16,7 @@ import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
 import '../session/session_controller.dart' show exerciseMapProvider;
 import '../session/session_format.dart';
+import 'one_rm_sheet.dart';
 
 final exerciseRecordsProvider = FutureProvider.autoDispose.family<ExerciseRecords, String>(
   (ref, id) => ref.watch(recordsRepositoryProvider).records(id),
@@ -47,10 +44,7 @@ class ExerciseRecordsPage extends ConsumerWidget {
   }
 
   Future<void> _add(BuildContext context, WidgetRef ref) async {
-    final saved = await showFormSheet<bool>(
-      context,
-      builder: (_) => _AddOneRmSheet(exerciseId: exerciseId),
-    );
+    final saved = await showAddOneRmSheet(context, exerciseId: exerciseId);
     if (saved == true) _refresh(ref);
   }
 
@@ -255,103 +249,6 @@ class ExerciseRecordsPage extends ConsumerWidget {
         ),
         body: ListView(children: [...children, const SizedBox(height: 88)]),
       ),
-    );
-  }
-}
-
-class _AddOneRmSheet extends ConsumerStatefulWidget {
-  const _AddOneRmSheet({required this.exerciseId});
-  final String exerciseId;
-  @override
-  ConsumerState<_AddOneRmSheet> createState() => _AddOneRmSheetState();
-}
-
-class _AddOneRmSheetState extends ConsumerState<_AddOneRmSheet> {
-  final _weight = TextEditingController();
-  final _note = TextEditingController();
-  late DateTime _date;
-  bool _bad = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _date = ref.read(clockProvider)().toLocal();
-  }
-
-  @override
-  void dispose() {
-    _weight.dispose();
-    _note.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickDate() async {
-    final d = await showDatePicker(
-      context: context,
-      initialDate: _date,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(_date.year + 1),
-    );
-    if (d != null) setState(() => _date = DateTime(d.year, d.month, d.day, _date.hour, _date.minute));
-  }
-
-  /// 검증 실패면 null(시트 유지). 저장이 실패하면 예외가 FormSheet까지 올라가 입력이 남는다.
-  Future<bool?> _submit() async {
-    final unit = ref.read(settingsProvider).weightUnit;
-    final v = double.tryParse(_weight.text.trim().replaceAll(',', '.'));
-    if (v == null || v <= 0) {
-      setState(() => _bad = true);
-      return null;
-    }
-    setState(() => _bad = false);
-    final note = _note.text.trim();
-    await ref.read(recordsRepositoryProvider).addOneRm(
-      widget.exerciseId,
-      OneRmMeasurement(
-        id: newId(),
-        weightKg: Units.fromDisplay(v, unit),
-        measuredAt: _date.toUtc(),
-        note: note.isEmpty ? null : note,
-      ),
-    );
-    return true;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final unit = ref.watch(settingsProvider).weightUnit;
-    return FormSheet<bool>(
-      title: l.recordsOneRmAdd,
-      submitLabel: l.commonAdd,
-      submitKey: const Key('onerm-save'),
-      failureMessage: (_) => l.recordsActionFailed,
-      onSubmit: _submit,
-      children: [
-        TextField(
-          key: const Key('onerm-weight'),
-          controller: _weight,
-          autofocus: true,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
-          decoration: InputDecoration(
-            labelText: l.recordsOneRmWeight(unit == WeightUnit.KG ? 'kg' : 'lb'),
-            errorText: _bad ? l.recordsInvalidWeight : null,
-          ),
-        ),
-        ListTile(
-          key: const Key('onerm-date'),
-          contentPadding: EdgeInsets.zero,
-          title: Text(l.recordsOneRmDate),
-          trailing: Text(formatDate(_date)),
-          onTap: _pickDate,
-        ),
-        TextField(
-          key: const Key('onerm-note'),
-          controller: _note,
-          decoration: InputDecoration(labelText: l.recordsOneRmNote),
-        ),
-      ],
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../core/api/dto.dart';
 import '../../core/auth/auth_controller.dart';
+import '../../core/big3.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme.dart';
@@ -11,7 +12,11 @@ import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../deletion_requests/deletion_providers.dart';
+import '../records/one_rm_sheet.dart';
+import '../session/session_format.dart';
 import '../sync_status/sync_status_indicator.dart';
+import 'big3_logic.dart';
+import 'big3_page.dart';
 
 final _latestBodyProvider = StreamProvider.autoDispose<BodyMeasurement?>(
   (ref) => ref.watch(bodyRepositoryProvider).watchMeasurements().map((l) => l.isEmpty ? null : l.first),
@@ -115,6 +120,7 @@ class MePage extends ConsumerWidget {
             subtitle: latest == null ? l.meBodyEmpty : l.meBodyLatest(Units.format(latest.weightKg, s.weightUnit)),
             route: Routes.body,
           ),
+          const _Big3Card(),
           tile(
             key: const Key('me-profile'),
             icon: Icons.badge_outlined,
@@ -153,6 +159,107 @@ class MePage extends ConsumerWidget {
             route: Routes.settings,
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// MY 탭의 '3대 운동 1RM' 카드: 현재 값과 합계, 입력 버튼. 탭하면 추이 화면.
+class _Big3Card extends ConsumerWidget {
+  const _Big3Card();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final c = AppColors.of(context);
+    final unit = ref.watch(settingsProvider).weightUnit;
+    final async = ref.watch(big3CurrentsProvider);
+    final cur = async.value;
+
+    Widget cell(int i) {
+      final lift = big3Lifts[i];
+      final v = cur?[i];
+      final muted = v == null || !v.measured;
+      return Expanded(
+        child: Column(
+          key: Key('me-big3-${lift.key}'),
+          children: [
+            Text(lift.shortName(l), style: TextStyle(fontSize: 13, color: c.fg2)),
+            const SizedBox(height: 4),
+            Text(
+              v == null ? '-' : Units.format(v.kg, unit, withUnit: false),
+              style: AppNum.style(context, 26, color: muted ? c.fg2 : null),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              v == null
+                  ? (async.isLoading ? '' : l.big3NoRecord)
+                  : (v.measured ? l.big3SrcMeasured : l.big3SrcEstimated)(shortDate(v.date.toLocal())),
+              style: TextStyle(fontSize: 12, color: v != null && v.measured ? c.accentStrong : c.fg2),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Card(
+      key: const Key('me-big3'),
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        onTap: () => context.push(Routes.big3),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.fitness_center, color: c.accentStrong),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(l.big3Title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
+                  Text(l.big3ViewTrend, style: TextStyle(fontSize: 13, color: c.fg2)),
+                  Icon(Icons.chevron_right, color: c.fg2),
+                ],
+              ),
+              const SizedBox(height: 12),
+              if (async.hasError)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    isOfflineError(async.error) ? l.progressOffline : l.big3CardError,
+                    key: const Key('me-big3-error'),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: c.fg2),
+                  ),
+                )
+              else
+                Row(crossAxisAlignment: CrossAxisAlignment.start, children: [for (var i = 0; i < 3; i++) cell(i)]),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      cur == null ? '' : big3TotalLabel(l, big3Total(cur), unit),
+                      key: const Key('me-big3-total'),
+                      style: TextStyle(fontSize: 14, color: c.fg2),
+                    ),
+                  ),
+                  FilledButton.tonal(
+                    key: const Key('me-big3-add'),
+                    onPressed: () => showAddOneRmSheet(context, exerciseId: big3Ids.first, choices: big3Ids),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [const Icon(Icons.add, size: 18), const SizedBox(width: 4), Text(l.big3Add)],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

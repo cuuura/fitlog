@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/api/program_dto.dart';
+import '../../core/big3.dart';
 import '../../core/clock.dart';
 import '../../data/providers.dart';
 
@@ -114,13 +115,8 @@ class RecommendInputs {
   final bool hasOneRm;
 }
 
-/// 서버 기본 종목 id: 스쿼트·벤치프레스·데드리프트·오버헤드 프레스.
-const _bigLiftIds = [
-  '019b76da-4000-7000-8000-000000000001',
-  '019b76da-4000-7000-8000-000000000003',
-  '019b76da-4000-7000-8000-000000000006',
-  '019b76da-4000-7000-8000-000000000009',
-];
+/// 서버 기본 종목 id: 3대 운동 + 오버헤드 프레스.
+final _bigLiftIds = [...big3Ids, ohpExerciseId];
 
 final recommendInputsProvider = FutureProvider.autoDispose<RecommendInputs>((
   ref,

@@ -268,7 +268,7 @@ class _ExerciseProgressPageState extends ConsumerState<ExerciseProgressPage> {
                   dotData: FlDotData(
                     getDotPainter: (spot, _, _, i) => points[i].isPr
                         ? _StarDot(color: prColor, outline: theme.colorScheme.surface, ring: i == points.length - 1 ? normal : null)
-                        : _RingDot(
+                        : RingDot(
                             fill: theme.colorScheme.surface,
                             stroke: normal,
                             ring: i == points.length - 1,
@@ -373,8 +373,8 @@ class _LegendStar extends StatelessWidget {
 }
 
 /// 일반 점: 속이 빈 동그라미. [ring]이면 가장 최근 점으로 바깥 고리를 더한다.
-class _RingDot extends FlDotPainter {
-  const _RingDot({required this.fill, required this.stroke, required this.ring});
+class RingDot extends FlDotPainter {
+  const RingDot({required this.fill, required this.stroke, required this.ring});
   final Color fill, stroke;
   final bool ring;
 

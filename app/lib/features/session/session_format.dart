@@ -48,3 +48,6 @@ double sessionVolumeKg(Session s) => [
         for (final w in e.sets)
           if (!w.isWarmup) setVolumeKg(w)
     ].fold(0.0, (a, b) => a + b);
+
+/// 월/일. 예: 11/20
+String shortDate(DateTime local) => '${local.month}/${local.day}';

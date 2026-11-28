@@ -48,7 +48,7 @@ class AppEnv {
   late final MemoryPlanCache planCache;
   late final MemoryImportRepository imports;
   final body = MemoryBodyRepository();
-  final records = MemoryRecordsRepository();
+  MemoryRecordsRepository records = MemoryRecordsRepository();
   final stats = MemoryStatsRepository();
   final deletions = MemoryDeletionRequestRepository();
   late ProviderContainer container;

@@ -17,6 +17,7 @@ import '../features/csv_import/csv_import_page.dart';
 import '../features/importing/import_page.dart';
 import '../features/history/history_page.dart';
 import '../features/history/session_edit_page.dart';
+import '../features/me/big3_page.dart';
 import '../features/me/me_page.dart';
 import '../features/shell/app_shell.dart';
 import '../features/program_editor/program_editor_page.dart';
@@ -120,6 +121,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: Routes.me, builder: (_, _) => const MePage()),
+            GoRoute(path: Routes.big3, builder: (_, _) => const Big3Page()),
             GoRoute(path: Routes.settings, builder: (_, _) => const SettingsPage()),
             GoRoute(path: Routes.profile, builder: (_, _) => const ProfilePage()),
             GoRoute(path: Routes.body, builder: (_, _) => const BodyWeightPage()),

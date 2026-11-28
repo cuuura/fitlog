@@ -11,6 +11,7 @@ abstract final class Routes {
   static const profile = '/profile';
   static const body = '/body';
   static const me = '/me'; // 하단 내비 'MY' 탭
+  static const big3 = '/me/big3'; // MY 탭 아래 3대 운동 1RM·추이
 
   // v0.2
   static const programs = '/programs'; // B1 템플릿·내 프로그램 목록 + 진행 중 인스턴스
