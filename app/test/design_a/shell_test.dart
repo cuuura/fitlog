@@ -12,7 +12,7 @@ void main() {
     final e = AppEnv();
     await e.pump(t);
     expect(find.byKey(const Key('app-nav')), findsOneWidget);
-    for (final l in ['오늘', '기록', '프로그램', '나']) {
+    for (final l in ['오늘', '기록', '프로그램', 'MY']) {
       expect(find.descendant(of: find.byKey(const Key('app-nav')), matching: find.text(l)), findsOneWidget);
     }
     await t.tap(find.byKey(const Key('nav-history')));

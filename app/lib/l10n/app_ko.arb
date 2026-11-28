@@ -1739,7 +1739,7 @@
   "shellNavToday": "오늘",
   "shellNavHistory": "기록",
   "shellNavPrograms": "프로그램",
-  "shellNavMe": "나",
+  "shellNavMe": "MY",
   "shellMiniActive": "진행 중 · {name} {done}/{total}세트",
   "@shellMiniActive": {
     "placeholders": {
@@ -1771,7 +1771,7 @@
       }
     }
   },
-  "meTitle": "나",
+  "meTitle": "MY",
   "meGuestName": "FitLog 사용자",
   "meSectionBody": "신체 수치",
   "meBodyLatest": "최근 체중 {weight}",

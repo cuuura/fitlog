@@ -17,7 +17,7 @@ final _latestBodyProvider = StreamProvider.autoDispose<BodyMeasurement?>(
   (ref) => ref.watch(bodyRepositoryProvider).watchMeasurements().map((l) => l.isEmpty ? null : l.first),
 );
 
-/// 하단 내비 '나' 탭: 프로필 요약과 신체·프로필·AI·내보내기·설정 진입.
+/// 하단 내비 'MY' 탭: 프로필 요약과 신체·프로필·AI·내보내기·설정 진입.
 String _trim(double v) => v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toString();
 
 class MePage extends ConsumerWidget {

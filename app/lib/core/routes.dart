@@ -10,7 +10,7 @@ abstract final class Routes {
   static const settings = '/settings';
   static const profile = '/profile';
   static const body = '/body';
-  static const me = '/me'; // 하단 내비 '나' 탭
+  static const me = '/me'; // 하단 내비 'MY' 탭
 
   // v0.2
   static const programs = '/programs'; // B1 템플릿·내 프로그램 목록 + 진행 중 인스턴스
