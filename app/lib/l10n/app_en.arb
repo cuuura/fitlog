@@ -2348,17 +2348,5 @@
   "calendarPrevWeek": "Previous week",
   "calendarNextWeek": "Next week",
   "calendarExpand": "Expand calendar",
-  "calendarCollapse": "Collapse calendar",
-  "calendarFilterChip": "Only {month}/{day}",
-  "@calendarFilterChip": {
-    "placeholders": {
-      "month": {
-        "type": "int"
-      },
-      "day": {
-        "type": "int"
-      }
-    }
-  },
-  "calendarFilterClear": "Clear date filter"
+  "calendarCollapse": "Collapse calendar"
 }

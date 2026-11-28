@@ -2420,17 +2420,5 @@
   "calendarPrevWeek": "이전 주",
   "calendarNextWeek": "다음 주",
   "calendarExpand": "달력 펼치기",
-  "calendarCollapse": "달력 접기",
-  "calendarFilterChip": "{month}월 {day}일 기록만 보기",
-  "@calendarFilterChip": {
-    "placeholders": {
-      "month": {
-        "type": "int"
-      },
-      "day": {
-        "type": "int"
-      }
-    }
-  },
-  "calendarFilterClear": "날짜 필터 해제"
+  "calendarCollapse": "달력 접기"
 }

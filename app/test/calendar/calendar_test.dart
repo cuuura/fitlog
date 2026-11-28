@@ -218,18 +218,14 @@ void main() {
         }
         await tester.tap(find.byKey(const Key('cal-day-2026-11-24')));
         await settle(tester);
-        expect(find.byKey(const Key('history-day-chip')), findsOneWidget);
-        expect(find.text('11월 24일 기록만 보기'), findsOneWidget);
-        expect(find.byKey(const Key('history-day-chip')), findsOneWidget);
         final shown = all
             .where(
               (s) => find.byKey(Key('history-${s.id}')).evaluate().isNotEmpty,
             )
             .toList();
         expect(shown.length, 1);
-        await tester.tap(find.byKey(const Key('history-day-chip')));
+        await tester.tap(find.byKey(const Key('cal-day-2026-11-24')));
         await settle(tester);
-        expect(find.byKey(const Key('history-day-chip')), findsNothing);
         for (final s in all) {
           expect(find.byKey(Key('history-${s.id}')), findsOneWidget);
         }

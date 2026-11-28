@@ -230,7 +230,7 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
 
     final slivers = <Widget>[SliverToBoxAdapter(child: header)];
     if (sel != null) {
-      // 고른 날: 칩 + 그날의 예정 운동 + 그날의 세션(불러온 범위와 무관하게 날짜로 조회).
+      // 고른 날: 그날의 예정 운동 + 그날의 세션(불러온 범위와 무관하게 날짜로 조회).
       final byDay =
           ref.watch(calendarRangeProvider((first: sel, last: sel))).value ??
           const <DateTime, List<SessionSummary>>{};
@@ -240,23 +240,6 @@ class _HistoryPageState extends ConsumerState<HistoryPage> {
           .where((v) => v.workout.plannedDate == dayKey(sel))
           .toList();
       final c = AppColors.of(context);
-      slivers.add(
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: InputChip(
-                key: const Key('history-day-chip'),
-                label: Text(l10n.calendarFilterChip(sel.month, sel.day)),
-                deleteButtonTooltipMessage: l10n.calendarFilterClear,
-                onDeleted: () => setState(() => _selected = null),
-                onPressed: () => setState(() => _selected = null),
-              ),
-            ),
-          ),
-        ),
-      );
       if (daySched.isNotEmpty) {
         slivers.add(
           SliverToBoxAdapter(
