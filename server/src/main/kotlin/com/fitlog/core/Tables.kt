@@ -125,6 +125,8 @@ object SessionExercises : Table("session_exercise") {
     val serverSeq = long("server_seq")
     val liftKey = text("lift_key").nullable()
     val accessory = bool("accessory").default(false)
+    /** V7 LOG-9: 같은 값끼리 슈퍼세트(세션 안에서만 의미) */
+    val supersetGroup = text("superset_group").nullable()
     override val primaryKey = PrimaryKey(id)
 }
 
@@ -151,6 +153,8 @@ object WorkoutSets : Table("workout_set") {
     val targetReps = integer("target_reps").nullable()
     val targetWeightKg = decimal("target_weight_kg", 6, 2).nullable()
     val isAmrap = bool("is_amrap").default(false)
+    /** V7 LOG-9: NORMAL·DROP·FAILURE */
+    val setType = text("set_type").default("NORMAL")
     /** V6 (LOG-13) */
     val targetRepsMax = integer("target_reps_max").nullable()
     val targetRir = integer("target_rir").nullable()
@@ -205,6 +209,12 @@ object ProgramInstances : Table("program_instance") {
     val updatedAt = timestamp("updated_at")
     val deletedAt = timestamp("deleted_at").nullable()
     val importBatchId = uuid("import_batch_id").nullable()
+    /** V7: 이 회차 이하는 replay 하지 않는다(정의 교체 시점) */
+    val baseSeq = integer("base_seq").default(0)
+    /** V7: {"dayKey": [종목 인덱스 순열]} */
+    val dayOrder = jsonbText("day_order").default("{}")
+    /** V7: 교체 시점의 마지막 이벤트 날짜 */
+    val baseDate = date("base_date").nullable()
     override val primaryKey = PrimaryKey(id)
 }
 
