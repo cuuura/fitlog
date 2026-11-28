@@ -243,6 +243,29 @@ class ProgramStartExtTest {
     }
 
     @Test
+    fun preview_fills_derived_keys_for_real_template() = fitlogTest {
+        startApplication()
+        val c = jsonClient()
+        val uid = createUser()
+        val list = c.get("/v1/programs?source=TEMPLATE") { auth(uid) }.arrOf().map { it.jsonObject }
+        val pid = list.first { it.str("templateKey") == "gzclp" }.str("id")!!
+        val sug = c.get("/v1/programs/$pid/suggest") { auth(uid) }.arrOf().map { it.jsonObject }
+        val derivedKeys = sug.filter { it["derivedFrom"] != null }.map { it.str("key")!! }.toSet()
+        assertTrue(derivedKeys.isNotEmpty(), "gzclp 에 자동 계산 키")
+        val need = sug.filter { it["optional"] == null }
+        val tm = need.filter { it.str("needs") == "TM" }.joinToString(",") { "\"${it.str("key")}\":100" }
+        val wk = need.filter { it.str("needs") == "WORKING" }.joinToString(",") { "\"${it.str("key")}\":100" }
+        val r = c.post("/v1/programs/$pid/preview") { auth(uid); jsonBody(); setBody("""{"tm":{$tm},"working":{$wk}}""") }
+        assertEquals(HttpStatusCode.OK, r.status)
+        val o = r.objOf()
+        val derived = o["derived"]!!.jsonArray.map { it.jsonPrimitive.content }.toSet()
+        assertEquals(derivedKeys, derived)
+        val working = o["inputs"]!!.jsonObject["working"]!!.jsonObject
+        // 100 × 0.65 = 65 를 roundingKg 단위 내림
+        derivedKeys.forEach { k -> assertTrue((working[k] ?: o["inputs"]!!.jsonObject["tm"]!!.jsonObject[k])!!.jsonPrimitive.content.toDouble() in 60.0..65.0, k) }
+    }
+
+    @Test
     fun import_start_programs_applies_weekdays() = fitlogTest {
         startApplication()
         withToday("2026-11-02T00:00:00Z") {
