@@ -521,6 +521,40 @@ class MemoryProgramRepository implements ProgramRepository {
   );
 
   @override
+  Future<Program> updateProgram(String id, {String? name, required Map<String, Object?> definition}) async {
+    final old = programs[id] ?? (throw StateError('no program $id'));
+    return programs[id] = Program(
+      id: id,
+      name: name ?? definition['name'] as String? ?? old.name,
+      description: definition['description'] as String?,
+      builtIn: old.builtIn,
+      dayCount: (definition['days'] as List?)?.length ?? 0,
+      source: old.source,
+      definition: definition,
+      activeInstanceIds: [
+        for (final i in instances.values)
+          if (i.programId == id && i.status != InstanceStatus.FINISHED) i.id,
+      ],
+    );
+  }
+
+  /// 인스턴스에 교체해 넣은 정의(테스트 확인용).
+  final Map<String, Map<String, Object?>> instanceDefinitions = {};
+
+  @override
+  Future<Instance> replaceInstanceDefinition(
+    String instanceId,
+    Map<String, Object?> definition, {
+    Map<String, double> tm = const {},
+    Map<String, double> working = const {},
+  }) async {
+    final i = instances[instanceId] ?? (throw StateError('no instance $instanceId'));
+    instanceDefinitions[instanceId] = definition;
+    _changed(instanceId);
+    return i;
+  }
+
+  @override
   Future<void> deleteProgram(String id) async => programs.remove(id);
 
   @override

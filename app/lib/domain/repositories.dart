@@ -125,6 +125,17 @@ abstract interface class ProgramRepository {
   Future<Program> getProgram(String id);
   Future<Program> createProgram(String id, Map<String, Object?> definition);
   Future<Program> validateProgram(Map<String, Object?> definition);
+
+  /// v1.2: 내 프로그램 고치기(본인 것만). 결과의 activeInstanceIds는 진행 중 인스턴스.
+  Future<Program> updateProgram(String id, {String? name, required Map<String, Object?> definition});
+
+  /// v1.2: 진행 중 인스턴스에 새 정의를 다음 회차부터 적용.
+  Future<Instance> replaceInstanceDefinition(
+    String instanceId,
+    Map<String, Object?> definition, {
+    Map<String, double> tm = const {},
+    Map<String, double> working = const {},
+  });
   Future<void> deleteProgram(String id);
   Future<List<SuggestItem>> suggest(String programId);
 

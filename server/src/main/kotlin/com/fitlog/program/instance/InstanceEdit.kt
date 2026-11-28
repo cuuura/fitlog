@@ -156,7 +156,7 @@ internal fun Transaction.replaceInstanceDefinition(
         it[updatedAt] = Times.now()
     }
     replayInstance(engine, loadInstanceRow(uid, id)!!)
-    return instanceView(engine, loadInstanceRow(uid, id)!!)
+    return instanceView(engine, loadInstanceRow(uid, id)!!, withDefinition = true)
 }
 
 /** 4절 종목 교체: lifts[liftKey].exercise 만 바꾼 정의로 교체 */

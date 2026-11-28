@@ -42,4 +42,11 @@ abstract final class Routes {
   static const scheduled = '/scheduled'; // 목록
   static const scheduledNew = '/scheduled/new'; // 만들기 (?date=YYYY-MM-DD 로 날짜 지정)
   static String scheduledEdit(String id) => '/scheduled/$id/edit'; // 수정
+
+  // v1.2 프로그램 편집기(PRG-2). 새로 만들기는 인자 없이, 고치기는 programId, 복사는 copyFrom, 진행만은 instanceId.
+  static const programEditor = '/program-editor';
+  static String programEditorFor({String? programId, String? copyFromProgramId, String? instanceId}) => Uri(
+    path: programEditor,
+    queryParameters: {'programId': ?programId, 'copyFrom': ?copyFromProgramId, 'instanceId': ?instanceId},
+  ).toString();
 }

@@ -19,6 +19,7 @@ import '../features/history/history_page.dart';
 import '../features/history/session_edit_page.dart';
 import '../features/me/me_page.dart';
 import '../features/shell/app_shell.dart';
+import '../features/program_editor/program_editor_page.dart';
 import '../features/programs/instance_detail_page.dart';
 import '../features/programs/program_detail_page.dart';
 import '../features/programs/program_start_page.dart';
@@ -103,6 +104,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           ]),
           StatefulShellBranch(routes: [
             GoRoute(path: Routes.programs, builder: (_, _) => const ProgramsPage()),
+            GoRoute(
+              path: Routes.programEditor,
+              builder: (_, s) => ProgramEditorPage(
+                programId: s.uri.queryParameters['programId'],
+                copyFromProgramId: s.uri.queryParameters['copyFrom'],
+                instanceId: s.uri.queryParameters['instanceId'],
+              ),
+            ),
             GoRoute(path: '/programs/:id', builder: (_, s) => ProgramDetailPage(programId: s.pathParameters['id']!)),
             GoRoute(
                 path: '/programs/:id/start',

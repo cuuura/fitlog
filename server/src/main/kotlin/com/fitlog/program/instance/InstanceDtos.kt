@@ -104,6 +104,8 @@ data class Instance(
     val next: PlannedWorkout? = null,
     /** v1.2: {dayKey: 정의 종목 인덱스 순열}. 없으면 빈 객체 */
     val dayOrder: Map<String, List<Int>> = emptyMap(),
+    /** v1.2: 이 인스턴스가 쓰는 정의 사본(GET 단건·정의 교체 응답에만). 목록·MCP 에는 없음 */
+    val definition: kotlinx.serialization.json.JsonElement? = null,
 )
 
 /** PUT /program-instances/{id}/definition */
