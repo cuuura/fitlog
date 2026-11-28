@@ -2716,5 +2716,71 @@
   "calendarPrevWeek": "이전 주",
   "calendarNextWeek": "다음 주",
   "calendarExpand": "달력 펼치기",
-  "calendarCollapse": "달력 접기"
+  "calendarCollapse": "달력 접기",
+  "progSessionMinutesRange": "회당 약 {min}~{max}분",
+  "@progSessionMinutesRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "progSessionMinutesOne": "회당 약 {min}분",
+  "@progSessionMinutesOne": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartPreviewMinutes": "약 {n}분",
+  "@programStartPreviewMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartPreviewHint": "무게를 채우면 세트가 보여요",
+  "programStartDerivedTitle": "자동 계산 {count}개",
+  "@programStartDerivedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartDerivedHelp": "기준 종목 무게에서 계산해요. 직접 고치면 그 값으로 시작해요.",
+  "programStartDerivedBasis": "{from} × {pct}%",
+  "@programStartDerivedBasis": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartDerivedPending": "무게를 채우면 계산돼요",
+  "programStartFirstSessionNote": "첫 운동에서 정하기: 비워 두면 첫 운동 기록으로 무게를 정해요.",
+  "programStartWeekdaysTitle": "요일 바꾸기",
+  "programStartWeekdayTaken": "다른 날이 쓰는 요일이에요",
+  "programStartAccTitle": "보조 종목",
+  "programStartAccChip": "선택",
+  "programStartAccSummaryNone": "추가하지 않아도 돼요",
+  "programStartAccSummary": "{count}개 추가",
+  "@programStartAccSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartAccHelp": "시작한 뒤에도 프로그램 화면에서 바꿀 수 있어요.",
+  "programStartAccRemoved": "보조 종목을 뺐어요",
+  "programStartAccFailed": "시작했지만 보조 종목은 저장하지 못했어요. 프로그램 화면에서 다시 추가해 주세요."
 }
