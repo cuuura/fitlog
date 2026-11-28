@@ -125,16 +125,23 @@ class MemorySessionRepository implements SessionRepository {
     scheduledWorkoutId: s.scheduledWorkoutId,
   );
 
-  SessionExercise _copySe(SessionExercise e, {int? position, String? Function()? note, List<WorkoutSet>? sets}) =>
-      SessionExercise(
-        id: e.id,
-        exerciseId: e.exerciseId,
-        position: position ?? e.position,
-        note: note != null ? note() : e.note,
-        sets: sets ?? e.sets,
-        liftKey: e.liftKey,
-        accessory: e.accessory,
-      );
+  SessionExercise _copySe(
+    SessionExercise e, {
+    int? position,
+    String? Function()? note,
+    List<WorkoutSet>? sets,
+    String? exerciseId,
+    String? Function()? supersetGroup,
+  }) => SessionExercise(
+    id: e.id,
+    exerciseId: exerciseId ?? e.exerciseId,
+    position: position ?? e.position,
+    note: note != null ? note() : e.note,
+    sets: sets ?? e.sets,
+    liftKey: e.liftKey,
+    accessory: e.accessory,
+    supersetGroup: supersetGroup != null ? supersetGroup() : e.supersetGroup,
+  );
 
   void _put(Session s) {
     _sessions[s.id] = s;
@@ -231,6 +238,7 @@ class MemorySessionRepository implements SessionRepository {
               position: ei,
               liftKey: plan.exercises[ei].key,
               accessory: plan.exercises[ei].accessory,
+              supersetGroup: plan.exercises[ei].superset,
               sets: [
                 for (var si = 0; si < plan.exercises[ei].sets.length; si++)
                   WorkoutSet(
@@ -245,6 +253,7 @@ class MemorySessionRepository implements SessionRepository {
                     isAmrap: plan.exercises[ei].sets[si].isAmrap,
                     targetRepsMax: plan.exercises[ei].sets[si].targetRepsMax,
                     targetRestSec: plan.exercises[ei].sets[si].restSec,
+                    setType: plan.exercises[ei].sets[si].isDrop ? SetType.DROP : SetType.NORMAL,
                   ),
               ],
             ),
@@ -342,6 +351,22 @@ class MemorySessionRepository implements SessionRepository {
     final f = _findSe(sessionExerciseId)!;
     final list = [...f.session.exercises];
     list[f.exIndex] = _copySe(list[f.exIndex], note: () => note);
+    _put(_copy(f.session, exercises: list));
+  }
+
+  @override
+  Future<void> setExerciseSuperset(String sessionExerciseId, String? group) async {
+    final f = _findSe(sessionExerciseId)!;
+    final list = [...f.session.exercises];
+    list[f.exIndex] = _copySe(list[f.exIndex], supersetGroup: () => group);
+    _put(_copy(f.session, exercises: list));
+  }
+
+  @override
+  Future<void> swapExercise(String sessionExerciseId, String exerciseId) async {
+    final f = _findSe(sessionExerciseId)!;
+    final list = [...f.session.exercises];
+    list[f.exIndex] = _copySe(list[f.exIndex], exerciseId: exerciseId);
     _put(_copy(f.session, exercises: list));
   }
 
@@ -605,6 +630,28 @@ class MemoryProgramRepository implements ProgramRepository {
     accessoryLists[instanceId] = list;
     _changed(instanceId);
     return list;
+  }
+
+  /// 테스트용 기록: 호출된 swap·day-order와 실패 주입.
+  final List<({String instanceId, String liftKey, String exerciseId})> swapCalls = [];
+  final List<({String instanceId, String dayKey, List<int> order})> dayOrderCalls = [];
+  Object? swapError;
+  Object? dayOrderError;
+
+  @override
+  Future<Instance> swapLift(String instanceId, String liftKey, String exerciseId) async {
+    if (swapError != null) throw swapError!;
+    swapCalls.add((instanceId: instanceId, liftKey: liftKey, exerciseId: exerciseId));
+    _changed(instanceId);
+    return instances[instanceId]!;
+  }
+
+  @override
+  Future<Map<String, List<int>>> putDayOrder(String instanceId, String dayKey, List<int> order) async {
+    if (dayOrderError != null) throw dayOrderError!;
+    dayOrderCalls.add((instanceId: instanceId, dayKey: dayKey, order: order));
+    _changed(instanceId);
+    return {dayKey: order};
   }
 }
 

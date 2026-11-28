@@ -75,6 +75,9 @@ class SessionExercises extends Table {
   TextColumn get liftKey => text().nullable()();
   BoolColumn get accessory => boolean().withDefault(const Constant(false))();
 
+  // v5: 슈퍼세트 묶음(문자열 1~8, 같은 세션에서 같은 값끼리)
+  TextColumn get supersetGroup => text().nullable()();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -110,6 +113,9 @@ class WorkoutSets extends Table {
   IntColumn get targetRepsMax => integer().nullable()();
   IntColumn get targetRir => integer().nullable()();
   IntColumn get targetRestSec => integer().nullable()();
+
+  // v5: 세트 종류 NORMAL | DROP | FAILURE
+  TextColumn get setType => text().withDefault(const Constant('NORMAL'))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -193,7 +199,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -225,6 +231,10 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(workoutSets, workoutSets.targetRepsMax);
         await m.addColumn(workoutSets, workoutSets.targetRir);
         await m.addColumn(workoutSets, workoutSets.targetRestSec);
+      }
+      if (from < 5) {
+        await m.addColumn(sessionExercises, sessionExercises.supersetGroup);
+        await m.addColumn(workoutSets, workoutSets.setType);
       }
     },
   );

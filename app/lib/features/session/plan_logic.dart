@@ -10,6 +10,7 @@ bool isJudged(Session session, SessionExercise se, WorkoutSet s) =>
     session.programInstanceId != null &&
     s.targetReps != null &&
     !s.isWarmup &&
+    s.setType != SetType.DROP && // 드롭 세트는 판정 제외(워밍업과 같음)
     !se.accessory;
 
 /// 완료한 세트가 목표 횟수에 못 미치면 실패(무게는 보지 않는다, PRG-5).

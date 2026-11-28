@@ -53,6 +53,12 @@ class RemoteProgramRepository implements ProgramRepository {
   @override
   Future<List<Accessory>> putAccessories(String instanceId, List<Accessory> list) =>
       _notify(instanceId, api.putAccessories(instanceId, list));
+  @override
+  Future<Instance> swapLift(String instanceId, String liftKey, String exerciseId) =>
+      _notify(instanceId, api.swapLift(instanceId, liftKey, exerciseId));
+  @override
+  Future<Map<String, List<int>>> putDayOrder(String instanceId, String dayKey, List<int> order) =>
+      _notify(instanceId, api.putDayOrder(instanceId, dayKey, order));
 }
 
 class RemoteRecordsRepository implements RecordsRepository {

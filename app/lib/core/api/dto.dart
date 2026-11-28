@@ -55,6 +55,9 @@ enum Sex { MALE, FEMALE, OTHER }
 
 enum UserRole { MEMBER, TRAINER }
 
+/// v1.2 세트 종류(LOG-9). DROP은 판정에서 제외, FAILURE는 일반 세트처럼 판정.
+enum SetType { NORMAL, DROP, FAILURE }
+
 enum SessionSource { APP, AI_JSON, AI_MCP, IMPORT }
 
 /// v0.3: AI_JSON·AI_MCP·IMPORT 추가(가져오기로 만든 체중).
@@ -323,6 +326,9 @@ class WorkoutSet {
   final int? targetRir;
   final int? targetRestSec;
 
+  /// v1.2: 세트 종류(NORMAL 기본). isWarmup과 별개.
+  final SetType setType;
+
   const WorkoutSet({
     required this.id,
     required this.position,
@@ -345,6 +351,7 @@ class WorkoutSet {
     this.targetRepsMax,
     this.targetRir,
     this.targetRestSec,
+    this.setType = SetType.NORMAL,
   });
 
   bool get isPlanned => plannedSetKey != null;
@@ -373,6 +380,7 @@ class WorkoutSet {
     targetRepsMax: j['targetRepsMax'] as int?,
     targetRir: j['targetRir'] as int?,
     targetRestSec: j['targetRestSec'] as int?,
+    setType: j['setType'] == null ? SetType.NORMAL : _enumByName(SetType.values, j['setType']),
   );
 
   Map<String, Object?> toJson() => _compact({
@@ -397,6 +405,7 @@ class WorkoutSet {
     'targetRepsMax': targetRepsMax,
     'targetRir': targetRir,
     'targetRestSec': targetRestSec,
+    'setType': setType.name,
   });
 
   /// nullable 필드는 `() => null`처럼 함수로 넘겨야 null로 바꿀 수 있다.
@@ -414,6 +423,7 @@ class WorkoutSet {
     int? Function()? restSec,
     String? Function()? note,
     DateTime? Function()? completedAt,
+    SetType? setType,
   }) => WorkoutSet(
     id: id,
     position: position ?? this.position,
@@ -436,6 +446,7 @@ class WorkoutSet {
     targetRepsMax: targetRepsMax,
     targetRir: targetRir,
     targetRestSec: targetRestSec,
+    setType: setType ?? this.setType,
   );
 }
 
@@ -449,6 +460,9 @@ class SessionExercise {
   /// v0.2: 프로그램 종목이면 lifts 키(인스턴스 보조운동은 `acc:<id>`), 보조운동이면 accessory=true.
   final String? liftKey;
   final bool accessory;
+
+  /// v1.2: 슈퍼세트 묶음(문자열 1~8) 또는 null. 한 세션에서 같은 값끼리 묶인다.
+  final String? supersetGroup;
   const SessionExercise({
     required this.id,
     required this.exerciseId,
@@ -457,6 +471,7 @@ class SessionExercise {
     this.sets = const [],
     this.liftKey,
     this.accessory = false,
+    this.supersetGroup,
   });
 
   factory SessionExercise.fromJson(Map<String, Object?> j) => SessionExercise(
@@ -467,6 +482,7 @@ class SessionExercise {
     sets: [for (final s in (j['sets'] as List? ?? const [])) WorkoutSet.fromJson((s as Map).cast())],
     liftKey: j['liftKey'] as String?,
     accessory: j['accessory'] as bool? ?? false,
+    supersetGroup: j['supersetGroup'] as String?,
   );
   Map<String, Object?> toJson() => _compact({
     'id': id,
@@ -475,6 +491,7 @@ class SessionExercise {
     'note': note,
     'liftKey': liftKey,
     'accessory': accessory,
+    'supersetGroup': supersetGroup,
     'sets': [for (final s in sets) s.toJson()],
   });
 }

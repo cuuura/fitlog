@@ -342,6 +342,7 @@ class DriftSessionRepository extends _DriftBase implements SessionRepository {
                   updatedAt: at,
                   liftKey: Value(pe.key),
                   accessory: Value(pe.accessory),
+                  supersetGroup: Value(pe.superset),
                 ),
               );
           await _enqSe(await _seRow(seId));
@@ -359,6 +360,7 @@ class DriftSessionRepository extends _DriftBase implements SessionRepository {
               isAmrap: ps.isAmrap,
               targetRepsMax: ps.targetRepsMax,
               targetRestSec: ps.restSec,
+              setType: ps.isDrop ? SetType.DROP : SetType.NORMAL,
             );
             await db.into(db.workoutSets).insert(setCompanion(set, sessionExerciseId: seId, updatedAt: at));
             await _enqSet(await (db.select(db.workoutSets)..where((t) => t.id.equals(set.id))).getSingle());
@@ -617,6 +619,30 @@ class DriftSessionRepository extends _DriftBase implements SessionRepository {
       final se = await _seRow(sessionExerciseId);
       await (db.update(db.sessionExercises)..where((t) => t.id.equals(se.id))).write(
         SessionExercisesCompanion(note: Value(note), updatedAt: Value(stamp(se.updatedAt))),
+      );
+      await _enqSe(await _seRow(se.id));
+    });
+    scheduleSync();
+  }
+
+  @override
+  Future<void> setExerciseSuperset(String sessionExerciseId, String? group) async {
+    await db.transaction(() async {
+      final se = await _seRow(sessionExerciseId);
+      await (db.update(db.sessionExercises)..where((t) => t.id.equals(se.id))).write(
+        SessionExercisesCompanion(supersetGroup: Value(group), updatedAt: Value(stamp(se.updatedAt))),
+      );
+      await _enqSe(await _seRow(se.id));
+    });
+    scheduleSync();
+  }
+
+  @override
+  Future<void> swapExercise(String sessionExerciseId, String exerciseId) async {
+    await db.transaction(() async {
+      final se = await _seRow(sessionExerciseId);
+      await (db.update(db.sessionExercises)..where((t) => t.id.equals(se.id))).write(
+        SessionExercisesCompanion(exerciseId: Value(exerciseId), updatedAt: Value(stamp(se.updatedAt))),
       );
       await _enqSe(await _seRow(se.id));
     });

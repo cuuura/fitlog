@@ -80,6 +80,12 @@ abstract interface class SessionRepository {
   Future<void> removeExercise(String sessionExerciseId);
   Future<void> updateExerciseNote(String sessionExerciseId, String? note);
 
+  /// v1.2 슈퍼세트 묶음 값 바꾸기(null이면 묶음 해제). 같은 값끼리 한 묶음.
+  Future<void> setExerciseSuperset(String sessionExerciseId, String? group);
+
+  /// v1.2 종목 바꾸기: exerciseId만 바꾸고 liftKey·세트 기록·순서는 그대로 둔다.
+  Future<void> swapExercise(String sessionExerciseId, String exerciseId);
+
   /// 종목 끝에 세트를 붙인다. draft.position은 무시하고 구현이 매긴다. id는 호출자가 만든다.
   Future<WorkoutSet> addSet(String sessionExerciseId, WorkoutSet draft);
 
@@ -137,6 +143,12 @@ abstract interface class ProgramRepository {
   Future<Instance> skip(String instanceId, int planSeq);
   Future<List<Accessory>> accessories(String instanceId);
   Future<List<Accessory>> putAccessories(String instanceId, List<Accessory> list);
+
+  /// v1.2 종목 교체(PRG-7, 앞으로 계속): lifts[liftKey].exercise만 바꾼다. 온라인 필요.
+  Future<Instance> swapLift(String instanceId, String liftKey, String exerciseId);
+
+  /// v1.2 운동 순서 기억: dayKey 하루의 정의 인덱스 순열을 저장한다. 응답은 인스턴스의 dayOrder 전체.
+  Future<Map<String, List<int>>> putDayOrder(String instanceId, String dayKey, List<int> order);
 
   /// 인스턴스가 바뀔 때(시작·일시정지·재개·종료·건너뛰기·조정·삭제) 알린다. 계획 캐시가 듣고 갱신한다.
   Stream<String> get instanceChanges;
