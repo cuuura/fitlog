@@ -325,6 +325,20 @@ void main() {
       expect(find.text('import-page'), findsOneWidget);
     });
 
+    testWidgets('시트 맨 아래 직접 만들기는 프로그램 편집기를 연다', (tester) async {
+      final env = _Env();
+      await env.pump(tester, Routes.programs, extraRoutes: [
+        GoRoute(path: Routes.programEditor, builder: (_, _) => const Scaffold(body: Text('editor-page'))),
+      ]);
+      await tester.tap(find.byKey(const Key('programs-add')));
+      await tester.pumpAndSettle();
+      await tester.scrollUntilVisible(find.byKey(const Key('programs-create-custom')), 200, scrollable: find.descendant(of: find.byKey(const Key('program-add-list')), matching: find.byType(Scrollable)));
+      expect(find.text('직접 만들기'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('programs-create-custom')));
+      await tester.pumpAndSettle();
+      expect(find.text('editor-page'), findsOneWidget);
+    });
+
     testWidgets('오프라인이면 시트에 안내와 다시 시도', (tester) async {
       final env = _Env();
       env.programs.listError = const ApiException(code: 'NETWORK', message: 'x');

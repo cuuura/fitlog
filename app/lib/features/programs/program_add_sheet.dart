@@ -789,7 +789,7 @@ class _Expanded extends ConsumerWidget {
   );
 }
 
-/// 맨 아래 "다른 방법으로 추가". 직접 만들기는 편집기가 생기는 v1.2까지 숨긴다.
+/// 맨 아래 "다른 방법으로 추가": 직접 만들기(편집기), AI로 가져오기, 하루만 예약.
 class _OtherWays extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -820,6 +820,14 @@ class _OtherWays extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.fromLTRB(4, 12, 4, 4),
           child: Text(l.progOtherWays, style: text.titleSmall),
+        ),
+        tile(
+          const Key('programs-create-custom'),
+          Icons.edit_note,
+          c.fg2,
+          l.progOtherCustom,
+          l.progOtherCustomHint,
+          Routes.programEditor,
         ),
         tile(
           const Key('programs-import-ai'),

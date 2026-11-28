@@ -2782,5 +2782,7 @@
   "sessionSwapSubmit": "Swap",
   "sessionSwapOnlineError": "Couldn't swap. Check your connection and try again",
   "sessionDayOrderSaved": "We'll show this order from the next session",
-  "instanceSwapLift": "Swap exercise"
+  "instanceSwapLift": "Swap exercise",
+  "progOtherCustom": "Build your own",
+  "progOtherCustomHint": "Set days, exercises, sets and progression from scratch"
 }
