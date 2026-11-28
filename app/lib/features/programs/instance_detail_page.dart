@@ -247,7 +247,7 @@ class _Body extends ConsumerWidget {
     final repo = ref.read(programRepositoryProvider);
     await showFormSheet<bool>(
       context,
-      builder: (_) => _AccessorySheet(
+      builder: (_) => AccessorySheet(
         unit: unit,
         save: (res) async {
           final same = view.accessories.where((a) => a.dayKey == dayKey).length;
@@ -767,18 +767,18 @@ class _AdjustSheetState extends State<_AdjustSheet> {
   }
 }
 
-typedef _AccessoryInput = ({int sets, int reps, double? weightKg});
+typedef AccessoryInput = ({int sets, int reps, double? weightKg});
 
-class _AccessorySheet extends StatefulWidget {
-  const _AccessorySheet({required this.unit, required this.save});
+class AccessorySheet extends StatefulWidget {
+  const AccessorySheet({super.key, required this.unit, required this.save});
   final WeightUnit unit;
-  final Future<void> Function(_AccessoryInput res) save;
+  final Future<void> Function(AccessoryInput res) save;
 
   @override
-  State<_AccessorySheet> createState() => _AccessorySheetState();
+  State<AccessorySheet> createState() => AccessorySheetState();
 }
 
-class _AccessorySheetState extends State<_AccessorySheet> {
+class AccessorySheetState extends State<AccessorySheet> {
   final _sets = TextEditingController(text: '3');
   final _reps = TextEditingController(text: '10');
   final _weight = TextEditingController();
