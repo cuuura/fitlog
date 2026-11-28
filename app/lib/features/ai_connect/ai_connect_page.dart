@@ -1,6 +1,7 @@
 import 'package:fitlog/core/api/ai_dto.dart';
 import 'package:fitlog/core/auth/auth_controller.dart';
 import 'package:fitlog/core/theme.dart';
+import 'package:fitlog/core/ui/confirm.dart';
 import 'package:fitlog/data/providers.dart';
 import 'package:fitlog/l10n/gen/app_localizations.dart';
 import 'package:flutter/services.dart';
@@ -159,18 +160,14 @@ class _ConnectionTile extends ConsumerWidget {
 
   Future<void> _disconnect(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text(l.aiConnectDisconnectTitle(conn.clientName)),
-        content: Text(l.aiConnectDisconnectBody),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l.aiConnectCancel)),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l.aiConnectDisconnect)),
-        ],
-      ),
+    final ok = await confirmAction(
+      context,
+      title: l.aiConnectDisconnectTitle(conn.clientName),
+      body: l.aiConnectDisconnectBody,
+      action: l.aiConnectDisconnect,
+      destructive: true,
     );
-    if (ok != true) return;
+    if (!ok) return;
     try {
       await ref.read(aiConnectionRepositoryProvider).disconnect(conn.id);
     } catch (_) {

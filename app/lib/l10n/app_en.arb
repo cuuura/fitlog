@@ -77,8 +77,8 @@
   "exerciseTypeLabel": "Type",
   "exercisePrimaryMuscle": "Primary muscle",
   "exerciseSecondaryMuscles": "Secondary muscles",
-  "exerciseEdit": "Edit",
   "exerciseDeleteConfirm": "Delete {name}?",
+  "exerciseDeleteBody": "It will be removed from the list. Workouts you already logged stay as they are.",
   "exerciseMuscleChest": "Chest",
   "exerciseMuscleBack": "Back",
   "exerciseMuscleLats": "Lats",
@@ -139,9 +139,6 @@
   "settingsKeepScreenOnDesc": "Prevents the screen from turning off during a workout.",
   "settingsRpe": "Use RPE/RIR input",
   "settingsRpeDesc": "Record effort for each set.",
-  "settingsSectionBody": "Body",
-  "settingsProfile": "Profile",
-  "settingsBodyWeight": "Body weight",
   "settingsSectionAccount": "Account",
   "settingsSignOut": "Sign out",
   "settingsSignOutPendingTitle": "Some changes are not synced yet",
@@ -172,6 +169,7 @@
   "profileSexMale": "Male",
   "profileSexFemale": "Female",
   "profileSexOther": "Other",
+  "profileValueEmpty": "Not set",
   "profileBirthYear": "Birth year",
   "profileHeightInvalid": "Enter a value between {min} and {max} cm.",
   "@profileHeightInvalid": {
@@ -195,7 +193,6 @@
       }
     }
   },
-  "profileSaved": "Saved.",
   "bodyTitle": "Body weight",
   "bodyEmpty": "No entries yet. Add your weight below.",
   "bodyWeightLabel": "Weight ({unit})",
@@ -221,8 +218,6 @@
       }
     }
   },
-  "bodyDeleteConfirm": "Delete this entry?",
-  "bodyDeleteTooltip": "Delete entry",
   "timerRestTitle": "Resting",
   "timerRestTitleWithLabel": "Rest · {label}",
   "@timerRestTitleWithLabel": {
@@ -734,9 +729,6 @@
   "settingsE1rmBrzyckiDesc": "Weight × 36 / (37 − reps). Fits low reps well.",
   "settingsE1rmLombardiDesc": "Weight × reps^0.10. Rises gently as reps grow.",
   "settingsE1rmNote": "Only sets of 1–10 reps count; warm-ups are excluded.",
-  "profileClear": "Clear",
-  "settingsAi": "AI integration",
-  "settingsAiSubtitle": "Connect AI, import JSON, deletion requests, export",
   "importTitle": "Import JSON",
   "importInputIntro": "Paste the JSON an AI made, or load it from a file.",
   "importPasteHint": "Paste the JSON here",
@@ -1213,7 +1205,6 @@
   "aiConnectDisconnect": "Disconnect",
   "aiConnectDisconnectTitle": "Disconnect {name}?",
   "aiConnectDisconnectBody": "This AI can no longer access your data. Records already imported stay.",
-  "aiConnectCancel": "Cancel",
   "aiConnectLoadFailed": "Could not load. Check your connection and try again. AI connections need internet.",
   "aiConnectActionFailed": "Something went wrong. Try again.",
   "aiConnectRetry": "Retry",
@@ -1578,6 +1569,10 @@
   "bodyTodayWeight": "Today's weight",
   "bodyRecordAction": "Log weight",
   "bodyHistoryTitle": "History",
+  "bodyDeleted": "Entry deleted.",
+  "bodyEditTitle": "Edit weight",
+  "bodyMeasuredAt": "Measured on",
+  "bodyHeightEmpty": "Add",
   "homeTodayTitle": "Today",
   "homeDateLabel": "{weekday}, {month}/{day}",
   "@homeDateLabel": {

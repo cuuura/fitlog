@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/api/ai_dto.dart';
+import '../../core/ui/confirm.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../programs/program_common.dart' show ErrorRetry;
-import '../session/active_session_page.dart' show confirmDialog;
 import 'ai_labels.dart';
 
 final aiBatchDetailProvider = FutureProvider.autoDispose.family<ImportBatchDetail, String>(
@@ -49,11 +49,12 @@ class _AiHistoryDetailPageState extends ConsumerState<AiHistoryDetailPage> {
   Future<void> _revert(ImportBatchDetail d) async {
     final l = AppLocalizations.of(context);
     final messenger = ScaffoldMessenger.of(context);
-    final ok = await confirmDialog(
+    final ok = await confirmAction(
       context,
       title: l.aiHistoryRevertTitle,
       body: revertConfirmText(l, d.items),
-      confirmLabel: l.aiHistoryRevert,
+      action: l.aiHistoryRevert,
+      destructive: true,
       confirmKey: const Key('ai-revert-confirm'),
     );
     if (!ok || !mounted) return;

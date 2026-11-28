@@ -5,6 +5,7 @@ import 'package:fitlog/core/auth/auth_controller.dart';
 import 'package:fitlog/core/auth/token_store.dart';
 import 'package:fitlog/core/settings/settings_controller.dart';
 import 'package:fitlog/features/profile/profile_page.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitlog/features/settings/settings_page.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
@@ -93,15 +94,17 @@ void main() {
       );
       c.read(settingsProvider);
       await settle();
-      await c.read(settingsProvider.notifier).update(c.read(settingsProvider).copyWith(e1rmFormula: E1rmFormula.BRZYCKI));
+      await c
+          .read(settingsProvider.notifier)
+          .update(c.read(settingsProvider).copyWith(e1rmFormula: E1rmFormula.BRZYCKI));
       expect(putBody(a)['e1rmFormula'], 'BRZYCKI');
       expect(c.read(settingsProvider).e1rmFormula, E1rmFormula.BRZYCKI);
     });
   });
 
   group('ProfilePage', () {
-    testWidgets('키·출생 연도 지우기와 성별 선택 안 함 -> PUT에 null', (tester) async {
-      final a = FakeAdapter((o) => o.method == 'PUT' ? json(o.data) : errorBody(500, 'X'));
+    Future<(FakeAdapter, ProviderContainer)> pumpProfile(WidgetTester tester, {bool failPut = false}) async {
+      final a = FakeAdapter((o) => o.method == 'PUT' && !failPut ? json(o.data) : errorBody(500, 'X'));
       final c = authContainer(
         adapter: a,
         extra: [authControllerProvider.overrideWith(() => FixedAuth(AuthStatus.signedOut))],
@@ -109,54 +112,100 @@ void main() {
       c.read(settingsProvider);
       await tester.pumpWidget(containerApp(c, const ProfilePage()));
       await flush(tester);
-      expect(find.widgetWithText(TextField, '175'), findsOneWidget);
-      expect(find.widgetWithText(TextField, '1990'), findsOneWidget);
+      return (a, c);
+    }
 
-      await tester.tap(find.byKey(const Key('profileHeightClear')));
-      await tester.tap(find.byKey(const Key('profileBirthClear')));
-      await tester.tap(find.byKey(const Key('profileSex')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('선택 안 함').last);
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('profileSave')));
-      await flush(tester);
-
-      final body = putBody(a);
-      expect(jsonEncode(body), contains('"heightCm":null'));
-      expect(body['sex'], isNull);
-      expect(body['birthYear'], isNull);
-      expect(c.read(settingsProvider).heightCm, isNull);
-      expect(c.read(settingsProvider).sex, isNull);
-      expect(c.read(settingsProvider).birthYear, isNull);
-      expect(find.text('저장했어요.'), findsOneWidget);
+    testWidgets('값이 보이는 행 목록이고 입력란은 없다', (tester) async {
+      await pumpProfile(tester);
+      expect(find.byType(TextField), findsNothing);
+      expect(
+        find.descendant(of: find.byKey(const Key('profile-height')), matching: find.text('175 cm')),
+        findsOneWidget,
+      );
+      expect(find.descendant(of: find.byKey(const Key('profile-sex')), matching: find.text('남성')), findsOneWidget);
+      expect(find.descendant(of: find.byKey(const Key('profile-birth')), matching: find.text('1990')), findsOneWidget);
     });
 
-    testWidgets('텍스트를 직접 지워도 비워진다', (tester) async {
-      final a = FakeAdapter((o) => o.method == 'PUT' ? json(o.data) : errorBody(500, 'X'));
-      final c = authContainer(
-        adapter: a,
-        extra: [authControllerProvider.overrideWith(() => FixedAuth(AuthStatus.signedOut))],
-      );
-      c.read(settingsProvider);
-      await tester.pumpWidget(containerApp(c, const ProfilePage()));
-      await flush(tester);
+    testWidgets('키 행 -> 시트에서 비워 저장하면 PUT에 null, 다른 값은 유지', (tester) async {
+      final (a, c) = await pumpProfile(tester);
+      await tester.tap(find.byKey(const Key('profile-height')));
+      await tester.pumpAndSettle();
+      expect(find.widgetWithText(TextField, '175'), findsOneWidget);
       await tester.enterText(find.byKey(const Key('profileHeight')), '');
       await tester.tap(find.byKey(const Key('profileSave')));
       await flush(tester);
+      await tester.pumpAndSettle();
+
       final body = putBody(a);
-      expect(body['heightCm'], isNull);
-      expect(body['sex'], 'MALE', reason: '건드리지 않은 값은 유지');
+      expect(jsonEncode(body), contains('"heightCm":null'));
+      expect(body['sex'], 'MALE');
       expect(body['birthYear'], 1990);
+      expect(c.read(settingsProvider).heightCm, isNull);
+      expect(find.byKey(const Key('profileHeight')), findsNothing, reason: '저장하면 시트가 닫힌다');
+      expect(
+        find.descendant(of: find.byKey(const Key('profile-height')), matching: find.text('입력 안 함')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('성별 행 -> 선택 안 함 저장 -> PUT에 null', (tester) async {
+      final (a, c) = await pumpProfile(tester);
+      await tester.tap(find.byKey(const Key('profile-sex')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('profileSex-none')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('profileSave')));
+      await flush(tester);
+      await tester.pumpAndSettle();
+      expect(putBody(a)['sex'], isNull);
+      expect(c.read(settingsProvider).sex, isNull);
+      expect(c.read(settingsProvider).heightCm, 175);
+    });
+
+    testWidgets('출생 연도 행 -> 범위 밖이면 시트가 남고, 비우면 null', (tester) async {
+      final (a, c) = await pumpProfile(tester);
+      await tester.tap(find.byKey(const Key('profile-birth')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('profileBirth')), '1800');
+      await tester.tap(find.byKey(const Key('profileSave')));
+      await tester.pump();
+      expect(find.textContaining('1900'), findsOneWidget);
+      expect(a.log.where((o) => o.method == 'PUT'), isEmpty);
+
+      await tester.enterText(find.byKey(const Key('profileBirth')), '');
+      await tester.tap(find.byKey(const Key('profileSave')));
+      await flush(tester);
+      await tester.pumpAndSettle();
+      expect(putBody(a)['birthYear'], isNull);
+      expect(c.read(settingsProvider).birthYear, isNull);
+    });
+
+    testWidgets('저장 실패하면 시트 안에 오류를 보이고 입력을 유지한다', (tester) async {
+      final (_, c) = await pumpProfile(tester, failPut: true);
+      await tester.tap(find.byKey(const Key('profile-height')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(const Key('profileHeight')), '180');
+      await tester.tap(find.byKey(const Key('profileSave')));
+      await flush(tester);
+      await tester.pump();
+      expect(find.byKey(const Key('sheet-error')), findsOneWidget);
+      expect(find.widgetWithText(TextField, '180'), findsOneWidget);
+      expect(c.read(settingsProvider).heightCm, 175, reason: '실패하면 이전 값으로 되돌린다');
     });
   });
 
   group('SettingsPage 추정식', () {
     testWidgets('기본은 Epley이고 선택하면 저장된다', (tester) async {
-      await tester.pumpWidget(app(const SettingsPage(), overrides: [
-        authControllerProvider.overrideWith(() => FixedAuthStatus(AuthStatus.signedOut)),
-        settingsProvider.overrideWith(() => FixedSettings()),
-        tokenStoreProvider.overrideWithValue(MemoryTokenStore()),
-      ]));
+      await tester.pumpWidget(
+        app(
+          const SettingsPage(),
+          overrides: [
+            authControllerProvider.overrideWith(() => FixedAuthStatus(AuthStatus.signedOut)),
+            settingsProvider.overrideWith(() => FixedSettings()),
+            tokenStoreProvider.overrideWithValue(MemoryTokenStore()),
+          ],
+        ),
+      );
       await tester.pump();
       final dd = find.byKey(const Key('e1rmDropdown'));
       expect(tester.widget<DropdownButton<E1rmFormula>>(dd).value, E1rmFormula.EPLEY);

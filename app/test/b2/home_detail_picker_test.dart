@@ -92,6 +92,7 @@ void main() {
     // 내 종목 추가: 이름이 비면 저장되지 않는다
     await t.tap(find.byKey(const Key('add-custom')));
     await settle(t);
+    expect(find.descendant(of: find.byKey(const Key('custom-save')), matching: find.text('추가')), findsOneWidget);
     await t.tap(find.byKey(const Key('custom-save')));
     await settle(t);
     expect(find.text('1~60자로 입력해 주세요'), findsOneWidget);
@@ -118,8 +119,7 @@ void main() {
     expect(find.text('케이블 크런치'), findsNWidgets(2));
   });
 
-  testWidgets('내 종목 길게 눌러 삭제(기본 종목은 길게 누르기 없음)', (t) async {
-    final custom = ex('ex-mine', '내 종목', ExerciseType.BARBELL, Muscle.BACK, builtIn: false);
+  Future<Harness> pumpPicker(WidgetTester t, Exercise custom) async {
     final h = Harness(seed: [squat, custom]);
     await h.pump(t);
     await h.sessions.startSession(tz: 'Asia/Seoul');
@@ -128,9 +128,26 @@ void main() {
     await settle(t);
     await t.tap(find.byKey(const Key('add-exercise')));
     await settle(t);
+    return h;
+  }
 
-    expect(t.widget<ListTile>(find.byKey(Key('exercise-${squat.id}'))).onLongPress, isNull);
-    await t.longPress(find.byKey(Key('exercise-${custom.id}')));
+  testWidgets('내 종목은 행 끝 ⋮ 메뉴로 삭제(길게 누르기 없음), 확인창을 거친다', (t) async {
+    final custom = ex('ex-mine', '내 종목', ExerciseType.BARBELL, Muscle.BACK, builtIn: false);
+    final h = await pumpPicker(t, custom);
+
+    expect(find.byKey(Key('exercise-menu-${squat.id}')), findsNothing, reason: '기본 종목은 메뉴 없음');
+    expect(t.widget<ListTile>(find.byKey(Key('exercise-${custom.id}'))).onLongPress, isNull);
+    await t.tap(find.byKey(Key('exercise-menu-${custom.id}')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('custom-delete')));
+    await settle(t);
+    // 취소하면 남는다
+    expect(find.text('내 종목을(를) 삭제할까요?'), findsOneWidget);
+    await t.tap(find.text('취소'));
+    await settle(t);
+    expect(await h.exercises.byId(custom.id), isNotNull);
+
+    await t.tap(find.byKey(Key('exercise-menu-${custom.id}')));
     await settle(t);
     await t.tap(find.byKey(const Key('custom-delete')));
     await settle(t);
@@ -138,5 +155,22 @@ void main() {
     await settle(t);
     expect(find.byKey(Key('exercise-${custom.id}')), findsNothing);
     expect(await h.exercises.byId(custom.id), isNull);
+  });
+
+  testWidgets('내 종목 수정은 ⋮ 메뉴 → 시트(저장)', (t) async {
+    final custom = ex('ex-mine', '내 종목', ExerciseType.BARBELL, Muscle.BACK, builtIn: false);
+    final h = await pumpPicker(t, custom);
+
+    await t.tap(find.byKey(Key('exercise-menu-${custom.id}')));
+    await settle(t);
+    await t.tap(find.byKey(const Key('custom-edit')));
+    await settle(t);
+    expect(find.descendant(of: find.byKey(const Key('custom-save')), matching: find.text('저장')), findsOneWidget);
+    await t.enterText(find.byKey(const Key('custom-name-ko')), '새 이름');
+    await t.tap(find.byKey(const Key('custom-save')));
+    await settle(t);
+    expect((await h.exercises.byId(custom.id))!.nameKo, '새 이름');
+    expect(find.byKey(const Key('custom-save')), findsNothing, reason: '수정은 시트만 닫고 화면에 남는다');
+    expect(find.byKey(Key('exercise-${custom.id}')), findsOneWidget);
   });
 }

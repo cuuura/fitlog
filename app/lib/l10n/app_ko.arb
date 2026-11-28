@@ -142,7 +142,6 @@
   "exerciseTypeLabel": "기록 유형",
   "exercisePrimaryMuscle": "주 부위",
   "exerciseSecondaryMuscles": "보조 부위",
-  "exerciseEdit": "수정",
   "exerciseDeleteConfirm": "{name}을(를) 삭제할까요?",
   "@exerciseDeleteConfirm": {
     "placeholders": {
@@ -151,6 +150,7 @@
       }
     }
   },
+  "exerciseDeleteBody": "목록에서 사라져요. 이미 한 운동 기록은 그대로 남아요.",
   "exerciseMuscleChest": "가슴",
   "exerciseMuscleBack": "등",
   "exerciseMuscleLats": "광배근",
@@ -211,9 +211,6 @@
   "settingsKeepScreenOnDesc": "운동 중에는 화면이 꺼지지 않게 해요.",
   "settingsRpe": "RPE/RIR 입력 사용",
   "settingsRpeDesc": "세트마다 운동 강도를 기록해요.",
-  "settingsSectionBody": "내 몸",
-  "settingsProfile": "프로필",
-  "settingsBodyWeight": "체중 기록",
   "settingsSectionAccount": "계정",
   "settingsSignOut": "로그아웃",
   "settingsSignOutPendingTitle": "아직 동기화되지 않은 변경이 있어요",
@@ -244,6 +241,7 @@
   "profileSexMale": "남성",
   "profileSexFemale": "여성",
   "profileSexOther": "기타",
+  "profileValueEmpty": "입력 안 함",
   "profileBirthYear": "출생 연도",
   "profileHeightInvalid": "{min}~{max} cm 사이로 입력해 주세요.",
   "@profileHeightInvalid": {
@@ -267,7 +265,6 @@
       }
     }
   },
-  "profileSaved": "저장했어요.",
   "bodyTitle": "체중",
   "bodyEmpty": "아직 기록이 없어요. 아래에서 체중을 추가해 보세요.",
   "bodyWeightLabel": "체중 ({unit})",
@@ -293,8 +290,6 @@
       }
     }
   },
-  "bodyDeleteConfirm": "이 기록을 삭제할까요?",
-  "bodyDeleteTooltip": "기록 삭제",
   "timerRestTitle": "휴식 중",
   "timerRestTitleWithLabel": "휴식 · {label}",
   "@timerRestTitleWithLabel": {
@@ -806,9 +801,6 @@
   "settingsE1rmBrzyckiDesc": "무게 × 36 / (37 − 횟수). 낮은 횟수에서 잘 맞아요.",
   "settingsE1rmLombardiDesc": "무게 × 횟수^0.10. 횟수가 늘어도 완만하게 올라가요.",
   "settingsE1rmNote": "1~10회 세트만 추정에 쓰고, 워밍업은 뺍니다.",
-  "profileClear": "지우기",
-  "settingsAi": "AI 연동",
-  "settingsAiSubtitle": "AI 연결, JSON 가져오기, 삭제 요청, 내보내기",
   "importTitle": "JSON 가져오기",
   "importInputIntro": "AI가 만든 JSON을 붙여넣거나 파일로 불러오세요.",
   "importPasteHint": "여기에 JSON을 붙여넣으세요",
@@ -1320,7 +1312,6 @@
     }
   },
   "aiConnectDisconnectBody": "이 AI는 더 이상 내 기록에 접근할 수 없어요. 이미 가져온 기록은 그대로 남아요.",
-  "aiConnectCancel": "취소",
   "aiConnectLoadFailed": "불러오지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요. AI 연결은 온라인에서만 쓸 수 있어요.",
   "aiConnectActionFailed": "처리하지 못했어요. 다시 시도해 주세요.",
   "aiConnectRetry": "다시 시도",
@@ -1650,6 +1641,10 @@
   "bodyTodayWeight": "오늘 체중",
   "bodyRecordAction": "체중 기록",
   "bodyHistoryTitle": "기록",
+  "bodyDeleted": "체중 기록을 지웠어요.",
+  "bodyEditTitle": "체중 수정",
+  "bodyMeasuredAt": "측정 날짜",
+  "bodyHeightEmpty": "입력",
   "homeTodayTitle": "오늘",
   "homeDateLabel": "{month}월 {day}일 {weekday}",
   "@homeDateLabel": {
