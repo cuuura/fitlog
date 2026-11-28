@@ -242,7 +242,7 @@ void main() {
     expect(await db.select(db.sessions).get(), isEmpty);
   });
 
-  test('스키마 버전 4', () => expect(db.schemaVersion, 4));
+  test('스키마 버전 5', () => expect(db.schemaVersion, 5));
 
   // ---- v0.2 골격 ----
 

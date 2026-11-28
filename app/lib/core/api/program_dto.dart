@@ -381,6 +381,8 @@ class Instance {
 
   /// v1.2: 서버가 인스턴스에 저장한 정의(시작 시점 스냅샷). 없으면 null.
   final Map<String, Object?>? definition;
+  /// v1.2: 날(dayKey)별 기억한 운동 순서(정의 인덱스 순열). 없으면 빈 맵.
+  final Map<String, List<int>> dayOrder;
   const Instance({
     required this.id,
     required this.programId,
@@ -391,6 +393,7 @@ class Instance {
     required this.state,
     this.next,
     this.definition,
+    this.dayOrder = const {},
   });
 
   factory Instance.fromJson(Map<String, Object?> j) => Instance(
@@ -403,6 +406,10 @@ class Instance {
     state: InstanceState.fromJson(((j['state'] as Map?) ?? const {}).cast()),
     next: j['next'] == null ? null : PlannedWorkout.fromJson((j['next'] as Map).cast()),
     definition: j['definition'] is Map ? (j['definition'] as Map).cast<String, Object?>() : null,
+    dayOrder: {
+      for (final e in ((j['dayOrder'] as Map?) ?? const {}).entries)
+        e.key as String: [for (final i in (e.value as List)) (i as num).toInt()],
+    },
   );
   Map<String, Object?> toJson() => {
     'id': id,
@@ -413,6 +420,7 @@ class Instance {
     'startDate': formatDate(startDate),
     'state': state.toJson(),
     if (next != null) 'next': next!.toJson(),
+    if (dayOrder.isNotEmpty) 'dayOrder': dayOrder,
   };
 }
 
@@ -446,6 +454,9 @@ class PlannedSet {
 
   /// v1.1: 세트 휴식(초). 없으면 null(앱 기본 휴식).
   final int? restSec;
+
+  /// v1.2: "DROP"이면 드롭 세트(없으면 null = 일반).
+  final String? setType;
   const PlannedSet({
     required this.plannedSetKey,
     required this.targetReps,
@@ -454,7 +465,10 @@ class PlannedSet {
     required this.isWarmup,
     this.targetRepsMax,
     this.restSec,
+    this.setType,
   });
+
+  bool get isDrop => setType == 'DROP';
 
   factory PlannedSet.fromJson(Map<String, Object?> j) => PlannedSet(
     plannedSetKey: j['plannedSetKey'] as String,
@@ -464,6 +478,7 @@ class PlannedSet {
     isWarmup: j['isWarmup'] as bool? ?? false,
     targetRepsMax: j['targetRepsMax'] as int?,
     restSec: j['restSec'] as int?,
+    setType: j['setType'] as String?,
   );
   Map<String, Object?> toJson() => {
     'plannedSetKey': plannedSetKey,
@@ -473,6 +488,7 @@ class PlannedSet {
     'isAmrap': isAmrap,
     'isWarmup': isWarmup,
     'restSec': ?restSec,
+    'setType': ?setType,
   };
 }
 
@@ -482,18 +498,29 @@ class PlannedExercise {
   final String exerciseId;
   final bool accessory;
   final List<PlannedSet> sets;
-  const PlannedExercise({required this.key, required this.exerciseId, required this.accessory, required this.sets});
+
+  /// v1.2: 슈퍼세트 묶음(같은 날 같은 값끼리). 없으면 null.
+  final String? superset;
+  const PlannedExercise({
+    required this.key,
+    required this.exerciseId,
+    required this.accessory,
+    required this.sets,
+    this.superset,
+  });
 
   factory PlannedExercise.fromJson(Map<String, Object?> j) => PlannedExercise(
     key: j['key'] as String,
     exerciseId: j['exerciseId'] as String,
     accessory: j['accessory'] as bool? ?? false,
     sets: [for (final s in (j['sets'] as List? ?? const [])) PlannedSet.fromJson((s as Map).cast())],
+    superset: j['superset'] as String?,
   );
   Map<String, Object?> toJson() => {
     'key': key,
     'exerciseId': exerciseId,
     'accessory': accessory,
+    'superset': ?superset,
     'sets': [for (final s in sets) s.toJson()],
   };
 }

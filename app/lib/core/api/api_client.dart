@@ -319,6 +319,25 @@ class ApiClient {
     () async =>
         Instance.fromJson(_map(await dio.post('/v1/program-instances/$instanceId/skip', data: {'planSeq': planSeq}))),
   );
+  Future<Instance> swapLift(String instanceId, String liftKey, String exerciseId) => _call(
+    () async => Instance.fromJson(
+      _map(
+        await dio.post(
+          '/v1/program-instances/$instanceId/swap',
+          data: {'liftKey': liftKey, 'exerciseId': exerciseId},
+        ),
+      ),
+    ),
+  );
+  Future<Map<String, List<int>>> putDayOrder(String instanceId, String dayKey, List<int> order) => _call(() async {
+    final r = _map(
+      await dio.put('/v1/program-instances/$instanceId/day-order', data: {'dayKey': dayKey, 'order': order}),
+    );
+    return {
+      for (final e in ((r['dayOrder'] as Map?) ?? const {}).entries)
+        e.key as String: [for (final i in (e.value as List)) (i as num).toInt()],
+    };
+  });
   Future<List<Accessory>> getAccessories(String instanceId) => _call(
     () async => [
       for (final j in _list(await dio.get('/v1/program-instances/$instanceId/accessories'))) Accessory.fromJson(j),

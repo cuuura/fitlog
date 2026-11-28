@@ -9,6 +9,8 @@ import '../../core/api/dto.dart';
 import '../../core/clock.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/ui/confirm.dart';
+import '../../core/ui/row_menu.dart';
+import '../../core/ui/undo.dart';
 import '../../core/widgets/reorder.dart';
 import '../../core/routes.dart';
 import '../../l10n/gen/app_localizations.dart';
@@ -22,6 +24,8 @@ import 'session_dock.dart';
 import 'session_format.dart';
 import 'set_row.dart';
 import 'set_table.dart';
+import 'superset.dart';
+import 'swap_exercise_flow.dart';
 
 class ActiveSessionPage extends ConsumerStatefulWidget {
   const ActiveSessionPage({super.key});
@@ -98,8 +102,22 @@ class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
     );
     if (!ok || !mounted) return;
     _leaving = true;
-    await ref.read(sessionControllerProvider).end(session.id);
+    final ctrl = ref.read(sessionControllerProvider);
+    final messenger = ScaffoldMessenger.of(context);
+    await ctrl.end(session.id);
     if (mounted) context.go(Routes.sessionSummary(session.id));
+    if (session.isProgram) {
+      // 순서 기억: 화면 이동을 막지 않고 뒤에서 저장한다. 실패하면 조용히 넘어간다.
+      final saved = await ctrl.saveDayOrderOnFinish(session);
+      if (saved != null) {
+        showUndoSnack(
+          messenger,
+          l,
+          message: l.sessionDayOrderSaved,
+          onUndo: () => ctrl.undoDayOrder(saved),
+        );
+      }
+    }
   }
 
   @override
@@ -453,197 +471,307 @@ class _ExerciseCard extends ConsumerWidget {
         ? ''
         : formatPastSets(pastSe.sets, type, unit);
 
+    final group = groupOf(session, se);
+    final bandColor = group == null
+        ? null
+        : _groupColor(context, groupColorIndex(session, se));
+    final letter = group == null ? null : groupLetter(session, group);
+    final menuItems = _menuItems(l);
+
     return KeyedSubtree(
       key: anchorKey,
       child: Card(
         key: Key('exercise-${se.id}'),
+        clipBehavior: Clip.antiAlias,
         margin: const EdgeInsets.symmetric(vertical: 6),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              ReorderableDelayedDragStartListener(
-                index: index,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 12, right: 4),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    name,
+        child: DecoratedBox(
+          key: group == null ? null : Key('superset-band-${se.id}'),
+          decoration: BoxDecoration(
+            border: bandColor == null
+                ? null
+                : Border(left: BorderSide(color: bandColor, width: 6)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ReorderableDelayedDragStartListener(
+                  index: index,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 12, right: 4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      name,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium,
+                                    ),
+                                  ),
+                                  if (letter != null) ...[
+                                    const SizedBox(width: 8),
+                                    Semantics(
+                                      label: l.sessionSupersetLabel(letter),
+                                      child: Container(
+                                        key: Key('superset-${se.id}'),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: bandColor,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          letter,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelMedium
+                                              ?.copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .surface,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                  if (se.accessory) ...[
+                                    const SizedBox(width: 8),
+                                    Chip(
+                                      key: Key('accessory-${se.id}'),
+                                      label: Text(l.sessionAccessoryBadge),
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              Wrap(
+                                spacing: 8,
+                                children: [
+                                  Text(
+                                    typeLabel(l, type),
                                     style: Theme.of(context)
                                         .textTheme
-                                        .titleMedium,
+                                        .bodySmall,
                                   ),
-                                ),
-                                if (se.accessory) ...[
-                                  const SizedBox(width: 8),
-                                  Chip(
-                                    key: Key('accessory-${se.id}'),
-                                    label: Text(l.sessionAccessoryBadge),
-                                    visualDensity: VisualDensity.compact,
-                                  ),
+                                  if (progress.total > 0)
+                                    Text(
+                                      l.sessionTableProgress(
+                                        progress.done,
+                                        progress.total,
+                                      ),
+                                      key: Key('progress-${se.id}'),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .labelLarge
+                                          ?.copyWith(
+                                            color:
+                                                progress.done == progress.total
+                                                ? Theme.of(context)
+                                                      .colorScheme
+                                                      .primary
+                                                : null,
+                                          ),
+                                    ),
                                 ],
-                              ],
-                            ),
-                            Wrap(
-                              spacing: 8,
-                              children: [
+                              ),
+                              if (pastText.isNotEmpty)
                                 Text(
-                                  typeLabel(l, type),
+                                  l.sessionLastDay(pastText),
+                                  key: Key('past-day-${se.id}'),
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
-                                if (progress.total > 0)
-                                  Text(
-                                    l.sessionTableProgress(
-                                      progress.done,
-                                      progress.total,
-                                    ),
-                                    key: Key('progress-${se.id}'),
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelLarge
-                                        ?.copyWith(
-                                          color: progress.done == progress.total
-                                              ? Theme.of(context)
-                                                    .colorScheme
-                                                    .primary
-                                              : null,
-                                        ),
-                                  ),
-                              ],
+                            ],
+                          ),
+                        ),
+                        if (se.sets.length > 1)
+                          IconButton(
+                            key: Key('reorder-sets-${se.id}'),
+                            tooltip: l.sessionReorderSets,
+                            icon: const Icon(Icons.swap_vert),
+                            onPressed: () => showModalBottomSheet<void>(
+                              context: context,
+                              isScrollControlled: true,
+                              useSafeArea: true,
+                              builder: (_) =>
+                                  _SetOrderSheet(seId: se.id, type: type),
                             ),
-                            if (pastText.isNotEmpty)
-                              Text(
-                                l.sessionLastDay(pastText),
-                                key: Key('past-day-${se.id}'),
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                          ],
+                          ),
+                        RowMenu<_ExAction>(
+                          key: Key('exercise-menu-${se.id}'),
+                          items: menuItems,
+                          onSelected: (a) => switch (a) {
+                            _ExAction.bind => ctrl.bindSupersetWithNext(
+                              session,
+                              se,
+                            ),
+                            _ExAction.unbind => ctrl.unbindSuperset(
+                              session,
+                              se,
+                            ),
+                            _ExAction.swap => swapSessionExercise(
+                              context,
+                              ref,
+                              session: session,
+                              se: se,
+                            ),
+                          },
                         ),
-                      ),
-                      if (se.sets.length > 1)
+                        ReorderableDragStartListener(
+                          index: index,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Icon(
+                              Icons.drag_handle,
+                              key: Key('drag-exercise-${se.id}'),
+                            ),
+                          ),
+                        ),
                         IconButton(
-                          key: Key('reorder-sets-${se.id}'),
-                          tooltip: l.sessionReorderSets,
-                          icon: const Icon(Icons.swap_vert),
-                          onPressed: () => showModalBottomSheet<void>(
-                            context: context,
-                            isScrollControlled: true,
-                            useSafeArea: true,
-                            builder: (_) =>
-                                _SetOrderSheet(seId: se.id, type: type),
-                          ),
+                          key: Key('remove-exercise-${se.id}'),
+                          tooltip: l.sessionRemoveExercise,
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () async {
+                            final ok = await confirmAction(
+                              context,
+                              title: l.sessionRemoveExercise,
+                              body: l.sessionRemoveExerciseConfirm(name),
+                              action: l.commonDelete,
+                              destructive: true,
+                              confirmKey: const Key('remove-exercise-confirm'),
+                            );
+                            if (ok) await ctrl.removeExercise(se.id);
+                          },
                         ),
-                      ReorderableDragStartListener(
-                        index: index,
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Icon(
-                            Icons.drag_handle,
-                            key: Key('drag-exercise-${se.id}'),
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        key: Key('remove-exercise-${se.id}'),
-                        tooltip: l.sessionRemoveExercise,
-                        icon: const Icon(Icons.delete_outline),
-                        onPressed: () async {
-                          final ok = await confirmAction(
-                            context,
-                            title: l.sessionRemoveExercise,
-                            body: l.sessionRemoveExerciseConfirm(name),
-                            action: l.commonDelete,
-                            destructive: true,
-                            confirmKey: const Key('remove-exercise-confirm'),
-                          );
-                          if (ok) await ctrl.removeExercise(se.id);
-                        },
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-                child: NoteField(
-                  key: ValueKey('note-${se.id}'),
-                  fieldKey: Key('exercise-note-${se.id}'),
-                  label: l.sessionExerciseNoteHint,
-                  value: se.note,
-                  onSave: (v) => ctrl.setExerciseNote(se.id, v),
-                ),
-              ),
-              if (se.sets.isEmpty)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
-                  child: Text(
-                    l.sessionTableEmptyHint,
-                    key: Key('empty-sets-${se.id}'),
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  child: NoteField(
+                    key: ValueKey('note-${se.id}'),
+                    fieldKey: Key('exercise-note-${se.id}'),
+                    label: l.sessionExerciseNoteHint,
+                    value: se.note,
+                    onSave: (v) => ctrl.setExerciseNote(se.id, v),
                   ),
-                )
-              else
-                SetTableHeader(type: type),
-              ReorderableListView.builder(
-                key: Key('sets-${se.id}'),
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                buildDefaultDragHandles: false,
-                onReorderStart: (_) => reorderHaptic(),
-                itemCount: se.sets.length,
-                onReorderItem: (o, n) {
-                  final ids = [for (final w in se.sets) w.id];
-                  ids.insert(n, ids.removeAt(o));
-                  ctrl.reorderSets(se.id, ids);
-                },
-                itemBuilder: (context, i) => SetRow(
-                  key: ValueKey(se.sets[i].id),
-                  session: session,
-                  sessionExercise: se,
-                  exerciseName: name,
-                  type: type,
-                  set: se.sets[i],
-                  index: i,
-                  label: setShortLabel(l, se, se.sets[i]),
-                  expanded: se.sets[i].id == expandedSetId,
-                  isCurrent: se.sets[i].id == currentSetId,
-                  onSelect: () => onSelect(se.sets[i].id),
-                  previous: last == null || last.sets.isEmpty
-                      ? null
-                      : matchPreviousSet(se.sets, i, last.sets),
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: se.sets.isEmpty
-                    ? FilledButton.tonalIcon(
-                        key: Key('add-set-${se.id}'),
-                        icon: const Icon(Icons.add),
-                        label: Text(l.sessionAddSet),
-                        onPressed: () => ctrl.addSet(session, se),
-                      )
-                    : TextButton.icon(
-                        key: Key('add-set-${se.id}'),
-                        icon: const Icon(Icons.add),
-                        label: Text(l.sessionAddSet),
-                        onPressed: () => ctrl.addSet(session, se),
-                      ),
-              ),
-            ],
+                if (se.sets.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 4, 12, 4),
+                    child: Text(
+                      l.sessionTableEmptyHint,
+                      key: Key('empty-sets-${se.id}'),
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  )
+                else
+                  SetTableHeader(type: type),
+                ReorderableListView.builder(
+                  key: Key('sets-${se.id}'),
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  buildDefaultDragHandles: false,
+                  onReorderStart: (_) => reorderHaptic(),
+                  itemCount: se.sets.length,
+                  onReorderItem: (o, n) {
+                    final ids = [for (final w in se.sets) w.id];
+                    ids.insert(n, ids.removeAt(o));
+                    ctrl.reorderSets(se.id, ids);
+                  },
+                  itemBuilder: (context, i) => SetRow(
+                    key: ValueKey(se.sets[i].id),
+                    session: session,
+                    sessionExercise: se,
+                    exerciseName: name,
+                    type: type,
+                    set: se.sets[i],
+                    index: i,
+                    label: setShortLabel(l, se, se.sets[i]),
+                    expanded: se.sets[i].id == expandedSetId,
+                    isCurrent: se.sets[i].id == currentSetId,
+                    onSelect: () => onSelect(se.sets[i].id),
+                    previous: last == null || last.sets.isEmpty
+                        ? null
+                        : matchPreviousSet(se.sets, i, last.sets),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: se.sets.isEmpty
+                      ? FilledButton.tonalIcon(
+                          key: Key('add-set-${se.id}'),
+                          icon: const Icon(Icons.add),
+                          label: Text(l.sessionAddSet),
+                          onPressed: () => ctrl.addSet(session, se),
+                        )
+                      : TextButton.icon(
+                          key: Key('add-set-${se.id}'),
+                          icon: const Icon(Icons.add),
+                          label: Text(l.sessionAddSet),
+                          onPressed: () => ctrl.addSet(session, se),
+                        ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
+
+  List<RowMenuItem<_ExAction>> _menuItems(AppLocalizations l) {
+    final i = session.exercises.indexWhere((e) => e.id == se.id);
+    final next = i >= 0 && i + 1 < session.exercises.length
+        ? session.exercises[i + 1]
+        : null;
+    final grouped = groupOf(session, se) != null;
+    final alreadyWithNext =
+        next != null &&
+        se.supersetGroup != null &&
+        se.supersetGroup == next.supersetGroup;
+    return [
+      if (next != null && !alreadyWithNext)
+        RowMenuItem(
+          value: _ExAction.bind,
+          label: l.sessionSupersetBind,
+          key: Key('superset-bind-${se.id}'),
+        ),
+      if (grouped)
+        RowMenuItem(
+          value: _ExAction.unbind,
+          label: l.sessionSupersetUnbind,
+          key: Key('superset-unbind-${se.id}'),
+        ),
+      RowMenuItem(
+        value: _ExAction.swap,
+        label: l.sessionSwapExercise,
+        key: Key('swap-exercise-${se.id}'),
+      ),
+    ];
+  }
+}
+
+enum _ExAction { bind, unbind, swap }
+
+/// 슈퍼세트 묶음 색(묶음 번호별).
+Color _groupColor(BuildContext context, int i) {
+  final s = Theme.of(context).colorScheme;
+  final list = [s.primary, s.tertiary, s.secondary, s.error];
+  return list[(i < 0 ? 0 : i) % list.length];
 }
 
 /// "오늘 운동" 플레이리스트: 종목 순서, 진행, 다음 목표. 끌어서 순서를 바꾸고 눌러서 카드로 이동한다.

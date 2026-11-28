@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 
 import '../../core/api/dto.dart';
+import '../../core/api/program_dto.dart';
 import '../../core/clock.dart';
 import '../../core/ids.dart';
 import '../../core/settings/settings_controller.dart';
@@ -15,7 +16,8 @@ import '../../l10n/gen/app_localizations.dart';
 import '../../data/providers.dart';
 import '../../domain/repositories.dart';
 import '../rest_timer/rest_timer_controller.dart';
-import 'current_set.dart' show restSecFor;
+import 'current_set.dart' show currentSetOf, restSecFor;
+import 'superset.dart';
 import 'previous_match.dart';
 
 /// 기기의 IANA 시간대. 테스트에서 override 한다.
@@ -98,6 +100,46 @@ class PlanLabel {
 
 final planLabelsProvider = Provider<Map<String, PlanLabel>>((ref) => {});
 
+/// 세션 시작 때의 프로그램 본운동 순서(정의 인덱스). 순서 기억(8.2)이 끝낼 때 비교한다. 앱을 다시 켜면 사라진다.
+final planOrdersProvider = Provider<Map<String, List<int>>>((ref) => {});
+
+/// 종목의 정의 인덱스: 계획 세트 키 `dayKey.exIndex.setIndex`의 가운데. 계획 세트가 없으면 null.
+int? definitionIndexOf(SessionExercise se) {
+  for (final w in se.sets) {
+    final k = w.plannedSetKey;
+    if (k == null) continue;
+    final parts = k.split('.');
+    if (parts.length >= 3) {
+      final i = int.tryParse(parts[parts.length - 2]);
+      if (i != null) return i;
+    }
+  }
+  return null;
+}
+
+int? _planDefIndex(PlannedExercise e) {
+  final p = e.sets.firstOrNull?.plannedSetKey.split('.');
+  return p == null || p.length < 3 ? null : int.tryParse(p[p.length - 2]);
+}
+
+/// 프로그램 본운동(보조 제외, 정의 인덱스가 있는) 종목들을 세션 순서대로.
+List<({SessionExercise se, int index})> programMainExercises(Session session) {
+  final sorted = [...session.exercises]..sort((a, b) => a.position.compareTo(b.position));
+  return [
+    for (final e in sorted)
+      if (e.liftKey != null && !e.accessory && !e.liftKey!.startsWith('acc:'))
+        if (definitionIndexOf(e) case final i?) (se: e, index: i),
+  ];
+}
+
+/// 순서 기억으로 저장한 결과(되돌리기용 이전 순서).
+class DayOrderSaved {
+  const DayOrderSaved({required this.instanceId, required this.dayKey, required this.previous});
+  final String instanceId;
+  final String dayKey;
+  final List<int> previous;
+}
+
 /// 입력 검증 범위(openapi WorkoutSet).
 abstract final class SetLimits {
   static bool validReps(int? v) => v == null || v >= 0;
@@ -142,6 +184,11 @@ class SessionController {
     final session = await _repo.startSession(tz: tz, plan: plan);
     if (session.programInstanceId == instanceId &&
         session.planSeq == plan.planSeq) {
+      _ref.read(planOrdersProvider)[session.id] = [
+        for (final e in plan.exercises)
+          if (!e.accessory && !e.key.startsWith('acc:'))
+            ?_planDefIndex(e),
+      ];
       _ref.read(planLabelsProvider)[session.id] = PlanLabel(
         programName: programName ?? '',
         dayName: plan.dayName,
@@ -232,6 +279,97 @@ class SessionController {
   Future<void> setExerciseNote(String seId, String? note) =>
       _repo.updateExerciseNote(seId, _blank(note));
   Future<void> updateSet(WorkoutSet s) => _repo.updateSet(s);
+
+  /// 세트 종류 바꾸기(일반·드롭·실패).
+  Future<void> setSetType(WorkoutSet s, SetType type) => _repo.updateSet(s.copyWith(setType: type));
+
+  /// [se]를 바로 다음 종목과 슈퍼세트로 묶는다. 다음 종목이 없으면 아무것도 하지 않는다.
+  Future<void> bindSupersetWithNext(Session session, SessionExercise se) async {
+    final i = session.exercises.indexWhere((e) => e.id == se.id);
+    if (i < 0 || i + 1 >= session.exercises.length) return;
+    final changes = bindWithNext(session, se, session.exercises[i + 1]);
+    for (final e in changes.entries) {
+      await _repo.setExerciseSuperset(e.key, e.value);
+    }
+  }
+
+  /// [se]를 묶음에서 푼다(남은 한 종목도 같이 풀린다).
+  Future<void> unbindSuperset(Session session, SessionExercise se) async {
+    for (final id in unbindIds(session, se)) {
+      await _repo.setExerciseSuperset(id, null);
+    }
+  }
+
+  /// 종목 바꾸기 "이번만": 이 세션 종목의 exerciseId만 바꾼다(liftKey·기록 유지).
+  Future<void> swapThisTime(String seId, String exerciseId) => _repo.swapExercise(seId, exerciseId);
+
+  /// 프로그램 종목인지(앞으로 계속 바꾸기를 고를 수 있는지): 세션이 인스턴스에 묶였고 본 종목 키가 있다.
+  bool canSwapPersistently(Session session, SessionExercise se) =>
+      session.programInstanceId != null &&
+      se.liftKey != null &&
+      !se.accessory &&
+      !se.liftKey!.startsWith('acc:');
+
+  /// 종목 바꾸기 "앞으로 계속": 서버 프로그램의 종목을 바꾼 뒤(온라인 필요, 실패하면 던진다) 이 세션도 바꾼다.
+  Future<void> swapPersistent(Session session, SessionExercise se, String exerciseId) async {
+    await _ref.read(programRepositoryProvider).swapLift(session.programInstanceId!, se.liftKey!, exerciseId);
+    await _repo.swapExercise(se.id, exerciseId);
+    try {
+      await _ref.read(planCacheProvider).refresh(instanceId: session.programInstanceId);
+    } catch (_) {}
+  }
+
+  /// 순서 기억(8.2): 끝낸 프로그램 세션의 본운동 순서가 시작 때와 다르면 day-order를 저장한다.
+  /// 바뀐 게 없거나 실패하면 null(조용히 넘어간다).
+  Future<DayOrderSaved?> saveDayOrderOnFinish(Session session) async {
+    final instanceId = session.programInstanceId;
+    final dayKey = session.planDayKey;
+    if (instanceId == null || dayKey == null) return null;
+    try {
+      final actual = [for (final m in programMainExercises(session)) m.index];
+      if (actual.length < 2) return null;
+      final programs = _ref.read(programRepositoryProvider);
+      final inst = await programs.getInstance(instanceId);
+      final n = _dayExerciseCount(
+        (await programs.getProgram(inst.programId)).definition,
+        dayKey,
+      );
+      if (n == null) return null;
+      final base = inst.dayOrder[dayKey] ?? [for (var i = 0; i < n; i++) i];
+      if (base.length != n) return null;
+      final planned = _ref.read(planOrdersProvider)[session.id] ?? base;
+      final present = actual.toSet();
+      if (_sameList([for (final i in planned) if (present.contains(i)) i], actual)) return null;
+      // 계획에 있던 자리에 실제 순서를 차례로 채운다. 이번 계획에 없던 인덱스는 제자리.
+      final queue = [...actual];
+      final order = [for (final i in base) present.contains(i) ? queue.removeAt(0) : i];
+      await programs.putDayOrder(instanceId, dayKey, order);
+      return DayOrderSaved(instanceId: instanceId, dayKey: dayKey, previous: base);
+    } catch (e) {
+      debugPrint('saveDayOrderOnFinish ignored: $e');
+      return null;
+    }
+  }
+
+  /// 순서 기억 되돌리기: 이전 순서로 다시 저장한다.
+  Future<void> undoDayOrder(DayOrderSaved saved) =>
+      _ref.read(programRepositoryProvider).putDayOrder(saved.instanceId, saved.dayKey, saved.previous);
+
+  static bool _sameList(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
+  }
+
+  static int? _dayExerciseCount(Map<String, Object?> def, String dayKey) {
+    for (final d in (def['days'] as List? ?? const [])) {
+      final m = (d as Map).cast<String, Object?>();
+      if (m['key'] == dayKey) return (m['exercises'] as List?)?.length;
+    }
+    return null;
+  }
   Future<void> deleteSet(String setId) => _repo.deleteSet(setId);
 
   static String? _blank(String? s) =>
@@ -296,6 +434,9 @@ class SessionController {
       );
     }
     await repo.updateSet(set.copyWith(completedAt: () => now));
+    // 휴식 규칙(5절): 다음 세트가 DROP이거나 슈퍼세트 한 바퀴 중간이면 타이머를 띄우지 않는다.
+    final owner = session.exercises.where((e) => e.sets.any((w) => w.id == set.id)).firstOrNull;
+    if (owner != null && skipRestAfter(session, owner, set, currentSetOf(session, excluding: set.id))) return;
     _ref
         .read(restTimerProvider.notifier)
         .start(
@@ -339,6 +480,7 @@ Future<void> restoreSetAt(
       targetRepsMax: old.targetRepsMax,
       targetRir: old.targetRir,
       targetRestSec: old.targetRestSec,
+      setType: old.setType,
     ),
   );
   final session = await repo.watchSession(sessionId).first;

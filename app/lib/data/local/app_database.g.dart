@@ -1560,6 +1560,17 @@ class $SessionExercisesTable extends SessionExercises
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _supersetGroupMeta = const VerificationMeta(
+    'supersetGroup',
+  );
+  @override
+  late final GeneratedColumn<String> supersetGroup = GeneratedColumn<String>(
+    'superset_group',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1571,6 +1582,7 @@ class $SessionExercisesTable extends SessionExercises
     deletedAt,
     liftKey,
     accessory,
+    supersetGroup,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1645,6 +1657,15 @@ class $SessionExercisesTable extends SessionExercises
         accessory.isAcceptableOrUnknown(data['accessory']!, _accessoryMeta),
       );
     }
+    if (data.containsKey('superset_group')) {
+      context.handle(
+        _supersetGroupMeta,
+        supersetGroup.isAcceptableOrUnknown(
+          data['superset_group']!,
+          _supersetGroupMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -1690,6 +1711,10 @@ class $SessionExercisesTable extends SessionExercises
         DriftSqlType.bool,
         data['${effectivePrefix}accessory'],
       )!,
+      supersetGroup: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}superset_group'],
+      ),
     );
   }
 
@@ -1710,6 +1735,7 @@ class SessionExerciseRow extends DataClass
   final DateTime? deletedAt;
   final String? liftKey;
   final bool accessory;
+  final String? supersetGroup;
   const SessionExerciseRow({
     required this.id,
     required this.sessionId,
@@ -1720,6 +1746,7 @@ class SessionExerciseRow extends DataClass
     this.deletedAt,
     this.liftKey,
     required this.accessory,
+    this.supersetGroup,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1739,6 +1766,9 @@ class SessionExerciseRow extends DataClass
       map['lift_key'] = Variable<String>(liftKey);
     }
     map['accessory'] = Variable<bool>(accessory);
+    if (!nullToAbsent || supersetGroup != null) {
+      map['superset_group'] = Variable<String>(supersetGroup);
+    }
     return map;
   }
 
@@ -1757,6 +1787,9 @@ class SessionExerciseRow extends DataClass
           ? const Value.absent()
           : Value(liftKey),
       accessory: Value(accessory),
+      supersetGroup: supersetGroup == null && nullToAbsent
+          ? const Value.absent()
+          : Value(supersetGroup),
     );
   }
 
@@ -1775,6 +1808,7 @@ class SessionExerciseRow extends DataClass
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       liftKey: serializer.fromJson<String?>(json['liftKey']),
       accessory: serializer.fromJson<bool>(json['accessory']),
+      supersetGroup: serializer.fromJson<String?>(json['supersetGroup']),
     );
   }
   @override
@@ -1790,6 +1824,7 @@ class SessionExerciseRow extends DataClass
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'liftKey': serializer.toJson<String?>(liftKey),
       'accessory': serializer.toJson<bool>(accessory),
+      'supersetGroup': serializer.toJson<String?>(supersetGroup),
     };
   }
 
@@ -1803,6 +1838,7 @@ class SessionExerciseRow extends DataClass
     Value<DateTime?> deletedAt = const Value.absent(),
     Value<String?> liftKey = const Value.absent(),
     bool? accessory,
+    Value<String?> supersetGroup = const Value.absent(),
   }) => SessionExerciseRow(
     id: id ?? this.id,
     sessionId: sessionId ?? this.sessionId,
@@ -1813,6 +1849,9 @@ class SessionExerciseRow extends DataClass
     deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
     liftKey: liftKey.present ? liftKey.value : this.liftKey,
     accessory: accessory ?? this.accessory,
+    supersetGroup: supersetGroup.present
+        ? supersetGroup.value
+        : this.supersetGroup,
   );
   SessionExerciseRow copyWithCompanion(SessionExercisesCompanion data) {
     return SessionExerciseRow(
@@ -1827,6 +1866,9 @@ class SessionExerciseRow extends DataClass
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       liftKey: data.liftKey.present ? data.liftKey.value : this.liftKey,
       accessory: data.accessory.present ? data.accessory.value : this.accessory,
+      supersetGroup: data.supersetGroup.present
+          ? data.supersetGroup.value
+          : this.supersetGroup,
     );
   }
 
@@ -1841,7 +1883,8 @@ class SessionExerciseRow extends DataClass
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('liftKey: $liftKey, ')
-          ..write('accessory: $accessory')
+          ..write('accessory: $accessory, ')
+          ..write('supersetGroup: $supersetGroup')
           ..write(')'))
         .toString();
   }
@@ -1857,6 +1900,7 @@ class SessionExerciseRow extends DataClass
     deletedAt,
     liftKey,
     accessory,
+    supersetGroup,
   );
   @override
   bool operator ==(Object other) =>
@@ -1870,7 +1914,8 @@ class SessionExerciseRow extends DataClass
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
           other.liftKey == this.liftKey &&
-          other.accessory == this.accessory);
+          other.accessory == this.accessory &&
+          other.supersetGroup == this.supersetGroup);
 }
 
 class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
@@ -1883,6 +1928,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
   final Value<DateTime?> deletedAt;
   final Value<String?> liftKey;
   final Value<bool> accessory;
+  final Value<String?> supersetGroup;
   final Value<int> rowid;
   const SessionExercisesCompanion({
     this.id = const Value.absent(),
@@ -1894,6 +1940,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
     this.deletedAt = const Value.absent(),
     this.liftKey = const Value.absent(),
     this.accessory = const Value.absent(),
+    this.supersetGroup = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   SessionExercisesCompanion.insert({
@@ -1906,6 +1953,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
     this.deletedAt = const Value.absent(),
     this.liftKey = const Value.absent(),
     this.accessory = const Value.absent(),
+    this.supersetGroup = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        sessionId = Value(sessionId),
@@ -1922,6 +1970,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
     Expression<DateTime>? deletedAt,
     Expression<String>? liftKey,
     Expression<bool>? accessory,
+    Expression<String>? supersetGroup,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1934,6 +1983,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (liftKey != null) 'lift_key': liftKey,
       if (accessory != null) 'accessory': accessory,
+      if (supersetGroup != null) 'superset_group': supersetGroup,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1948,6 +1998,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
     Value<DateTime?>? deletedAt,
     Value<String?>? liftKey,
     Value<bool>? accessory,
+    Value<String?>? supersetGroup,
     Value<int>? rowid,
   }) {
     return SessionExercisesCompanion(
@@ -1960,6 +2011,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
       deletedAt: deletedAt ?? this.deletedAt,
       liftKey: liftKey ?? this.liftKey,
       accessory: accessory ?? this.accessory,
+      supersetGroup: supersetGroup ?? this.supersetGroup,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1994,6 +2046,9 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
     if (accessory.present) {
       map['accessory'] = Variable<bool>(accessory.value);
     }
+    if (supersetGroup.present) {
+      map['superset_group'] = Variable<String>(supersetGroup.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2012,6 +2067,7 @@ class SessionExercisesCompanion extends UpdateCompanion<SessionExerciseRow> {
           ..write('deletedAt: $deletedAt, ')
           ..write('liftKey: $liftKey, ')
           ..write('accessory: $accessory, ')
+          ..write('supersetGroup: $supersetGroup, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2287,6 +2343,18 @@ class $WorkoutSetsTable extends WorkoutSets
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _setTypeMeta = const VerificationMeta(
+    'setType',
+  );
+  @override
+  late final GeneratedColumn<String> setType = GeneratedColumn<String>(
+    'set_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('NORMAL'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2313,6 +2381,7 @@ class $WorkoutSetsTable extends WorkoutSets
     targetRepsMax,
     targetRir,
     targetRestSec,
+    setType,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2499,6 +2568,12 @@ class $WorkoutSetsTable extends WorkoutSets
         ),
       );
     }
+    if (data.containsKey('set_type')) {
+      context.handle(
+        _setTypeMeta,
+        setType.isAcceptableOrUnknown(data['set_type']!, _setTypeMeta),
+      );
+    }
     return context;
   }
 
@@ -2604,6 +2679,10 @@ class $WorkoutSetsTable extends WorkoutSets
         DriftSqlType.int,
         data['${effectivePrefix}target_rest_sec'],
       ),
+      setType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}set_type'],
+      )!,
     );
   }
 
@@ -2638,6 +2717,7 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
   final int? targetRepsMax;
   final int? targetRir;
   final int? targetRestSec;
+  final String setType;
   const WorkoutSetRow({
     required this.id,
     required this.sessionExerciseId,
@@ -2663,6 +2743,7 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     this.targetRepsMax,
     this.targetRir,
     this.targetRestSec,
+    required this.setType,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2727,6 +2808,7 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     if (!nullToAbsent || targetRestSec != null) {
       map['target_rest_sec'] = Variable<int>(targetRestSec);
     }
+    map['set_type'] = Variable<String>(setType);
     return map;
   }
 
@@ -2784,6 +2866,7 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
       targetRestSec: targetRestSec == null && nullToAbsent
           ? const Value.absent()
           : Value(targetRestSec),
+      setType: Value(setType),
     );
   }
 
@@ -2817,6 +2900,7 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
       targetRepsMax: serializer.fromJson<int?>(json['targetRepsMax']),
       targetRir: serializer.fromJson<int?>(json['targetRir']),
       targetRestSec: serializer.fromJson<int?>(json['targetRestSec']),
+      setType: serializer.fromJson<String>(json['setType']),
     );
   }
   @override
@@ -2847,6 +2931,7 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
       'targetRepsMax': serializer.toJson<int?>(targetRepsMax),
       'targetRir': serializer.toJson<int?>(targetRir),
       'targetRestSec': serializer.toJson<int?>(targetRestSec),
+      'setType': serializer.toJson<String>(setType),
     };
   }
 
@@ -2875,6 +2960,7 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     Value<int?> targetRepsMax = const Value.absent(),
     Value<int?> targetRir = const Value.absent(),
     Value<int?> targetRestSec = const Value.absent(),
+    String? setType,
   }) => WorkoutSetRow(
     id: id ?? this.id,
     sessionExerciseId: sessionExerciseId ?? this.sessionExerciseId,
@@ -2910,6 +2996,7 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     targetRestSec: targetRestSec.present
         ? targetRestSec.value
         : this.targetRestSec,
+    setType: setType ?? this.setType,
   );
   WorkoutSetRow copyWithCompanion(WorkoutSetsCompanion data) {
     return WorkoutSetRow(
@@ -2955,6 +3042,7 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
       targetRestSec: data.targetRestSec.present
           ? data.targetRestSec.value
           : this.targetRestSec,
+      setType: data.setType.present ? data.setType.value : this.setType,
     );
   }
 
@@ -2984,7 +3072,8 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
           ..write('isAmrap: $isAmrap, ')
           ..write('targetRepsMax: $targetRepsMax, ')
           ..write('targetRir: $targetRir, ')
-          ..write('targetRestSec: $targetRestSec')
+          ..write('targetRestSec: $targetRestSec, ')
+          ..write('setType: $setType')
           ..write(')'))
         .toString();
   }
@@ -3015,6 +3104,7 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
     targetRepsMax,
     targetRir,
     targetRestSec,
+    setType,
   ]);
   @override
   bool operator ==(Object other) =>
@@ -3043,7 +3133,8 @@ class WorkoutSetRow extends DataClass implements Insertable<WorkoutSetRow> {
           other.isAmrap == this.isAmrap &&
           other.targetRepsMax == this.targetRepsMax &&
           other.targetRir == this.targetRir &&
-          other.targetRestSec == this.targetRestSec);
+          other.targetRestSec == this.targetRestSec &&
+          other.setType == this.setType);
 }
 
 class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
@@ -3071,6 +3162,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
   final Value<int?> targetRepsMax;
   final Value<int?> targetRir;
   final Value<int?> targetRestSec;
+  final Value<String> setType;
   final Value<int> rowid;
   const WorkoutSetsCompanion({
     this.id = const Value.absent(),
@@ -3097,6 +3189,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     this.targetRepsMax = const Value.absent(),
     this.targetRir = const Value.absent(),
     this.targetRestSec = const Value.absent(),
+    this.setType = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   WorkoutSetsCompanion.insert({
@@ -3124,6 +3217,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     this.targetRepsMax = const Value.absent(),
     this.targetRir = const Value.absent(),
     this.targetRestSec = const Value.absent(),
+    this.setType = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        sessionExerciseId = Value(sessionExerciseId),
@@ -3154,6 +3248,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     Expression<int>? targetRepsMax,
     Expression<int>? targetRir,
     Expression<int>? targetRestSec,
+    Expression<String>? setType,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3181,6 +3276,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
       if (targetRepsMax != null) 'target_reps_max': targetRepsMax,
       if (targetRir != null) 'target_rir': targetRir,
       if (targetRestSec != null) 'target_rest_sec': targetRestSec,
+      if (setType != null) 'set_type': setType,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3210,6 +3306,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     Value<int?>? targetRepsMax,
     Value<int?>? targetRir,
     Value<int?>? targetRestSec,
+    Value<String>? setType,
     Value<int>? rowid,
   }) {
     return WorkoutSetsCompanion(
@@ -3237,6 +3334,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
       targetRepsMax: targetRepsMax ?? this.targetRepsMax,
       targetRir: targetRir ?? this.targetRir,
       targetRestSec: targetRestSec ?? this.targetRestSec,
+      setType: setType ?? this.setType,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3316,6 +3414,9 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
     if (targetRestSec.present) {
       map['target_rest_sec'] = Variable<int>(targetRestSec.value);
     }
+    if (setType.present) {
+      map['set_type'] = Variable<String>(setType.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3349,6 +3450,7 @@ class WorkoutSetsCompanion extends UpdateCompanion<WorkoutSetRow> {
           ..write('targetRepsMax: $targetRepsMax, ')
           ..write('targetRir: $targetRir, ')
           ..write('targetRestSec: $targetRestSec, ')
+          ..write('setType: $setType, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5984,6 +6086,7 @@ typedef $$SessionExercisesTableCreateCompanionBuilder =
       Value<DateTime?> deletedAt,
       Value<String?> liftKey,
       Value<bool> accessory,
+      Value<String?> supersetGroup,
       Value<int> rowid,
     });
 typedef $$SessionExercisesTableUpdateCompanionBuilder =
@@ -5997,6 +6100,7 @@ typedef $$SessionExercisesTableUpdateCompanionBuilder =
       Value<DateTime?> deletedAt,
       Value<String?> liftKey,
       Value<bool> accessory,
+      Value<String?> supersetGroup,
       Value<int> rowid,
     });
 
@@ -6051,6 +6155,11 @@ class $$SessionExercisesTableFilterComposer
 
   ColumnFilters<bool> get accessory => $composableBuilder(
     column: $table.accessory,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get supersetGroup => $composableBuilder(
+    column: $table.supersetGroup,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6108,6 +6217,11 @@ class $$SessionExercisesTableOrderingComposer
     column: $table.accessory,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get supersetGroup => $composableBuilder(
+    column: $table.supersetGroup,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SessionExercisesTableAnnotationComposer
@@ -6147,6 +6261,11 @@ class $$SessionExercisesTableAnnotationComposer
 
   GeneratedColumn<bool> get accessory =>
       $composableBuilder(column: $table.accessory, builder: (column) => column);
+
+  GeneratedColumn<String> get supersetGroup => $composableBuilder(
+    column: $table.supersetGroup,
+    builder: (column) => column,
+  );
 }
 
 class $$SessionExercisesTableTableManager
@@ -6195,6 +6314,7 @@ class $$SessionExercisesTableTableManager
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<String?> liftKey = const Value.absent(),
                 Value<bool> accessory = const Value.absent(),
+                Value<String?> supersetGroup = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionExercisesCompanion(
                 id: id,
@@ -6206,6 +6326,7 @@ class $$SessionExercisesTableTableManager
                 deletedAt: deletedAt,
                 liftKey: liftKey,
                 accessory: accessory,
+                supersetGroup: supersetGroup,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6219,6 +6340,7 @@ class $$SessionExercisesTableTableManager
                 Value<DateTime?> deletedAt = const Value.absent(),
                 Value<String?> liftKey = const Value.absent(),
                 Value<bool> accessory = const Value.absent(),
+                Value<String?> supersetGroup = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SessionExercisesCompanion.insert(
                 id: id,
@@ -6230,6 +6352,7 @@ class $$SessionExercisesTableTableManager
                 deletedAt: deletedAt,
                 liftKey: liftKey,
                 accessory: accessory,
+                supersetGroup: supersetGroup,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -6298,6 +6421,7 @@ typedef $$WorkoutSetsTableCreateCompanionBuilder =
       Value<int?> targetRepsMax,
       Value<int?> targetRir,
       Value<int?> targetRestSec,
+      Value<String> setType,
       Value<int> rowid,
     });
 typedef $$WorkoutSetsTableUpdateCompanionBuilder =
@@ -6326,6 +6450,7 @@ typedef $$WorkoutSetsTableUpdateCompanionBuilder =
       Value<int?> targetRepsMax,
       Value<int?> targetRir,
       Value<int?> targetRestSec,
+      Value<String> setType,
       Value<int> rowid,
     });
 
@@ -6455,6 +6580,11 @@ class $$WorkoutSetsTableFilterComposer
 
   ColumnFilters<int> get targetRestSec => $composableBuilder(
     column: $table.targetRestSec,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get setType => $composableBuilder(
+    column: $table.setType,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -6587,6 +6717,11 @@ class $$WorkoutSetsTableOrderingComposer
     column: $table.targetRestSec,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get setType => $composableBuilder(
+    column: $table.setType,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$WorkoutSetsTableAnnotationComposer
@@ -6687,6 +6822,9 @@ class $$WorkoutSetsTableAnnotationComposer
     column: $table.targetRestSec,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get setType =>
+      $composableBuilder(column: $table.setType, builder: (column) => column);
 }
 
 class $$WorkoutSetsTableTableManager
@@ -6744,6 +6882,7 @@ class $$WorkoutSetsTableTableManager
                 Value<int?> targetRepsMax = const Value.absent(),
                 Value<int?> targetRir = const Value.absent(),
                 Value<int?> targetRestSec = const Value.absent(),
+                Value<String> setType = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkoutSetsCompanion(
                 id: id,
@@ -6770,6 +6909,7 @@ class $$WorkoutSetsTableTableManager
                 targetRepsMax: targetRepsMax,
                 targetRir: targetRir,
                 targetRestSec: targetRestSec,
+                setType: setType,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6798,6 +6938,7 @@ class $$WorkoutSetsTableTableManager
                 Value<int?> targetRepsMax = const Value.absent(),
                 Value<int?> targetRir = const Value.absent(),
                 Value<int?> targetRestSec = const Value.absent(),
+                Value<String> setType = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => WorkoutSetsCompanion.insert(
                 id: id,
@@ -6824,6 +6965,7 @@ class $$WorkoutSetsTableTableManager
                 targetRepsMax: targetRepsMax,
                 targetRir: targetRir,
                 targetRestSec: targetRestSec,
+                setType: setType,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

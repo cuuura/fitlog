@@ -48,6 +48,7 @@ WorkoutSet setOf(WorkoutSetRow r) => WorkoutSet(
   targetRepsMax: r.targetRepsMax,
   targetRir: r.targetRir,
   targetRestSec: r.targetRestSec,
+  setType: SetType.values.asNameMap()[r.setType] ?? SetType.NORMAL,
 );
 
 SessionExercise sessionExerciseOf(SessionExerciseRow r, List<WorkoutSet> sets) => SessionExercise(
@@ -58,6 +59,7 @@ SessionExercise sessionExerciseOf(SessionExerciseRow r, List<WorkoutSet> sets) =
   sets: sets,
   liftKey: r.liftKey,
   accessory: r.accessory,
+  supersetGroup: r.supersetGroup,
 );
 
 Session sessionOf(SessionRow r, List<SessionExercise> exercises) => Session(
@@ -190,6 +192,7 @@ WorkoutSetsCompanion setCompanion(WorkoutSet w, {required String sessionExercise
       targetRepsMax: Value(w.targetRepsMax),
       targetRir: Value(w.targetRir),
       targetRestSec: Value(w.targetRestSec),
+      setType: Value(w.setType.name),
     );
 
 ExercisesCompanion exerciseCompanion(Exercise e, {DateTime? updatedAt}) => ExercisesCompanion(
@@ -241,6 +244,7 @@ extension ApplyServerChange on AppDatabase {
               deletedAt: const Value(null),
               liftKey: Value(se.liftKey),
               accessory: Value(se.accessory),
+              supersetGroup: Value(se.supersetGroup),
             ),
           );
         case SyncEntity.workout_set:
