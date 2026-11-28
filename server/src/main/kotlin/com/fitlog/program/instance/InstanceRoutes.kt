@@ -134,7 +134,7 @@ internal fun Transaction.plannedWorkouts(
  * 인스턴스 응답. FIXED_DATE 는 조회 때마다 replay(지난 예정일 자동 건너뛰기 포함)로 최신 상태를 만들고,
  * SHIFT 는 저장된 state 캐시를 쓴다. 호출자는 lockUser 를 먼저 호출한다.
  */
-internal fun Transaction.instanceView(engine: ProgramCalculator, row: ResultRow, withNext: Boolean = true): Instance {
+internal fun Transaction.instanceView(engine: ProgramCalculator, row: ResultRow, withNext: Boolean = true, withDefinition: Boolean = false): Instance {
     var r = row
     var state: ProgramState
     var anchor: LocalDate? = null
@@ -152,6 +152,7 @@ internal fun Transaction.instanceView(engine: ProgramCalculator, row: ResultRow,
         id = ctx.id, programId = r[ProgramInstances.programId], name = ctx.definition.name, status = ctx.status,
         skipPolicy = ctx.policy.name, startDate = ctx.startDate.toString(), state = state.toView(), next = next,
         dayOrder = ctx.dayOrder,
+        definition = if (withDefinition) AppJson.parseToJsonElement(r[ProgramInstances.definition]) else null,
     )
 }
 
@@ -454,7 +455,7 @@ fun Route.instanceRoutes(config: AppConfig) {
             get {
                 val uid = call.userId
                 val id = Ids.parse(call.parameters["id"])
-                call.respond(dbQuery { lockUser(uid); instanceView(config.engine, ownInstance(uid, id)) })
+                call.respond(dbQuery { lockUser(uid); instanceView(config.engine, ownInstance(uid, id), withDefinition = true) })
             }
 
             patch {

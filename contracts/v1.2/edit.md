@@ -87,6 +87,7 @@
 - 응답 `{ "dayOrder": { "<dayKey>": [int] } }`
 - 계획(`GET .../plan`, 인스턴스 `next`, MCP `get_plan`)의 `exercises`는 이 순서로 나온다. `plannedSetKey`는 정의 인덱스 그대로라 판정은 바뀌지 않는다
 - 인스턴스 보기에 `dayOrder` 필드 추가
+- 인스턴스 보기에 `definition` 추가(이 인스턴스가 쓰는 정의 사본). `GET /v1/program-instances/{id}`와 정의 교체·종목 교체 응답에만 있고 목록·MCP 출력에는 없다. 앱 편집기(이 진행만 고치기)가 이 값을 기준으로 고친다
 
 ## 5. 슈퍼세트·드롭세트 기록 (LOG-9)
 

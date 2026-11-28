@@ -62,6 +62,23 @@ class InstanceEditTest {
     private fun instanceRow(id: String) = transaction { ProgramInstances.selectAll().where { ProgramInstances.id eq UUID.fromString(id) }.single() }
 
     @Test
+    fun instance_view_includes_definition_and_follows_replace() = fakeTest {
+        startApplication()
+        val c = jsonClient()
+        val w = world()
+        val id = newId()
+        withToday("2026-11-10T03:00:00Z") { c.startInstance(w.uid, id, w.programId) }
+        val first = withToday("2026-11-10T03:00:00Z") { c.getInstance(w.uid, id).objOf() }
+        assertEquals(w.def.name, first["definition"]!!.jsonObject.str("name"))
+        val renamed = w.def.copy(name = "이 진행만 바꿈")
+        val res = withToday("2026-11-10T03:00:00Z") { c.putDefinition(w.uid, id, renamed) }
+        assertEquals(HttpStatusCode.OK, res.status)
+        assertEquals("이 진행만 바꿈", res.objOf()["definition"]!!.jsonObject.str("name"))
+        val after = withToday("2026-11-10T03:00:00Z") { c.getInstance(w.uid, id).objOf() }
+        assertEquals("이 진행만 바꿈", after["definition"]!!.jsonObject.str("name"))
+    }
+
+    @Test
     fun c13_replace_definition_rebases_and_ignores_older_history() = fakeTest {
         startApplication()
         val c = jsonClient()
