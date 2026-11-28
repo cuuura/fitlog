@@ -211,17 +211,20 @@ class ExerciseRecordsPage extends ConsumerWidget {
             key: Key('onerm-${m.id}'),
             title: Text(Units.format(m.weightKg, unit), style: AppNum.medium(context)),
             subtitle: Text([formatDate(m.measuredAt.toLocal()), if (m.note != null) m.note!].join(' · ')),
-            trailing: RowMenu<String>(
-              key: Key('onerm-menu-${m.id}'),
-              items: [
-                RowMenuItem(
-                  value: 'delete',
-                  label: l.commonDelete,
-                  destructive: true,
-                  key: Key('onerm-delete-${m.id}'),
-                ),
-              ],
-              onSelected: (_) => _delete(context, ref, m),
+            // 새 ScaffoldMessenger 아래의 context로 스낵바를 띄우려고 Builder를 쓴다.
+            trailing: Builder(
+              builder: (ctx) => RowMenu<String>(
+                key: Key('onerm-menu-${m.id}'),
+                items: [
+                  RowMenuItem(
+                    value: 'delete',
+                    label: l.commonDelete,
+                    destructive: true,
+                    key: Key('onerm-delete-${m.id}'),
+                  ),
+                ],
+                onSelected: (_) => _delete(ctx, ref, m),
+              ),
             ),
           ),
         );
@@ -230,25 +233,28 @@ class ExerciseRecordsPage extends ConsumerWidget {
       children.add(error());
     }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(ex == null ? l.recordsTitle : exerciseDisplayName(context, ex)),
-        actions: [
-          IconButton(
-            key: const Key('records-progress'),
-            tooltip: l.progressButton,
-            icon: const Icon(Icons.show_chart),
-            onPressed: () => context.push(Routes.exerciseProgress(exerciseId)),
-          ),
-        ],
+    // 셸(하단 탭) Scaffold가 스낵바를 대신 띄우면 FAB를 가린다. 전용 ScaffoldMessenger로 감싸 FAB가 스낵바 위로 오게 한다.
+    return ScaffoldMessenger(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(ex == null ? l.recordsTitle : exerciseDisplayName(context, ex)),
+          actions: [
+            IconButton(
+              key: const Key('records-progress'),
+              tooltip: l.progressButton,
+              icon: const Icon(Icons.show_chart),
+              onPressed: () => context.push(Routes.exerciseProgress(exerciseId)),
+            ),
+          ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          key: const Key('records-add-onerm'),
+          icon: const Icon(Icons.add),
+          label: Text(l.recordsOneRmAdd),
+          onPressed: () => _add(context, ref),
+        ),
+        body: ListView(children: [...children, const SizedBox(height: 88)]),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('records-add-onerm'),
-        icon: const Icon(Icons.add),
-        label: Text(l.recordsOneRmAdd),
-        onPressed: () => _add(context, ref),
-      ),
-      body: ListView(children: [...children, const SizedBox(height: 88)]),
     );
   }
 }
