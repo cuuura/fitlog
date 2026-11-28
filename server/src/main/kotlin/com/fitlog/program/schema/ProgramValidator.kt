@@ -4,6 +4,15 @@ import com.fitlog.core.ApiException
 import com.fitlog.core.ErrorCode
 import com.fitlog.core.ErrorDetail
 import com.fitlog.engine.ApplyAt
+import com.fitlog.engine.CustomApplyAt
+import com.fitlog.engine.CustomFailure
+import com.fitlog.engine.CustomStep
+import com.fitlog.engine.CustomSuccess
+import com.fitlog.engine.CustomTarget
+import com.fitlog.engine.FailureMethod
+import com.fitlog.engine.FailureWhen
+import com.fitlog.engine.SuccessMethod
+import com.fitlog.engine.SuccessWhen
 import com.fitlog.engine.Day
 import com.fitlog.engine.DayExercise
 import com.fitlog.engine.ExerciseRef
@@ -70,12 +79,13 @@ private val WEEKDAYS = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN")
 
 private fun esc(k: String) = k.replace("~", "~0").replace("/", "~1")
 
-private class SetInfo(val exPath: String, val lift: String, val index: Int, val amrap: Boolean, val load: Load, val warmup: Boolean)
+private class SetInfo(val exPath: String, val lift: String, val index: Int, val amrap: Boolean, val load: Load, val warmup: Boolean, val drop: Boolean = false)
 
 private class Run(val resolver: ExerciseResolver) {
     val errors = mutableListOf<ErrorDetail>()
     var cycleWeeks: Int? = null
     var liftKeys: Set<String> = emptySet()
+    var liftTmFrom: Map<String, String?> = emptyMap()
     val setInfos = mutableListOf<SetInfo>()
     val dayKeys = mutableMapOf<String, Int>()
 
@@ -194,6 +204,7 @@ private class Run(val resolver: ExerciseResolver) {
         val liftsEl = o["lifts"]
         if (liftsEl is JsonObject) liftKeys = liftsEl.keys.toSet()
         val lifts = lifts(o)
+        liftTmFrom = lifts?.mapValues { it.value.tmFrom } ?: emptyMap()
         val progression = progression(o)
         val days = days(o)
         crossChecks(progression)
@@ -304,7 +315,7 @@ private class Run(val resolver: ExerciseResolver) {
         return out
     }
 
-    private val ruleTypes = listOf("LINEAR", "AMRAP_TABLE", "CYCLE", "STAGES", "DOUBLE", "NONE")
+    private val ruleTypes = listOf("LINEAR", "AMRAP_TABLE", "CYCLE", "STAGES", "DOUBLE", "CUSTOM", "NONE")
 
     fun rule(el: JsonElement, path: String): Rule? {
         val o = obj(el, path) ?: return null
@@ -353,11 +364,94 @@ private class Run(val resolver: ExerciseResolver) {
                 val ok = inc != null && stages != null && stages.all { it != null } && (!o.containsKey("deloadPercent") || d != null)
                 return if (ok) Rule.Stages(inc!!, stages!!.filterNotNull(), d ?: 0.15) else null
             }
+            "CUSTOM" -> return customRule(o, path)
             else -> {
                 checkKeys(o, path, setOf("type"), setOf("type"))
                 return Rule.NoRule
             }
         }
+    }
+
+    // ---- CUSTOM (v1.2 edit.md 1절·9.5)
+
+    private fun customRule(o: JsonObject, path: String): Rule? {
+        checkKeys(o, path, setOf("type", "target", "applyAt", "success", "failure", "steps"), setOf("type", "success"))
+        val before = errors.size
+        val target = enum(o, "target", path, CustomTarget.entries.map { it.name })
+        val applyAt = enum(o, "applyAt", path, CustomApplyAt.entries.map { it.name })
+        val success = o["success"]?.let { customSuccess(it, "$path/success") }
+        val failure = o["failure"]?.let { customFailure(it, "$path/failure") }
+        val steps = arr(o, "steps", path, min = 1)?.mapIndexed { i, r -> customStep(r, "$path/steps/$i") }
+        if (applyAt == "CYCLE_END" && cycleWeeks == null) err("$path/applyAt", "CYCLE_END requires 'cycleWeeks' on the program")
+        if (success != null) {
+            if (success.whenCond == SuccessWhen.AMRAP_REPS && steps == null && "steps" !in o) err("$path/steps", "required when success.when is AMRAP_REPS")
+            if (success.whenCond != SuccessWhen.AMRAP_REPS && "steps" in o) err("$path/steps", "only allowed when success.when is AMRAP_REPS")
+            if (success.method == SuccessMethod.E1RM && applyAt != null && applyAt != "SESSION") err("$path/applyAt", "success.method E1RM requires applyAt SESSION")
+        }
+        if (errors.size > before || success == null || (steps != null && steps.any { it == null })) return null
+        return Rule.Custom(
+            target = target?.let { CustomTarget.valueOf(it) } ?: CustomTarget.WORKING,
+            applyAt = applyAt?.let { CustomApplyAt.valueOf(it) } ?: CustomApplyAt.SESSION,
+            success = success,
+            failure = failure,
+            steps = steps?.filterNotNull(),
+        )
+    }
+
+    private fun customSuccess(el: JsonElement, path: String): CustomSuccess? {
+        val o = obj(el, path) ?: return null
+        checkKeys(o, path, setOf("when", "afterConsecutive", "method", "amount"), emptySet())
+        val before = errors.size
+        val whenV = enumKey(o, "when", path, SuccessWhen.entries.map { it.name })
+        val after = int(o, "afterConsecutive", path, 1, 10)
+        val method = enum(o, "method", path, SuccessMethod.entries.map { it.name })
+        val whenC = whenV?.let { SuccessWhen.valueOf(it) } ?: SuccessWhen.ALL_SETS
+        val m = method?.let { SuccessMethod.valueOf(it) } ?: SuccessMethod.ADD_KG
+        if (whenC == SuccessWhen.AMRAP_REPS && method != null && m != SuccessMethod.ADD_KG) {
+            err("$path/method", "AMRAP_REPS supports only ADD_KG")
+        }
+        val amount: Double? = if (whenC == SuccessWhen.AMRAP_REPS) {
+            if ("amount" in o) err("$path/amount", "not used with AMRAP_REPS (use steps)")
+            0.0
+        } else when (m) {
+            SuccessMethod.ADD_KG -> num(o, "amount", path, -50.0, 50.0)
+            SuccessMethod.ADD_PERCENT -> num(o, "amount", path, 0.0, 0.5)
+            SuccessMethod.E1RM -> num(o, "amount", path, 0.5, 1.0)
+        }
+        if (amount == null && "amount" !in o) err(path, "missing required property 'amount'")
+        if (errors.size > before || amount == null) return null
+        return CustomSuccess(whenC, after ?: 1, m, amount)
+    }
+
+    private fun customFailure(el: JsonElement, path: String): CustomFailure? {
+        val o = obj(el, path) ?: return null
+        checkKeys(o, path, setOf("when", "afterConsecutive", "method", "amount"), emptySet())
+        val before = errors.size
+        val whenV = enumKey(o, "when", path, FailureWhen.entries.map { it.name })
+        val after = int(o, "afterConsecutive", path, 1, 10)
+        val method = enum(o, "method", path, FailureMethod.entries.map { it.name })
+        val m = method?.let { FailureMethod.valueOf(it) } ?: FailureMethod.MULTIPLY
+        val amount: Double? = when (m) {
+            FailureMethod.MULTIPLY -> num(o, "amount", path, 0.5, 1.0)
+            FailureMethod.SUBTRACT_KG -> num(o, "amount", path, 0.0, 50.0)
+            FailureMethod.NONE -> if ("amount" in o) num(o, "amount", path) else 1.0
+        }
+        if (amount == null && "amount" !in o) err(path, "missing required property 'amount'")
+        if (errors.size > before || amount == null) return null
+        return CustomFailure(whenV?.let { FailureWhen.valueOf(it) } ?: FailureWhen.ANY_SET, after ?: 3, m, amount)
+    }
+
+    /** 키 이름이 'when'(예약어 아님, 그냥 헬퍼 이름 충돌 방지) */
+    private fun enumKey(o: JsonObject, key: String, path: String, values: List<String>) = enum(o, key, path, values)
+
+    private fun customStep(el: JsonElement, path: String): CustomStep? {
+        val o = obj(el, path) ?: return null
+        checkKeys(o, path, setOf("minReps", "maxReps", "amount"), setOf("minReps", "amount"))
+        val min = int(o, "minReps", path, min = 0)
+        val max = int(o, "maxReps", path, min = 0)
+        val amount = num(o, "amount", path, -50.0, 50.0)
+        if (min != null && max != null && max < min) { err("$path/maxReps", "must be at least minReps"); return null }
+        return if (min != null && amount != null && (!o.containsKey("maxReps") || max != null)) CustomStep(min, max, amount) else null
     }
 
     fun tableRow(el: JsonElement, path: String): TableRow? {
@@ -413,13 +507,14 @@ private class Run(val resolver: ExerciseResolver) {
 
     fun dayExercise(el: JsonElement, path: String): DayExercise? {
         val o = obj(el, path) ?: return null
-        checkKeys(o, path, setOf("lift", "accessory", "amrapSet", "sets", "countsForProgression", "restSec"), setOf("lift", "sets"))
+        checkKeys(o, path, setOf("lift", "accessory", "amrapSet", "sets", "countsForProgression", "restSec", "superset"), setOf("lift", "sets"))
         val lift = str(o, "lift", path)
         if (lift != null && lift !in liftKeys) err("$path/lift", "'$lift' is not a key in lifts")
         val accessory = bool(o, "accessory", path)
         val counts = bool(o, "countsForProgression", path)
         val amrapSet = int(o, "amrapSet", path, min = 0)
         val restSec = int(o, "restSec", path, 0, 3600)
+        val superset = str(o, "superset", path, 1, 8)
         val sets = arr(o, "sets", path, 1, 30)?.mapIndexed { i, s -> set(s, "$path/sets/$i", lift, i, path) }
         val allSets = sets != null && sets.all { it != null }
         if (amrapSet != null && allSets) {
@@ -428,19 +523,20 @@ private class Run(val resolver: ExerciseResolver) {
         }
         val ok = lift != null && allSets && (!o.containsKey("accessory") || accessory != null) &&
             (!o.containsKey("countsForProgression") || counts != null) && (!o.containsKey("amrapSet") || amrapSet != null) &&
-            (!o.containsKey("restSec") || restSec != null)
-        return if (ok) DayExercise(lift!!, accessory ?: false, amrapSet, sets!!.filterNotNull(), counts ?: true, restSec) else null
+            (!o.containsKey("restSec") || restSec != null) && (!o.containsKey("superset") || superset != null)
+        return if (ok) DayExercise(lift!!, accessory ?: false, amrapSet, sets!!.filterNotNull(), counts ?: true, restSec, superset) else null
     }
 
     fun set(el: JsonElement, path: String, lift: String?, index: Int, exPath: String): SetSpec? {
         val o = obj(el, path) ?: return null
-        checkKeys(o, path, setOf("count", "reps", "amrap", "warmup", "load", "weekly", "repsMax", "restSec"), setOf("reps", "load"))
+        checkKeys(o, path, setOf("count", "reps", "amrap", "warmup", "load", "weekly", "repsMax", "restSec", "drop"), setOf("reps", "load"))
         val count = int(o, "count", path, 1, 20)
         val reps = int(o, "reps", path, 0, 100)
         val amrap = bool(o, "amrap", path)
         val warmup = bool(o, "warmup", path)
         val repsMax = int(o, "repsMax", path, 1, 100)
         val restSec = int(o, "restSec", path, 0, 3600)
+        val drop = bool(o, "drop", path)
         val load = o["load"]?.let { load(it, "$path/load") }
         val weekly = arr(o, "weekly", path)?.let { a ->
             val cw = cycleWeeks
@@ -450,8 +546,14 @@ private class Run(val resolver: ExerciseResolver) {
         val ok = reps != null && load != null && (!o.containsKey("count") || count != null) &&
             (!o.containsKey("amrap") || amrap != null) && (!o.containsKey("warmup") || warmup != null) &&
             (weekly == null || weekly.all { it != null }) &&
-            (!o.containsKey("repsMax") || repsMax != null) && (!o.containsKey("restSec") || restSec != null)
+            (!o.containsKey("repsMax") || repsMax != null) && (!o.containsKey("restSec") || restSec != null) &&
+            (!o.containsKey("drop") || drop != null)
         if (!ok) return null
+        if (drop == true) {
+            if (amrap == true) err("$path/drop", "cannot be used together with amrap")
+            if (warmup == true) err("$path/drop", "cannot be used together with warmup")
+            weekly?.forEachIndexed { i, w -> if (w?.amrap == true) err("$path/weekly/$i/amrap", "cannot be used together with drop") }
+        }
         if (repsMax != null) {
             if (repsMax < reps!!) err("$path/repsMax", "must be at least reps ($reps)")
             if (amrap == true) err("$path/repsMax", "cannot be used together with amrap")
@@ -466,10 +568,10 @@ private class Run(val resolver: ExerciseResolver) {
                 err("$path/weekly/$i/${if (w.repsMax != null) "repsMax" else "amrap"}", "repsMax cannot be used together with amrap in this week")
             }
         }
-        val spec = SetSpec(count ?: 1, reps!!, amrap ?: false, warmup ?: false, load!!, weekly?.filterNotNull(), repsMax, restSec)
+        val spec = SetSpec(count ?: 1, reps!!, amrap ?: false, warmup ?: false, load!!, weekly?.filterNotNull(), repsMax, restSec, drop ?: false)
         if (lift != null) {
             val anyAmrap = spec.amrap || spec.weekly?.any { it.amrap == true } == true
-            setInfos += SetInfo(exPath, lift, index, anyAmrap, spec.load, spec.warmup)
+            setInfos += SetInfo(exPath, lift, index, anyAmrap, spec.load, spec.warmup, spec.drop)
         }
         return spec
     }
@@ -557,8 +659,39 @@ private class Run(val resolver: ExerciseResolver) {
                         }
                     }
                 }
+                is Rule.Custom -> customCross(key, rule, p)
                 else -> {}
             }
+        }
+    }
+
+    /** 하중이 가리키는 상태 키(of ?: 종목 키, tmFrom 따라감) */
+    private fun stateKeyOf(lift: String, of: String?): String {
+        var key = of ?: lift
+        var guard = 0
+        while (guard++ < 8) key = liftTmFrom[key] ?: break
+        return key
+    }
+
+    private fun customCross(key: String, rule: Rule.Custom, p: String) {
+        for (s in setInfos) {
+            val load = s.load
+            val ref = when (load) {
+                is Load.PercentTm -> stateKeyOf(s.lift, load.of)
+                is Load.Working -> stateKeyOf(s.lift, load.of)
+                else -> continue
+            }
+            if (ref != key) continue
+            if (load is Load.PercentTm && rule.target != CustomTarget.TM) {
+                err("${s.exPath}/sets/${s.index}/load", "load of CUSTOM lift ('$key') is PERCENT_TM, so the rule target must be TM")
+            }
+            if (load is Load.Working && rule.target != CustomTarget.WORKING) {
+                err("${s.exPath}/sets/${s.index}/load", "load of CUSTOM lift ('$key') is WORKING, so the rule target must be WORKING")
+            }
+        }
+        val needsAmrap = rule.success.whenCond == SuccessWhen.AMRAP_REPS || rule.failure?.whenCond == FailureWhen.AMRAP_BELOW
+        if (needsAmrap && setInfos.none { it.lift == key && it.amrap && !it.warmup && !it.drop }) {
+            err(p, "CUSTOM rule for '$key' uses AMRAP and requires at least one AMRAP set on that lift")
         }
     }
 }

@@ -32,9 +32,17 @@ object ProgramEngine : ProgramCalculator {
 
     override fun optionalInputs(program: ProgramDefinition): Set<String> {
         val required = requiredInputs(program)
-        return program.progression.filter { it.value is Rule.Double }.keys
+        return program.progression.filter { it.value is Rule.Double || isCustomStartWeight(it.value) }.keys
             .map { stateKey(program, it, null) }.filter { required[it] == Needs.WORKING }.toSet()
     }
+
+    /** CUSTOM RANGE_TOP + WORKING: DOUBLE 처럼 시작 무게를 비워둘 수 있다 */
+    private fun isCustomStartWeight(r: Rule): Boolean =
+        r is Rule.Custom && r.target == CustomTarget.WORKING && r.success.whenCond == SuccessWhen.RANGE_TOP
+
+    /** plan() 의 "모두 성공" 가정에서 무게를 유지(HOLD)하는 규칙 */
+    private fun isHoldAssumed(r: Rule): Boolean = r is Rule.Double ||
+        (r is Rule.Custom && (r.success.whenCond == SuccessWhen.RANGE_TOP || r.success.method == SuccessMethod.E1RM))
 
     override fun initialState(program: ProgramDefinition, tm: Map<String, Double>, working: Map<String, Double>): ProgramState {
         val optional = optionalInputs(program)
@@ -72,28 +80,37 @@ object ProgramEngine : ProgramCalculator {
                         exerciseId = x.exerciseId,
                         accessory = x.de.accessory,
                         sets = x.sets.mapIndexed { si, xs ->
-                            PlannedSet("${day.key}.${x.index}.$si", xs.reps, xs.weight, xs.amrap, xs.warmup, xs.repsMax, xs.restSec)
+                            PlannedSet("${day.key}.${x.index}.$si", xs.reps, xs.weight, xs.amrap, xs.warmup, xs.repsMax, xs.restSec, if (xs.drop) "DROP" else null)
                         },
+                        superset = x.de.superset,
                     )
                 },
             )
             if (i < count - 1) {
                 val next = apply(program, s, ProgramEvent.Completed(planSeq, assumeAllSuccess(program, day, expanded)), settings)
-                // DOUBLE 키는 "모두 성공" 가정에서 무게 유지(범위 안 가정)
-                val keys = program.progression.filter { it.value is Rule.Double }.keys
+                // DOUBLE·CUSTOM(RANGE_TOP·E1RM) 키는 "모두 성공" 가정에서 무게 유지(HOLD 가정): 상태를 되돌린다
+                val keys = program.progression.filter { isHoldAssumed(it.value) }.keys
+                val tmKeys = program.progression.filter { isHoldAssumed(it.value) && (it.value as? Rule.Custom)?.target == CustomTarget.TM }.keys
                 s = if (keys.isEmpty()) next else next.copy(
-                    working = next.working.filterKeys { it !in keys } + s.working.filterKeys { it in keys },
-                    failStreak = next.failStreak.filterKeys { it !in keys } + s.failStreak.filterKeys { it in keys },
+                    tm = restore(next.tm, s.tm, tmKeys),
+                    working = restore(next.working, s.working, keys),
+                    failStreak = restore(next.failStreak, s.failStreak, keys),
+                    successStreak = restore(next.successStreak, s.successStreak, keys),
+                    periodResult = restore(next.periodResult, s.periodResult, keys),
+                    pendingTmDelta = restore(next.pendingTmDelta, s.pendingTmDelta, keys),
                 )
             }
         }
         return out
     }
 
+    private fun <V> restore(next: Map<String, V>, from: Map<String, V>, keys: Set<String>): Map<String, V> =
+        next.filterKeys { it !in keys } + from.filterKeys { it in keys }
+
     private fun assumeAllSuccess(program: ProgramDefinition, day: Day, expanded: List<XEx>): List<PerformedExercise> =
         expanded.map { x ->
             val rule = program.progression[x.de.lift]
-            val amrapIdx = if (rule is Rule.AmrapTable) amrapIndex(x) else -1
+            val amrapIdx = if (rule is Rule.AmrapTable || (rule is Rule.Custom && rule.success.whenCond == SuccessWhen.AMRAP_REPS)) amrapIndex(x) else -1
             PerformedExercise(
                 liftKey = x.de.lift,
                 accessory = x.de.accessory,
@@ -102,15 +119,18 @@ object ProgramEngine : ProgramCalculator {
                     if (si == amrapIdx && rule is Rule.AmrapTable) {
                         val lowestPositive = rule.table.filter { it.incrementKg > 0 }.minOfOrNull { it.minReps }
                         if (lowestPositive != null) reps = maxOf(reps, lowestPositive)
+                    } else if (si == amrapIdx && rule is Rule.Custom) {
+                        val lowestPositive = rule.steps.orEmpty().filter { it.amount > 0 }.minOfOrNull { it.minReps }
+                        if (lowestPositive != null) reps = maxOf(reps, lowestPositive)
                     }
-                    PerformedSet("${day.key}.${x.index}.$si", reps, xs.weight, xs.warmup)
+                    PerformedSet("${day.key}.${x.index}.$si", reps, xs.weight, xs.warmup, if (xs.drop) "DROP" else "NORMAL")
                 },
             )
         }
 
     // ------------------------------------------------------------ 세트 펼치기
 
-    private class XSet(val reps: Int, val amrap: Boolean, val warmup: Boolean, val weight: Double?, val repsMax: Int? = null, val restSec: Int? = null)
+    private class XSet(val reps: Int, val amrap: Boolean, val warmup: Boolean, val weight: Double?, val repsMax: Int? = null, val restSec: Int? = null, val drop: Boolean = false)
     private class XEx(val de: DayExercise, val index: Int, val exerciseId: String, val sets: List<XSet>)
 
     private fun expandDay(p: ProgramDefinition, s: ProgramState, day: Day, settings: EngineSettings): List<XEx> =
@@ -125,7 +145,7 @@ object ProgramEngine : ProgramCalculator {
                 val load = overrideValue(spec.load, weekly?.value)
                 val addKg = weekly?.addKg ?: 0.0
                 val rest = spec.restSec ?: de.restSec
-                if (stageRule != null && !spec.warmup) {
+                if (stageRule != null && !spec.warmup && !spec.drop) {
                     if (stageDone) continue
                     stageDone = true
                     val idx = (s.stage[de.lift] ?: 0).coerceIn(0, stageRule.stages.lastIndex)
@@ -136,7 +156,7 @@ object ProgramEngine : ProgramCalculator {
                     val w = weightOf(p, s, de, load, exerciseId, settings, addKg)
                     val amrap = weekly?.amrap ?: spec.amrap
                     val repsMax = (weekly?.repsMax ?: spec.repsMax)?.takeIf { !amrap }
-                    repeat(weekly?.count ?: spec.count) { sets += XSet(weekly?.reps ?: spec.reps, amrap, spec.warmup, w, repsMax, rest) }
+                    repeat(weekly?.count ?: spec.count) { sets += XSet(weekly?.reps ?: spec.reps, amrap, spec.warmup, w, repsMax, rest, spec.drop) }
                 }
             }
             if (sets.isEmpty()) null else XEx(de, ei, exerciseId, sets)
@@ -160,7 +180,7 @@ object ProgramEngine : ProgramCalculator {
             is Load.Working -> {
                 val key = stateKey(p, de.lift, load.of)
                 val base = s.working[key]
-                    ?: if (p.progression[key] is Rule.Double) return null else error("missing working for key: $key")
+                    ?: if (p.progression[key].let { it is Rule.Double || (it != null && isCustomStartWeight(it)) }) return null else error("missing working for key: $key")
                 roundWeight(base * load.value + addKg, p.roundingKg, p.barKg, barbell)
             }
             is Load.Fixed -> load.kg + addKg
@@ -179,7 +199,7 @@ object ProgramEngine : ProgramCalculator {
 
     /** AMRAP_TABLE 이 볼 세트의 펼친 뒤 인덱스(amrapSet, 없으면 첫 AMRAP 세트). 없으면 -1 */
     private fun amrapIndex(x: XEx): Int =
-        x.de.amrapSet ?: x.sets.indexOfFirst { it.amrap && !it.warmup }
+        x.de.amrapSet ?: x.sets.indexOfFirst { it.amrap && !it.warmup && !it.drop }
 
     // ------------------------------------------------------------ 이벤트 적용
 
@@ -189,12 +209,14 @@ object ProgramEngine : ProgramCalculator {
         val stage = s.stage.toMutableMap()
         val failStreak = s.failStreak.toMutableMap()
         val pending = s.pendingTmDelta.toMutableMap()
+        val successStreak = s.successStreak.toMutableMap()
+        val periodResult = s.periodResult.toMutableMap()
         var week = s.week
         var cycle = s.cycle
         var nextDayIndex = s.nextDayIndex
         var seq = s.seq
 
-        fun toState() = ProgramState(tm, working, stage, failStreak, pending, week, cycle, nextDayIndex, seq)
+        fun toState() = ProgramState(tm, working, stage, failStreak, pending, week, cycle, nextDayIndex, seq, successStreak, periodResult)
     }
 
     override fun apply(program: ProgramDefinition, state: ProgramState, event: ProgramEvent, settings: EngineSettings): ProgramState {
@@ -219,23 +241,29 @@ object ProgramEngine : ProgramCalculator {
 
     private fun judge(p: ProgramDefinition, s: ProgramState, event: ProgramEvent.Completed, settings: EngineSettings, m: M) {
         val day = p.days[s.nextDayIndex]
-        val expanded = expandDay(p, s, day, settings)
+        // 앱에서 DROP 으로 바꾼 세트는 계획 세트도 판정에서 뺀다(계획의 drop 세트와 같음)
+        val droppedKeys = event.exercises.flatMap { it.sets }.filter { it.setType == "DROP" }.mapNotNull { it.plannedSetKey }.toSet()
+        val expanded = expandDay(p, s, day, settings).map { x ->
+            if (droppedKeys.isEmpty()) x else XEx(x.de, x.index, x.exerciseId, x.sets.mapIndexed { si, xs ->
+                if ("${day.key}.${x.index}.$si" in droppedKeys) XSet(xs.reps, xs.amrap, xs.warmup, xs.weight, xs.repsMax, xs.restSec, true) else xs
+            })
+        }
         // plannedSetKey -> 실제 횟수(워밍업 제외, 같은 키가 여럿이면 최대)
         val performed = HashMap<String, Int>()
         for (pe in event.exercises) for (ps in pe.sets) {
             val key = ps.plannedSetKey ?: continue
-            if (ps.isWarmup) continue
+            if (ps.isWarmup || ps.setType == "DROP") continue
             performed.merge(key, ps.reps ?: 0, ::maxOf)
         }
         val weights = HashMap<String, Double>()
         for (pe in event.exercises) for (ps in pe.sets) {
             val key = ps.plannedSetKey ?: continue
-            if (ps.isWarmup) continue
+            if (ps.isWarmup || ps.setType == "DROP") continue
             ps.weightKg?.let { weights[key] = it }
         }
         fun repsOf(x: XEx, si: Int): Int = performed["${day.key}.${x.index}.$si"] ?: 0
         fun setOk(x: XEx, si: Int): Boolean = repsOf(x, si) >= x.sets[si].reps
-        fun allOk(xs: List<XEx>): Boolean = xs.all { x -> x.sets.indices.all { si -> x.sets[si].warmup || setOk(x, si) } }
+        fun allOk(xs: List<XEx>): Boolean = xs.all { x -> x.sets.indices.all { si -> x.sets[si].warmup || x.sets[si].drop || setOk(x, si) } }
 
         val counted = expanded.filter { !it.de.accessory && it.de.countsForProgression }
         for ((key, rule) in p.progression) {
@@ -257,7 +285,7 @@ object ProgramEngine : ProgramCalculator {
                     }
                 }
                 is Rule.Double -> {
-                    val judged = xs.flatMap { x -> x.sets.indices.filter { !x.sets[it].warmup }.map { x to it } }
+                    val judged = xs.flatMap { x -> x.sets.indices.filter { !x.sets[it].warmup && !x.sets[it].drop }.map { x to it } }
                     if (judged.isEmpty()) continue
                     val w = m.working[key] ?: judged
                         .mapNotNull { (x, si) -> weights["${day.key}.${x.index}.$si"]?.takeIf { it > 0.0 } }
@@ -311,10 +339,11 @@ object ProgramEngine : ProgramCalculator {
                         m.tm[key] = r2(next)
                     }
                 }
+                is Rule.Custom -> judgeCustom(key, rule, xs, settings, m, day.key, ::repsOf, weights)
                 is Rule.Cycle -> {
                     // 사이클의 마지막 주는 제외하고 AMRAP 세트 목표 미달을 센다
                     if (p.cycleWeeks != null && s.week >= p.cycleWeeks) continue
-                    val miss = xs.any { x -> x.sets.indices.any { si -> x.sets[si].amrap && !x.sets[si].warmup && !setOk(x, si) } }
+                    val miss = xs.any { x -> x.sets.indices.any { si -> x.sets[si].amrap && !x.sets[si].warmup && !x.sets[si].drop && !setOk(x, si) } }
                     if (miss) m.failStreak[key] = (m.failStreak[key] ?: 0) + 1
                 }
             }
@@ -337,6 +366,7 @@ object ProgramEngine : ProgramCalculator {
 
     private fun weekEnd(p: ProgramDefinition, m: M) {
         for ((key, rule) in p.progression) {
+            if (rule is Rule.Custom && rule.applyAt == CustomApplyAt.WEEK_END) { customPeriodEnd(key, rule, m); continue }
             if (rule !is Rule.AmrapTable || rule.applyAt != ApplyAt.WEEK_END) continue
             val tm = m.tm[key] ?: continue
             var next = tm + (m.pending[key] ?: 0.0)
@@ -351,6 +381,7 @@ object ProgramEngine : ProgramCalculator {
 
     private fun cycleEnd(p: ProgramDefinition, m: M) {
         for ((key, rule) in p.progression) {
+            if (rule is Rule.Custom && rule.applyAt == CustomApplyAt.CYCLE_END) { customPeriodEnd(key, rule, m); continue }
             if (rule !is Rule.Cycle) continue
             val tm = m.tm[key] ?: continue
             val missed = (m.failStreak[key] ?: 0) > 0
@@ -358,6 +389,127 @@ object ProgramEngine : ProgramCalculator {
             m.failStreak[key] = 0
         }
     }
+
+    // ------------------------------------------------------------ CUSTOM 규칙 (v1.2 edit.md 1절·9.5)
+
+    private fun judgeCustom(
+        key: String, rule: Rule.Custom, xs: List<XEx>, settings: EngineSettings, m: M,
+        dayKey: String, repsOf: (XEx, Int) -> Int, weights: Map<String, Double>,
+    ) {
+        val judged = xs.flatMap { x -> x.sets.indices.filter { !x.sets[it].warmup && !x.sets[it].drop }.map { x to it } }
+        if (judged.isEmpty()) return
+        val stateMap = if (rule.target == CustomTarget.TM) m.tm else m.working
+        if (stateMap[key] == null) {
+            if (rule.target == CustomTarget.TM || rule.success.whenCond != SuccessWhen.RANGE_TOP) return
+            // 시작 무게 선택: 첫 회차 최소 무게로 확정(DOUBLE 과 같음)
+            val w = judged.mapNotNull { (x, si) -> weights["$dayKey.${x.index}.$si"]?.takeIf { it > 0.0 } }.minOrNull()?.let { r2(it) } ?: return
+            stateMap[key] = w
+        }
+        val failureWhen = rule.failure?.whenCond
+        var amount = 0.0
+        val success: Boolean = when (rule.success.whenCond) {
+            SuccessWhen.ALL_SETS -> judged.all { (x, si) -> repsOf(x, si) >= x.sets[si].reps }
+            SuccessWhen.RANGE_TOP -> judged.all { (x, si) -> repsOf(x, si) >= (x.sets[si].repsMax ?: x.sets[si].reps) }
+            SuccessWhen.AMRAP_REPS -> {
+                val x = xs.first()
+                val idx = amrapIndex(x)
+                amount = if (idx < 0 || idx >= x.sets.size) 0.0 else {
+                    val reps = repsOf(x, idx)
+                    rule.steps.orEmpty().filter { reps >= it.minReps && (it.maxReps == null || reps <= it.maxReps) }
+                        .maxByOrNull { it.minReps }?.amount ?: 0.0
+                }
+                amount > 0.0
+            }
+        }
+        var e1rm: Double? = null
+        var effectiveSuccess = success
+        if (rule.success.method == SuccessMethod.E1RM) {
+            e1rm = judged.mapNotNull { (x, si) ->
+                val w = weights["$dayKey.${x.index}.$si"] ?: x.sets[si].weight
+                estimateOneRm(settings.e1rmFormula, w, repsOf(x, si))
+            }.maxOrNull()
+            if (e1rm == null) effectiveSuccess = false
+        }
+        val fail = when {
+            failureWhen == FailureWhen.AMRAP_BELOW -> {
+                val x = xs.first()
+                val idx = amrapIndex(x)
+                idx >= 0 && idx < x.sets.size && repsOf(x, idx) < x.sets[idx].reps
+            }
+            failureWhen == FailureWhen.ANY_SET || (failureWhen == null && rule.success.whenCond != SuccessWhen.AMRAP_REPS) ->
+                judged.any { (x, si) -> repsOf(x, si) < x.sets[si].reps }
+            else -> false
+        }
+        val result = if (fail) "FAIL" else if (effectiveSuccess) "SUCCESS" else "HOLD"
+        if (rule.applyAt == CustomApplyAt.SESSION) {
+            if (rule.success.whenCond == SuccessWhen.AMRAP_REPS) {
+                if (result == "SUCCESS") m.pending[key] = r2((m.pending[key] ?: 0.0) + amount) else m.pending.remove(key)
+            }
+            customApplyResult(key, rule, result, e1rm, m)
+        } else {
+            if (rule.success.whenCond == SuccessWhen.AMRAP_REPS) m.pending[key] = r2((m.pending[key] ?: 0.0) + amount)
+            val prev = m.periodResult[key]
+            m.periodResult[key] = when {
+                prev == "FAIL" || result == "FAIL" -> "FAIL"
+                prev == "SUCCESS" || result == "SUCCESS" -> "SUCCESS"
+                else -> "HOLD"
+            }
+        }
+    }
+
+    /** 결과 하나(회차 또는 기간)를 연속 횟수에 반영하고, 임계에 닿으면 값을 바꾼다 */
+    private fun customApplyResult(key: String, rule: Rule.Custom, result: String, e1rm: Double?, m: M) {
+        val map = if (rule.target == CustomTarget.TM) m.tm else m.working
+        val cur = map[key] ?: return
+        when (result) {
+            "SUCCESS" -> {
+                m.failStreak[key] = 0
+                val n = (m.successStreak[key] ?: 0) + 1
+                if (n >= rule.success.afterConsecutive) {
+                    m.successStreak[key] = 0
+                    map[key] = when (rule.success.method) {
+                        SuccessMethod.ADD_KG ->
+                            if (rule.success.whenCond == SuccessWhen.AMRAP_REPS) r2(cur + (m.pending.remove(key) ?: 0.0)) else r2(cur + rule.success.amount)
+                        SuccessMethod.ADD_PERCENT -> r2(cur * (1 + rule.success.amount))
+                        SuccessMethod.E1RM -> e1rm?.let { r2(it * rule.success.amount) }?.takeIf { it > cur } ?: cur
+                    }
+                } else m.successStreak[key] = n
+            }
+            "FAIL" -> {
+                m.successStreak[key] = 0
+                val f = rule.failure
+                val n = (m.failStreak[key] ?: 0) + 1
+                if (f != null && n >= f.afterConsecutive) {
+                    m.failStreak[key] = 0
+                    map[key] = when (f.method) {
+                        FailureMethod.MULTIPLY -> r2(cur * f.amount)
+                        FailureMethod.SUBTRACT_KG -> r2(cur - f.amount)
+                        FailureMethod.NONE -> cur
+                    }
+                } else m.failStreak[key] = n
+            }
+            else -> {
+                m.successStreak[key] = 0
+                m.failStreak[key] = 0
+            }
+        }
+    }
+
+    /** WEEK_END·CYCLE_END: 기간 안에 모은 결과로 한 번 판정한다. 기간 안에 그 키 회차가 없으면 아무 변화 없음 */
+    private fun customPeriodEnd(key: String, rule: Rule.Custom, m: M) {
+        val result = m.periodResult.remove(key) ?: return
+        if (rule.success.whenCond == SuccessWhen.AMRAP_REPS) {
+            // amount 는 기간 결과와 관계없이 더해 기간 끝에 반영하고, 실패 연속만 기간 결과로 센다
+            val map = if (rule.target == CustomTarget.TM) m.tm else m.working
+            val cur = map[key]
+            val add = m.pending.remove(key) ?: 0.0
+            if (cur != null) map[key] = r2(cur + add)
+            customApplyResult(key, rule, if (result == "FAIL") "FAIL" else "HOLD", null, m)
+        } else {
+            customApplyResult(key, rule, result, null, m)
+        }
+    }
+
 
     // ------------------------------------------------------------ 1RM·반올림
 

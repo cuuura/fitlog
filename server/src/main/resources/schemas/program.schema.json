@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://fitlog.app/schemas/program/v1.json",
   "title": "Fitlog Program",
-  "description": "프로그램 정의. 템플릿·사용자 프로그램·AI 입력이 모두 이 형식. 의미는 engine.md 참고. v1.1: repsMax·restSec·weekly(count/addKg/skip/repsMax)·DOUBLE 추가(contracts/v1.1/program-ext.md).",
+  "description": "프로그램 정의. 템플릿·사용자 프로그램·AI 입력이 모두 이 형식. 의미는 engine.md 참고. v1.1: repsMax·restSec·weekly(count/addKg/skip/repsMax)·DOUBLE 추가(contracts/v1.1/program-ext.md). v1.2: CUSTOM 규칙, set.drop, dayExercise.superset(contracts/v1.2/edit.md).",
   "type": "object",
   "dependentRequired": { "family": ["variantLabel"] },
   "required": [
@@ -348,6 +348,11 @@
           "minimum": 0,
           "maximum": 3600,
           "description": "이 세트 뒤 목표 휴식(초)"
+        },
+        "drop": {
+          "type": "boolean",
+          "default": false,
+          "description": "드롭 세트. 모든 규칙의 판정에서 워밍업처럼 제외. amrap·warmup과 같이 쓸 수 없음"
         }
       }
     },
@@ -391,6 +396,12 @@
           "minimum": 0,
           "maximum": 3600,
           "description": "이 종목 세트의 기본 휴식(초). 세트 값이 우선"
+        },
+        "superset": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 8,
+          "description": "같은 날 같은 값끼리 슈퍼세트. 계산에는 영향 없음"
         }
       }
     },
@@ -617,6 +628,99 @@
             }
           },
           "description": "더블 프로그레션: 판정 세트가 모두 repsMax 이상이면 working += incrementKg, 하한 미달이면 실패. 시작 working 선택"
+        },
+        {
+          "type": "object",
+          "required": [
+            "type",
+            "success"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "type": {
+              "const": "CUSTOM"
+            },
+            "target": {
+              "enum": ["WORKING", "TM"],
+              "default": "WORKING",
+              "description": "바꿀 상태 값. 이 키를 쓰는 하중이 PERCENT_TM이면 TM, WORKING이면 WORKING"
+            },
+            "applyAt": {
+              "enum": ["SESSION", "WEEK_END", "CYCLE_END"],
+              "default": "SESSION",
+              "description": "판정 결과를 반영할 시점. CYCLE_END는 cycleWeeks 필수. E1RM은 SESSION만"
+            },
+            "success": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "when": {
+                  "enum": ["ALL_SETS", "RANGE_TOP", "AMRAP_REPS"],
+                  "default": "ALL_SETS",
+                  "description": "ALL_SETS: 판정 세트 모두 하한 이상. RANGE_TOP: 모두 repsMax(없으면 reps) 이상. AMRAP_REPS: AMRAP 세트 횟수로 steps 표를 찾음(ADD_KG만)"
+                },
+                "afterConsecutive": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10,
+                  "default": 1,
+                  "description": "성공이 이만큼 연속돼야 반영"
+                },
+                "method": {
+                  "enum": ["ADD_KG", "ADD_PERCENT", "E1RM"],
+                  "default": "ADD_KG",
+                  "description": "ADD_KG: +amount kg(-50~50). ADD_PERCENT: ×(1+amount)(0~0.5). E1RM: 판정 세트 추정 1RM 최대값 × amount(0.5~1.0), 지금보다 작으면 유지"
+                },
+                "amount": {
+                  "type": "number",
+                  "description": "method의 값. when이 AMRAP_REPS이면 쓰지 않음(steps 사용)"
+                }
+              }
+            },
+            "failure": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "when": {
+                  "enum": ["ANY_SET", "AMRAP_BELOW"],
+                  "default": "ANY_SET",
+                  "description": "ANY_SET: 판정 세트 하나라도 하한 미달. AMRAP_BELOW: AMRAP 세트가 목표 미달"
+                },
+                "afterConsecutive": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 10,
+                  "default": 3,
+                  "description": "실패가 이만큼 연속되면 반영"
+                },
+                "method": {
+                  "enum": ["MULTIPLY", "SUBTRACT_KG", "NONE"],
+                  "default": "MULTIPLY",
+                  "description": "MULTIPLY: ×amount(0.5~1.0). SUBTRACT_KG: -amount kg(0~50). NONE: 유지"
+                },
+                "amount": {
+                  "type": "number"
+                }
+              },
+              "description": "생략하면 실패해도 무게 유지"
+            },
+            "steps": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": ["minReps", "amount"],
+                "additionalProperties": false,
+                "properties": {
+                  "minReps": { "type": "integer", "minimum": 0 },
+                  "maxReps": { "type": "integer", "minimum": 0 },
+                  "amount": { "type": "number", "minimum": -50, "maximum": 50 }
+                }
+              },
+              "description": "success.when이 AMRAP_REPS일 때만(필수). AMRAP_TABLE의 table과 같은 모양(incrementKg 대신 amount)"
+            }
+          },
+          "description": "사용자 정의 증량 규칙(contracts/v1.2/edit.md 1절). FAIL이 SUCCESS보다 우선. 워밍업·드롭 세트는 판정 제외"
         },
         {
           "type": "object",

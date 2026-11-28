@@ -83,7 +83,7 @@ class ImportApiTest {
         assertEquals(File("../contracts/v0.3/import.schema.json").readText(), imp.bodyAsText())
         val prog = c.get("/v1/public/schema/program.json")
         assertEquals(HttpStatusCode.OK, prog.status)
-        assertEquals(File("../contracts/v1.1/program.schema.json").readText(), prog.bodyAsText())
+        assertEquals(File("../contracts/v1.2/program.schema.json").readText(), prog.bodyAsText())
         assertEquals(File("../contracts/v0.3/import.schema.json").readText(), File("src/main/resources/schemas/import.schema.json").readText())
     }
 

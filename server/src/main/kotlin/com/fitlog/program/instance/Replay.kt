@@ -137,7 +137,7 @@ private fun Transaction.loadReplayData(ctx: InstanceCtx): ReplayData {
                 setsByEx[ex[SessionExercises.id]].orEmpty().filter { it[WorkoutSets.completedAt] != null }.map {
                     PerformedSet(
                         it[WorkoutSets.plannedSetKey], it[WorkoutSets.reps], it[WorkoutSets.weightKg]?.toDouble(),
-                        it[WorkoutSets.isWarmup],
+                        it[WorkoutSets.isWarmup], it[WorkoutSets.setType],
                     )
                 },
             )

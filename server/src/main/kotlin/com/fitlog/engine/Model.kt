@@ -84,6 +84,8 @@ data class SetSpec(
     val weekly: List<WeeklyOverride>? = null,
     val repsMax: Int? = null,
     val restSec: Int? = null,
+    /** v1.2: 드롭 세트. 모든 규칙의 판정에서 워밍업처럼 제외 */
+    val drop: Boolean = false,
 )
 
 @Serializable
@@ -94,6 +96,8 @@ data class DayExercise(
     val sets: List<SetSpec>,
     val countsForProgression: Boolean = true,
     val restSec: Int? = null,
+    /** v1.2: 같은 날 같은 값끼리 슈퍼세트(계산에는 영향 없음) */
+    val superset: String? = null,
 )
 
 @Serializable
@@ -127,9 +131,57 @@ sealed interface Rule {
     @Serializable @SerialName("DOUBLE")
     data class Double(val incrementKg: kotlin.Double, val failuresBeforeDeload: Int = 3, val deloadPercent: kotlin.Double = 0.1) : Rule
 
+    /** v1.2 사용자 정의 증량 규칙(contracts/v1.2/edit.md 1절) */
+    @Serializable @SerialName("CUSTOM")
+    data class Custom(
+        val target: CustomTarget = CustomTarget.WORKING,
+        val applyAt: CustomApplyAt = CustomApplyAt.SESSION,
+        val success: CustomSuccess = CustomSuccess(),
+        val failure: CustomFailure? = null,
+        val steps: List<CustomStep>? = null,
+    ) : Rule
+
     @Serializable @SerialName("NONE")
     data object NoRule : Rule
 }
+
+@Serializable
+enum class CustomTarget { WORKING, TM }
+
+@Serializable
+enum class CustomApplyAt { SESSION, WEEK_END, CYCLE_END }
+
+@Serializable
+enum class SuccessWhen { ALL_SETS, RANGE_TOP, AMRAP_REPS }
+
+@Serializable
+enum class SuccessMethod { ADD_KG, ADD_PERCENT, E1RM }
+
+@Serializable
+enum class FailureWhen { ANY_SET, AMRAP_BELOW }
+
+@Serializable
+enum class FailureMethod { MULTIPLY, SUBTRACT_KG, NONE }
+
+@Serializable
+data class CustomSuccess(
+    @SerialName("when") val whenCond: SuccessWhen = SuccessWhen.ALL_SETS,
+    val afterConsecutive: Int = 1,
+    val method: SuccessMethod = SuccessMethod.ADD_KG,
+    val amount: kotlin.Double = 0.0,
+)
+
+@Serializable
+data class CustomFailure(
+    @SerialName("when") val whenCond: FailureWhen = FailureWhen.ANY_SET,
+    val afterConsecutive: Int = 3,
+    val method: FailureMethod = FailureMethod.MULTIPLY,
+    val amount: kotlin.Double = 1.0,
+)
+
+/** AMRAP_REPS 표 한 줄(TableRow 와 같은 모양, incrementKg 대신 amount) */
+@Serializable
+data class CustomStep(val minReps: Int, val maxReps: Int? = null, val amount: kotlin.Double)
 
 @Serializable
 enum class ApplyAt { WEEK_END, SESSION }
@@ -149,6 +201,10 @@ data class ProgramState(
     val nextDayIndex: Int = 0,
     /** 지금까지 반영한 회차 수. COMPLETED·SKIPPED 마다 +1, ADJUSTED 는 그대로. 다음 회차의 planSeq = seq + 1 */
     val seq: Int = 0,
+    /** v1.2 CUSTOM: 성공 연속 횟수 */
+    val successStreak: Map<String, Int> = emptyMap(),
+    /** v1.2 CUSTOM: 기간(WEEK_END·CYCLE_END) 중 모은 회차 결과 SUCCESS·FAIL·HOLD */
+    val periodResult: Map<String, String> = emptyMap(),
 )
 
 @Serializable
@@ -169,6 +225,8 @@ data class PerformedSet(
     val reps: Int?,
     val weightKg: Double?,
     val isWarmup: Boolean = false,
+    /** NORMAL · DROP · FAILURE. DROP 은 판정에서 제외(워밍업처럼) */
+    val setType: String = "NORMAL",
 )
 
 data class PerformedExercise(val liftKey: String?, val accessory: Boolean, val sets: List<PerformedSet>)
@@ -192,6 +250,8 @@ data class PlannedSet(
     val isWarmup: Boolean,
     val targetRepsMax: Int? = null,
     val restSec: Int? = null,
+    /** "DROP" 일 때만, 아니면 생략 */
+    val setType: String? = null,
 )
 
 @Serializable
@@ -200,6 +260,7 @@ data class PlannedExercise(
     val exerciseId: String,
     val accessory: Boolean,
     val sets: List<PlannedSet>,
+    val superset: String? = null,
 )
 
 /** engine.md 7절. instanceId·scheduledDate 는 API 계층이 붙인다 */
