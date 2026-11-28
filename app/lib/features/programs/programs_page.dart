@@ -260,6 +260,8 @@ class _MineTab extends ConsumerWidget {
                           ?programCategoryLabel(l, p.category),
                         ].join(' · '),
                         description: p.description,
+                        sessionMinutes: sessionMinutesText(l, p.sessionMinutes),
+                        minutesKey: Key('program-session-minutes-${p.id}'),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -305,9 +307,15 @@ class _ProgramCard extends StatelessWidget {
     required this.trailing,
     this.badge,
     this.description,
+    this.sessionMinutes,
+    this.minutesKey,
   });
   final String title;
   final String meta;
+
+  /// "회당 약 45~70분". 없으면 숨김.
+  final String? sessionMinutes;
+  final Key? minutesKey;
   final String? description;
   final Widget? badge;
   final Widget trailing;
@@ -354,6 +362,12 @@ class _ProgramCard extends StatelessWidget {
                           meta,
                           style: text.bodySmall?.copyWith(color: c.fg2),
                         ),
+                        if (sessionMinutes != null)
+                          Text(
+                            sessionMinutes!,
+                            key: minutesKey,
+                            style: text.bodySmall?.copyWith(color: c.fg2),
+                          ),
                         if (description != null)
                           Text(
                             description!,

@@ -2644,5 +2644,71 @@
   "calendarPrevWeek": "Previous week",
   "calendarNextWeek": "Next week",
   "calendarExpand": "Expand calendar",
-  "calendarCollapse": "Collapse calendar"
+  "calendarCollapse": "Collapse calendar",
+  "progSessionMinutesRange": "About {min}-{max} min per session",
+  "@progSessionMinutesRange": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      },
+      "max": {
+        "type": "int"
+      }
+    }
+  },
+  "progSessionMinutesOne": "About {min} min per session",
+  "@progSessionMinutesOne": {
+    "placeholders": {
+      "min": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartPreviewMinutes": "About {n} min",
+  "@programStartPreviewMinutes": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartPreviewHint": "Fill in the weights to see the sets",
+  "programStartDerivedTitle": "{count} calculated automatically",
+  "@programStartDerivedTitle": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartDerivedHelp": "Calculated from the main lift weight. If you edit one, it starts at your value.",
+  "programStartDerivedBasis": "{from} × {pct}%",
+  "@programStartDerivedBasis": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "pct": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartDerivedPending": "Calculated once the weights are filled in",
+  "programStartFirstSessionNote": "Set at first workout: leave blank and the weight is set from your first session.",
+  "programStartWeekdaysTitle": "Change weekdays",
+  "programStartWeekdayTaken": "Another day uses this weekday",
+  "programStartAccTitle": "Accessories",
+  "programStartAccChip": "Optional",
+  "programStartAccSummaryNone": "You can skip this",
+  "programStartAccSummary": "{count} added",
+  "@programStartAccSummary": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "programStartAccHelp": "You can change these later from the program screen.",
+  "programStartAccRemoved": "Accessory removed",
+  "programStartAccFailed": "Started, but the accessories could not be saved. Add them again from the program screen."
 }

@@ -59,6 +59,15 @@ class ProgramDetailPage extends ConsumerWidget {
                     ),
                   ),
                 ),
+              if (sessionMinutesText(l, v.program.sessionMinutes) case final m?)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    m,
+                    key: const Key('program-session-minutes'),
+                    style: theme.textTheme.bodySmall?.copyWith(color: AppColors.of(context).fg2),
+                  ),
+                ),
               Text(v.program.description ?? l.programNoDescription, style: theme.textTheme.bodyMedium),
               const SizedBox(height: 20),
               Text(l.progWeekStructure, style: theme.textTheme.titleMedium),
