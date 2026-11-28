@@ -442,10 +442,12 @@ class _EditSetRowState extends State<_EditSetRow> {
   void didUpdateWidget(_EditSetRow old) {
     super.didUpdateWidget(old);
     // 입력창이 뜻하는 값이 모델과 다를 때만 덮어쓴다(타이핑 중·오류 중 보호).
-    if (!_weightBad && _parseKg(_weight.text) != _modelWeight)
+    if (!_weightBad && _parseKg(_weight.text) != _modelWeight) {
       _weight.text = _kgText(_modelWeight);
-    if (!_repsBad && int.tryParse(_reps.text.trim()) != widget.set.reps)
+    }
+    if (!_repsBad && int.tryParse(_reps.text.trim()) != widget.set.reps) {
       _reps.text = widget.set.reps?.toString() ?? '';
+    }
   }
 
   @override

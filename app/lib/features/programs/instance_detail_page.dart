@@ -231,8 +231,9 @@ class _Body extends ConsumerWidget {
         from < 0 ||
         from >= dayList.length ||
         to < 0 ||
-        to >= dayList.length)
+        to >= dayList.length) {
       return;
+    }
     final moved = movedItem(dayList, from, to);
     final list = [
       for (final x in view.accessories)
