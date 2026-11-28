@@ -41,43 +41,46 @@ class ScheduledListPage extends ConsumerWidget {
         if (v.workout.plannedDate.compareTo(todayKey) < 0) v,
     ];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l.schedListTitle),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        key: const Key('sched-list-add'),
-        onPressed: () => context.push(Routes.scheduledNew),
-        icon: const Icon(Icons.add),
-        label: Text(l.schedCreateEntry),
-      ),
-      body: all.isEmpty
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(l.schedListEmpty, key: const Key('sched-list-empty'), textAlign: TextAlign.center),
-                    const SizedBox(height: 12),
-                    FilledButton(
-                      key: const Key('sched-list-empty-create'),
-                      onPressed: () => context.push(Routes.scheduledNew),
-                      child: Text(l.schedCreateEntry),
-                    ),
-                  ],
+    // 셸(하단 탭) Scaffold가 스낵바를 대신 띄우면 이 탭의 FAB를 가린다. 탭 전용 ScaffoldMessenger로 감싸 FAB가 스낵바 위로 오게 한다.
+    return ScaffoldMessenger(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(l.schedListTitle),
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          key: const Key('sched-list-add'),
+          onPressed: () => context.push(Routes.scheduledNew),
+          icon: const Icon(Icons.add),
+          label: Text(l.schedCreateEntry),
+        ),
+        body: all.isEmpty
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(l.schedListEmpty, key: const Key('sched-list-empty'), textAlign: TextAlign.center),
+                      const SizedBox(height: 12),
+                      FilledButton(
+                        key: const Key('sched-list-empty-create'),
+                        onPressed: () => context.push(Routes.scheduledNew),
+                        child: Text(l.schedCreateEntry),
+                      ),
+                    ],
+                  ),
                 ),
+              )
+            : ListView(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
+                children: [
+                  if (upcoming.isNotEmpty) _Header(l.schedListUpcoming),
+                  for (final v in upcoming) _Row(view: v, todayKey: todayKey),
+                  if (past.isNotEmpty) _Header(l.schedListPast),
+                  for (final v in past) _Row(view: v, todayKey: todayKey),
+                ],
               ),
-            )
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-              children: [
-                if (upcoming.isNotEmpty) _Header(l.schedListUpcoming),
-                for (final v in upcoming) _Row(view: v, todayKey: todayKey),
-                if (past.isNotEmpty) _Header(l.schedListPast),
-                for (final v in past) _Row(view: v, todayKey: todayKey),
-              ],
-            ),
+      ),
     );
   }
 }
