@@ -32,8 +32,15 @@ object ProgramEngine : ProgramCalculator {
 
     override fun optionalInputs(program: ProgramDefinition): Set<String> {
         val required = requiredInputs(program)
-        return program.progression.filter { it.value is Rule.Double || isCustomStartWeight(it.value) }.keys
-            .map { stateKey(program, it, null) }.filter { required[it] == Needs.WORKING }.toSet()
+        val out = LinkedHashSet<String>()
+        program.progression.filter { it.value is Rule.Double || isCustomStartWeight(it.value) }.keys
+            .map { stateKey(program, it, null) }.filter { required[it] == Needs.WORKING }.forEach { out += it }
+        for ((key, lift) in program.lifts) {
+            if (key !in required || lift.tmFrom != null) continue
+            if (lift.derive != null) out += key
+            if (lift.fromFirstSession && required[key] == Needs.WORKING) out += key
+        }
+        return out
     }
 
     /** CUSTOM RANGE_TOP + WORKING: DOUBLE 처럼 시작 무게를 비워둘 수 있다 */
@@ -46,16 +53,50 @@ object ProgramEngine : ProgramCalculator {
 
     override fun initialState(program: ProgramDefinition, tm: Map<String, Double>, working: Map<String, Double>): ProgramState {
         val optional = optionalInputs(program)
-        for ((key, needs) in requiredInputs(program)) {
+        val required = requiredInputs(program)
+        val tmAll = tm.toMutableMap()
+        val workingAll = working.toMutableMap()
+        // 자동 계산(derive): 사용자가 준 값이 없는 derive 키를 from 의 시작 값 × ratio 로 채운다(사슬 없음)
+        for ((key, lift) in program.lifts) {
+            val d = lift.derive ?: continue
+            val needs = required[key] ?: continue
+            if (lift.tmFrom != null) continue
+            if (if (needs == Needs.TM) tm.containsKey(key) else working.containsKey(key)) continue
+            val fromKey = stateKey(program, d.from, null)
+            val base = when (required[fromKey]) {
+                Needs.TM -> tm[fromKey]
+                Needs.WORKING -> working[fromKey]
+                null -> null
+            } ?: continue
+            val v = deriveWeight(base, d.ratio, program.roundingKg)
+            if (needs == Needs.TM) tmAll[key] = v else workingAll[key] = v
+        }
+        for ((key, needs) in required) {
             if (key in optional) continue
-            val ok = if (needs == Needs.TM) tm.containsKey(key) else working.containsKey(key)
+            val ok = if (needs == Needs.TM) tmAll.containsKey(key) else workingAll.containsKey(key)
             require(ok) { "missing ${needs.name} value for key: $key" }
         }
+        for ((key, needs) in required) {
+            // 비울 수 있는 키 중 TM 은 비운 채 시작할 수 없다(첫 운동에서 정하기는 WORKING 만)
+            if (needs == Needs.TM && !tmAll.containsKey(key)) require(false) { "missing TM value for key: $key" }
+        }
         return ProgramState(
-            tm = tm.mapValues { r2(it.value) },
-            working = working.mapValues { r2(it.value) },
+            tm = tmAll.mapValues { r2(it.value) },
+            working = workingAll.mapValues { r2(it.value) },
         )
     }
+
+    /** derive 규칙: base × ratio 를 roundingKg 단위 내림, 0 이하면 roundingKg */
+    private fun deriveWeight(base: Double, ratio: Double, roundingKg: Double): Double {
+        val step = BigDecimal(roundingKg.toString())
+        val raw = BigDecimal(base.toString()).multiply(BigDecimal(ratio.toString()))
+        val v = raw.divide(step, 0, RoundingMode.FLOOR).multiply(step).toDouble()
+        return if (v <= 0.0) roundingKg else v
+    }
+
+    /** 이 상태 키의 working 이 비어 있어도 되는 키(DOUBLE·derive·fromFirstSession). 첫 완료에서 정한다 */
+    private fun mayStartEmpty(p: ProgramDefinition, key: String): Boolean =
+        p.progression[key].let { it is Rule.Double || (it != null && isCustomStartWeight(it)) } || p.lifts[key]?.let { it.fromFirstSession || it.derive != null } == true
 
     // ------------------------------------------------------------ 계획
 
@@ -180,7 +221,7 @@ object ProgramEngine : ProgramCalculator {
             is Load.Working -> {
                 val key = stateKey(p, de.lift, load.of)
                 val base = s.working[key]
-                    ?: if (p.progression[key].let { it is Rule.Double || (it != null && isCustomStartWeight(it)) }) return null else error("missing working for key: $key")
+                    ?: if (mayStartEmpty(p, key)) return null else error("missing working for key: $key")
                 roundWeight(base * load.value + addKg, p.roundingKg, p.barKg, barbell)
             }
             is Load.Fixed -> load.kg + addKg
@@ -265,6 +306,15 @@ object ProgramEngine : ProgramCalculator {
         fun setOk(x: XEx, si: Int): Boolean = repsOf(x, si) >= x.sets[si].reps
         fun allOk(xs: List<XEx>): Boolean = xs.all { x -> x.sets.indices.all { si -> x.sets[si].warmup || x.sets[si].drop || setOk(x, si) } }
 
+        /** working 이 비어 있는 선택 키: 판정 세트 중 무게 있는 세트의 최소 무게(없으면 null) */
+        fun firstWeight(key: String, xs: List<XEx>): Double? {
+            if (!mayStartEmpty(p, key)) return null
+            if (p.progression[key] !is Rule.Double && requiredInputs(p)[key] != Needs.WORKING) return null
+            return xs.flatMap { x -> x.sets.indices.filter { !x.sets[it].warmup && !x.sets[it].drop }.map { x to it } }
+                .mapNotNull { (x, si) -> weights["${day.key}.${x.index}.$si"]?.takeIf { it > 0.0 } }
+                .minOrNull()?.let { r2(it) }
+        }
+
         val counted = expanded.filter { !it.de.accessory && it.de.countsForProgression }
         for ((key, rule) in p.progression) {
             val xs = counted.filter { it.de.lift == key }
@@ -272,7 +322,8 @@ object ProgramEngine : ProgramCalculator {
             when (rule) {
                 is Rule.NoRule -> {}
                 is Rule.Linear -> {
-                    val w = m.working[key] ?: continue
+                    val w = m.working[key] ?: firstWeight(key, xs) ?: continue
+                    m.working[key] = w
                     if (allOk(xs)) {
                         m.working[key] = r2(w + rule.incrementKg)
                         m.failStreak[key] = 0
@@ -287,9 +338,7 @@ object ProgramEngine : ProgramCalculator {
                 is Rule.Double -> {
                     val judged = xs.flatMap { x -> x.sets.indices.filter { !x.sets[it].warmup && !x.sets[it].drop }.map { x to it } }
                     if (judged.isEmpty()) continue
-                    val w = m.working[key] ?: judged
-                        .mapNotNull { (x, si) -> weights["${day.key}.${x.index}.$si"]?.takeIf { it > 0.0 } }
-                        .minOrNull()?.let { r2(it) } ?: continue
+                    val w = m.working[key] ?: firstWeight(key, xs) ?: continue
                     m.working[key] = w
                     if (judged.all { (x, si) -> repsOf(x, si) >= (x.sets[si].repsMax ?: x.sets[si].reps) }) {
                         m.working[key] = r2(w + rule.incrementKg)
@@ -303,7 +352,8 @@ object ProgramEngine : ProgramCalculator {
                     } else m.failStreak[key] = 0
                 }
                 is Rule.Stages -> {
-                    val w = m.working[key] ?: continue
+                    val w = m.working[key] ?: firstWeight(key, xs) ?: continue
+                    m.working[key] = w
                     if (allOk(xs)) {
                         m.working[key] = r2(w + rule.incrementKg)
                     } else {
@@ -339,7 +389,7 @@ object ProgramEngine : ProgramCalculator {
                         m.tm[key] = r2(next)
                     }
                 }
-                is Rule.Custom -> judgeCustom(key, rule, xs, settings, m, day.key, ::repsOf, weights)
+                is Rule.Custom -> judgeCustom(key, rule, xs, settings, m, day.key, ::repsOf, weights, ::firstWeight)
                 is Rule.Cycle -> {
                     // 사이클의 마지막 주는 제외하고 AMRAP 세트 목표 미달을 센다
                     if (p.cycleWeeks != null && s.week >= p.cycleWeeks) continue
@@ -394,16 +444,15 @@ object ProgramEngine : ProgramCalculator {
 
     private fun judgeCustom(
         key: String, rule: Rule.Custom, xs: List<XEx>, settings: EngineSettings, m: M,
-        dayKey: String, repsOf: (XEx, Int) -> Int, weights: Map<String, Double>,
+        dayKey: String, repsOf: (XEx, Int) -> Int, weights: Map<String, Double>, firstWeight: (String, List<XEx>) -> Double?,
     ) {
         val judged = xs.flatMap { x -> x.sets.indices.filter { !x.sets[it].warmup && !x.sets[it].drop }.map { x to it } }
         if (judged.isEmpty()) return
         val stateMap = if (rule.target == CustomTarget.TM) m.tm else m.working
         if (stateMap[key] == null) {
-            if (rule.target == CustomTarget.TM || rule.success.whenCond != SuccessWhen.RANGE_TOP) return
-            // 시작 무게 선택: 첫 회차 최소 무게로 확정(DOUBLE 과 같음)
-            val w = judged.mapNotNull { (x, si) -> weights["$dayKey.${x.index}.$si"]?.takeIf { it > 0.0 } }.minOrNull()?.let { r2(it) } ?: return
-            stateMap[key] = w
+            if (rule.target == CustomTarget.TM) return
+            // 시작 무게 선택: 첫 회차 최소 무게로 확정(mayStartEmpty 키만)
+            stateMap[key] = firstWeight(key, xs) ?: return
         }
         val failureWhen = rule.failure?.whenCond
         var amount = 0.0

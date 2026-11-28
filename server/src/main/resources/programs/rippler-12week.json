@@ -18,7 +18,8 @@
     "bench_t2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000004"
-      }
+      },
+      "derive": { "from": "bench", "ratio": 0.8 }
     },
     "squat": {
       "exercise": {
@@ -28,7 +29,8 @@
     "squat_t2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000002"
-      }
+      },
+      "derive": { "from": "squat", "ratio": 0.8 }
     },
     "ohp": {
       "exercise": {
@@ -48,7 +50,8 @@
     "deadlift_t2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000007"
-      }
+      },
+      "derive": { "from": "deadlift", "ratio": 0.7 }
     },
     "pulldown": {
       "exercise": {
@@ -58,7 +61,8 @@
     "pushdown": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002d"
-      }
+      },
+      "fromFirstSession": true
     },
     "leg_press": {
       "exercise": {
@@ -73,12 +77,14 @@
     "lateral": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000017"
-      }
+      },
+      "fromFirstSession": true
     },
     "face_pull": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002e"
-      }
+      },
+      "fromFirstSession": true
     },
     "cable_row": {
       "exercise": {
@@ -88,7 +94,8 @@
     "calf": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-00000000002f"
-      }
+      },
+      "fromFirstSession": true
     }
   },
   "progression": {

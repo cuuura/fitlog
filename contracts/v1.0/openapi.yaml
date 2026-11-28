@@ -43,6 +43,21 @@ paths:
       responses:
         '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/SessionComparison' } } } }
         '404': { $ref: '#/components/responses/Error' }
+  /v1/programs/{id}/preview:
+    parameters:
+      - { $ref: '#/components/parameters/Id' }
+    post:
+      tags: [programs]
+      summary: 시작 전 미리 계산(v1.1, 저장 안 함)
+      description: |
+        contracts/v1.1/program-start-ext.md 1절. 검증은 POST /v1/program-instances와 같다(필수 입력 누락 400 tm.<key>·working.<key>,
+        무게 범위, weekdays, FIXED_DATE 요일 요구). 인스턴스를 만들었다면 GET /plan?count=N이 돌려줄 것과 같은 회차를 계산한다(보조 종목 없음).
+        scheduledDate는 FIXED_DATE일 때만, 첫 회차는 startDate 당일부터 찾는다. 없는 프로그램 404.
+      requestBody: { required: true, content: { application/json: { schema: { $ref: '#/components/schemas/PreviewRequest' } } } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/PreviewResult' } } } }
+        '400': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
   /privacy:
     get:
       tags: [public]
@@ -135,3 +150,70 @@ components:
               previous: { oneOf: [ { $ref: '#/components/schemas/Snap' }, { type: 'null' } ] }
               bestWeight: { oneOf: [ { $ref: '#/components/schemas/RecordPoint' }, { type: 'null' } ], description: '이 세션 이전까지' }
               bestE1rm: { oneOf: [ { $ref: '#/components/schemas/RecordPoint' }, { type: 'null' } ], description: '이 세션 이전까지' }
+    StartInstanceExt:
+      description: v0.2 StartInstance에 더해지는 선택 필드(v1.1). 기존 필드는 그대로
+      type: object
+      properties:
+        weekdays:
+          type: object
+          description: |
+            날 키(days[].key) → MON~SUN. 일부 날만 줘도 된다. 인스턴스 정의 사본의 days[].weekday에만 반영(원래 프로그램 불변).
+            모르는 날 키·요일 값은 400 weekdays.<key>, 적용 뒤 같은 요일 두 날 이상은 400 weekdays.
+            FIXED_DATE 요일 요구는 적용 후 정의로 검사한다.
+          additionalProperties: { type: string, enum: [MON, TUE, WED, THU, FRI, SAT, SUN] }
+    PlannedWorkoutExt:
+      description: v0.2 PlannedWorkout에 더해지는 선택 필드(v1.1)
+      type: object
+      properties:
+        estimatedMinutes: { type: integer, description: '회당 어림 시간(분, 5분 단위, 최소 5). 보조 종목 포함' }
+    SessionMinutes:
+      type: object
+      required: [min, max]
+      properties:
+        min: { type: integer }
+        max: { type: integer }
+    ProgramSummaryExt:
+      description: v0.2 ProgramSummary·Program에 더해지는 선택 필드(v1.1)
+      type: object
+      properties:
+        sessionMinutes:
+          description: '회당 어림 시간(분) 범위. 계산 실패 시 생략'
+          allOf: [ { $ref: '#/components/schemas/SessionMinutes' } ]
+    PreviewRequest:
+      description: StartInstance에서 id·programId를 뺀 모양 + count
+      type: object
+      properties:
+        startDate: { type: string, format: date, description: '없으면 사용자 오늘(tz 기준, tz 없으면 UTC)' }
+        tz: { type: string }
+        skipPolicy: { type: string, enum: [SHIFT, FIXED_DATE], default: SHIFT }
+        tm: { type: object, additionalProperties: { type: number } }
+        working: { type: object, additionalProperties: { type: number } }
+        weekdays: { type: object, additionalProperties: { type: string, enum: [MON, TUE, WED, THU, FRI, SAT, SUN] } }
+        count: { type: integer, minimum: 1, maximum: 4, default: 1 }
+    PreviewWorkout:
+      description: PlannedWorkout에서 instanceId를 뺀 모양(보조 종목 없음)
+      type: object
+      required: [planSeq, dayIndex, dayKey, dayName, week, cycle, confirmed, estimatedMinutes, exercises]
+      properties:
+        planSeq: { type: integer }
+        dayIndex: { type: integer }
+        dayKey: { type: string }
+        dayName: { type: string }
+        week: { type: integer }
+        cycle: { type: integer }
+        scheduledDate: { type: string, format: date, description: FIXED_DATE일 때만 }
+        confirmed: { type: boolean }
+        estimatedMinutes: { type: integer }
+        exercises: { type: array, items: { type: object }, description: 'PlannedExercise, 인스턴스 계획과 같은 모양' }
+    PreviewResult:
+      type: object
+      required: [workouts, inputs, derived]
+      properties:
+        workouts: { type: array, items: { $ref: '#/components/schemas/PreviewWorkout' } }
+        inputs:
+          type: object
+          description: '실제로 시작될 값(자동 계산이 채운 값 포함)'
+          properties:
+            tm: { type: object, additionalProperties: { type: number } }
+            working: { type: object, additionalProperties: { type: number } }
+        derived: { type: array, items: { type: string }, description: 'inputs 중 요청에 없어서 서버가 자동 계산으로 채운 키' }

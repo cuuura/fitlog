@@ -1263,7 +1263,8 @@ def build_call_cases(R, cc):
         {"measuredAt": (datetime.now(timezone.utc) - timedelta(days=20)).strftime("%Y-%m-%dT%H:%M:%SZ"), "weightKg": 81.2}]}}
     cases["create_program"] = lambda: {"definition": cc.new_definition}
     cases["start_program"] = lambda: {"program": {"templateKey": "stronglifts-5x5"}, "startDate": today,
-                                      "working": {"squat": 60, "bench": 40, "row": 40, "ohp": 30, "deadlift": 80}}
+                                      "working": {"squat": 60, "bench": 40, "row": 40, "ohp": 30, "deadlift": 80},
+                                      "weekdays": {"A": "TUE"}}
     cases["log_session"] = lambda: {"session": {
         "startedAt": (datetime.now(timezone.utc) - timedelta(days=10)).strftime("%Y-%m-%dT%H:%M:%SZ"), "tz": "Asia/Seoul",
         "exercises": [{"exercise": {"id": cc.exercise_id}, "sets": [{"weightKg": 110, "reps": 5}, {"weightKg": 110, "reps": 5, "rpe": 8}]}]}}

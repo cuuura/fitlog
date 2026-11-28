@@ -12,6 +12,7 @@
 - 프로그램의 증량 규칙은 LINEAR, AMRAP_TABLE, CYCLE, STAGES, DOUBLE, CUSTOM, NONE 중에서 고른다.
 - 반복 범위는 세트에 {"reps": 8, "repsMax": 12}(reps가 하한, AMRAP과는 같이 못 씀). 세트 뒤 휴식은 세트나 종목에 "restSec"(초).
 - 더블 프로그레션: {"type": "DOUBLE", "incrementKg": 2.5}. 모든 세트가 repsMax에 닿으면 증량, 하한 미달이면 실패로 센다. 시작 무게는 비워도 된다.
+- 시작 무게를 다른 종목에서 구하려면 lifts의 그 종목에 "derive": {"from": "squat", "ratio": 0.8}(비워 두면 from 종목 시작 값 x ratio, 연쇄 불가). 첫 운동에서 정하려면 WORKING 종목에 "fromFirstSession": true(LINEAR·STAGES·DOUBLE 규칙 필요).
 - 주차별로 세트를 바꾸려면 세트의 weekly 배열에 {"count": 4, "addKg": 5, "reps": 5, "repsMax": 8}처럼 쓰고, 그 주에 그 세트를 빼려면 {"skip": true}.
 - 사용자 정의 증량(CUSTOM): 기본 규칙이 안 맞을 때만 쓴다. 예) 5x5를 모두 채우면 2.5kg 올리고 3번 연속 실패하면 10% 낮춤:
   {"type": "CUSTOM", "target": "WORKING", "success": {"when": "ALL_SETS", "method": "ADD_KG", "amount": 2.5}, "failure": {"when": "ANY_SET", "afterConsecutive": 3, "method": "MULTIPLY", "amount": 0.9}}

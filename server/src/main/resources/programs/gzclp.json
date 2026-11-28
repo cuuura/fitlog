@@ -18,7 +18,8 @@
     "squat_t2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000001"
-      }
+      },
+      "derive": { "from": "squat_t1", "ratio": 0.65 }
     },
     "bench_t1": {
       "exercise": {
@@ -28,7 +29,8 @@
     "bench_t2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000003"
-      }
+      },
+      "derive": { "from": "bench_t1", "ratio": 0.65 }
     },
     "ohp_t1": {
       "exercise": {
@@ -38,7 +40,8 @@
     "ohp_t2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000009"
-      }
+      },
+      "derive": { "from": "ohp_t1", "ratio": 0.65 }
     },
     "deadlift_t1": {
       "exercise": {
@@ -48,7 +51,8 @@
     "deadlift_t2": {
       "exercise": {
         "id": "019b76da-4000-7000-8000-000000000006"
-      }
+      },
+      "derive": { "from": "deadlift_t1", "ratio": 0.65 }
     },
     "pulldown": {
       "exercise": {
