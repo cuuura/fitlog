@@ -1658,7 +1658,7 @@
   "bodyTodayWeight": "오늘 체중",
   "bodyRecordAction": "체중 기록",
   "bodyHistoryTitle": "기록",
-  "bodyDeleted": "체중 기록을 지웠어요.",
+  "bodyDeleted": "체중 기록을 지웠어요",
   "bodyEditTitle": "체중 수정",
   "bodyMeasuredAt": "측정 날짜",
   "bodyHeightEmpty": "입력",
