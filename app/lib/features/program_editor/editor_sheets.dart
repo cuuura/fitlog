@@ -528,7 +528,7 @@ class _RowsEditor extends StatelessWidget {
                 for (final f in fields) ...[
                   Expanded(
                     child: MapNumField(
-                      key: Key('${key is ValueKey ? '' : ''}row$i-${f.field}'),
+                      key: Key('row$i-${f.field}'),
                       map: rows[i] as Json,
                       field: f.field,
                       label: f.label,

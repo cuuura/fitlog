@@ -9,6 +9,8 @@ import '../../core/ui/bottom_action_bar.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../program_editor/program_editor.dart';
+import '../../core/ui/row_menu.dart';
 import '../source_badge/source_badge.dart';
 import 'program_common.dart';
 import 'programs_providers.dart';
@@ -24,7 +26,17 @@ class ProgramDetailPage extends ConsumerWidget {
     final unit = ref.watch(settingsProvider).weightUnit;
     final c = AppColors.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(async.value?.program.name ?? l.programsTitle)),
+      appBar: AppBar(
+        title: Text(async.value?.program.name ?? l.programsTitle),
+        actions: [
+          if (async.value != null)
+            RowMenu<String>(
+              key: const Key('program-detail-menu'),
+              items: const [RowMenuItem(value: 'copy', label: '복사해서 고치기', key: Key('program-copy-edit'))],
+              onSelected: (_) => openProgramEditor(context, copyFromProgramId: programId),
+            ),
+        ],
+      ),
       body: async.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => ErrorRetry(error: e, onRetry: () => ref.invalidate(programViewProvider(programId))),

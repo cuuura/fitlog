@@ -12,6 +12,7 @@ import '../../core/ui/row_menu.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../source_badge/source_badge.dart';
 import '../sync_status/sync_status_indicator.dart';
+import '../program_editor/program_editor.dart';
 import 'program_add_sheet.dart';
 import 'program_common.dart';
 import 'programs_providers.dart';
@@ -278,13 +279,25 @@ class _MineTab extends ConsumerWidget {
                               key: Key('program-menu-${p.id}'),
                               items: [
                                 RowMenuItem(
+                                  value: 'edit',
+                                  label: '편집',
+                                  key: Key('program-edit-${p.id}'),
+                                ),
+                                RowMenuItem(
                                   value: 'delete',
                                   label: l.programDeleteAction,
                                   destructive: true,
                                   key: Key('program-delete-${p.id}'),
                                 ),
                               ],
-                              onSelected: (_) => _delete(context, ref, p),
+                              onSelected: (v) async {
+                                if (v == 'edit') {
+                                  await openProgramEditor(context, programId: p.id);
+                                  ref.invalidate(programListProvider);
+                                } else {
+                                  _delete(context, ref, p);
+                                }
+                              },
                             ),
                           ],
                         ),

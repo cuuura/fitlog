@@ -20,6 +20,7 @@ import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../session/current_set.dart' show repsRangeText;
 import '../session/start_program_flow.dart';
+import '../program_editor/program_editor.dart';
 import 'program_common.dart';
 import 'programs_providers.dart';
 
@@ -85,7 +86,7 @@ class InstanceDetailPage extends ConsumerWidget {
   }
 }
 
-enum _InstanceAction { pause, resume, finish, delete }
+enum _InstanceAction { pause, resume, finish, delete, editDef }
 
 /// 진행 중 프로그램 상세 AppBar의 ⋮ 메뉴: 일시정지/다시 시작, 끝내기, 삭제.
 class _InstanceMenu extends ConsumerWidget {
@@ -111,6 +112,11 @@ class _InstanceMenu extends ConsumerWidget {
     );
     if (!ok) return;
     await _setStatus(ref, InstanceStatus.FINISHED);
+  }
+
+  Future<void> _editDef(BuildContext context, WidgetRef ref) async {
+    await openProgramEditor(context, instanceId: inst.id);
+    ref.invalidate(instanceViewProvider(inst.id));
   }
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
@@ -155,6 +161,12 @@ class _InstanceMenu extends ConsumerWidget {
             label: l.instanceFinish,
             key: const Key('instance-finish'),
           ),
+        if (inst.status != InstanceStatus.FINISHED)
+          const RowMenuItem(
+            value: _InstanceAction.editDef,
+            label: '이 진행만 고치기',
+            key: Key('instance-edit-def'),
+          ),
         RowMenuItem(
           value: _InstanceAction.delete,
           label: l.instanceDelete,
@@ -167,6 +179,7 @@ class _InstanceMenu extends ConsumerWidget {
         _InstanceAction.resume => _setStatus(ref, InstanceStatus.ACTIVE),
         _InstanceAction.finish => _finish(context, ref),
         _InstanceAction.delete => _delete(context, ref),
+        _InstanceAction.editDef => _editDef(context, ref),
       },
     );
   }
