@@ -38,11 +38,11 @@ class McpProtocolTest {
     private val readTools = listOf(
         "get_profile", "search_exercises", "list_programs", "get_program", "validate_program", "list_program_instances",
         "get_plan", "list_sessions", "get_session", "get_exercise_records", "get_exercise_progress", "get_training_summary", "get_body_measurements",
-        "list_deletion_requests", "list_scheduled_workouts", "search", "fetch",
+        "list_deletion_requests", "list_scheduled_workouts", "search", "fetch", "get_program_analysis",
     )
     private val writeTools = listOf(
         "import_bundle", "create_program", "start_program", "log_session", "log_body_weight", "create_exercise",
-        "adjust_program_instance", "request_deletion", "schedule_workout", "skip_scheduled_workout",
+        "adjust_program_instance", "request_deletion", "schedule_workout", "skip_scheduled_workout", "update_program", "edit_program_instance",
     )
 
     @Test
@@ -155,7 +155,7 @@ class McpProtocolTest {
         val conn = c.connect()
         val sid = c.mcpInit(conn.access)
         val tools = c.mcpPost(conn.access, sid, """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""").json().result()["tools"]!!.jsonArray
-        assertEquals(27, tools.size)
+        assertEquals(30, tools.size)
         assertEquals((readTools + writeTools).toSet(), tools.map { it.jsonObject["name"]!!.jsonPrimitive.content }.toSet())
         for (t in tools.map { it.jsonObject }) {
             val name = t["name"]!!.jsonPrimitive.content
@@ -174,7 +174,7 @@ class McpProtocolTest {
         val ro = c.connect(write = false)
         val roSid = c.mcpInit(ro.access)
         val roTools = c.mcpPost(ro.access, roSid, """{"jsonrpc":"2.0","id":2,"method":"tools/list"}""").json().result()["tools"]!!.jsonArray
-        assertEquals(27, roTools.size)
+        assertEquals(30, roTools.size)
     }
 
     @Test

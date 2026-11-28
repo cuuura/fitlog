@@ -18,6 +18,23 @@ String formatDate(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 DateTime? _date(Object? v) => v == null ? null : DateTime.parse(v as String);
 
+/// v1.1: 회당 운동 시간 어림(분). min==max면 한 값.
+class SessionMinutes {
+  final int min;
+  final int max;
+  const SessionMinutes({required this.min, required this.max});
+
+  /// 객체가 아니거나 숫자가 아니면 null(숨김).
+  static SessionMinutes? tryParse(Object? v) {
+    if (v is! Map) return null;
+    final a = v['min'], b = v['max'];
+    if (a is! num || b is! num) return null;
+    final lo = a.toInt(), hi = b.toInt();
+    if (lo <= 0 || hi < lo) return null;
+    return SessionMinutes(min: lo, max: hi);
+  }
+}
+
 enum ProgramSource { TEMPLATE, USER, AI_JSON, AI_MCP }
 
 /// GET /v1/programs?source=
@@ -59,6 +76,9 @@ class ProgramSummary {
 
   /// 쉬운 말 규칙 세 줄. 없거나 형식이 틀리면 null.
   final ProgramRules? rules;
+
+  /// v1.1: 회당 시간 어림. 없으면 null.
+  final SessionMinutes? sessionMinutes;
   const ProgramSummary({
     required this.id,
     this.templateKey,
@@ -74,6 +94,7 @@ class ProgramSummary {
     this.variantLabel,
     this.aka = const [],
     this.rules,
+    this.sessionMinutes,
   });
 
   factory ProgramSummary.fromJson(Map<String, Object?> j) => ProgramSummary(
@@ -91,6 +112,7 @@ class ProgramSummary {
     variantLabel: j['variantLabel'] is String ? j['variantLabel'] as String : null,
     aka: j['aka'] is List ? [for (final e in j['aka'] as List) if (e is String) e] : const [],
     rules: ProgramRules.tryParse(j['rules']),
+    sessionMinutes: SessionMinutes.tryParse(j['sessionMinutes']),
   );
 }
 
@@ -128,6 +150,7 @@ class Program extends ProgramSummary {
     super.variantLabel,
     super.aka,
     super.rules,
+    super.sessionMinutes,
     required this.definition,
   });
 
@@ -148,6 +171,7 @@ class Program extends ProgramSummary {
       variantLabel: s.variantLabel,
       aka: s.aka,
       rules: s.rules,
+      sessionMinutes: s.sessionMinutes,
       definition: (j['definition'] as Map).cast<String, Object?>(),
     );
   }
@@ -166,6 +190,10 @@ class SuggestItem {
 
   /// v1.1: true면 시작 시 값을 비워둘 수 있다(첫 운동 기록으로 정함).
   final bool optional;
+
+  /// v1.1: 자동 계산 종목이면 기준 종목 키와 비율(예: squat, 0.8). 아니면 null.
+  final String? derivedFrom;
+  final double? derivedRatio;
   const SuggestItem({
     required this.key,
     required this.exerciseId,
@@ -174,7 +202,15 @@ class SuggestItem {
     this.oneRmSource,
     this.suggestedKg,
     this.optional = false,
+    this.derivedFrom,
+    this.derivedRatio,
   });
+
+  /// 자동 계산 종목(기준 종목이 있음).
+  bool get isDerived => derivedFrom != null;
+
+  /// 비워도 시작할 수 있는 종목(첫 운동에서 정하기·자동 계산).
+  bool get canSkip => optional || isDerived;
 
   factory SuggestItem.fromJson(Map<String, Object?> j) => SuggestItem(
     key: j['key'] as String,
@@ -185,6 +221,8 @@ class SuggestItem {
     oneRmSource: OneRmSource.values.where((e) => e.name == j['oneRmSource']).firstOrNull,
     suggestedKg: _num(j['suggestedKg']),
     optional: j['optional'] as bool? ?? false,
+    derivedFrom: j['derivedFrom'] is String ? j['derivedFrom'] as String : null,
+    derivedRatio: j['derivedRatio'] is num ? (j['derivedRatio'] as num).toDouble() : null,
   );
 }
 
@@ -196,6 +234,9 @@ class StartInstance {
   final SkipPolicy skipPolicy;
   final Map<String, double> tm;
   final Map<String, double> working;
+
+  /// v1.1: 날 키 → 요일(MON~SUN). 바꾼 날만 담는다. 비면 보내지 않는다.
+  final Map<String, String> weekdays;
   const StartInstance({
     required this.id,
     required this.programId,
@@ -204,6 +245,7 @@ class StartInstance {
     this.skipPolicy = SkipPolicy.SHIFT,
     this.tm = const {},
     this.working = const {},
+    this.weekdays = const {},
   });
 
   Map<String, Object?> toJson() => {
@@ -214,7 +256,72 @@ class StartInstance {
     'skipPolicy': skipPolicy.name,
     if (tm.isNotEmpty) 'tm': tm,
     if (working.isNotEmpty) 'working': working,
+    if (weekdays.isNotEmpty) 'weekdays': weekdays,
   };
+}
+
+/// POST /v1/programs/{id}/preview 요청: StartInstance에서 id·programId를 뺀 모양 + count.
+class StartPreviewRequest {
+  final DateTime startDate;
+  final String tz;
+  final SkipPolicy skipPolicy;
+  final Map<String, double> tm;
+  final Map<String, double> working;
+  final Map<String, String> weekdays;
+  final int count;
+  const StartPreviewRequest({
+    required this.startDate,
+    required this.tz,
+    this.skipPolicy = SkipPolicy.SHIFT,
+    this.tm = const {},
+    this.working = const {},
+    this.weekdays = const {},
+    this.count = 1,
+  });
+
+  Map<String, Object?> toJson() => {
+    'startDate': formatDate(startDate),
+    'tz': tz,
+    'skipPolicy': skipPolicy.name,
+    'tm': tm,
+    'working': working,
+    if (weekdays.isNotEmpty) 'weekdays': weekdays,
+    'count': count,
+  };
+}
+
+/// 미리 계산 응답. 저장하지 않는다.
+class StartPreview {
+  final List<PlannedWorkout> workouts;
+
+  /// 실제로 시작될 값(자동 계산이 채운 값 포함).
+  final Map<String, double> inputsTm;
+  final Map<String, double> inputsWorking;
+
+  /// inputs 중 요청에 없어서 서버가 채운 키.
+  final List<String> derived;
+  const StartPreview({
+    this.workouts = const [],
+    this.inputsTm = const {},
+    this.inputsWorking = const {},
+    this.derived = const [],
+  });
+
+  factory StartPreview.fromJson(Map<String, Object?> j) {
+    final inputs = j['inputs'] is Map ? (j['inputs'] as Map).cast<String, Object?>() : const <String, Object?>{};
+    Map<String, double> kg(Object? v) => v is Map
+        ? {for (final e in v.entries) if (e.value is num) '${e.key}': (e.value as num).toDouble()}
+        : const {};
+    return StartPreview(
+      workouts: [
+        for (final w in (j['workouts'] as List? ?? const []))
+          if (w is Map) PlannedWorkout.fromJson(w.cast()),
+      ],
+      inputsTm: kg(inputs['tm']),
+      inputsWorking: kg(inputs['working']),
+      derived: [for (final d in (j['derived'] as List? ?? const [])) if (d is String) d],
+    );
+  }
 }
 
 class InstanceState {
@@ -419,6 +526,9 @@ class PlannedWorkout {
 
   /// true = 첫 회차(확정). false = 모두 성공 가정 예상치(오프라인 캐시용).
   final bool confirmed;
+
+  /// v1.1: 회차 시간 어림(분). 없으면 null.
+  final int? estimatedMinutes;
   final List<PlannedExercise> exercises;
   const PlannedWorkout({
     required this.instanceId,
@@ -430,11 +540,12 @@ class PlannedWorkout {
     required this.cycle,
     this.scheduledDate,
     this.confirmed = false,
+    this.estimatedMinutes,
     required this.exercises,
   });
 
   factory PlannedWorkout.fromJson(Map<String, Object?> j) => PlannedWorkout(
-    instanceId: j['instanceId'] as String,
+    instanceId: j['instanceId'] as String? ?? '', // 미리 계산 응답은 instanceId 없음
     planSeq: j['planSeq'] as int,
     dayIndex: j['dayIndex'] as int,
     dayKey: j['dayKey'] as String,
@@ -443,6 +554,7 @@ class PlannedWorkout {
     cycle: j['cycle'] as int,
     scheduledDate: _date(j['scheduledDate']),
     confirmed: j['confirmed'] as bool? ?? false,
+    estimatedMinutes: j['estimatedMinutes'] is num ? (j['estimatedMinutes'] as num).toInt() : null,
     exercises: [for (final e in (j['exercises'] as List? ?? const [])) PlannedExercise.fromJson((e as Map).cast())],
   );
   Map<String, Object?> toJson() => {
@@ -455,6 +567,7 @@ class PlannedWorkout {
     'cycle': cycle,
     if (scheduledDate != null) 'scheduledDate': formatDate(scheduledDate!),
     'confirmed': confirmed,
+    'estimatedMinutes': ?estimatedMinutes,
     'exercises': [for (final e in exercises) e.toJson()],
   };
 
@@ -469,6 +582,7 @@ class PlannedWorkout {
     cycle: cycle,
     scheduledDate: scheduledDate,
     confirmed: false,
+    estimatedMinutes: estimatedMinutes,
     exercises: exercises,
   );
 }

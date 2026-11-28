@@ -93,7 +93,7 @@ private fun rpcResult(id: JsonElement?, result: JsonElement): JsonObject = build
     put("result", result)
 }
 
-private val ALL_TOOLS: List<Tool> = READ_TOOLS + WRITE_TOOLS
+private val ALL_TOOLS: List<Tool> = READ_TOOLS + EDIT_READ_TOOLS + WRITE_TOOLS + EDIT_WRITE_TOOLS
 private val TOOLS_BY_NAME = ALL_TOOLS.associateBy { it.name }
 
 private fun toolJson(t: Tool): JsonObject = buildJsonObject {

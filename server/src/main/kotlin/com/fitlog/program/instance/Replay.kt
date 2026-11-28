@@ -23,6 +23,8 @@ import com.fitlog.engine.SkipPolicy
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.greaterEq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNotNull
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.isNull
@@ -58,7 +60,15 @@ internal class InstanceCtx(val row: ResultRow) {
     val status: String = row[ProgramInstances.status]
     val tz: String = row[ProgramInstances.tz]
     val startDate: LocalDate = row[ProgramInstances.startDate]
+
+    /** 정의 교체 시점의 회차. 이 이하 세션·건너뛰기는 replay 하지 않는다(v1.2 edit.md 4·9.5절) */
+    val baseSeq: Int = row[ProgramInstances.baseSeq]
+    val baseDate: LocalDate? = row[ProgramInstances.baseDate]
+    val dayOrder: Map<String, List<Int>> = parseDayOrder(row[ProgramInstances.dayOrder])
 }
+
+internal fun parseDayOrder(text: String): Map<String, List<Int>> =
+    runCatching { AppJson.decodeFromString<Map<String, List<Int>>>(text) }.getOrDefault(emptyMap())
 
 internal fun Transaction.loadInstanceRow(userId: UUID, id: UUID): ResultRow? =
     ProgramInstances.selectAll()
@@ -76,45 +86,52 @@ internal fun Transaction.engineSettings(userId: UUID, def: ProgramDefinition): E
     return EngineSettings(formula, barbells)
 }
 
-private class SessionEv(val planSeq: Int, val date: LocalDate, val event: ProgramEvent.Completed)
-private class SkipEv(val id: UUID, val planSeq: Int, val dayIndex: Int, val date: LocalDate, val auto: Boolean)
-private class AdjEv(val afterSeq: Int, val createdAt: Instant, val event: ProgramEvent.Adjusted)
+internal class SessionEv(val planSeq: Int, val date: LocalDate, val event: ProgramEvent.Completed)
+internal class SkipEv(val id: UUID, val planSeq: Int, val dayIndex: Int, val date: LocalDate, val auto: Boolean)
+internal class AdjEv(val afterSeq: Int, val createdAt: Instant, val event: ProgramEvent.Adjusted)
 
 /** replay 입력 모음(메모리). 건너뛰기를 더하면 events() 도 갱신된다 */
-private class ReplayData(
+internal class ReplayData(
     val sessions: List<SessionEv>,
     val skips: MutableList<SkipEv>,
     val adjustments: List<AdjEv>,
     val policy: SkipPolicy,
+    val baseDate: LocalDate? = null,
 ) {
     private val sessionSeqs get() = sessions.mapTo(HashSet()) { it.planSeq }
 
     /** 세션이 있는 회차의 건너뛰기는 무시한다(실제로 한 운동이 우선) */
     private fun effectiveSkips() = skips.filter { it.planSeq !in sessionSeqs }
 
-    fun events(): List<ProgramEvent> {
-        class Keyed(val seq: Int, val kind: Int, val at: Instant, val event: ProgramEvent)
-        val all = sessions.map { Keyed(it.planSeq, 0, Instant.EPOCH, it.event) } +
-            effectiveSkips().map { Keyed(it.planSeq, 0, Instant.EPOCH, ProgramEvent.Skipped(it.planSeq, policy)) } +
-            adjustments.map { Keyed(it.afterSeq, 1, it.createdAt, it.event) }
-        return all.sortedWith(compareBy<Keyed> { it.seq }.thenBy { it.kind }.thenBy { it.at }).map { it.event }
+    /** 정렬된 이벤트. date 는 회차 이벤트(세션·건너뛰기)만 갖는다 */
+    class Keyed(val seq: Int, val kind: Int, val at: Instant, val event: ProgramEvent, val date: LocalDate?)
+
+    fun keyedEvents(): List<Keyed> {
+        val all = sessions.map { Keyed(it.planSeq, 0, Instant.EPOCH, it.event, it.date) } +
+            effectiveSkips().map { Keyed(it.planSeq, 0, Instant.EPOCH, ProgramEvent.Skipped(it.planSeq, policy), it.date) } +
+            adjustments.map { Keyed(it.afterSeq, 1, it.createdAt, it.event, null) }
+        return all.sortedWith(compareBy<Keyed> { it.seq }.thenBy { it.kind }.thenBy { it.at })
     }
 
-    /** 가장 큰 회차 이벤트의 날짜(예정일 계산의 기준). 없으면 null */
+    fun events(): List<ProgramEvent> = keyedEvents().map { it.event }
+
+    /** 가장 큰 회차 이벤트의 날짜와 교체 시점 날짜(base_date) 중 늦은 쪽(예정일 계산의 기준). 없으면 null */
     fun lastDate(): LocalDate? {
         val s = sessions.map { it.planSeq to it.date } + effectiveSkips().map { it.planSeq to it.date }
-        return s.maxByOrNull { it.first }?.second
+        val last = s.maxByOrNull { it.first }?.second
+        return if (last == null) baseDate else if (baseDate == null || last > baseDate) last else baseDate
     }
 }
 
 internal class ReplayResult(val state: ProgramState, val lastEventDate: LocalDate?)
 
-private fun Transaction.loadReplayData(ctx: InstanceCtx): ReplayData {
+internal fun Transaction.loadReplayData(ctx: InstanceCtx): ReplayData {
     val zone = ZoneId.of(ctx.tz)
     val rows = WorkoutSessions.selectAll()
         .where {
             (WorkoutSessions.programInstanceId eq ctx.id) and WorkoutSessions.endedAt.isNotNull() and
-                WorkoutSessions.deletedAt.isNull() and WorkoutSessions.planSeq.isNotNull()
+                WorkoutSessions.deletedAt.isNull() and WorkoutSessions.planSeq.isNotNull() and
+                (WorkoutSessions.planSeq greater ctx.baseSeq)
         }.toList()
     // 같은 planSeq 에 둘 이상이면 먼저 끝난 것만(부분 유니크 인덱스가 보통 막지만 방어한다)
     val chosen = rows.groupBy { it[WorkoutSessions.planSeq]!! }.map { (_, list) ->
@@ -137,7 +154,7 @@ private fun Transaction.loadReplayData(ctx: InstanceCtx): ReplayData {
                 setsByEx[ex[SessionExercises.id]].orEmpty().filter { it[WorkoutSets.completedAt] != null }.map {
                     PerformedSet(
                         it[WorkoutSets.plannedSetKey], it[WorkoutSets.reps], it[WorkoutSets.weightKg]?.toDouble(),
-                        it[WorkoutSets.isWarmup],
+                        it[WorkoutSets.isWarmup], it[WorkoutSets.setType],
                     )
                 },
             )
@@ -145,10 +162,11 @@ private fun Transaction.loadReplayData(ctx: InstanceCtx): ReplayData {
         val seq = s[WorkoutSessions.planSeq]!!
         SessionEv(seq, s[WorkoutSessions.startedAt].atZone(zone).toLocalDate(), ProgramEvent.Completed(seq, exercises))
     }
-    val skips = ProgramSkips.selectAll().where { ProgramSkips.instanceId eq ctx.id }.map {
+    val skips = ProgramSkips.selectAll().where { (ProgramSkips.instanceId eq ctx.id) and (ProgramSkips.planSeq greater ctx.baseSeq) }.map {
         SkipEv(it[ProgramSkips.id], it[ProgramSkips.planSeq], it[ProgramSkips.dayIndex], it[ProgramSkips.skippedOn], it[ProgramSkips.auto])
     }.toMutableList()
-    val adj = ProgramAdjustments.selectAll().where { ProgramAdjustments.instanceId eq ctx.id }.map {
+    // 교체 시점에 이미 반영된 조정은 교체 때 지운다. 남은 것 중 base_seq 보다 앞선 값은 무시한다
+    val adj = ProgramAdjustments.selectAll().where { (ProgramAdjustments.instanceId eq ctx.id) and (ProgramAdjustments.afterSeq greaterEq ctx.baseSeq) }.map {
         AdjEv(
             it[ProgramAdjustments.afterSeq], it[ProgramAdjustments.createdAt],
             ProgramEvent.Adjusted(
@@ -156,7 +174,7 @@ private fun Transaction.loadReplayData(ctx: InstanceCtx): ReplayData {
             ),
         )
     }
-    return ReplayData(sessions, skips, adj, ctx.policy)
+    return ReplayData(sessions, skips, adj, ctx.policy, ctx.baseDate)
 }
 
 internal fun weekdayOf(s: String?): DayOfWeek? = s?.let { w -> DayOfWeek.entries.firstOrNull { it.name.startsWith(w) } }

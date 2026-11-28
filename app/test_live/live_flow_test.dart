@@ -186,6 +186,33 @@ void main() {
       }
     });
 
+    test('v1.1 시작 전 미리 계산·자동 계산·요일 바꾸기가 실서버와 맞는다(템플릿 전부)', () async {
+      for (final t in templates) {
+        expect(t.sessionMinutes, isNotNull, reason: t.name);
+        final sg = await app.api.suggest(t.id);
+        final tm = <String, double>{}, working = <String, double>{};
+        for (final s in sg) {
+          if (s.optional) continue;
+          (s.needs == SuggestNeeds.TM ? tm : working)[s.key] = s.suggestedKg ?? 100;
+        }
+        final detail = await app.api.getProgram(t.id);
+        final days = [for (final d in (detail.definition['days'] as List)) (d as Map)['key'] as String];
+        const codes = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+        final wd = {for (var i = 0; i < days.length && i < 7; i++) days[i]: codes[i]};
+        final pv = await app.api.previewStart(
+          t.id,
+          StartPreviewRequest(startDate: DateTime.now(), tz: 'Asia/Seoul', tm: tm, working: working, weekdays: days.length <= 7 ? wd : const {}),
+        );
+        expect(pv.workouts, hasLength(1), reason: t.name);
+        expect(pv.workouts.first.exercises, isNotEmpty, reason: t.name);
+        expect(pv.workouts.first.estimatedMinutes, isNotNull, reason: t.name);
+        // from 이 비울 수 있는 키라 비워 보냈으면 파생 키도 비운 채(첫 운동에서 정하기)
+        for (final d in sg.where((s) => s.derivedFrom != null && (tm.containsKey(s.derivedFrom) || working.containsKey(s.derivedFrom)))) {
+          expect(pv.derived, contains(d.key), reason: '${t.name} ${d.key}');
+        }
+      }
+    });
+
     test('인스턴스 시작(소수 무게 102.5) → 조회·목록·plan', () async {
       final t = templates.first;
       final sg = await app.api.suggest(t.id);

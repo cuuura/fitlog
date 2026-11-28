@@ -134,6 +134,9 @@ abstract interface class ProgramRepository {
   Future<void> deleteProgram(String id);
   Future<List<SuggestItem>> suggest(String programId);
 
+  /// v1.1: 시작 전 미리 계산(저장 안 함). 필수 입력이 빠지면 400.
+  Future<StartPreview> previewStart(String programId, StartPreviewRequest request);
+
   Future<List<Instance>> listInstances({InstanceStatus? status});
   Future<Instance> getInstance(String id);
   Future<Instance> startInstance(StartInstance start);

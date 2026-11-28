@@ -214,3 +214,13 @@ CSV 가져오기(6절 대체)
 | B3 가져오기·리마인더 | `features/importing/` 또는 새 `features/csv_import/`, `features/settings/`, 새 `core/reminders/` | 8.3 |
 
 다른 스레드와 공유 파일(`engine/Model.kt`, `ProgramValidator`, 스키마, `InstanceDtos.kt`, `program_dto.dart`)은 **필드 추가만** 하고 기존 필드는 바꾸지 않는다. 푸시 전 origin/main 병합.
+
+## A2 구현 메모
+
+- CSV 사전 위치: `server/.../importing/CsvExerciseDictionary.kt`(시드 id 직접 매핑, 정규화 키는 단어 정렬·복수형 제거·괄호 단어 포함). 기구 단어가 다른 괄호 표기는 괄호 없는 이름으로 되돌려 찾지 않는다.
+- 내 종목 이름(한/영)이 사전·기본 종목보다 먼저 매칭된다.
+- 세션·새 종목 id 해시에는 userId를 포함한다(다른 사용자가 같은 파일을 가져올 때 PK 충돌 방지).
+- 새 종목 type: 이름의 기구 단어 → 없으면 기록 모양(횟수 없이 시간·거리만=CARDIO, 무게>0=MACHINE, 그 외 BODYWEIGHT). CARDIO는 primaryMuscle CARDIO, 사전에 없으면 FULL_BODY. BODYWEIGHT·BAND의 무게는 addedWeightKg.
+- 4MB 초과는 413(`VALIDATION_FAILED`), 형식 오류·머리글 판별 실패·잘못된 format/weightUnit/tz는 400 `VALIDATION_FAILED`. 한 세션 종목 30·종목당 세트 50 초과분은 skippedRows.
+- Strong `Rest Timer` 행·빈 세트 행은 skippedRows. 세션 note = 운동 이름 + 줄바꿈 + 메모.
+- 내보내기 JSON 세트는 `setType`을 항상, 종목은 `supersetGroup`이 있을 때만 낸다. CSV 열은 맨 끝에 추가.

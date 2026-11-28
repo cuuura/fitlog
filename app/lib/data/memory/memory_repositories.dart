@@ -551,6 +551,16 @@ class MemoryProgramRepository implements ProgramRepository {
   @override
   Future<List<SuggestItem>> suggest(String programId) async => suggestions[programId] ?? const [];
 
+  /// 테스트가 programId별 미리 계산 결과를 넣는다. 없으면 입력을 그대로 돌려주고 workouts는 비운다.
+  final Map<String, StartPreview> previews = {};
+  final List<StartPreviewRequest> previewRequests = [];
+
+  @override
+  Future<StartPreview> previewStart(String programId, StartPreviewRequest request) async {
+    previewRequests.add(request);
+    return previews[programId] ?? StartPreview(inputsTm: request.tm, inputsWorking: request.working);
+  }
+
   @override
   Future<List<Instance>> listInstances({InstanceStatus? status}) async => [
     for (final i in instances.values)

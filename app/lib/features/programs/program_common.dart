@@ -49,6 +49,58 @@ List<String> programWeekdays(Map<String, Object?> def) {
   ];
 }
 
+/// 날 키 → 정의에 적힌 요일(요일 없는 날은 빠진다).
+Map<String, String> programDayWeekdays(Map<String, Object?> def) => {
+  for (final d in programDays(def))
+    if (d['key'] is String && d['weekday'] is String) d['key'] as String: d['weekday'] as String,
+};
+
+/// 날 요일을 [weekdays](날 키 → 요일)로 바꾼 정의 사본. 원본은 건드리지 않는다.
+Map<String, Object?> definitionWithWeekdays(Map<String, Object?> def, Map<String, String> weekdays) => {
+  ...def,
+  'days': [
+    for (final d in programDays(def))
+      {
+        ...d,
+        if (weekdays[d['key']] != null) 'weekday': weekdays[d['key']],
+      },
+  ],
+};
+
+/// "회당 약 45~70분", min==max면 "회당 약 N분". 값이 없으면 null(숨김).
+String? sessionMinutesText(AppLocalizations l, SessionMinutes? m) {
+  if (m == null) return null;
+  return m.min == m.max ? l.progSessionMinutesOne(m.min) : l.progSessionMinutesRange(m.min, m.max);
+}
+
+/// 계획 세트 요약: 같은 횟수·무게 연속 세트는 묶어 "3×5 @ 100 kg". 워밍업은 뺀다.
+String summarizePlannedSets(List<PlannedSet> sets, WeightUnit unit) {
+  final parts = <String>[];
+  String? lastKey;
+  var count = 0;
+  String? lastText;
+  void flush() {
+    if (lastText != null) parts.add('$count×$lastText');
+  }
+
+  for (final s in sets) {
+    if (s.isWarmup) continue;
+    final reps = '${s.targetReps}${s.targetRepsMax != null ? '-${s.targetRepsMax}' : ''}${s.isAmrap ? '+' : ''}';
+    final w = s.targetWeightKg;
+    final text = w == null ? reps : '$reps @ ${Units.format(w, unit)}';
+    if (text == lastKey) {
+      count++;
+    } else {
+      flush();
+      lastKey = text;
+      lastText = text;
+      count = 1;
+    }
+  }
+  flush();
+  return parts.join(' + ');
+}
+
 /// 첫 운동 날짜. 서버와 같은 규칙: SHIFT는 시작일 그대로, FIXED_DATE는 첫째 날의 요일이 처음 오는 날(시작일 포함).
 /// 세트·무게는 계산하지 않는다.
 DateTime firstWorkoutDate(Map<String, Object?> def, DateTime start, SkipPolicy policy) {

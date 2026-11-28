@@ -1,0 +1,12 @@
+title,start_time,end_time,description,exercise_title,superset_id,exercise_notes,set_index,set_type,weight_kg,reps,distance_km,duration_seconds,rpe
+"Pull Day","4 Mar 2024, 09:00","4 Mar 2024, 10:05","Back focus","Lat Pulldown (Cable)",1,,0,warmup,30,12,,,
+"Pull Day","4 Mar 2024, 09:00","4 Mar 2024, 10:05","Back focus","Lat Pulldown (Cable)",1,,1,normal,55,10,,,8
+"Pull Day","4 Mar 2024, 09:00","4 Mar 2024, 10:05","Back focus","Lat Pulldown (Cable)",1,,2,normal,55,9,,,8.5
+"Pull Day","4 Mar 2024, 09:00","4 Mar 2024, 10:05","Back focus","Bicep Curl (Dumbbell)",1,"Slow, controlled",0,normal,14,12,,,
+"Pull Day","4 Mar 2024, 09:00","4 Mar 2024, 10:05","Back focus","Bicep Curl (Dumbbell)",1,"Slow, controlled",1,dropset,10,12,,,
+"Pull Day","4 Mar 2024, 09:00","4 Mar 2024, 10:05","Back focus","Bent Over Row (Barbell)",,,0,normal,70,8,,,
+"Pull Day","4 Mar 2024, 09:00","4 Mar 2024, 10:05","Back focus","Bent Over Row (Barbell)",,,1,failure,70,6,,,9.5
+"Pull Day","4 Mar 2024, 09:00","4 Mar 2024, 10:05","Back focus","Cable Woodchop",,,0,normal,20,15,,,
+"Pull Day","4 Mar 2024, 09:00","4 Mar 2024, 10:05","Back focus","Running (Treadmill)",,,0,normal,,,3.2,1000,
+"Cardio Only","6 Mar 2024, 07:30","6 Mar 2024, 08:00",,"Running (Treadmill)",,,0,normal,,,5,1800,
+"Cardio Only","6 Mar 2024, 07:30","6 Mar 2024, 08:00",,"Pull Up",,,0,normal,,,,,

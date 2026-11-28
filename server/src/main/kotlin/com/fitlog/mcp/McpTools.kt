@@ -466,7 +466,7 @@ internal val READ_TOOLS: List<Tool> = listOf(
         description = "세션 한 건의 종목·세트·계획 목표를 모두 조회합니다. / Get a full workout session with exercises, sets and plan targets.",
         write = false, input = S.obj("id" to idS, required = listOf("id")),
         output = S.obj(
-            "session" to S.anyObj("세션(startedAt, endedAt, tz, exercises[sets[weightKg,reps,...]])"),
+            "session" to S.anyObj("세션(startedAt, endedAt, tz, exercises[supersetGroup?, sets[weightKg, reps, isWarmup, setType(NORMAL|DROP|FAILURE), ...]])"),
             "exerciseNames" to S.map(S.str(), "종목 id → 이름"),
             required = listOf("session"),
         ),

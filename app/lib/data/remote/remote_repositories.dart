@@ -33,6 +33,9 @@ class RemoteProgramRepository implements ProgramRepository {
   Future<void> deleteProgram(String id) => api.deleteProgram(id);
   @override
   Future<List<SuggestItem>> suggest(String programId) => api.suggest(programId);
+  @override
+  Future<StartPreview> previewStart(String programId, StartPreviewRequest request) =>
+      api.previewStart(programId, request);
 
   @override
   Future<List<Instance>> listInstances({InstanceStatus? status}) => api.getInstances(status: status);

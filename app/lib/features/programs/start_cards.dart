@@ -7,6 +7,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/api/dto.dart';
 import '../../core/api/program_dto.dart';
 import '../../core/theme.dart';
+import '../../core/ui/row_menu.dart';
 import '../../core/units.dart';
 import '../../l10n/gen/app_localizations.dart';
 import 'program_common.dart';
@@ -26,8 +27,9 @@ class StartOverlap {
   bool get paused => running.instance.status == InstanceStatus.PAUSED;
 }
 
-List<StartOverlap> computeOverlaps(StartView v) {
-  final mine = programWeekdays(v.program.definition);
+/// [def]는 요일을 바꾼 정의(없으면 프로그램 정의 그대로).
+List<StartOverlap> computeOverlaps(StartView v, [Map<String, Object?>? def]) {
+  final mine = programWeekdays(def ?? v.program.definition);
   return [
     for (final r in v.running)
       if (r.instance.programId == v.program.id || r.weekdays.any(mine.contains))
@@ -138,30 +140,52 @@ class StartCard extends StatelessWidget {
   }
 }
 
-/// 맨 위 "첫 운동 · 날짜 · 그날 종목". 세트·무게는 계산하지 않는다(서버 미리 계산이 생기면 이 자리에 붙인다).
+/// 미리 계산 결과 상태. data가 null이면 기존(날짜·종목) 표시로 돌아간다.
+class StartPreviewState {
+  const StartPreviewState({this.data, this.loading = false});
+  final StartPreview? data;
+
+  /// 입력이 바뀌어 새 결과를 기다리는 중(이전 결과를 흐리게 보인다).
+  final bool loading;
+}
+
+/// 맨 위 "첫 운동 · 날짜 · 그날 종목". 미리 계산이 있으면 세트×횟수@무게와 예상 시간을 보이고,
+/// 없으면(칸이 비었거나 실패·오프라인) 날짜·종목과 "무게를 채우면 세트가 보여요". 앱은 무게를 계산하지 않는다.
 class FirstWorkoutBanner extends StatelessWidget {
   const FirstWorkoutBanner({
     super.key,
     required this.view,
     required this.startDate,
     required this.policy,
+    required this.weekdays,
+    required this.preview,
+    required this.unit,
   });
   final StartView view;
   final ValueListenable<DateTime> startDate;
   final ValueListenable<SkipPolicy> policy;
+  final ValueListenable<Map<String, String>> weekdays;
+  final ValueListenable<StartPreviewState> preview;
+  final WeightUnit unit;
 
   @override
   Widget build(BuildContext context) {
-    final first = programFirstDay(view.program.definition);
-    if (first == null) return const SizedBox.shrink();
+    final def0 = view.program.definition;
+    if (programFirstDay(def0) == null) return const SizedBox.shrink();
     final l = AppLocalizations.of(context);
     final c = AppColors.of(context);
     final theme = Theme.of(context);
-    final names = [for (final k in first.lifts) view.lifts[k]?.name(context) ?? k];
     return ListenableBuilder(
-      listenable: Listenable.merge([startDate, policy]),
+      listenable: Listenable.merge([startDate, policy, weekdays, preview]),
       builder: (context, _) {
-        final date = firstWorkoutDate(view.program.definition, startDate.value, policy.value);
+        final def = definitionWithWeekdays(def0, weekdays.value);
+        final first = programFirstDay(def)!;
+        final names = [for (final k in first.lifts) view.lifts[k]?.name(context) ?? k];
+        final date = firstWorkoutDate(def, startDate.value, policy.value);
+        final st = preview.value;
+        final w = st.data?.workouts.firstOrNull;
+        final minutes = w?.estimatedMinutes;
+        final muted = theme.textTheme.bodyMedium?.copyWith(color: c.fg2);
         return Container(
           key: const Key('start-first'),
           width: double.infinity,
@@ -170,12 +194,56 @@ class FirstWorkoutBanner extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l.programStartFirstTitle(startDateText(l, date)), style: theme.textTheme.titleSmall),
-              const SizedBox(height: 2),
-              Text(
-                [if (first.name.isNotEmpty) first.name, ...names].join(' · '),
-                style: theme.textTheme.bodyMedium?.copyWith(color: c.fg2),
+              Row(
+                children: [
+                  Expanded(child: Text(l.programStartFirstTitle(startDateText(l, date)), style: theme.textTheme.titleSmall)),
+                  if (minutes != null)
+                    Text(l.programStartPreviewMinutes(minutes), key: const Key('start-preview-minutes'), style: muted),
+                ],
               ),
+              const SizedBox(height: 2),
+              Text([if (first.name.isNotEmpty) first.name, ...names].join(' · '), style: muted),
+              if (w != null && w.exercises.isNotEmpty)
+                Opacity(
+                  opacity: st.loading ? 0.5 : 1,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Column(
+                      key: const Key('start-preview-sets'),
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        for (final e in w.exercises)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(child: Text(view.lifts[e.key]?.name(context) ?? e.key, style: theme.textTheme.bodyMedium)),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    summarizePlannedSets(e.sets, unit),
+                                    key: Key('start-preview-${e.key}'),
+                                    textAlign: TextAlign.end,
+                                    style: AppNum.table(context),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    l.programStartPreviewHint,
+                    key: const Key('start-preview-hint'),
+                    style: theme.textTheme.bodySmall?.copyWith(color: c.fg2),
+                  ),
+                ),
             ],
           ),
         );
@@ -187,11 +255,18 @@ class FirstWorkoutBanner extends StatelessWidget {
 /// 겹침 알림 + "같이 진행 / 기존 것 일시정지".
 class OverlapNotice extends StatelessWidget {
   const OverlapNotice({super.key, required this.overlaps, required this.pauseOthers});
-  final List<StartOverlap> overlaps;
+  final ValueListenable<List<StartOverlap>> overlaps;
   final ValueNotifier<bool> pauseOthers;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context) => ValueListenableBuilder<List<StartOverlap>>(
+    valueListenable: overlaps,
+    builder: (context, list, _) => list.isEmpty
+        ? const SizedBox.shrink()
+        : Padding(padding: const EdgeInsets.only(top: 12), child: _notice(context, list)),
+  );
+
+  Widget _notice(BuildContext context, List<StartOverlap> overlaps) {
     final l = AppLocalizations.of(context);
     final c = AppColors.of(context);
     final theme = Theme.of(context);
@@ -285,12 +360,18 @@ class WeightsSection extends StatelessWidget {
     required this.stepKg,
     required this.expanded,
     required this.optionalExpanded,
+    required this.derivedExpanded,
     required this.submitted,
     required this.details,
+    required this.nameOfKey,
   });
 
   final List<SuggestItem> items;
   final String Function(SuggestItem) nameOf;
+
+  /// lift 키 → 종목 이름(자동 계산 근거 "<기준 종목> × 80%"용).
+  final String Function(String key) nameOfKey;
+  final ValueNotifier<bool> derivedExpanded;
   final Map<String, TextEditingController> controllers;
   final Map<String, FocusNode> focusNodes;
   final Map<String, GlobalKey> rowKeys;
@@ -302,8 +383,9 @@ class WeightsSection extends StatelessWidget {
   final ValueListenable<List<StartDetail>> details;
 
   Listenable get _all => Listenable.merge(controllers.values.toList());
-  List<SuggestItem> get _required => [for (final s in items) if (!s.optional) s];
-  List<SuggestItem> get _optional => [for (final s in items) if (s.optional) s];
+  List<SuggestItem> get _required => [for (final s in items) if (!s.canSkip) s];
+  List<SuggestItem> get _optional => [for (final s in items) if (s.canSkip && !s.isDerived) s];
+  List<SuggestItem> get _derived => [for (final s in items) if (s.isDerived) s];
 
   double? _kg(SuggestItem s) {
     final v = parseNumber(controllers[_itemId(s)]!.text);
@@ -350,6 +432,7 @@ class WeightsSection extends StatelessWidget {
     final c = AppColors.of(context);
     final req = _required;
     final opt = _optional;
+    final der = _derived;
     final anyTm = items.any((s) => s.needs == SuggestNeeds.TM);
     final anySug = items.any((s) => s.suggestedKg != null);
     final anyNoSug = req.any((s) => s.suggestedKg == null);
@@ -364,6 +447,9 @@ class WeightsSection extends StatelessWidget {
       stepKg: stepKg,
       submitted: submitted,
       details: details,
+      basis: s.isDerived
+          ? l.programStartDerivedBasis(nameOfKey(s.derivedFrom!), ((s.derivedRatio ?? 0) * 100).round())
+          : null,
     );
 
     return StartCard(
@@ -435,6 +521,36 @@ class WeightsSection extends StatelessWidget {
               ),
             ),
           ],
+          if (der.isNotEmpty)
+            Column(
+              key: const Key('start-derived-group'),
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ValueListenableBuilder<bool>(
+                  valueListenable: derivedExpanded,
+                  builder: (context, open, _) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: TextButton.icon(
+                          key: const Key('start-derived-toggle'),
+                          style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                          onPressed: () => derivedExpanded.value = !open,
+                          icon: Icon(open ? Icons.expand_less : Icons.expand_more),
+                          label: Text(l.programStartDerivedTitle(der.length)),
+                        ),
+                      ),
+                      if (open) ...[
+                        Text(l.programStartDerivedHelp, style: theme.textTheme.bodySmall?.copyWith(color: c.fg2)),
+                        const SizedBox(height: 10),
+                        for (final s in der) ...[row(s), const SizedBox(height: 10)],
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           if (opt.isNotEmpty)
             ValueListenableBuilder<bool>(
               valueListenable: optionalExpanded,
@@ -451,7 +567,15 @@ class WeightsSection extends StatelessWidget {
                       label: Text(l.programStartOptionalGroup(opt.length)),
                     ),
                   ),
-                  if (open) ...[for (final s in opt) ...[row(s), const SizedBox(height: 10)]],
+                  if (open) ...[
+                    Text(
+                      l.programStartFirstSessionNote,
+                      key: const Key('start-first-session-note'),
+                      style: theme.textTheme.bodySmall?.copyWith(color: c.fg2),
+                    ),
+                    const SizedBox(height: 10),
+                    for (final s in opt) ...[row(s), const SizedBox(height: 10)],
+                  ],
                 ],
               ),
             ),
@@ -473,7 +597,11 @@ class WeightRow extends StatefulWidget {
     required this.stepKg,
     required this.submitted,
     required this.details,
+    this.basis,
   });
+
+  /// 있으면 근거 줄을 이 문구로 바꾼다(자동 계산 종목).
+  final String? basis;
   final SuggestItem item;
   final String name;
   final TextEditingController controller;
@@ -601,7 +729,7 @@ class _WeightRowState extends State<WeightRow> {
                   style: theme.textTheme.bodySmall?.copyWith(color: c.warn),
                 );
               }
-              final b = _basis(l);
+              final b = widget.basis ?? _basis(l);
               return b == null ? const SizedBox.shrink() : Text(b, style: theme.textTheme.bodySmall?.copyWith(color: c.fg2));
             },
           ),
@@ -617,7 +745,7 @@ class _WeightRowState extends State<WeightRow> {
                       for (final d in widget.details.value)
                         if (d.path.endsWith('/${s.key}')) d.message,
                     ];
-                    final required = widget.submitted.value && !s.optional && _kg() == null;
+                    final required = widget.submitted.value && !s.canSkip && _kg() == null;
                     return TextField(
                       key: ValueKey('start-$id'),
                       controller: widget.controller,
@@ -631,7 +759,8 @@ class _WeightRowState extends State<WeightRow> {
                         suffixText: unitText,
                         errorText: errors.isNotEmpty ? errors.join('\n') : (required ? l.programStartRequired : null),
                         errorMaxLines: 3,
-                        helperText: s.optional ? l.progStartOptionalHint : null,
+                        helperText: s.optional && !s.isDerived ? l.progStartOptionalHint : null,
+                        hintText: s.isDerived ? l.programStartDerivedPending : null,
                         helperMaxLines: 2,
                         border: const OutlineInputBorder(),
                       ),
@@ -642,7 +771,7 @@ class _WeightRowState extends State<WeightRow> {
               stepButton(true),
             ],
           ),
-          if (s.suggestedKg == null) ...[
+          if (s.suggestedKg == null && !s.isDerived) ...[
             Align(
               alignment: AlignmentDirectional.centerStart,
               child: TextButton(
@@ -702,6 +831,7 @@ class ScheduleSection extends StatelessWidget {
     super.key,
     required this.view,
     required this.overlaps,
+    required this.weekdays,
     required this.today,
     required this.startDate,
     required this.policy,
@@ -710,7 +840,10 @@ class ScheduleSection extends StatelessWidget {
     required this.onPickDate,
   });
   final StartView view;
-  final List<StartOverlap> overlaps;
+  final ValueListenable<List<StartOverlap>> overlaps;
+
+  /// 날 키 → 현재 요일(바꾼 값 포함).
+  final ValueNotifier<Map<String, String>> weekdays;
   final DateTime today;
   final ValueNotifier<DateTime> startDate;
   final ValueNotifier<SkipPolicy> policy;
@@ -720,7 +853,7 @@ class ScheduleSection extends StatelessWidget {
 
   /// 다른 진행 중(ACTIVE) 프로그램의 운동 요일. "기존 것 일시정지"를 고르면 겹치는 것은 뺀다.
   Set<String> _otherDays(bool pause) {
-    final skip = pause ? {for (final o in overlaps) o.running.instance.id} : const <String>{};
+    final skip = pause ? {for (final o in overlaps.value) o.running.instance.id} : const <String>{};
     return {
       for (final r in view.running)
         if (r.instance.status == InstanceStatus.ACTIVE && !skip.contains(r.instance.id)) ...r.weekdays,
@@ -732,8 +865,9 @@ class ScheduleSection extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final c = AppColors.of(context);
     final theme = Theme.of(context);
-    final mine = programWeekdays(view.program.definition);
-    final fixedOk = programHasWeekdays(view.program.definition);
+    final days = programDays(view.program.definition);
+    List<String> mineNow() => programWeekdays(definitionWithWeekdays(view.program.definition, weekdays.value));
+    bool fixedOkNow() => programHasWeekdays(definitionWithWeekdays(view.program.definition, weekdays.value));
     final muted = theme.textTheme.bodySmall?.copyWith(color: c.fg2);
     String policyText(SkipPolicy p) => p == SkipPolicy.SHIFT ? l.progSkipShiftSeg : l.progSkipFixedSeg;
 
@@ -742,8 +876,9 @@ class ScheduleSection extends StatelessWidget {
       title: l.programStartScheduleTitle,
       expanded: expanded,
       summary: ListenableBuilder(
-        listenable: Listenable.merge([startDate, policy]),
+        listenable: Listenable.merge([startDate, policy, weekdays]),
         builder: (context, _) {
+          final mine = mineNow();
           final d = startDate.value;
           final isToday = d.year == today.year && d.month == today.month && d.day == today.day;
           return Text(
@@ -755,19 +890,40 @@ class ScheduleSection extends StatelessWidget {
           );
         },
       ),
-      chip: overlaps.isEmpty
-          ? null
-          : ValueListenableBuilder<bool>(
-              valueListenable: pauseOthers,
-              builder: (context, pause, _) {
-                final other = _otherDays(pause);
-                final both = mine.where(other.contains).length;
-                return both == 0
-                    ? const SizedBox.shrink()
-                    : StartChip(l.programStartOverlapChip(both), StartChipTone.warn, key: const Key('start-overlap-chip'));
-              },
-            ),
-      child: Column(
+      chip: ListenableBuilder(
+        listenable: Listenable.merge([pauseOthers, weekdays, overlaps]),
+        builder: (context, _) {
+          if (overlaps.value.isEmpty) return const SizedBox.shrink();
+          final other = _otherDays(pauseOthers.value);
+          final both = mineNow().where(other.contains).length;
+          return both == 0
+              ? const SizedBox.shrink()
+              : StartChip(l.programStartOverlapChip(both), StartChipTone.warn, key: const Key('start-overlap-chip'));
+        },
+      ),
+      child: ListenableBuilder(
+        listenable: Listenable.merge([weekdays, overlaps]),
+        builder: (context, _) {
+          final mine = mineNow();
+          final fixedOk = fixedOkNow();
+          return _body(context, l, c, theme, muted, mine, fixedOk, days, policyText);
+        },
+      ),
+    );
+  }
+
+  Widget _body(
+    BuildContext context,
+    AppLocalizations l,
+    AppColors c,
+    ThemeData theme,
+    TextStyle? muted,
+    List<String> mine,
+    bool fixedOk,
+    List<Map<String, Object?>> days,
+    String Function(SkipPolicy) policyText,
+  ) {
+    return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(l.programStartDate, style: theme.textTheme.labelLarge),
@@ -813,6 +969,28 @@ class ScheduleSection extends StatelessWidget {
                 );
               },
             ),
+          if (days.isNotEmpty) ...[
+            Text(l.programStartWeekdaysTitle, style: theme.textTheme.labelLarge),
+            const SizedBox(height: 4),
+            ValueListenableBuilder<Map<String, String>>(
+              valueListenable: weekdays,
+              builder: (context, wd, _) => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final d in days)
+                    _WeekdayChips(
+                      key: Key('start-weekday-${d['key']}'),
+                      dayKey: '${d['key']}',
+                      name: '${d['name'] ?? d['key']}',
+                      current: wd['${d['key']}'],
+                      taken: {for (final e in wd.entries) if (e.key != '${d['key']}') e.value},
+                      onPick: (code) => weekdays.value = {...wd, '${d['key']}': code},
+                    ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ],
           Text(l.programStartPolicy, style: theme.textTheme.labelLarge),
           const SizedBox(height: 8),
           ValueListenableBuilder<SkipPolicy>(
@@ -847,6 +1025,52 @@ class ScheduleSection extends StatelessWidget {
                 if (!fixedOk && p == SkipPolicy.SHIFT) Text(l.programSkipFixedUnavailable, style: muted),
               ],
             ),
+          ),
+        ],
+    );
+  }
+}
+
+class _WeekdayChips extends StatelessWidget {
+  const _WeekdayChips({
+    super.key,
+    required this.dayKey,
+    required this.name,
+    required this.current,
+    required this.taken,
+    required this.onPick,
+  });
+  final String dayKey;
+  final String name;
+  final String? current;
+  final Set<String> taken;
+  final ValueChanged<String> onPick;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(name, style: theme.textTheme.bodyMedium),
+          Wrap(
+            spacing: 6,
+            children: [
+              for (final code in programWeekdayCodes)
+                Tooltip(
+                  message: taken.contains(code) ? l.programStartWeekdayTaken : '',
+                  child: ChoiceChip(
+                    key: Key('start-weekday-$dayKey-$code'),
+                    label: Text(weekdayLabel(l, code)),
+                    selected: current == code,
+                    // 같은 요일 두 날은 막는다.
+                    onSelected: taken.contains(code) ? null : (_) => onPick(code),
+                  ),
+                ),
+            ],
           ),
         ],
       ),
@@ -923,6 +1147,111 @@ class StartOffline extends StatelessWidget {
             Text(l.programStartOffline, textAlign: TextAlign.center),
             const SizedBox(height: 16),
             FilledButton(onPressed: onRetry, child: Text(l.commonRetry)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ───────────────────────── 보조 종목(선택) ─────────────────────────
+
+/// 시작 전에 고른 보조 종목. 시작이 성공하면 PUT /accessories로 저장한다.
+class StartAccessory {
+  const StartAccessory({
+    required this.id,
+    required this.dayKey,
+    required this.exercise,
+    required this.sets,
+    required this.reps,
+    this.weightKg,
+  });
+  final String id;
+  final String dayKey;
+  final LiftRef exercise;
+  final int sets;
+  final int reps;
+  final double? weightKg;
+}
+
+class AccessoriesSection extends StatelessWidget {
+  const AccessoriesSection({
+    super.key,
+    required this.view,
+    required this.items,
+    required this.expanded,
+    required this.unit,
+    required this.onAdd,
+    required this.onRemove,
+  });
+  final StartView view;
+  final ValueListenable<List<StartAccessory>> items;
+  final ValueNotifier<bool> expanded;
+  final WeightUnit unit;
+  final void Function(String dayKey) onAdd;
+  final void Function(StartAccessory a) onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final c = AppColors.of(context);
+    final theme = Theme.of(context);
+    final days = programDays(view.program.definition);
+    return ValueListenableBuilder<List<StartAccessory>>(
+      valueListenable: items,
+      builder: (context, list, _) => StartCard(
+        key: const Key('start-accessories'),
+        title: l.programStartAccTitle,
+        chip: StartChip(l.programStartAccChip, StartChipTone.neutral),
+        expanded: expanded,
+        summary: Text(list.isEmpty ? l.programStartAccSummaryNone : l.programStartAccSummary(list.length)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(l.programStartAccHelp, style: theme.textTheme.bodySmall?.copyWith(color: c.fg2)),
+            for (final d in days) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(child: Text('${d['name'] ?? d['key']}', style: theme.textTheme.titleSmall)),
+                  TextButton.icon(
+                    key: Key('start-acc-add-${d['key']}'),
+                    style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                    onPressed: () => onAdd('${d['key']}'),
+                    icon: const Icon(Icons.add),
+                    label: Text(l.commonAdd),
+                  ),
+                ],
+              ),
+              for (final a in list.where((a) => a.dayKey == '${d['key']}'))
+                Container(
+                  key: Key('start-acc-${a.id}'),
+                  margin: const EdgeInsets.only(bottom: 6),
+                  padding: const EdgeInsets.only(left: 12),
+                  decoration: BoxDecoration(color: c.surface2, borderRadius: BorderRadius.circular(AppRadius.md)),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '${a.exercise.name(context)}  ${l.instanceAccessorySummary(a.sets, a.reps)}'
+                          '${a.weightKg == null ? '' : ' @ ${Units.format(a.weightKg!, unit)}'}',
+                        ),
+                      ),
+                      RowMenu<String>(
+                        items: [
+                          RowMenuItem(
+                            key: Key('start-acc-remove-${a.id}'),
+                            value: 'remove',
+                            label: l.commonDelete,
+                            destructive: true,
+                          ),
+                        ],
+                        onSelected: (_) => onRemove(a),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
           ],
         ),
       ),
