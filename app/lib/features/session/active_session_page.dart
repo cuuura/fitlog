@@ -8,6 +8,7 @@ import 'package:material_ui/material_ui.dart';
 import '../../core/api/dto.dart';
 import '../../core/clock.dart';
 import '../../core/settings/settings_controller.dart';
+import '../../core/ui/confirm.dart';
 import '../../core/routes.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
@@ -19,35 +20,6 @@ import 'session_dock.dart';
 import 'session_format.dart';
 import 'set_row.dart';
 import 'set_table.dart';
-
-Future<bool> confirmDialog(
-  BuildContext context, {
-  required String title,
-  String? body,
-  required String confirmLabel,
-  Key? confirmKey,
-}) async {
-  final l = AppLocalizations.of(context);
-  final r = await showDialog<bool>(
-    context: context,
-    builder: (c) => AlertDialog(
-      title: Text(title),
-      content: body == null ? null : Text(body),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(c, false),
-          child: Text(l.commonCancel),
-        ),
-        FilledButton(
-          key: confirmKey ?? const Key('confirm-ok'),
-          onPressed: () => Navigator.pop(c, true),
-          child: Text(confirmLabel),
-        ),
-      ],
-    ),
-  );
-  return r ?? false;
-}
 
 class ActiveSessionPage extends ConsumerStatefulWidget {
   const ActiveSessionPage({super.key});
@@ -113,13 +85,13 @@ class _ActiveSessionPageState extends ConsumerState<ActiveSessionPage> {
         for (final w in e.sets)
           if (isJudged(session, e, w) && !w.isCompleted) w,
     ].length;
-    final ok = await confirmDialog(
+    final ok = await confirmAction(
       context,
       title: l.sessionEndConfirmTitle,
       body: unfinished == 0
           ? l.sessionEndConfirmBody
           : '${l.sessionEndConfirmBody}\n${l.sessionEndUnfinishedWarning(unfinished)}',
-      confirmLabel: l.sessionEnd,
+      action: l.sessionEnd,
       confirmKey: const Key('end-confirm'),
     );
     if (!ok || !mounted) return;
@@ -559,11 +531,12 @@ class _ExerciseCard extends ConsumerWidget {
                       tooltip: l.sessionRemoveExercise,
                       icon: const Icon(Icons.delete_outline),
                       onPressed: () async {
-                        final ok = await confirmDialog(
+                        final ok = await confirmAction(
                           context,
                           title: l.sessionRemoveExercise,
                           body: l.sessionRemoveExerciseConfirm(name),
-                          confirmLabel: l.commonDelete,
+                          action: l.commonDelete,
+                          destructive: true,
                           confirmKey: const Key('remove-exercise-confirm'),
                         );
                         if (ok) await ctrl.removeExercise(se.id);

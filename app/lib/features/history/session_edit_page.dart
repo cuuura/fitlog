@@ -11,11 +11,12 @@ import '../../core/ids.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme.dart';
+import '../../core/ui/confirm.dart';
 import '../../core/units.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
-import '../session/session_controller.dart' show SetLimits, exerciseMapProvider, sessionByIdProvider;
+import '../session/session_controller.dart' show SetLimits, deleteSetWithUndo, exerciseMapProvider, sessionByIdProvider;
 import '../session/session_format.dart';
 
 /// 로컬 시각을 골라 돌려준다. 취소하면 null. 테스트에서 바꿔 끼운다.
@@ -98,21 +99,16 @@ class _SessionEditPageState extends ConsumerState<SessionEditPage> {
 
   Future<void> _removeExercise(SessionExercise se) async {
     final l = AppLocalizations.of(context);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        content: Text(l.historyEditRemoveExerciseConfirm),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l.commonCancel)),
-          TextButton(
-            key: const Key('edit-confirm'),
-            onPressed: () => Navigator.pop(c, true),
-            child: Text(l.historyEditRemoveExercise),
-          ),
-        ],
-      ),
+    final ex = ref.read(exerciseMapProvider).value?[se.exerciseId];
+    final ok = await confirmAction(
+      context,
+      title: l.historyEditRemoveExerciseTitle(ex == null ? '' : exerciseDisplayName(context, ex)),
+      body: l.historyEditRemoveExerciseConfirm,
+      action: l.commonDelete,
+      destructive: true,
+      confirmKey: const Key('edit-confirm'),
     );
-    if (ok != true || !mounted) return;
+    if (!ok || !mounted) return;
     await _run(() => ref.read(sessionRepositoryProvider).removeExercise(se.id));
   }
 
@@ -244,7 +240,16 @@ class _SessionEditPageState extends ConsumerState<SessionEditPage> {
                         type: exercises[se.exerciseId]?.type ?? ExerciseType.BARBELL,
                         unit: unit,
                         onSave: (w) => _run(() => ref.read(sessionRepositoryProvider).updateSet(w)),
-                        onDelete: () => _run(() => ref.read(sessionRepositoryProvider).deleteSet(se.sets[i].id)),
+                        onDelete: () => _run(
+                          () => deleteSetWithUndo(
+                            ref.read(sessionRepositoryProvider),
+                            ScaffoldMessenger.of(context),
+                            l,
+                            sessionId: s.id,
+                            se: se,
+                            set: se.sets[i],
+                          ),
+                        ),
                         onMove: (d) => _moveSet(se, i, d),
                       ),
                     Align(

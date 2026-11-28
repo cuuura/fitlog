@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:material_ui/material_ui.dart';
 
 import '../../core/routes.dart';
+import '../../core/ui/confirm.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
 import 'session_controller.dart';
@@ -23,27 +24,17 @@ Future<bool> prepareToStartSession(BuildContext context, WidgetRef ref) async {
     return false;
   }
   if (!context.mounted) return false;
-  final ok = await showDialog<bool>(
-    context: context,
-    builder: (c) => AlertDialog(
-      key: const Key('discard-free-dialog'),
-      title: Text(l.homeStartDiscardTitle),
-      content: Text(l.homeStartDiscardBody),
-      actions: [
-        TextButton(
-          key: const Key('discard-free-cancel'),
-          onPressed: () => Navigator.pop(c, false),
-          child: Text(l.commonCancel),
-        ),
-        FilledButton(
-          key: const Key('discard-free-confirm'),
-          onPressed: () => Navigator.pop(c, true),
-          child: Text(l.homeStartDiscardAction),
-        ),
-      ],
-    ),
+  final ok = await confirmAction(
+    context,
+    title: l.homeStartDiscardTitle,
+    body: l.homeStartDiscardBody,
+    action: l.homeStartDiscardAction,
+    destructive: true,
+    dialogKey: const Key('discard-free-dialog'),
+    cancelKey: const Key('discard-free-cancel'),
+    confirmKey: const Key('discard-free-confirm'),
   );
-  if (ok != true) return false;
+  if (!ok) return false;
   await controller.deleteSession(active.id);
   return true;
 }

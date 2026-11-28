@@ -6,14 +6,45 @@ import '../../core/api/dto.dart';
 import '../../core/routes.dart';
 import '../../core/settings/settings_controller.dart';
 import '../../core/theme.dart';
+import '../../core/ui/confirm.dart';
+import '../../core/ui/row_menu.dart';
 import '../../l10n/gen/app_localizations.dart';
 import '../exercise_picker/exercise_labels.dart';
 import '../source_badge/source_badge.dart';
-import 'active_session_page.dart' show confirmDialog;
 import 'session_controller.dart';
 import 'session_format.dart';
 
 /// 끝난 세션 읽기 전용 보기. v0.1은 수정 없이 삭제만 된다.
+/// 세션 삭제 확인과 삭제. 세션 상세와 기록 탭이 같이 쓴다. 지웠으면 true.
+Future<bool> confirmDeleteSession(
+  BuildContext context,
+  WidgetRef ref, {
+  required String sessionId,
+  required DateTime startedAt,
+  required String tz,
+  Key? confirmKey,
+}) async {
+  final l = AppLocalizations.of(context);
+  final messenger = ScaffoldMessenger.of(context);
+  final ctrl = ref.read(sessionControllerProvider);
+  final ok = await confirmAction(
+    context,
+    title: l.sessionDeleteTitle(formatDate(sessionLocalTime(startedAt, tz))),
+    body: l.sessionDeleteBody,
+    action: l.commonDelete,
+    destructive: true,
+    confirmKey: confirmKey,
+  );
+  if (!ok) return false;
+  try {
+    await ctrl.deleteSession(sessionId);
+    return true;
+  } catch (_) {
+    messenger.showSnackBar(SnackBar(content: Text(l.historyEditSaveFailed)));
+    return false;
+  }
+}
+
 class SessionDetailPage extends ConsumerWidget {
   const SessionDetailPage({super.key, required this.sessionId});
   final String sessionId;
@@ -43,26 +74,25 @@ class SessionDetailPage extends ConsumerWidget {
             icon: const Icon(Icons.compare_arrows),
             onPressed: () => context.push(Routes.sessionComparison(s.id)),
           ),
-          IconButton(
-            key: const Key('detail-edit'),
-            tooltip: l.historyEdit,
-            icon: const Icon(Icons.edit_outlined),
-            onPressed: () => context.push(Routes.sessionEdit(s.id)),
-          ),
-          IconButton(
-            key: const Key('detail-delete'),
-            tooltip: l.commonDelete,
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () async {
-              final ok = await confirmDialog(
+          RowMenu<String>(
+            items: [
+              RowMenuItem(value: 'edit', label: l.commonEdit, key: const Key('detail-edit')),
+              RowMenuItem(value: 'delete', label: l.commonDelete, destructive: true, key: const Key('detail-delete')),
+            ],
+            onSelected: (v) async {
+              if (v == 'edit') {
+                context.push(Routes.sessionEdit(s.id));
+                return;
+              }
+              final ok = await confirmDeleteSession(
                 context,
-                title: l.sessionDetailDeleteConfirm,
-                confirmLabel: l.commonDelete,
+                ref,
+                sessionId: s.id,
+                startedAt: s.startedAt,
+                tz: s.tz,
                 confirmKey: const Key('detail-delete-confirm'),
               );
-              if (!ok || !context.mounted) return;
-              await ref.read(sessionControllerProvider).deleteSession(s.id);
-              if (context.mounted) context.pop();
+              if (ok && context.mounted) context.pop();
             },
           ),
         ],

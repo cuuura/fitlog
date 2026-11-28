@@ -157,7 +157,13 @@ void main() {
     await t.tap(find.byKey(Key('history-${s.id}')));
     await settle(t);
     expect(find.byKey(const Key('detail-header')), findsOneWidget);
+    expect(find.byKey(const Key('detail-compare')), findsOneWidget);
+    await t.tap(find.byType(PopupMenuButton<String>));
+    await settle(t);
     expect(find.byKey(const Key('detail-edit')), findsOneWidget);
+    expect(find.byKey(const Key('detail-delete')), findsOneWidget);
+    await t.tapAt(const Offset(2, 2)); // 메뉴 닫기
+    await settle(t);
 
     // 뒤로 -> 히스토리 -> 홈
     e.router.pop();

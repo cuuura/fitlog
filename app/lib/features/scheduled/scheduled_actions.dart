@@ -4,9 +4,10 @@ import 'package:material_ui/material_ui.dart';
 
 import '../../core/api/dto.dart';
 import '../../core/routes.dart';
-import '../../core/ui/confirm.dart';
 import '../../data/providers.dart';
 import '../../l10n/gen/app_localizations.dart';
+import '../../core/ui/confirm.dart';
+import '../../core/ui/row_menu.dart';
 import 'scheduled_logic.dart';
 import 'start_scheduled_flow.dart';
 
@@ -21,28 +22,21 @@ class ScheduledMenu extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
     final id = view.id;
-    return PopupMenuButton<ScheduledMenuAction>(
+    return RowMenu<ScheduledMenuAction>(
       key: Key('sched-menu-$id'),
       tooltip: l.schedMenuTooltip,
       onSelected: (a) => runScheduledAction(context, ref, view, a),
-      itemBuilder: (_) => [
-        PopupMenuItem(
-          value: ScheduledMenuAction.edit,
-          child: Text(l.schedMenuEdit, key: Key('sched-menu-edit-$id')),
-        ),
+      items: [
+        RowMenuItem(value: ScheduledMenuAction.edit, label: l.schedMenuEdit, key: Key('sched-menu-edit-$id')),
         if (view.status == ScheduledStatus.PLANNED)
-          PopupMenuItem(
-            value: ScheduledMenuAction.skip,
-            child: Text(l.schedMenuSkip, key: Key('sched-menu-skip-$id')),
-          ),
+          RowMenuItem(value: ScheduledMenuAction.skip, label: l.schedMenuSkip, key: Key('sched-menu-skip-$id')),
         if (view.status == ScheduledStatus.SKIPPED)
-          PopupMenuItem(
-            value: ScheduledMenuAction.unskip,
-            child: Text(l.schedMenuUnskip, key: Key('sched-menu-unskip-$id')),
-          ),
-        PopupMenuItem(
+          RowMenuItem(value: ScheduledMenuAction.unskip, label: l.schedMenuUnskip, key: Key('sched-menu-unskip-$id')),
+        RowMenuItem(
           value: ScheduledMenuAction.delete,
-          child: Text(l.schedMenuDelete, key: Key('sched-menu-delete-$id')),
+          label: l.schedMenuDelete,
+          destructive: true,
+          key: Key('sched-menu-delete-$id'),
         ),
       ],
     );
@@ -69,10 +63,11 @@ Future<void> runScheduledAction(
       case ScheduledMenuAction.delete:
         final ok = await confirmAction(
           context,
-          title: l.schedDeleteTitle,
-          body: l.schedDeleteBody(view.workout.title),
+          title: l.schedDeleteTitle(view.workout.title),
+          body: l.schedDeleteBody,
           action: l.schedMenuDelete,
           destructive: true,
+          confirmKey: const Key('sched-delete-confirm'),
         );
         if (ok) await repo.delete(view.id);
     }

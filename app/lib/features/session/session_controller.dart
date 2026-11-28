@@ -2,6 +2,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:material_ui/material_ui.dart' show ScaffoldMessengerState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 
@@ -9,6 +10,8 @@ import '../../core/api/dto.dart';
 import '../../core/clock.dart';
 import '../../core/ids.dart';
 import '../../core/settings/settings_controller.dart';
+import '../../core/ui/undo.dart';
+import '../../l10n/gen/app_localizations.dart';
 import '../../data/providers.dart';
 import '../../domain/repositories.dart';
 import '../rest_timer/rest_timer_controller.dart';
@@ -300,6 +303,74 @@ class SessionController {
           body: nextText,
         );
   }
+}
+
+/// 지운 세트를 같은 값(무게·횟수·완료·RPE·목표 등 전부)으로 [index] 자리에 다시 넣는다.
+/// 동기화 삭제 표시와 부딪히지 않게 새 id로 넣고, 순서만 원래 자리로 맞춘다.
+Future<void> restoreSetAt(
+  SessionRepository repo, {
+  required String sessionId,
+  required String sessionExerciseId,
+  required WorkoutSet old,
+  required int index,
+}) async {
+  final added = await repo.addSet(
+    sessionExerciseId,
+    WorkoutSet(
+      id: newId(),
+      position: old.position,
+      isWarmup: old.isWarmup,
+      weightKg: old.weightKg,
+      addedWeightKg: old.addedWeightKg,
+      reps: old.reps,
+      durationSec: old.durationSec,
+      distanceM: old.distanceM,
+      bandLevel: old.bandLevel,
+      rpe: old.rpe,
+      rir: old.rir,
+      restSec: old.restSec,
+      note: old.note,
+      completedAt: old.completedAt,
+      plannedSetKey: old.plannedSetKey,
+      targetReps: old.targetReps,
+      targetWeightKg: old.targetWeightKg,
+      isAmrap: old.isAmrap,
+      targetRepsMax: old.targetRepsMax,
+      targetRir: old.targetRir,
+      targetRestSec: old.targetRestSec,
+    ),
+  );
+  final session = await repo.watchSession(sessionId).first;
+  final se = session?.exercises.where((e) => e.id == sessionExerciseId).firstOrNull;
+  if (se == null) return;
+  final ids = [for (final w in se.sets) if (w.id != added.id) w.id];
+  ids.insert(index.clamp(0, ids.length), added.id);
+  await repo.reorderSets(sessionExerciseId, ids);
+}
+
+/// 세트를 확인 없이 지우고 "되돌리기"를 보여 준다(운동 중·세션 수정 화면 공통).
+Future<void> deleteSetWithUndo(
+  SessionRepository repo,
+  ScaffoldMessengerState messenger,
+  AppLocalizations l, {
+  required String sessionId,
+  required SessionExercise se,
+  required WorkoutSet set,
+}) async {
+  final index = se.sets.indexWhere((w) => w.id == set.id);
+  await repo.deleteSet(set.id);
+  showUndoSnack(
+    messenger,
+    l,
+    message: l.sessionSetDeleted,
+    onUndo: () => restoreSetAt(
+      repo,
+      sessionId: sessionId,
+      sessionExerciseId: se.id,
+      old: set,
+      index: index < 0 ? se.sets.length : index,
+    ),
+  );
 }
 
 final sessionControllerProvider = Provider<SessionController>(
