@@ -415,6 +415,8 @@ void main() {
         200,
         scrollable: find.byType(Scrollable).first,
       );
+      await tester.ensureVisible(find.byKey(const Key('deleteAccount'))); // v1.2: 설정 항목이 늘어 화면 가장자리에 걸칠 수 있다
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('deleteAccount')));
       await tester.pumpAndSettle();
       expect(find.byType(OutlinedButton), findsOneWidget);

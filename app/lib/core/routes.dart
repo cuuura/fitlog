@@ -31,6 +31,9 @@ abstract final class Routes {
   static const aiConnect = '/ai/connect'; // B3 MCP 연결 안내·연결된 AI
   static const export = '/export'; // B3 내보내기
 
+  // v1.2
+  static const csvImport = '/import/csv'; // B3 다른 앱(Strong·Hevy) CSV 가져오기
+
   // v1.0
   static String exerciseProgress(String exerciseId) => '/exercises/$exerciseId/progress'; // B1 종목 추이 꺾은선
   static String sessionComparison(String sessionId) => '/sessions/$sessionId/comparison'; // B1 오늘 vs 지난·PR 막대

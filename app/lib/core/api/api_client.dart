@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../integrity/integrity.dart';
 import 'ai_dto.dart';
+import 'csv_import_dto.dart';
 import 'dto.dart';
 import 'program_dto.dart';
 import 'stats_dto.dart';
@@ -418,4 +419,23 @@ class ApiClient {
   );
   Future<SessionComparison> getComparison(String sessionId) =>
       _call(() async => SessionComparison.fromJson(_map(await dio.get('/v1/sessions/$sessionId/comparison'))));
+
+  // ---------- v1.2: CSV 가져오기(B3) ----------
+
+  /// CSV를 변환해 미리보기와 확정용 묶음 조각을 받는다. 413(너무 큼)·400(머리글·형식 오류)은 ApiException.
+  Future<CsvPreview> previewCsvImport({
+    required CsvFormat format,
+    required String csv,
+    String? weightUnit,
+    required String tz,
+  }) => _call(
+    () async => CsvPreview.fromJson(
+      _map(
+        await dio.post(
+          '/v1/imports/csv/preview',
+          data: {'format': format.name, 'csv': csv, 'weightUnit': ?weightUnit, 'tz': tz},
+        ),
+      ),
+    ),
+  );
 }
